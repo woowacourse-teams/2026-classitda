@@ -37,3 +37,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+.claude
+.codex
+.agents
+CLAUDE.md
+AGENTS.md
