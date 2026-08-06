@@ -15,7 +15,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -27,19 +26,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Table(
-        name = "class_session",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_session_instructor_start",
-                        columnNames = {"instructor_membership_id", "start_at"}
-                ),
-                @UniqueConstraint(
-                        name = "uk_session_room_start",
-                        columnNames = {"room_id", "start_at"}
-                )
-        }
-)
+@Table(name = "class_session")
 @Entity
 public class ClassSession extends BaseEntity {
 
@@ -78,4 +65,5 @@ public class ClassSession extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private ClassSessionStatus status;
+
 }
