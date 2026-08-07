@@ -6,7 +6,7 @@
 
 | 번호 | 결정 | 한 줄 요약 |
 | --- | --- | --- |
-| [0001](0001-be-development-harness-pipeline.md) | BE 개발 하네스 파이프라인 | 기능 개발을 설계→구현→테스트→리뷰 4단계로 나누고 단계마다 게이트를 둬요 |
+| [0001](0001-be-development-harness-pipeline.md) | BE 작업 라우팅과 기능 개발 파이프라인 | 작업을 위험에 따라 네 경로로 나누고, 제품 기능만 설계→구현→테스트→리뷰로 처리해요 |
 | [0002](0002-integrity-enforcement-location.md) | 무결성 강제 위치 | 스튜디오 경계·시간 겹침은 DB가 아니라 애플리케이션이 막아요 |
 | [0003](0003-schema-source-of-truth.md) | 스키마 원본 | DDL 원본은 `schema.sql`이고 엔티티는 매핑만 해요 |
 | [0004](0004-no-wildcard-imports.md) | 와일드카드 임포트 금지 | `import a.b.*`를 쓰지 않고 `.editorconfig`로 고정해요 |
