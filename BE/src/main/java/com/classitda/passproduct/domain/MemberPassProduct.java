@@ -1,4 +1,4 @@
-package com.classitda.pass.domain;
+package com.classitda.passproduct.domain;
 
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.studio.domain.StudioMembership;
@@ -24,9 +24,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Table(name = "member_pass")
+@Table(name = "member_pass_product")
 @Entity
-public class MemberPass extends BaseEntity {
+public class MemberPassProduct extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,8 +37,8 @@ public class MemberPass extends BaseEntity {
     private StudioMembership membership;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "pass_id", nullable = false)
-    private Pass pass;
+    @JoinColumn(name = "pass_product_id", nullable = false)
+    private PassProduct passProduct;
 
     private Integer remainingCount;
 
@@ -47,7 +47,7 @@ public class MemberPass extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private MemberPassStatus status;
+    private MemberPassProductStatus status;
 
     @Column(nullable = false)
     private LocalDate startedAt;

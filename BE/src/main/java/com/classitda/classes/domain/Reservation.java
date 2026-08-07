@@ -1,6 +1,6 @@
 package com.classitda.classes.domain;
 
-import com.classitda.pass.domain.MemberPass;
+import com.classitda.passproduct.domain.MemberPassProduct;
 import com.classitda.studio.domain.StudioMembership;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,8 +41,8 @@ public class Reservation {
     private ClassSession classSession;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "member_pass_id")
-    private MemberPass memberPass;
+    @JoinColumn(name = "member_pass_product_id")
+    private MemberPassProduct memberPassProduct;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

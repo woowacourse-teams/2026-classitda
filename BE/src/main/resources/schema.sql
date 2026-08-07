@@ -192,29 +192,29 @@ CREATE TABLE class_session
   DEFAULT CHARSET = utf8mb4;
 
 
-CREATE TABLE pass
+CREATE TABLE pass_product
 (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
-    studio_id       BIGINT       NOT NULL,
-    name            VARCHAR(100) NOT NULL,
-    pass_type       VARCHAR(20)  NOT NULL,
-    total_count     INT          NULL,
-    total_hold_days INT          NOT NULL DEFAULT 0,
-    valid_days      INT          NOT NULL,
-    is_active       BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at      DATETIME(6)  NOT NULL,
-    updated_at      DATETIME(6)  NULL,
+    id                BIGINT       NOT NULL AUTO_INCREMENT,
+    studio_id         BIGINT       NOT NULL,
+    name              VARCHAR(100) NOT NULL,
+    pass_product_type VARCHAR(20)  NOT NULL,
+    total_count       INT          NULL,
+    total_hold_days   INT          NOT NULL DEFAULT 0,
+    valid_days        INT          NOT NULL,
+    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at        DATETIME(6)  NOT NULL,
+    updated_at        DATETIME(6)  NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_pass_studio FOREIGN KEY (studio_id) REFERENCES studio (id)
+    CONSTRAINT fk_pass_product_studio FOREIGN KEY (studio_id) REFERENCES studio (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
 
-CREATE TABLE member_pass
+CREATE TABLE member_pass_product
 (
     id                  BIGINT      NOT NULL AUTO_INCREMENT,
     membership_id       BIGINT      NOT NULL,
-    pass_id             BIGINT      NOT NULL,
+    pass_product_id     BIGINT      NOT NULL,
     remaining_count     INT         NULL,
     remaining_hold_days INT         NOT NULL DEFAULT 0,
     status              VARCHAR(20) NOT NULL,
@@ -223,27 +223,27 @@ CREATE TABLE member_pass
     created_at          DATETIME(6) NOT NULL,
     updated_at          DATETIME(6) NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_member_pass_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
-    CONSTRAINT fk_member_pass_pass FOREIGN KEY (pass_id) REFERENCES pass (id)
+    CONSTRAINT fk_member_pass_product_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
+    CONSTRAINT fk_member_pass_product_pass_product FOREIGN KEY (pass_product_id) REFERENCES pass_product (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
 
 CREATE TABLE reservation
 (
-    id               BIGINT      NOT NULL AUTO_INCREMENT,
-    membership_id    BIGINT      NOT NULL,
-    class_session_id BIGINT      NOT NULL,
-    member_pass_id   BIGINT      NULL,
-    status           VARCHAR(20) NOT NULL,
-    active_flag      TINYINT GENERATED ALWAYS AS (IF(status = 'CANCELED', NULL, 1)) STORED,
-    reserved_at      DATETIME(6) NOT NULL,
-    canceled_at      DATETIME(6) NULL,
+    id                     BIGINT      NOT NULL AUTO_INCREMENT,
+    membership_id          BIGINT      NOT NULL,
+    class_session_id       BIGINT      NOT NULL,
+    member_pass_product_id BIGINT      NULL,
+    status                 VARCHAR(20) NOT NULL,
+    active_flag            TINYINT GENERATED ALWAYS AS (IF(status = 'CANCELED', NULL, 1)) STORED,
+    reserved_at            DATETIME(6) NOT NULL,
+    canceled_at            DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_reservation_active (class_session_id, membership_id, active_flag),
     CONSTRAINT fk_reservation_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
     CONSTRAINT fk_reservation_session FOREIGN KEY (class_session_id) REFERENCES class_session (id),
-    CONSTRAINT fk_reservation_member_pass FOREIGN KEY (member_pass_id) REFERENCES member_pass (id)
+    CONSTRAINT fk_reservation_member_pass_product FOREIGN KEY (member_pass_product_id) REFERENCES member_pass_product (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 

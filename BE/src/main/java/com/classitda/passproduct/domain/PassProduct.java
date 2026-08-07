@@ -1,4 +1,4 @@
-package com.classitda.pass.domain;
+package com.classitda.passproduct.domain;
 
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.studio.domain.Studio;
@@ -23,9 +23,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Table(name = "pass")
+@Table(name = "pass_product")
 @Entity
-public class Pass extends BaseEntity {
+public class PassProduct extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,7 +40,7 @@ public class Pass extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private PassType passType;
+    private PassProductType passProductType;
 
     private Integer totalCount;
 
