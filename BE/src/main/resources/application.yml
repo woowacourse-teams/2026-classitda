@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: classitda
+  profiles:
+    default: local
+  jpa:
+    hibernate:
+      ddl-auto: validate
