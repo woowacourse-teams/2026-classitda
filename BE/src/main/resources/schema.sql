@@ -220,7 +220,6 @@ CREATE TABLE member_pass
     status              VARCHAR(20) NOT NULL,
     started_at          DATE        NOT NULL,
     expires_at          DATE        NOT NULL,
-    version             BIGINT      NOT NULL DEFAULT 0,
     created_at          DATETIME(6) NOT NULL,
     updated_at          DATETIME(6) NULL,
     PRIMARY KEY (id),
