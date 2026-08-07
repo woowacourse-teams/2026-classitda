@@ -1,0 +1,21 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${LOCAL_DB_NAME:-classitda}
+      MYSQL_USER: ${LOCAL_DB_USERNAME:-classitda}
+      MYSQL_PASSWORD: ${LOCAL_DB_PASSWORD:-classitda}
+      MYSQL_ROOT_PASSWORD: ${LOCAL_DB_ROOT_PASSWORD:-classitda-root}
+    ports:
+      - "${LOCAL_DB_BIND_ADDRESS:-127.0.0.1}:${LOCAL_DB_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  mysql-data:

@@ -1,4 +1,11 @@
 spring:
+  datasource:
+    url: "jdbc:mysql://${LOCAL_DB_HOST:localhost}:${LOCAL_DB_PORT:3306}/${LOCAL_DB_NAME:classitda}?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=Asia%2FSeoul"
+    username: ${LOCAL_DB_USERNAME:classitda}
+    password: ${LOCAL_DB_PASSWORD:classitda}
   sql:
     init:
       mode: always
+      schema-locations:
+        - classpath:reset-schema.sql
+        - classpath:schema.sql
