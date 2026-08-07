@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -21,13 +20,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Table(
-        name = "member_term_agreement",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_agreement_member_term",
-                columnNames = {"member_id", "term_id"}
-        )
-)
+@Table(name = "member_term_agreement")
 @Entity
 public class MemberTermAgreement {
 
