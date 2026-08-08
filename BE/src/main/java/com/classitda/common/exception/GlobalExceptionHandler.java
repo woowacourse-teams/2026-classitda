@@ -1,6 +1,5 @@
 package com.classitda.common.exception;
 
-import com.classitda.common.response.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;

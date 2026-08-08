@@ -1,6 +1,5 @@
-package com.classitda.common.response;
+package com.classitda.common.exception;
 
-import com.classitda.common.exception.ErrorCode;
 import java.util.Objects;
 
 public record ErrorResponse(String code, String message) {
