@@ -153,7 +153,8 @@ public StudioResponse findOne(
 
 public CursorResponse<StudioResponse> findAll(
         @PathVariable Long studioId,
-        @Valid @ModelAttribute CursorRequest cursorRequest
+        @RequestParam(required = false) String cursor,
+        @RequestParam(defaultValue = "20") int limit
 ) {
 }
 ```
@@ -163,7 +164,7 @@ public CursorResponse<StudioResponse> findAll(
 - 성공 응답은 응답 DTO를 직접 반환한다.
 - 상태 코드나 헤더를 직접 제어할 때만 `ResponseEntity<T>`를 사용한다.
 - 에러 응답은 `code`, `message`만 가지는 공통 `ErrorResponse`를 사용한다.
-- 목록 응답은 공통 `CursorResponse<T>`를 사용하고 `items`, `nextCursor`를 반환한다.
+- 목록 응답은 공통 `CursorResponse<T>`를 사용하고 `items`, `hasNext`, `nextCursor`를 반환한다.
 - 성공 응답을 `ApiResponse<T>` 같은 공통 래퍼로 감싸지 않는다.
 
 ---

@@ -73,8 +73,8 @@ presentation → application → domain
 ### 목록 응답
 
 - 모든 목록 API는 커서 기반 페이지네이션을 사용해요.
-- 요청 필드는 `cursor`, `limit`, 응답 필드는 `items`, `nextCursor`로 통일해요.
-- 공통 `CursorResponse<T>`를 사용하고, 마지막 페이지의 `nextCursor`는 `null`이에요.
+- 요청 필드는 `cursor`, `limit`, 응답 필드는 `items`, `hasNext`, `nextCursor`로 통일해요.
+- 공통 `CursorResponse<T>`를 사용하고, 마지막 페이지의 `hasNext`는 `false`, `nextCursor`는 `null`이에요.
 - 커서는 클라이언트가 해석하지 않는 문자열이에요. 각 목록의 정렬 기준에 맞는 생성·조회 책임은 해당 기능에 둬요.
 
 ### 공통 요소는 `common/`에 한 번만
