@@ -1,5 +1,6 @@
 package com.classitda.classes.domain;
 
+import com.classitda.common.domain.BaseEntity;
 import com.classitda.passproduct.domain.MemberPassProduct;
 import com.classitda.studio.domain.StudioMembership;
 import jakarta.persistence.Column;
@@ -26,7 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "reservation")
 @Entity
-public class Reservation {
+public class Reservation extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
