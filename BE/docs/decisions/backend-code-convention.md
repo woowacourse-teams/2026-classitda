@@ -63,6 +63,8 @@ StudioController.findAll()
 ### 2.2 Entity / 도메인 객체
 
 - 생성은 **모두 빌더를 사용**한다.
+- 모든 Entity는 `BaseEntity`를 상속해 `createdAt`, `updatedAt`을 공통으로 관리한다.
+- Entity에서 감사 필드를 다시 선언하거나 빌더·Setter로 직접 주입하지 않는다.
 
 ```java
 Studio studio = Studio.builder()
@@ -144,17 +146,25 @@ public interface StudioRepository extends JpaRepository<Studio, Long> {
 **매개변수 개수에 관계없이** 항상 줄바꿈하여 작성한다.
 
 ```java
-public ApiResponse<StudioResponse> findOne(
+public StudioResponse findOne(
         @PathVariable String studioName
 ) {
 }
 
-public ApiResponse<StudioResponse> findAll(
+public CursorResponse<StudioResponse> findAll(
         @PathVariable Long studioId,
-        @RequestParam(defaultValue = "1") int page
+        @Valid @ModelAttribute CursorRequest cursorRequest
 ) {
 }
 ```
+
+### 4.4 API 응답
+
+- 성공 응답은 응답 DTO를 직접 반환한다.
+- 상태 코드나 헤더를 직접 제어할 때만 `ResponseEntity<T>`를 사용한다.
+- 에러 응답은 `code`, `message`만 가지는 공통 `ErrorResponse`를 사용한다.
+- 목록 응답은 공통 `CursorResponse<T>`를 사용하고 `items`, `nextCursor`를 반환한다.
+- 성공 응답을 `ApiResponse<T>` 같은 공통 래퍼로 감싸지 않는다.
 
 ---
 
@@ -225,7 +235,7 @@ void 스튜디오_이름으로_조회할_수_있다() {
 
 ```
 com.classitda
-├── common/            # 공통 설정, 예외, 응답 포맷 등
+├── common/            # 공통 설정, 예외, 에러 응답, 페이지네이션 등
 └── studio/
     ├── presentation/
     │   ├── dto/

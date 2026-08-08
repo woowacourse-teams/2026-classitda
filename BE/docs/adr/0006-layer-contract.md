@@ -1,6 +1,6 @@
 # ADR-0006. 계층 간 계약을 고정해요 — DTO 경계·트랜잭션·예외
 
-- 상태: 채택 (2026-08-06)
+- 상태: 채택 (2026-08-06), 공통 API 계약 개정 (2026-08-08)
 - 후보: 엔티티를 컨트롤러까지 그대로 노출, 서비스 경계에서 DTO로 변환
 - 선택: 서비스 경계에서 DTO로 변환 + 트랜잭션·예외 처리 위치 고정
 - 관련: [ADR-0005](0005-entity-creation-and-mutation.md), [ADR-0002](0002-integrity-enforcement-location.md)
@@ -53,23 +53,33 @@ presentation → application → domain
 ### 컨트롤러
 
 - **위임만 해요.** 분기·계산 로직을 두지 않아요.
-- **반환 타입은 공통 응답 래퍼(`ApiResponse<T>`)로 통일해요.**
+- **성공 응답은 응답 DTO를 직접 반환해요.** 성공 여부·코드·메시지를 덧붙이는 공통 래퍼를 만들지 않아요.
+- **상태 코드나 헤더를 직접 제어해야 할 때만 `ResponseEntity<T>`를 사용해요.**
 - **요청 DTO에 Bean Validation을 붙이고 `@Valid`로 발동시켜요.**
 - 매개변수는 개수와 무관하게 줄바꿈해요([코드 컨벤션](../decisions/backend-code-convention.md) 4.3).
 
 ### 예외
 
 - 도메인별 예외 클래스를 만들고 공통 예외를 상속시켜요.
-- 예외 → HTTP 상태 매핑은 `GlobalExceptionHandler`(또는 에러 코드 enum) **한 곳**에서 결정해요.
+- 예외 → HTTP 상태 매핑은 `GlobalExceptionHandler`와 에러 코드 enum **한 곳**에서 결정해요.
+- 에러 본문은 `code`, `message`만 가지는 `ErrorResponse`로 통일해요. HTTP 상태는 본문에 반복하지 않아요.
+- Bean Validation 실패는 대표 오류 하나를 같은 `ErrorResponse` 형식으로 반환해요.
 - **컨트롤러·서비스에서 `try-catch`로 예외를 삼키지 않아요.**
 
 ### API 버저닝
 
-버전은 **`X-API-Version` 헤더**로 구분해요. **경로에 `/v1`을 넣지 않아요.** 선택 근거는 [기술 스택 문서](../decisions/backend-tech-stack.md)에 있어요.
+버전은 **`X-API-Version` 헤더**로 구분해요. **경로에 `/v1`을 넣지 않아요.** 헤더는 필수이고 초기 지원 버전은 `1`이에요. 헤더가 없거나 지원하지 않는 버전이면 `400 Bad Request`와 공통 `ErrorResponse`를 반환해요. 선택 근거는 [기술 스택 문서](../decisions/backend-tech-stack.md)에 있어요.
+
+### 목록 응답
+
+- 모든 목록 API는 커서 기반 페이지네이션을 사용해요.
+- 요청 필드는 `cursor`, `limit`, 응답 필드는 `items`, `nextCursor`로 통일해요.
+- 공통 `CursorResponse<T>`를 사용하고, 마지막 페이지의 `nextCursor`는 `null`이에요.
+- 커서는 클라이언트가 해석하지 않는 문자열이에요. 각 목록의 정렬 기준에 맞는 생성·조회 책임은 해당 기능에 둬요.
 
 ### 공통 요소는 `common/`에 한 번만
 
-`ApiResponse`, `GlobalExceptionHandler`, 에러 코드, API 버전 설정은 `com.classitda.common/` 아래 한 벌만 둬요. 도메인마다 만들지 않아요.
+`ErrorResponse`, `GlobalExceptionHandler`, 에러 코드, API 버전 설정, `CursorResponse`는 `com.classitda.common/` 아래 한 벌만 둬요. 도메인마다 만들지 않아요.
 
 ---
 
