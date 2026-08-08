@@ -4,6 +4,8 @@ import com.classitda.common.response.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
+import org.springframework.web.accept.InvalidApiVersionException;
+import org.springframework.web.accept.MissingApiVersionException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -25,6 +27,16 @@ public class GlobalExceptionHandler {
     })
     public ResponseEntity<ErrorResponse> handleInvalidInput(Exception exception) {
         return toResponseEntity(ErrorCode.INVALID_INPUT);
+    }
+
+    @ExceptionHandler(MissingApiVersionException.class)
+    public ResponseEntity<ErrorResponse> handleMissingApiVersion(MissingApiVersionException exception) {
+        return toResponseEntity(ErrorCode.API_VERSION_REQUIRED);
+    }
+
+    @ExceptionHandler(InvalidApiVersionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidApiVersion(InvalidApiVersionException exception) {
+        return toResponseEntity(ErrorCode.API_VERSION_UNSUPPORTED);
     }
 
     @ExceptionHandler(Exception.class)
