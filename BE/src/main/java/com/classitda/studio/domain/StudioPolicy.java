@@ -1,5 +1,6 @@
 package com.classitda.studio.domain;
 
+import com.classitda.common.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -9,7 +10,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "studio_policy")
 @Entity
-public class StudioPolicy {
+public class StudioPolicy extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,5 +47,4 @@ public class StudioPolicy {
     @Column(nullable = false)
     private int waitingOfferResponseMinutes;
 
-    private LocalDateTime updatedAt;
 }

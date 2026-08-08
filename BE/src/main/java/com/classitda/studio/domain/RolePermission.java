@@ -1,5 +1,6 @@
 package com.classitda.studio.domain;
 
+import com.classitda.common.domain.BaseEntity;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "role_permission")
 @Entity
-public class RolePermission {
+public class RolePermission extends BaseEntity {
 
     @EmbeddedId
     private RolePermissionId id;

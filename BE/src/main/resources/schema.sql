@@ -30,11 +30,13 @@ CREATE TABLE term
 
 CREATE TABLE member_term_agreement
 (
-    id        BIGINT      NOT NULL AUTO_INCREMENT,
-    member_id BIGINT      NOT NULL,
-    term_id   BIGINT      NOT NULL,
-    agreed    BOOLEAN     NOT NULL,
-    agreed_at DATETIME(6) NOT NULL,
+    id         BIGINT      NOT NULL AUTO_INCREMENT,
+    member_id  BIGINT      NOT NULL,
+    term_id    BIGINT      NOT NULL,
+    agreed     BOOLEAN     NOT NULL,
+    agreed_at  DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_agreement_member_term (member_id, term_id),
     CONSTRAINT fk_agreement_member FOREIGN KEY (member_id) REFERENCES member (id),
@@ -64,10 +66,12 @@ CREATE TABLE studio
 
 CREATE TABLE room
 (
-    id        BIGINT      NOT NULL AUTO_INCREMENT,
-    studio_id BIGINT      NOT NULL,
-    name      VARCHAR(50) NOT NULL,
-    capacity  INT         NULL,
+    id         BIGINT      NOT NULL AUTO_INCREMENT,
+    studio_id  BIGINT      NOT NULL,
+    name       VARCHAR(50) NOT NULL,
+    capacity   INT         NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_room_studio_name (studio_id, name),
     CONSTRAINT fk_room_studio FOREIGN KEY (studio_id) REFERENCES studio (id)
@@ -84,6 +88,7 @@ CREATE TABLE studio_policy
     free_cancel_minutes_before       INT         NOT NULL,
     waiting_enabled                  BOOLEAN     NOT NULL DEFAULT TRUE,
     waiting_offer_response_minutes   INT         NOT NULL,
+    created_at                       DATETIME(6) NOT NULL,
     updated_at                       DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_policy_studio (studio_id),
@@ -94,9 +99,11 @@ CREATE TABLE studio_policy
 
 CREATE TABLE permission
 (
-    id       BIGINT      NOT NULL AUTO_INCREMENT,
-    code     VARCHAR(50) NOT NULL,
-    category VARCHAR(50) NOT NULL,
+    id         BIGINT      NOT NULL AUTO_INCREMENT,
+    code       VARCHAR(50) NOT NULL,
+    category   VARCHAR(50) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_permission_code (code)
 ) ENGINE = InnoDB
@@ -123,6 +130,8 @@ CREATE TABLE role_permission
 (
     studio_role_id BIGINT NOT NULL,
     permission_id  BIGINT NOT NULL,
+    created_at     DATETIME(6) NOT NULL,
+    updated_at     DATETIME(6) NULL,
     PRIMARY KEY (studio_role_id, permission_id),
     CONSTRAINT fk_role_permission_role FOREIGN KEY (studio_role_id) REFERENCES studio_role (id),
     CONSTRAINT fk_role_permission_permission FOREIGN KEY (permission_id) REFERENCES permission (id)
@@ -132,14 +141,16 @@ CREATE TABLE role_permission
 
 CREATE TABLE studio_membership
 (
-    id             BIGINT      NOT NULL AUTO_INCREMENT,
-    studio_id      BIGINT      NOT NULL,
-    member_id      BIGINT      NOT NULL,
-    studio_role_id BIGINT      NOT NULL,
-    is_instructor  BOOLEAN     NOT NULL DEFAULT FALSE,
-    is_customer    BOOLEAN     NOT NULL DEFAULT TRUE,
-    status         VARCHAR(20) NOT NULL,
-    joined_at      DATETIME(6) NOT NULL,
+    id              BIGINT      NOT NULL AUTO_INCREMENT,
+    studio_id       BIGINT      NOT NULL,
+    member_id       BIGINT      NOT NULL,
+    studio_role_id  BIGINT      NOT NULL,
+    is_instructor   BOOLEAN     NOT NULL DEFAULT FALSE,
+    is_customer     BOOLEAN     NOT NULL DEFAULT TRUE,
+    status          VARCHAR(20) NOT NULL,
+    joined_at       DATETIME(6) NOT NULL,
+    created_at      DATETIME(6) NOT NULL,
+    updated_at      DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_membership_studio_member (studio_id, member_id),
     CONSTRAINT fk_membership_studio FOREIGN KEY (studio_id) REFERENCES studio (id),
@@ -239,6 +250,8 @@ CREATE TABLE reservation
     active_flag            TINYINT GENERATED ALWAYS AS (IF(status = 'CANCELED', NULL, 1)) STORED,
     reserved_at            DATETIME(6) NOT NULL,
     canceled_at            DATETIME(6) NULL,
+    created_at             DATETIME(6) NOT NULL,
+    updated_at             DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_reservation_active (class_session_id, membership_id, active_flag),
     CONSTRAINT fk_reservation_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
