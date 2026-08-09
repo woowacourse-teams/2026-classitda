@@ -23,6 +23,7 @@ Docker 명령어를 몰라도 저장소에 포함된 스크립트로 클래스�
 | `be-redis` | `localhost:6379` | 로컬 Redis 7.4 |
 
 MySQL과 Redis가 정상 상태가 된 후 서버가 자동으로 시작됩니다. 로컬 프로필에서는 서버를 시작할 때 기존 테이블을 삭제하고 `schema.sql`로 다시 생성합니다.
+실행 스크립트는 애플리케이션의 `http://localhost:8080/actuator/health`가 정상 상태가 될 때까지 기다립니다.
 
 ## 중지
 

@@ -20,7 +20,7 @@ fi
 cd "${PROJECT_DIR}"
 
 echo "클래스잇다 서버와 MySQL, Redis를 시작합니다."
-docker compose -f "${COMPOSE_FILE}" up -d --build
+docker compose -f "${COMPOSE_FILE}" up -d --build --wait --wait-timeout 120
 docker compose -f "${COMPOSE_FILE}" ps
 
 echo
