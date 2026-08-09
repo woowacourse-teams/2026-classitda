@@ -118,6 +118,18 @@ class CommonWebContractTest {
         assertError(response, 500, "COMMON-002", "서버 내부 오류가 발생했습니다.");
     }
 
+    @Test
+    void 존재하지_않는_API_경로는_COMMON_003을_반환한다() {
+        // given / when
+        RestTestClient.ResponseSpec response = client.get()
+                .uri("/test/not-found")
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        assertError(response, 404, "COMMON-003", "요청한 API를 찾을 수 없습니다.");
+    }
+
     private void assertError(RestTestClient.ResponseSpec response, int status, String code, String message) {
         response.expectStatus().isEqualTo(status)
                 .expectBody()

@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -36,6 +37,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidApiVersionException.class)
     public ResponseEntity<ErrorResponse> handleInvalidApiVersion(InvalidApiVersionException exception) {
         return toResponseEntity(CommonErrorCode.API_VERSION_UNSUPPORTED);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException exception) {
+        return toResponseEntity(CommonErrorCode.ENDPOINT_NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
