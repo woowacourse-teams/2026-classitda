@@ -19,9 +19,9 @@ fi
 
 cd "${PROJECT_DIR}"
 
-echo "클래스잇다 서버와 MySQL을 중지합니다."
+echo "클래스잇다 서버와 MySQL, Redis를 중지합니다."
 docker compose -f "${COMPOSE_FILE}" stop
 
 echo
 echo "중지 완료"
-echo "컨테이너와 MySQL 데이터 볼륨은 삭제하지 않았습니다."
+echo "컨테이너와 MySQL, Redis 데이터 볼륨은 삭제하지 않았습니다."
