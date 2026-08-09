@@ -25,5 +25,5 @@ docker compose -f "${COMPOSE_FILE}" ps
 
 echo
 echo "실행 완료"
-echo "- 서버: http://localhost:${LOCAL_APP_PORT:-8080}"
-echo "- MySQL: localhost:${LOCAL_DB_PORT:-3306}"
+echo "- 서버: http://localhost:8080"
+echo "- MySQL: localhost:3306"
