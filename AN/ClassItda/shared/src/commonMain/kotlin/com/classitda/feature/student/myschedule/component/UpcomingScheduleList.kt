@@ -3,7 +3,9 @@ package com.classitda.feature.student.myschedule.component
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,20 +15,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.feature.student.myschedule.contract.ActiveScheduleItemUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleItemId
+import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel
 import com.classitda.feature.student.myschedule.preview.myScheduleReservationsPreviewItems
 
 @Composable
 internal fun UpcomingScheduleList(
-    items: List<ActiveScheduleItemUiModel>,
+    items: List<UpcomingScheduleItemUiModel>,
     onItemClick: (ScheduleItemId) -> Unit,
+    state: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
 ) {
-    val itemsByDate = items.groupBy { it.dateTime.dateLabel }
+    val itemsByDate = items.groupBy { it.dateTime.sectionDateLabel }
 
     LazyColumn(
         modifier = modifier,
+        state = state,
         contentPadding =
             PaddingValues(
                 horizontal = AppSpacing.screenPadding,
@@ -75,7 +79,7 @@ internal fun UpcomingScheduleList(
 private fun `UpcomingScheduleListPreview_Reservations_STUDENT_Default`() {
     AppTheme(theme = ThemeType.STUDENT) {
         UpcomingScheduleList(
-            items = myScheduleReservationsPreviewItems,
+            items = myScheduleReservationsPreviewItems(),
             onItemClick = {},
         )
     }

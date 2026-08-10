@@ -3,11 +3,12 @@ package com.classitda.feature.student.myschedule.contract
 sealed interface MyScheduleUiState {
     data class ScheduleList(
         val selectedTab: MyScheduleTab,
-        val content: MyScheduleContentState,
+        val upcomingContent: MyScheduleContentState<UpcomingScheduleItemUiModel>,
+        val historyContent: MyScheduleContentState<HistoryScheduleItemUiModel>,
     ) : MyScheduleUiState
 
     data class ScheduleDetail(
-        val item: ActiveScheduleItemUiModel,
+        val item: UpcomingScheduleItemUiModel,
         val cancellationFlow: MyScheduleCancellationFlowState = MyScheduleCancellationFlowState.Idle,
     ) : MyScheduleUiState
 
