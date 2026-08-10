@@ -36,14 +36,29 @@ public class AuthAccount extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String providerSubject;
 
+    @Column(length = 254)
+    private String providerEmail;
+
     @Builder
-    private AuthAccount(Long memberId, OauthProvider provider, String providerSubject) {
+    private AuthAccount(
+            Long memberId,
+            OauthProvider provider,
+            String providerSubject,
+            String providerEmail
+    ) {
         validateMemberId(memberId);
         validateProvider(provider);
         validateProviderSubject(providerSubject);
+        validateProviderEmail(providerEmail);
         this.memberId = memberId;
         this.provider = provider;
         this.providerSubject = providerSubject;
+        this.providerEmail = providerEmail;
+    }
+
+    public void updateProviderEmail(String providerEmail) {
+        validateProviderEmail(providerEmail);
+        this.providerEmail = providerEmail;
     }
 
     private void validateMemberId(Long memberId) {
@@ -61,6 +76,12 @@ public class AuthAccount extends BaseEntity {
     private void validateProviderSubject(String providerSubject) {
         if (providerSubject == null || providerSubject.isBlank()) {
             throw new AuthException(AuthErrorCode.AUTH_ACCOUNT_PROVIDER_SUBJECT_REQUIRED);
+        }
+    }
+
+    private void validateProviderEmail(String providerEmail) {
+        if (providerEmail != null && (providerEmail.isBlank() || providerEmail.length() > 254)) {
+            throw new AuthException(AuthErrorCode.AUTH_ACCOUNT_PROVIDER_EMAIL_INVALID);
         }
     }
 }

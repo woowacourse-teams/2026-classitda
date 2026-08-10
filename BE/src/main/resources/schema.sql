@@ -18,6 +18,7 @@ CREATE TABLE auth_account
     member_id        BIGINT       NOT NULL,
     provider         VARCHAR(20)  NOT NULL,
     provider_subject VARCHAR(255) NOT NULL,
+    provider_email   VARCHAR(254) NULL,
     created_at       DATETIME(6)  NOT NULL,
     updated_at       DATETIME(6)  NULL,
     PRIMARY KEY (id),

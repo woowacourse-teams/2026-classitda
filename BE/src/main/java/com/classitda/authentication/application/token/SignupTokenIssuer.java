@@ -19,10 +19,10 @@ public class SignupTokenIssuer {
     private final JwtTokenEncoder jwtTokenEncoder;
     private final TokenProperties tokenProperties;
 
-    public String issueSignupToken(
+    public IssuedSignupToken issueSignupToken(
             OauthProvider provider,
             String providerSubject,
-            String profileImageUrl
+            String providerEmail
     ) {
         validateProvider(provider);
         validateProviderSubject(providerSubject);
@@ -34,8 +34,8 @@ public class SignupTokenIssuer {
                 signupJti,
                 tokenProperties.signupTtl());
 
-        signupSessionRegistry.save(signupJti, provider, providerSubject, profileImageUrl);
-        return signupToken;
+        signupSessionRegistry.save(signupJti, provider, providerSubject, providerEmail);
+        return IssuedSignupToken.of(signupToken, tokenProperties.signupTtl().toSeconds());
     }
 
     private void validateProvider(OauthProvider provider) {

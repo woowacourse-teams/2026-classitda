@@ -22,9 +22,9 @@ public class SignupSessionRegistry {
             String signupJti,
             OauthProvider provider,
             String providerSubject,
-            String profileImageUrl
+            String providerEmail
     ) {
-        SignupSessionValue sessionValue = new SignupSessionValue(provider, providerSubject, profileImageUrl);
+        SignupSessionValue sessionValue = new SignupSessionValue(provider, providerSubject, providerEmail);
         redisTemplate.opsForValue().set(
                 signupSessionKey(signupJti),
                 serialize(sessionValue),
@@ -50,7 +50,7 @@ public class SignupSessionRegistry {
     private record SignupSessionValue(
             OauthProvider provider,
             String providerSubject,
-            String profileImageUrl
+            String providerEmail
     ) {
     }
 }
