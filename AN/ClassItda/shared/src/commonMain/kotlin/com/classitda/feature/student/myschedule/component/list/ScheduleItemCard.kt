@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component
+package com.classitda.feature.student.myschedule.component.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +20,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.feature.student.myschedule.component.common.ScheduleStatusChip
+import com.classitda.feature.student.myschedule.component.common.ScheduleStatusChipType
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel
 import com.classitda.feature.student.myschedule.preview.myScheduleReservationsPreviewItems
 import org.jetbrains.compose.resources.stringResource

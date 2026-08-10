@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component
+package com.classitda.feature.student.myschedule.component.detail.reservation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,6 +50,9 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.feature.student.myschedule.component.common.MyScheduleDestructiveButton
+import com.classitda.feature.student.myschedule.component.common.ScheduleStatusChip
+import com.classitda.feature.student.myschedule.component.common.ScheduleStatusChipType
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleCancellationAvailabilityUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleCancellationPolicyUiModel

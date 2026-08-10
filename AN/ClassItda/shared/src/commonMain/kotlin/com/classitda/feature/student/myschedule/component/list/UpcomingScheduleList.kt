@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component
+package com.classitda.feature.student.myschedule.component.list
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding

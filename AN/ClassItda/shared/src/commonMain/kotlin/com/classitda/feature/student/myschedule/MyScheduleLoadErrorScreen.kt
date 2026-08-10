@@ -9,8 +9,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.feature.student.myschedule.component.MyScheduleLoadErrorContent
-import com.classitda.feature.student.myschedule.component.MyScheduleTopBar
+import com.classitda.feature.student.myschedule.component.common.MyScheduleTopBar
+import com.classitda.feature.student.myschedule.component.error.MyScheduleLoadErrorContent
 
 @Composable
 fun MyScheduleLoadErrorScreen(

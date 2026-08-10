@@ -11,10 +11,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.feature.student.myschedule.component.HistoryScheduleList
-import com.classitda.feature.student.myschedule.component.MyScheduleTabRow
-import com.classitda.feature.student.myschedule.component.MyScheduleTopBar
-import com.classitda.feature.student.myschedule.component.UpcomingScheduleList
+import com.classitda.feature.student.myschedule.component.common.MyScheduleTopBar
+import com.classitda.feature.student.myschedule.component.list.HistoryScheduleList
+import com.classitda.feature.student.myschedule.component.list.MyScheduleTabRow
+import com.classitda.feature.student.myschedule.component.list.UpcomingScheduleList
 import com.classitda.feature.student.myschedule.contract.HistoryScheduleItemUiModel
 import com.classitda.feature.student.myschedule.contract.MyScheduleTab
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel

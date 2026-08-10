@@ -9,8 +9,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.feature.student.myschedule.component.ReservationDetailContent
-import com.classitda.feature.student.myschedule.component.ReservationDetailTopBar
+import com.classitda.feature.student.myschedule.component.detail.reservation.ReservationDetailContent
+import com.classitda.feature.student.myschedule.component.detail.reservation.ReservationDetailTopBar
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleItemId
 import com.classitda.feature.student.myschedule.preview.reservationDetailPreviewModel

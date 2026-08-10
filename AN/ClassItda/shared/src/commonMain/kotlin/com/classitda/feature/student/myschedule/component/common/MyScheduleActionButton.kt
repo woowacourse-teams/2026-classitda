@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component
+package com.classitda.feature.student.myschedule.component.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding

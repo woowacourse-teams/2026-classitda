@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component
+package com.classitda.feature.student.myschedule.component.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +19,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.feature.student.myschedule.component.common.ScheduleStatusChip
+import com.classitda.feature.student.myschedule.component.common.toScheduleStatusChipType
 import com.classitda.feature.student.myschedule.contract.HistoryScheduleItemUiModel
 import com.classitda.feature.student.myschedule.contract.HistoryScheduleStatusUiModel
 import com.classitda.feature.student.myschedule.preview.myScheduleHistoryPreviewItems
@@ -62,16 +64,7 @@ internal fun HistoryScheduleItemCard(
                 )
 
                 ScheduleStatusChip(
-                    type =
-                        when (item.status) {
-                            HistoryScheduleStatusUiModel.COMPLETED -> {
-                                ScheduleStatusChipType.COMPLETED
-                            }
-
-                            HistoryScheduleStatusUiModel.RESERVATION_CANCELED -> {
-                                ScheduleStatusChipType.RESERVATION_CANCELED
-                            }
-                        },
+                    type = item.status.toScheduleStatusChipType(),
                     modifier = Modifier.padding(start = AppSpacing.cardItemHorizontalGap),
                 )
             }

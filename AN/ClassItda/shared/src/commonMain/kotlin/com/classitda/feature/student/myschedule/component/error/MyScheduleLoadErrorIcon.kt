@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component
+package com.classitda.feature.student.myschedule.component.error
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding

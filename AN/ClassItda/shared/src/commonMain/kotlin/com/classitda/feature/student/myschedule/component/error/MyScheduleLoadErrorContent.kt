@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component
+package com.classitda.feature.student.myschedule.component.error
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,6 +24,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.feature.student.myschedule.component.common.MySchedulePrimaryButton
+import com.classitda.feature.student.myschedule.component.common.MyScheduleSecondaryButton
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

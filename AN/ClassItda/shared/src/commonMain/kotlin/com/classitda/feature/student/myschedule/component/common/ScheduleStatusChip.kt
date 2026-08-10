@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component
+package com.classitda.feature.student.myschedule.component.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
