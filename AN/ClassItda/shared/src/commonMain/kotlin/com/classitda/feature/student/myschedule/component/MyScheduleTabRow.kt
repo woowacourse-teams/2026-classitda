@@ -108,3 +108,19 @@ private fun `MyScheduleTabRowPreview_Upcoming_STUDENT_Default`() {
         )
     }
 }
+
+@Preview(
+    name = "Tabs · History · Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun MyScheduleTabRowPreview_History_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        MyScheduleTabRow(
+            selectedTab = MyScheduleTab.HISTORY,
+            onTabSelected = {},
+        )
+    }
+}
