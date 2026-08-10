@@ -59,4 +59,12 @@
     <string name="my_schedule_inquiry_icon">문의하기</string>
     <string name="my_schedule_separator">|</string>
     <string name="my_schedule_bullet">•</string>
+    <string name="my_schedule_cancel_confirm_title">정말 취소하시겠습니까?</string>
+    <string name="my_schedule_cancel_confirm_availability_label">취소 가능 여부</string>
+    <string name="my_schedule_cancel_confirm_available">취소 가능</string>
+    <string name="my_schedule_cancel_confirm_policy_prefix">수업 시작 %1$d시간 전으로, 취소 시 사용된 </string>
+    <string name="my_schedule_cancel_confirm_policy_emphasis">수강권 %1$d회가 즉시 복구</string>
+    <string name="my_schedule_cancel_confirm_policy_suffix">됩니다.</string>
+    <string name="my_schedule_cancel_confirm_irreversible">취소된 예약은 되돌릴 수 없습니다.</string>
+    <string name="my_schedule_cancel_confirm_dismiss">취소 안 함</string>
 </resources>
