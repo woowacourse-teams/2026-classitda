@@ -8,7 +8,10 @@ import org.springframework.http.HttpStatus;
 public enum AuthErrorCode implements ErrorCode {
 
     AUTHENTICATION_REQUIRED("AUTH-001", "인증이 필요합니다.", HttpStatus.UNAUTHORIZED),
-    ACCESS_DENIED("AUTH-002", "접근 권한이 없습니다.", HttpStatus.FORBIDDEN);
+    ACCESS_DENIED("AUTH-002", "접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
+    AUTH_ACCOUNT_MEMBER_ID_INVALID("AUTH-003", "회원 ID는 1 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
+    AUTH_ACCOUNT_PROVIDER_REQUIRED("AUTH-004", "OAuth 제공자는 필수입니다.", HttpStatus.BAD_REQUEST),
+    AUTH_ACCOUNT_PROVIDER_SUBJECT_REQUIRED("AUTH-005", "OAuth 제공자 사용자 식별자는 필수입니다.", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String message;
