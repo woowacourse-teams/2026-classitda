@@ -5,15 +5,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.classitda.authentication.application.SocialLoginService;
+import com.classitda.authentication.application.phone.PhoneVerificationService;
 import com.classitda.authentication.application.token.IssuedLoginTokens;
 import com.classitda.authentication.application.token.IssuedSignupToken;
+import com.classitda.authentication.domain.TokenUse;
 import com.classitda.authentication.infra.security.AuthenticationErrorHandler;
 import com.classitda.authentication.infra.security.SecurityConfig;
 import com.classitda.authentication.infra.security.jwt.JwtAuthenticationConverter;
 import com.classitda.authentication.presentation.dto.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.LoginResponse;
+import com.classitda.authentication.presentation.dto.PhoneVerificationResponse;
+import com.classitda.authentication.presentation.dto.PhoneVerificationSendRequest;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -22,6 +27,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -44,6 +50,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private SocialLoginService socialLoginService;
+
+    @MockitoBean
+    private PhoneVerificationService phoneVerificationService;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
@@ -151,6 +160,104 @@ class AuthControllerTest {
         verifyNoInteractions(socialLoginService);
     }
 
+    @Test
+    void 가입_토큰으로_휴대전화_인증번호를_발송하면_201과_엄격한_응답을_반환한다() {
+        // given
+        PhoneVerificationSendRequest request = PhoneVerificationSendRequest.from("+821012345678");
+        PhoneVerificationResponse applicationResult = PhoneVerificationResponse.of("verification-id", 180L, 60L);
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+        given(phoneVerificationService.send("signup-jti", request.phoneNumber())).willReturn(applicationResult);
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/auth/phone-verifications")
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer signup-token")
+                .body(request)
+                .exchange();
+
+        // then
+        result.expectStatus().isCreated()
+                .expectBody()
+                .json("""
+                        {
+                          "verificationId": "verification-id",
+                          "expiresInSeconds": 180,
+                          "resendAfterSeconds": 60
+                        }
+                        """, JsonCompareMode.STRICT);
+        verify(phoneVerificationService).send("signup-jti", request.phoneNumber());
+    }
+
+    @Test
+    void 올바르지_않은_휴대전화_번호들은_COMMON_001을_반환한다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+        String[] invalidPhoneNumbers = {" ", "01012345678", "+8210-1234-5678", "+8210 1234 5678", "+12025550123"};
+
+        // when / then
+        for (String invalidPhoneNumber : invalidPhoneNumbers) {
+            RestTestClient.ResponseSpec result = client.post()
+                    .uri("/api/auth/phone-verifications")
+                    .header("X-API-Version", "1")
+                    .header("Authorization", "Bearer signup-token")
+                    .body(PhoneVerificationSendRequest.from(invalidPhoneNumber))
+                    .exchange();
+
+            assertError(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        }
+        verifyNoInteractions(phoneVerificationService);
+    }
+
+    @Test
+    void 휴대전화_인증번호_발송에서_버전_헤더가_없으면_API_001을_반환한다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/auth/phone-verifications")
+                .header("Authorization", "Bearer signup-token")
+                .body(PhoneVerificationSendRequest.from("+821012345678"))
+                .exchange();
+
+        // then
+        assertError(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        verifyNoInteractions(phoneVerificationService);
+    }
+
+    @Test
+    void 휴대전화_인증번호_발송에서_인증이_없으면_AUTH_001을_반환한다() {
+        // given / when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/auth/phone-verifications")
+                .header("X-API-Version", "1")
+                .body(PhoneVerificationSendRequest.from("+821012345678"))
+                .exchange();
+
+        // then
+        assertError(result, 401, "AUTH-001", "인증이 필요합니다.");
+        verifyNoInteractions(phoneVerificationService);
+    }
+
+    @Test
+    void 액세스_토큰으로_휴대전화_인증번호를_발송하면_AUTH_002를_반환한다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("access-jti", TokenUse.ACCESS));
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/auth/phone-verifications")
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer access-token")
+                .body(PhoneVerificationSendRequest.from("+821012345678"))
+                .exchange();
+
+        // then
+        assertError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
+        verifyNoInteractions(phoneVerificationService);
+    }
+
     private void assertError(
             RestTestClient.ResponseSpec response,
             int status,
@@ -162,6 +269,18 @@ class AuthControllerTest {
                 .json("""
                         {"code":"%s","message":"%s"}
                         """.formatted(code, message), JsonCompareMode.STRICT);
+    }
+
+    private Jwt jwt(String jti, TokenUse tokenUse) {
+        Instant issuedAt = Instant.now();
+        return Jwt.withTokenValue("test-token")
+                .header("alg", "RS256")
+                .subject(jti)
+                .claim("jti", jti)
+                .issuedAt(issuedAt)
+                .expiresAt(issuedAt.plusSeconds(1800))
+                .claim("token_use", tokenUse.name())
+                .build();
     }
 
     @EnableWebSecurity
