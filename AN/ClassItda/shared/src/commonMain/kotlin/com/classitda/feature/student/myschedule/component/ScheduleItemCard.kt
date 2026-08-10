@@ -25,11 +25,9 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun ScheduleItemCard(
     item: UpcomingScheduleItemUiModel,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
-        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -89,7 +87,6 @@ private fun `ScheduleItemCardPreview_Confirmed_STUDENT_Default`() {
     AppTheme(theme = ThemeType.STUDENT) {
         ScheduleItemCard(
             item = myScheduleReservationsPreviewItems().first(),
-            onClick = {},
             modifier = Modifier.padding(AppSpacing.screenPadding),
         )
     }
@@ -106,7 +103,6 @@ private fun `ScheduleItemCardPreview_Waitlist_STUDENT_Default`() {
     AppTheme(theme = ThemeType.STUDENT) {
         ScheduleItemCard(
             item = myScheduleReservationsPreviewItems()[1],
-            onClick = {},
             modifier = Modifier.padding(AppSpacing.screenPadding),
         )
     }

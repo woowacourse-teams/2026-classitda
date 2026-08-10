@@ -15,14 +15,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.feature.student.myschedule.contract.ScheduleItemId
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel
 import com.classitda.feature.student.myschedule.preview.myScheduleReservationsPreviewItems
 
 @Composable
 internal fun UpcomingScheduleList(
     items: List<UpcomingScheduleItemUiModel>,
-    onItemClick: (ScheduleItemId) -> Unit,
     state: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
 ) {
@@ -60,7 +58,6 @@ internal fun UpcomingScheduleList(
                     }
                 ScheduleItemCard(
                     item = item,
-                    onClick = { onItemClick(item.id) },
                     modifier = itemModifier,
                 )
             }
@@ -80,7 +77,6 @@ private fun `UpcomingScheduleListPreview_Reservations_STUDENT_Default`() {
     AppTheme(theme = ThemeType.STUDENT) {
         UpcomingScheduleList(
             items = myScheduleReservationsPreviewItems(),
-            onItemClick = {},
         )
     }
 }
