@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="my_schedule_title">내 일정</string>
+    <string name="my_schedule_tab_upcoming">예정 일정</string>
+    <string name="my_schedule_tab_history">이용 내역</string>
+    <string name="my_schedule_instructor_name">%1$s 강사</string>
+    <string name="my_schedule_status_confirmed">예약 완료</string>
+    <string name="my_schedule_status_waitlist">대기 중</string>
+    <string name="my_schedule_status_confirmed_mark">✓</string>
+    <string name="my_schedule_open_detail_mark">›</string>
+</resources>
