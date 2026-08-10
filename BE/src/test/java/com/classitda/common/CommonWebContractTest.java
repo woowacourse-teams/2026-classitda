@@ -2,7 +2,7 @@ package com.classitda.common;
 
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
-import com.classitda.common.exception.ErrorCode;
+import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import jakarta.validation.constraints.Positive;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @AutoConfigureRestTestClient
 @Import({ApiVersionConfig.class, GlobalExceptionHandler.class, CommonWebContractTest.TestController.class})
-@WebMvcTest
+@WebMvcTest(controllers = CommonWebContractTest.TestController.class)
 class CommonWebContractTest {
 
     private final RestTestClient client;
@@ -144,7 +144,7 @@ class CommonWebContractTest {
 
         @GetMapping(path = "/common-exception", version = "1")
         public TestResponse commonException() {
-            throw new ClassitdaException(ErrorCode.INVALID_INPUT);
+            throw new ClassitdaException(CommonErrorCode.INVALID_INPUT);
         }
 
         @GetMapping(path = "/unexpected", version = "1")
