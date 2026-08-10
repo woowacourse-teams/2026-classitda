@@ -29,6 +29,7 @@ import classitda.shared.generated.resources.my_schedule_status_confirmed
 import classitda.shared.generated.resources.my_schedule_status_confirmed_mark
 import classitda.shared.generated.resources.my_schedule_status_waitlist
 import com.classitda.core.designsystem.AppColor
+import com.classitda.core.designsystem.AppColor.SecondaryOrange
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
@@ -38,7 +39,6 @@ import com.classitda.feature.student.myschedule.preview.myScheduleReservationsPr
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
-private val WaitlistStatusBackground = Color(0xFFFFF5F2)
 
 @Composable
 internal fun ScheduleItemCard(
@@ -121,7 +121,7 @@ private fun ScheduleStatusChip(item: ActiveScheduleItemUiModel) {
 
         is ScheduleItemUiModel.Waitlist -> {
             label = Res.string.my_schedule_status_waitlist
-            containerColor = WaitlistStatusBackground
+            containerColor = SecondaryOrange
             contentColor = AppColor.AccentOrange
         }
     }
