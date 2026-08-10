@@ -2,6 +2,8 @@ package com.classitda.studio.domain;
 
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.member.domain.Member;
+import com.classitda.studio.exception.StudioErrorCode;
+import com.classitda.studio.exception.StudioException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,15 +15,12 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalTime;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "studio")
 @Entity
 public class Studio extends BaseEntity {
@@ -54,4 +53,57 @@ public class Studio extends BaseEntity {
 
     @Column(nullable = false)
     private LocalTime closeTime;
+
+    @Builder
+    private Studio(
+            Member owner,
+            String name,
+            String address,
+            String phoneNumber,
+            String imageUrl,
+            String description,
+            LocalTime openTime,
+            LocalTime closeTime
+    ) {
+        validateOperatingTime(openTime, closeTime);
+        this.owner = owner;
+        this.name = name;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.imageUrl = imageUrl;
+        this.description = description;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
+    }
+
+    public void validateOwner(Long memberId) {
+        if (!owner.getId().equals(memberId)) {
+            throw new StudioException(StudioErrorCode.NOT_OWNER);
+        }
+    }
+
+    public void update(
+            String name,
+            String address,
+            String phoneNumber,
+            String imageUrl,
+            String description,
+            LocalTime openTime,
+            LocalTime closeTime
+    ) {
+        validateOperatingTime(openTime, closeTime);
+        this.name = name;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.imageUrl = imageUrl;
+        this.description = description;
+        this.openTime = openTime;
+        this.closeTime = closeTime;
+    }
+
+    private void validateOperatingTime(LocalTime openTime, LocalTime closeTime) {
+        if (openTime == null || closeTime == null || !openTime.isBefore(closeTime)) {
+            throw new StudioException(StudioErrorCode.INVALID_OPERATING_TIME);
+        }
+    }
 }
