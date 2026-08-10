@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component.result.reservation
+package com.classitda.feature.student.myschedule.component.result.common
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,7 +23,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun ReservationCancelledTopBar(
+internal fun MyScheduleResultTopBar(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -50,14 +50,14 @@ internal fun ReservationCancelledTopBar(
 }
 
 @Preview(
-    name = "Reservation cancelled top bar · Student · Default",
+    name = "Result top bar · Student · Default",
     group = "Component/MySchedule",
     showBackground = true,
     widthDp = 390,
 )
 @Composable
-private fun ReservationCancelledTopBarPreview_Default_Student() {
+private fun MyScheduleResultTopBarPreview_Default_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
-        ReservationCancelledTopBar(onBack = {})
+        MyScheduleResultTopBar(onBack = {})
     }
 }

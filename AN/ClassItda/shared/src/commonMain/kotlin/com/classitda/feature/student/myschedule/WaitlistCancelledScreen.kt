@@ -6,23 +6,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import classitda.shared.generated.resources.Res
-import classitda.shared.generated.resources.my_schedule_cancelled_at_label
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.student.myschedule.component.result.common.MyScheduleResultActionSection
 import com.classitda.feature.student.myschedule.component.result.common.MyScheduleResultTopBar
-import com.classitda.feature.student.myschedule.component.result.reservation.ReservationCancelledContent
-import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
-import com.classitda.feature.student.myschedule.preview.reservationDetailPreviewModel
-import org.jetbrains.compose.resources.stringResource
+import com.classitda.feature.student.myschedule.component.result.waitlist.WaitlistCancelledContent
+import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel
+import com.classitda.feature.student.myschedule.preview.waitlistCancelledPreviewFixture
 
 @Composable
-fun ReservationCancelledScreen(
-    reservation: ReservationDetailUiModel,
+fun WaitlistCancelledScreen(
+    waitlist: UpcomingScheduleItemUiModel.Waitlist,
+    dateLabel: String,
+    timeRangeLabel: String,
     cancelledAtLabel: String,
-    restoredTicketCount: Int,
     onBack: () -> Unit,
     onBookAnotherClass: () -> Unit,
     onReturnToList: () -> Unit,
@@ -35,10 +33,11 @@ fun ReservationCancelledScreen(
                 .background(StuColors.Background),
     ) {
         MyScheduleResultTopBar(onBack = onBack)
-        ReservationCancelledContent(
-            reservation = reservation,
+        WaitlistCancelledContent(
+            waitlist = waitlist,
+            dateLabel = dateLabel,
+            timeRangeLabel = timeRangeLabel,
             cancelledAtLabel = cancelledAtLabel,
-            restoredTicketCount = restoredTicketCount,
             modifier = Modifier.weight(1f),
         )
         MyScheduleResultActionSection(
@@ -49,7 +48,7 @@ fun ReservationCancelledScreen(
 }
 
 @Preview(
-    name = "Reservation cancelled · Student · Default",
+    name = "Waitlist cancelled · Student · Default",
     group = "Screen/MySchedule",
     showBackground = true,
     locale = "ko",
@@ -57,19 +56,15 @@ fun ReservationCancelledScreen(
     heightDp = 840,
 )
 @Composable
-private fun ReservationCancelledScreenPreview_Success_Student_Default() {
+private fun WaitlistCancelledScreenPreview_Success_Student_Default() {
+    val fixture = waitlistCancelledPreviewFixture()
+
     AppTheme(theme = ThemeType.STUDENT) {
-        ReservationCancelledScreen(
-            reservation = reservationDetailPreviewModel().copy(locationLabel = "리포머룸"),
-            cancelledAtLabel =
-                stringResource(
-                    Res.string.my_schedule_cancelled_at_label,
-                    2026,
-                    "08",
-                    "04",
-                    "14:32",
-                ),
-            restoredTicketCount = 1,
+        WaitlistCancelledScreen(
+            waitlist = fixture.item,
+            dateLabel = fixture.dateLabel,
+            timeRangeLabel = fixture.timeRangeLabel,
+            cancelledAtLabel = fixture.cancelledAtLabel,
             onBack = {},
             onBookAnotherClass = {},
             onReturnToList = {},

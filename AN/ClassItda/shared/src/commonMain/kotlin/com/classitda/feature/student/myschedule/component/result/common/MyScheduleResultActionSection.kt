@@ -1,4 +1,4 @@
-package com.classitda.feature.student.myschedule.component.result.reservation
+package com.classitda.feature.student.myschedule.component.result.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,7 +20,7 @@ import com.classitda.feature.student.myschedule.component.common.MyScheduleSecon
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun ReservationCancelledActionSection(
+internal fun MyScheduleResultActionSection(
     onBookAnotherClass: () -> Unit,
     onReturnToList: () -> Unit,
     modifier: Modifier = Modifier,
@@ -48,15 +48,15 @@ internal fun ReservationCancelledActionSection(
 }
 
 @Preview(
-    name = "Reservation cancelled actions · Student · Default",
+    name = "Result actions · Student · Default",
     group = "Component/MySchedule",
     showBackground = true,
     widthDp = 390,
 )
 @Composable
-private fun ReservationCancelledActionSectionPreview_Default_Student() {
+private fun MyScheduleResultActionSectionPreview_Default_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
-        ReservationCancelledActionSection(
+        MyScheduleResultActionSection(
             onBookAnotherClass = {},
             onReturnToList = {},
         )

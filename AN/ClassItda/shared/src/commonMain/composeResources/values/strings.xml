@@ -97,4 +97,12 @@
     <string name="my_schedule_waitlist_cancel_confirm_description">취소 시 대기 순번(%1$d번)이 사라지며,\n다시 신청할 경우 마지막 순번으로 배정됩니다.</string>
     <string name="my_schedule_waitlist_cancel_confirm_dismiss">아니요</string>
     <string name="my_schedule_waitlist_cancel_confirm_submit">취소하기</string>
+    <string name="my_schedule_waitlist_cancelled_title">대기 신청이 취소되었습니다</string>
+    <string name="my_schedule_waitlist_cancelled_description">신청하신 클래스의 대기 예약이 취소되었습니다.</string>
+    <string name="my_schedule_waitlist_cancellation_history">대기 취소 내역</string>
+    <string name="my_schedule_waitlist_number">대기 번호</string>
+    <string name="my_schedule_waitlist_cancelled_position">%1$d번 (대기 중 취소)</string>
+    <string name="my_schedule_waitlist_progress_status">진행 상태</string>
+    <string name="my_schedule_waitlist_auto_released">대기 자동 해제</string>
+    <string name="my_schedule_waitlist_ticket_not_deducted">수강권이 차감되지 않은 상태입니다.</string>
 </resources>
