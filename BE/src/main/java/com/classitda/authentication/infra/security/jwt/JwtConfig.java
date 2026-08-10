@@ -15,7 +15,10 @@ import java.security.interfaces.RSAPrivateKey;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
@@ -25,8 +28,6 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 @EnableConfigurationProperties({JwtProperties.class, TokenProperties.class})
 @Configuration
 public class JwtConfig {
-
-    private static final String ISSUER = "classitda";
 
     @Bean
     public JwtEncoder jwtEncoder(JwtProperties jwtProperties) {
@@ -47,12 +48,18 @@ public class JwtConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(JwtProperties jwtProperties) {
+    public JwtDecoder jwtDecoder(
+            JwtProperties jwtProperties,
+            SignupSessionJwtValidator signupSessionJwtValidator
+    ) {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder
                 .withPublicKey(jwtProperties.publicKey())
                 .signatureAlgorithm(SignatureAlgorithm.RS256)
                 .build();
-        jwtDecoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(ISSUER));
+        OAuth2TokenValidator<Jwt> defaultValidator = JwtValidators.createDefaultWithIssuer(JwtContract.ISSUER);
+        jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                defaultValidator,
+                signupSessionJwtValidator));
         return jwtDecoder;
     }
 }

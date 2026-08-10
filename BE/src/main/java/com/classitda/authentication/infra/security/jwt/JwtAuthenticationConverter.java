@@ -7,6 +7,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.BearerTokenErrorCodes;
 import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
@@ -14,11 +15,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class JwtAuthenticationConverter implements Converter<Jwt, AbstractOAuth2TokenAuthenticationToken<Jwt>> {
 
-    private static final String TOKEN_USE_CLAIM = "token_use";
-
     @Override
     public AbstractOAuth2TokenAuthenticationToken<Jwt> convert(Jwt jwt) {
-        TokenUse tokenUse = parseTokenUse(jwt.getClaimAsString(TOKEN_USE_CLAIM));
+        TokenUse tokenUse = parseTokenUse(jwt.getClaimAsString(JwtContract.TOKEN_USE_CLAIM));
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(tokenUse.authority());
         return new JwtAuthenticationToken(jwt, List.of(authority), jwt.getSubject());
     }
@@ -28,7 +27,7 @@ public class JwtAuthenticationConverter implements Converter<Jwt, AbstractOAuth2
             return TokenUse.valueOf(claim);
         } catch (IllegalArgumentException | NullPointerException exception) {
             OAuth2Error error = new OAuth2Error(
-                    "invalid_token",
+                    BearerTokenErrorCodes.INVALID_TOKEN,
                     "토큰 용도(token_use)가 없거나 지원하지 않는 값입니다.",
                     null);
             throw new OAuth2AuthenticationException(error);
