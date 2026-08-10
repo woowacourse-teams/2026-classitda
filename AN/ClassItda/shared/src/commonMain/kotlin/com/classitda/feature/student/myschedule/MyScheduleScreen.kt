@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.classitda.core.designsystem.AppColor.White
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.student.myschedule.component.HistoryScheduleList
@@ -35,7 +36,7 @@ fun MyScheduleScreen(
         modifier =
             modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+                .background(White),
     ) {
         MyScheduleTopBar()
         MyScheduleTabRow(
