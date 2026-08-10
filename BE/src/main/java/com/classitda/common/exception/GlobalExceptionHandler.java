@@ -25,22 +25,22 @@ public class GlobalExceptionHandler {
             ConstraintViolationException.class
     })
     public ResponseEntity<ErrorResponse> handleInvalidInput(Exception exception) {
-        return toResponseEntity(ErrorCode.INVALID_INPUT);
+        return toResponseEntity(CommonErrorCode.INVALID_INPUT);
     }
 
     @ExceptionHandler(MissingApiVersionException.class)
     public ResponseEntity<ErrorResponse> handleMissingApiVersion(MissingApiVersionException exception) {
-        return toResponseEntity(ErrorCode.API_VERSION_REQUIRED);
+        return toResponseEntity(CommonErrorCode.API_VERSION_REQUIRED);
     }
 
     @ExceptionHandler(InvalidApiVersionException.class)
     public ResponseEntity<ErrorResponse> handleInvalidApiVersion(InvalidApiVersionException exception) {
-        return toResponseEntity(ErrorCode.API_VERSION_UNSUPPORTED);
+        return toResponseEntity(CommonErrorCode.API_VERSION_UNSUPPORTED);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnexpectedException(Exception exception) {
-        return toResponseEntity(ErrorCode.INTERNAL_SERVER_ERROR);
+        return toResponseEntity(CommonErrorCode.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<ErrorResponse> toResponseEntity(ErrorCode errorCode) {
