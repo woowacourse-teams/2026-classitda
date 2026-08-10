@@ -30,7 +30,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(authenticationErrorHandler))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.POST, "/api/auth/google", "/api/auth/tokens/refresh").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/terms/registration").hasAuthority(TokenUse.SIGNUP.authority())
+                        .requestMatchers(HttpMethod.GET, "/api/terms").hasAuthority(TokenUse.SIGNUP.authority())
                         .requestMatchers(HttpMethod.POST, "/api/auth/phone-verifications", "/api/auth/phone-verifications/*/confirm", "/api/auth/signup").hasAuthority(TokenUse.SIGNUP.authority())
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").hasAuthority(TokenUse.ACCESS.authority())
                         .requestMatchers("/api/**").hasAuthority(TokenUse.ACCESS.authority())
