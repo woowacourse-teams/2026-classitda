@@ -69,7 +69,6 @@ CREATE TABLE room
     id         BIGINT      NOT NULL AUTO_INCREMENT,
     studio_id  BIGINT      NOT NULL,
     name       VARCHAR(50) NOT NULL,
-    capacity   INT         NULL,
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NULL,
     PRIMARY KEY (id),
