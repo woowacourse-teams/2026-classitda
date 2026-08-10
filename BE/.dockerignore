@@ -1,0 +1,14 @@
+.git
+.gradle
+.idea
+.wiki
+.agents
+build
+_workspace*
+.env
+.env.*
+*.iml
+.DS_Store
+AGENTS.md
+CLAUDE.md
+docs
