@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_cancel_confirm_dismiss
 import classitda.shared.generated.resources.my_schedule_cancel_reservation
+import classitda.shared.generated.resources.my_schedule_cancel_waitlist
 import classitda.shared.generated.resources.my_schedule_go_home
 import classitda.shared.generated.resources.my_schedule_retry
 import com.classitda.core.designsystem.AppColor
@@ -119,6 +120,34 @@ internal fun MyScheduleDestructiveButton(
 }
 
 @Composable
+internal fun MyScheduleWarningButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        enabled = enabled,
+        shape = AppShape.Card,
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = AppColor.DarkOrange,
+                contentColor = StuColors.White,
+                disabledContainerColor = StuColors.Divider,
+                disabledContentColor = StuColors.TextTertiary,
+            ),
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(vertical = AppSpacing.sm),
+            style = appTypography().labelLarge.copy(fontWeight = FontWeight.SemiBold),
+        )
+    }
+}
+
+@Composable
 internal fun MyScheduleTextButton(
     text: String,
     onClick: () -> Unit,
@@ -165,6 +194,23 @@ private fun MyScheduleDestructiveButtonPreview_Default_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         MyScheduleDestructiveButton(
             text = stringResource(Res.string.my_schedule_cancel_reservation),
+            onClick = {},
+            modifier = Modifier.padding(AppSpacing.screenPadding),
+        )
+    }
+}
+
+@Preview(
+    name = "Warning button / Student / Default",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun MyScheduleWarningButtonPreview_Default_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        MyScheduleWarningButton(
+            text = stringResource(Res.string.my_schedule_cancel_waitlist),
             onClick = {},
             modifier = Modifier.padding(AppSpacing.screenPadding),
         )
