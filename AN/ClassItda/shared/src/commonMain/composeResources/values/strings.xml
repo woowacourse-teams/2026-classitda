@@ -67,4 +67,18 @@
     <string name="my_schedule_cancel_confirm_policy_suffix">됩니다.</string>
     <string name="my_schedule_cancel_confirm_irreversible">취소된 예약은 되돌릴 수 없습니다.</string>
     <string name="my_schedule_cancel_confirm_dismiss">취소 안 함</string>
+    <string name="my_schedule_reservation_cancelled_title">예약이 취소되었습니다</string>
+    <string name="my_schedule_reservation_cancelled_description">해당 클래스의 예약이 정상적으로 취소되었습니다.</string>
+    <string name="my_schedule_class_information">클래스 정보</string>
+    <string name="my_schedule_class_name">수업명</string>
+    <string name="my_schedule_instructor">강사</string>
+    <string name="my_schedule_date_time">일시</string>
+    <string name="my_schedule_location">장소</string>
+    <string name="my_schedule_cancellation_history">취소 내역</string>
+    <string name="my_schedule_cancelled_at">취소 일시</string>
+    <string name="my_schedule_refund_restoration_status">환불/복구 상태</string>
+    <string name="my_schedule_ticket_restoration_completed">수강권 %1$d회 복구 완료</string>
+    <string name="my_schedule_cancelled_at_label">%1$d.%2$s.%3$s %4$s</string>
+    <string name="my_schedule_book_another_class">다른 수업 예약하기</string>
+    <string name="my_schedule_return_to_list">목록으로 돌아가기</string>
 </resources>
