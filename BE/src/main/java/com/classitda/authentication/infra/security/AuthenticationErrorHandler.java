@@ -1,6 +1,6 @@
 package com.classitda.authentication.infra.security;
 
-import com.classitda.common.exception.CommonErrorCode;
+import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.common.exception.ErrorCode;
 import com.classitda.common.exception.ErrorResponse;
 import jakarta.servlet.ServletException;
@@ -30,7 +30,7 @@ public class AuthenticationErrorHandler implements AuthenticationEntryPoint, Acc
             HttpServletResponse response,
             AuthenticationException authenticationException
     ) throws IOException, ServletException {
-        writeError(response, CommonErrorCode.AUTHENTICATION_REQUIRED);
+        writeError(response, AuthErrorCode.AUTHENTICATION_REQUIRED);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class AuthenticationErrorHandler implements AuthenticationEntryPoint, Acc
             HttpServletResponse response,
             AccessDeniedException accessDeniedException
     ) throws IOException, ServletException {
-        writeError(response, CommonErrorCode.ACCESS_DENIED);
+        writeError(response, AuthErrorCode.ACCESS_DENIED);
     }
 
     private void writeError(HttpServletResponse response, ErrorCode errorCode) throws IOException {

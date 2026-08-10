@@ -5,13 +5,13 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum CommonErrorCode implements ErrorCode {
+
     INVALID_INPUT("COMMON-001", "요청 값이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
     INTERNAL_SERVER_ERROR("COMMON-002", "서버 내부 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
-    ENDPOINT_NOT_FOUND("COMMON-003", "요청한 API를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    AUTHENTICATION_REQUIRED("AUTH-001", "인증이 필요합니다.", HttpStatus.UNAUTHORIZED),
-    ACCESS_DENIED("AUTH-002", "접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
+
     API_VERSION_REQUIRED("API-001", "X-API-Version 헤더는 필수입니다.", HttpStatus.BAD_REQUEST),
-    API_VERSION_UNSUPPORTED("API-002", "지원하지 않는 API 버전입니다.", HttpStatus.BAD_REQUEST);
+    API_VERSION_UNSUPPORTED("API-002", "지원하지 않는 API 버전입니다.", HttpStatus.BAD_REQUEST),
+    ENDPOINT_NOT_FOUND("COMMON-003", "요청한 API를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
     private final String code;
     private final String message;
