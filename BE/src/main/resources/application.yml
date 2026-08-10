@@ -27,6 +27,9 @@ management:
 auth:
   google:
     web-client-id: ${GOOGLE_OAUTH_WEB_CLIENT_ID}
+  sms:
+    local:
+      fixed-otp: ${AUTH_SMS_LOCAL_FIXED_OTP:}
   jwt:
     private-key-base64: ${AUTH_JWT_PRIVATE_KEY_BASE64}
     public-key-base64: ${AUTH_JWT_PUBLIC_KEY_BASE64}
