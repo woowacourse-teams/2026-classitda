@@ -26,6 +26,7 @@ public class RoomService {
 
     private static final Long FIRST_PAGE_CURSOR = 0L;
     private static final int MIN_SIZE = 1;
+    private static final int MAX_SIZE = 100;
 
     private final RoomRepository roomRepository;
     private final StudioRepository studioRepository;
@@ -39,7 +40,7 @@ public class RoomService {
     }
 
     public CursorResponse<RoomResponse> findWithCursor(Long studioId, String cursor, int size) {
-        if (size < MIN_SIZE) {
+        if (size < MIN_SIZE || size > MAX_SIZE) {
             throw new ClassitdaException(CommonErrorCode.INVALID_INPUT);
         }
         getStudio(studioId);

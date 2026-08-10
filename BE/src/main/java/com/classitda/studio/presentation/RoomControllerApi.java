@@ -84,7 +84,7 @@ public interface RoomControllerApi {
                     schema = @Schema(type = "string", example = "10")
             )
             String cursor,
-            @Parameter(description = "한 번에 가져올 개수. 1 이상이어야 한다.", example = "10")
+            @Parameter(description = "한 번에 가져올 개수. 1 이상 100 이하여야 한다.", example = "10")
             int size
     );
 

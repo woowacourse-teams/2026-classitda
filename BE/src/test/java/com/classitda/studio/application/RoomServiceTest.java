@@ -145,6 +145,18 @@ class RoomServiceTest {
     }
 
     @Test
+    void size가_상한을_넘으면_조회할_수_없다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = 시설을_만든다(owner);
+
+        // when / then
+        assertThatThrownBy(() -> roomService.findWithCursor(studioId, null, 101))
+                .isInstanceOf(ClassitdaException.class)
+                .hasMessage(CommonErrorCode.INVALID_INPUT.getMessage());
+    }
+
+    @Test
     void 커서가_숫자가_아니면_조회할_수_없다() {
         // given
         Member owner = 소유자를_저장한다();
