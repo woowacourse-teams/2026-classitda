@@ -28,7 +28,9 @@ import classitda.shared.generated.resources.my_schedule_status_waitlist
 import com.classitda.core.designsystem.AppColor
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -44,6 +46,7 @@ internal fun ScheduleStatusChip(
     type: ScheduleStatusChipType,
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
     val label: StringResource
     val mark: StringResource?
     val showWaitlistMark: Boolean
@@ -55,8 +58,8 @@ internal fun ScheduleStatusChip(
             label = Res.string.my_schedule_status_confirmed
             mark = Res.string.my_schedule_status_confirmed_mark
             showWaitlistMark = false
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = StuColors.SecondaryGreen
+            contentColor = StuColors.PrimaryGreen
         }
 
         ScheduleStatusChipType.WAITLIST -> {
@@ -71,8 +74,8 @@ internal fun ScheduleStatusChip(
             label = Res.string.my_schedule_status_completed
             mark = Res.string.my_schedule_status_completed_mark
             showWaitlistMark = false
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+            containerColor = StuColors.Divider
+            contentColor = StuColors.TextSecondary
         }
 
         ScheduleStatusChipType.RESERVATION_CANCELED -> {
@@ -102,7 +105,7 @@ internal fun ScheduleStatusChip(
             if (mark != null) {
                 Text(
                     text = stringResource(mark),
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                    style = typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
                 )
             } else if (showWaitlistMark) {
                 Box(
@@ -114,7 +117,7 @@ internal fun ScheduleStatusChip(
             }
             Text(
                 text = stringResource(label),
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                style = typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
             )
         }
     }

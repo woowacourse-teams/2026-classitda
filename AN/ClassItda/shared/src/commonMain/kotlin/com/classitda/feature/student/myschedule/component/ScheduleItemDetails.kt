@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,7 +14,9 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_instructor_name
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.contract.MyScheduleItemUiModel
 import com.classitda.feature.student.myschedule.preview.myScheduleReservationsPreviewItems
 import org.jetbrains.compose.resources.stringResource
@@ -25,6 +26,8 @@ internal fun ScheduleItemDetails(
     item: MyScheduleItemUiModel,
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.cardItemVerticalGap),
@@ -36,20 +39,20 @@ internal fun ScheduleItemDetails(
             Text(
                 text = item.title,
                 modifier = Modifier.weight(1f, fill = false),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = MaterialTheme.colorScheme.onSurface,
+                style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                color = StuColors.TextPrimary,
             )
             Text(
                 text = stringResource(Res.string.my_schedule_instructor_name, item.instructorName),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = typography.bodyMedium,
+                color = StuColors.TextSecondary,
             )
         }
         if (item.locationLabel.isNotBlank()) {
             Text(
                 text = item.locationLabel,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = typography.bodyLarge,
+                color = StuColors.TextSecondary,
             )
         }
     }

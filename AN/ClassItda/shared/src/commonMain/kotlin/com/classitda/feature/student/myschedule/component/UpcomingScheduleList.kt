@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,7 +13,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel
 import com.classitda.feature.student.myschedule.preview.myScheduleReservationsPreviewItems
 
@@ -24,6 +25,7 @@ internal fun UpcomingScheduleList(
     state: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
     val itemsByDate = items.groupBy { it.dateTime.sectionDateLabel }
 
     LazyColumn(
@@ -40,8 +42,8 @@ internal fun UpcomingScheduleList(
                 Text(
                     text = dateLabel,
                     modifier = Modifier.padding(bottom = AppSpacing.cardGap),
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onBackground,
+                    style = typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = StuColors.TextPrimary,
                 )
             }
             itemsIndexed(

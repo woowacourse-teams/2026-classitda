@@ -17,7 +17,9 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_open_detail_mark
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel
 import com.classitda.feature.student.myschedule.preview.myScheduleReservationsPreviewItems
 import org.jetbrains.compose.resources.stringResource
@@ -27,10 +29,12 @@ internal fun ScheduleItemCard(
     item: UpcomingScheduleItemUiModel,
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
+
     OutlinedCard(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.outlinedCardColors(containerColor = StuColors.Surface),
     ) {
         Row(
             modifier = Modifier.padding(AppSpacing.cardPadding),
@@ -42,12 +46,12 @@ internal fun ScheduleItemCard(
             ) {
                 Text(
                     text = item.dateTime.timeRangeLabel,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = typography.bodyLarge,
                     color =
                         if (item is UpcomingScheduleItemUiModel.ConfirmedReservation) {
-                            MaterialTheme.colorScheme.primary
+                            StuColors.PrimaryGreen
                         } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                            StuColors.TextSecondary
                         },
                 )
                 ScheduleItemDetails(item = item)
@@ -69,8 +73,8 @@ internal fun ScheduleItemCard(
             Text(
                 text = stringResource(Res.string.my_schedule_open_detail_mark),
                 modifier = Modifier.padding(start = AppSpacing.cardItemHorizontalGap),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.outline,
+                style = typography.titleLarge,
+                color = StuColors.Divider,
             )
         }
     }

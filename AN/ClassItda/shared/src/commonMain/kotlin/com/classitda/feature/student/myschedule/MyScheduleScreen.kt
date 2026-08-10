@@ -5,12 +5,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.classitda.core.designsystem.AppColor.White
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.student.myschedule.component.HistoryScheduleList
 import com.classitda.feature.student.myschedule.component.MyScheduleTabRow
@@ -36,7 +35,7 @@ fun MyScheduleScreen(
         modifier =
             modifier
                 .fillMaxSize()
-                .background(White),
+                .background(StuColors.White),
     ) {
         MyScheduleTopBar()
         MyScheduleTabRow(

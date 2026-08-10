@@ -16,7 +16,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.contract.HistoryScheduleItemUiModel
 import com.classitda.feature.student.myschedule.contract.HistoryScheduleStatusUiModel
 import com.classitda.feature.student.myschedule.preview.myScheduleHistoryPreviewItems
@@ -26,11 +28,12 @@ internal fun HistoryScheduleItemCard(
     item: HistoryScheduleItemUiModel,
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
     val containerColor =
         if (item.status == HistoryScheduleStatusUiModel.RESERVATION_CANCELED) {
-            MaterialTheme.colorScheme.surfaceVariant
+            StuColors.SurfaceVariant
         } else {
-            MaterialTheme.colorScheme.surface
+            StuColors.Surface
         }
 
     OutlinedCard(
@@ -47,8 +50,8 @@ internal fun HistoryScheduleItemCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 softWrap = false,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = typography.bodyMedium,
+                color = StuColors.TextSecondary,
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,

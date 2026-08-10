@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,16 +16,20 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_title
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import org.jetbrains.compose.resources.stringResource
 
 private val MyScheduleTopBarHeight = 52.dp
 
 @Composable
 internal fun MyScheduleTopBar(modifier: Modifier = Modifier) {
+    val typography = appTypography()
+
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+        color = StuColors.Surface,
     ) {
         Box(
             modifier =
@@ -37,8 +40,8 @@ internal fun MyScheduleTopBar(modifier: Modifier = Modifier) {
         ) {
             Text(
                 text = stringResource(Res.string.my_schedule_title),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
+                style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = StuColors.TextPrimary,
             )
         }
     }

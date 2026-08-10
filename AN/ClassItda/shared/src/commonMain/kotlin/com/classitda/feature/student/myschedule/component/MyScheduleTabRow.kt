@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,7 +18,9 @@ import classitda.shared.generated.resources.my_schedule_tab_history
 import classitda.shared.generated.resources.my_schedule_tab_upcoming
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.contract.MyScheduleTab
 import org.jetbrains.compose.resources.stringResource
 
@@ -28,13 +29,14 @@ internal fun MyScheduleTabRow(
     selectedTab: MyScheduleTab,
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
     val tabs = listOf(MyScheduleTab.UPCOMING, MyScheduleTab.HISTORY)
 
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
+                .background(StuColors.Surface),
     ) {
         tabs.forEach { tab ->
             val isSelected = selectedTab == tab
@@ -59,23 +61,23 @@ internal fun MyScheduleTabRow(
                                 },
                             ),
                         style =
-                            MaterialTheme.typography.titleMedium.copy(
+                            typography.titleMedium.copy(
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             ),
                         color =
                             if (isSelected) {
-                                MaterialTheme.colorScheme.primary
+                                StuColors.PrimaryGreen
                             } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
+                                StuColors.TextSecondary
                             },
                     )
                 }
                 HorizontalDivider(
                     color =
                         if (isSelected) {
-                            MaterialTheme.colorScheme.primary
+                            StuColors.PrimaryGreen
                         } else {
-                            MaterialTheme.colorScheme.outline
+                            StuColors.Divider
                         },
                 )
             }
