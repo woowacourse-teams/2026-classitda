@@ -12,8 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.my_schedule_cancel_reservation
 import classitda.shared.generated.resources.my_schedule_go_home
 import classitda.shared.generated.resources.my_schedule_retry
+import com.classitda.core.designsystem.AppColor
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -87,6 +89,34 @@ internal fun MyScheduleSecondaryButton(
     }
 }
 
+@Composable
+internal fun MyScheduleDestructiveButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        enabled = enabled,
+        shape = AppShape.Card,
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = AppColor.AccentRed,
+                contentColor = StuColors.White,
+                disabledContainerColor = StuColors.Divider,
+                disabledContentColor = StuColors.TextTertiary,
+            ),
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(vertical = AppSpacing.sm),
+            style = appTypography().labelLarge.copy(fontWeight = FontWeight.SemiBold),
+        )
+    }
+}
+
 @Preview(
     name = "Secondary button / Student / Default",
     group = "Component/MySchedule",
@@ -98,6 +128,23 @@ private fun `MyScheduleSecondaryButtonPreview_Default_STUDENT_Default`() {
     AppTheme(theme = ThemeType.STUDENT) {
         MyScheduleSecondaryButton(
             text = stringResource(Res.string.my_schedule_go_home),
+            onClick = {},
+            modifier = Modifier.padding(AppSpacing.screenPadding),
+        )
+    }
+}
+
+@Preview(
+    name = "Destructive button / Student / Default",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun MyScheduleDestructiveButtonPreview_Default_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        MyScheduleDestructiveButton(
+            text = stringResource(Res.string.my_schedule_cancel_reservation),
             onClick = {},
             modifier = Modifier.padding(AppSpacing.screenPadding),
         )

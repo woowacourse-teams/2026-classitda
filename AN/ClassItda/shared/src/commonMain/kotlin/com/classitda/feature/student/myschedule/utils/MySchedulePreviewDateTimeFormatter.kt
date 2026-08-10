@@ -5,11 +5,13 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_clock_time
 import classitda.shared.generated.resources.my_schedule_date_label
 import classitda.shared.generated.resources.my_schedule_date_time_label
+import classitda.shared.generated.resources.my_schedule_detail_date_label
 import classitda.shared.generated.resources.my_schedule_history_time_range_different_period
 import classitda.shared.generated.resources.my_schedule_history_time_range_same_period
 import classitda.shared.generated.resources.my_schedule_month_label
 import classitda.shared.generated.resources.my_schedule_period_am
 import classitda.shared.generated.resources.my_schedule_period_pm
+import classitda.shared.generated.resources.my_schedule_ticket_valid_until
 import classitda.shared.generated.resources.my_schedule_upcoming_time_range_different_period
 import classitda.shared.generated.resources.my_schedule_upcoming_time_range_same_period
 import classitda.shared.generated.resources.my_schedule_weekday_friday
@@ -20,8 +22,10 @@ import classitda.shared.generated.resources.my_schedule_weekday_thursday
 import classitda.shared.generated.resources.my_schedule_weekday_tuesday
 import classitda.shared.generated.resources.my_schedule_weekday_wednesday
 import com.classitda.feature.student.myschedule.contract.HistoryScheduleDateTimeUiModel
+import com.classitda.feature.student.myschedule.contract.ReservationDetailDateTimeUiModel
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleDateTimeUiModel
 import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
@@ -73,6 +77,46 @@ internal fun previewHistoryScheduleDateTime(
         dateTimeLabel = stringResource(Res.string.my_schedule_date_time_label, dateLabel, timeRangeLabel),
     )
 }
+
+@Composable
+internal fun previewReservationDetailDateTime(
+    startAt: Instant,
+    endAt: Instant,
+): ReservationDetailDateTimeUiModel {
+    val start = startAt.toLocalDateTime(previewScheduleTimeZone)
+    val end = endAt.toLocalDateTime(previewScheduleTimeZone)
+
+    return ReservationDetailDateTimeUiModel(
+        dateLabel =
+            stringResource(
+                Res.string.my_schedule_detail_date_label,
+                start.year,
+                start.month.number,
+                start.day,
+                stringResource(scheduleWeekdayResource(start.dayOfWeek)),
+            ),
+        timeRangeLabel =
+            scheduleTimeRangeLabel(
+                start = start,
+                end = end,
+                samePeriodResource = Res.string.my_schedule_history_time_range_same_period,
+                differentPeriodResource = Res.string.my_schedule_history_time_range_different_period,
+            ),
+    )
+}
+
+@Composable
+internal fun previewTicketValidUntilLabel(date: LocalDate): String =
+    stringResource(
+        Res.string.my_schedule_ticket_valid_until,
+        date.year,
+        date.month.number
+            .toString()
+            .padStart(length = 2, padChar = '0'),
+        date.day
+            .toString()
+            .padStart(length = 2, padChar = '0'),
+    )
 
 @Composable
 private fun scheduleDateLabel(dateTime: LocalDateTime): String =

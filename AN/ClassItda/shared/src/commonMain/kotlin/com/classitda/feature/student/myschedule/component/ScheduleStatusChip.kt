@@ -45,6 +45,7 @@ internal enum class ScheduleStatusChipType {
 internal fun ScheduleStatusChip(
     type: ScheduleStatusChipType,
     modifier: Modifier = Modifier,
+    labelOverride: StringResource? = null,
 ) {
     val typography = appTypography()
     val label: StringResource
@@ -116,7 +117,7 @@ internal fun ScheduleStatusChip(
                 )
             }
             Text(
-                text = stringResource(label),
+                text = stringResource(labelOverride ?: label),
                 style = typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
             )
         }
