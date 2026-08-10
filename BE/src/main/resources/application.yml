@@ -23,3 +23,12 @@ management:
   endpoint:
     health:
       show-details: never
+
+auth:
+  jwt:
+    private-key-base64: ${AUTH_JWT_PRIVATE_KEY_BASE64}
+    public-key-base64: ${AUTH_JWT_PUBLIC_KEY_BASE64}
+  token:
+    signup-ttl: PT30M
+    access-ttl: PT15M
+    refresh-ttl: P30D
