@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_go_home
 import classitda.shared.generated.resources.my_schedule_retry
+import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
@@ -30,7 +31,7 @@ internal fun MySchedulePrimaryButton(
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        shape = AppShape.Card,
         colors =
             ButtonDefaults.buttonColors(
                 containerColor = StuColors.PrimaryGreen,

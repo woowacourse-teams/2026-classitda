@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +25,7 @@ import classitda.shared.generated.resources.my_schedule_status_reservation_cance
 import classitda.shared.generated.resources.my_schedule_status_reservation_canceled_mark
 import classitda.shared.generated.resources.my_schedule_status_waitlist
 import com.classitda.core.designsystem.AppColor
+import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
@@ -89,7 +89,7 @@ internal fun ScheduleStatusChip(
 
     Surface(
         modifier = modifier,
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = AppShape.Pill,
         color = containerColor,
         contentColor = contentColor,
     ) {

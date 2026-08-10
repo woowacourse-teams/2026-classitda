@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_open_detail_mark
+import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
@@ -33,7 +33,7 @@ internal fun ScheduleItemCard(
 
     OutlinedCard(
         modifier = modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        shape = AppShape.Card,
         colors = CardDefaults.outlinedCardColors(containerColor = StuColors.Surface),
     ) {
         Row(
