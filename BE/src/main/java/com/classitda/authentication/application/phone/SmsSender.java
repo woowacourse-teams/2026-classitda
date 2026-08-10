@@ -1,4 +1,4 @@
-package com.classitda.authentication.application.sms;
+package com.classitda.authentication.application.phone;
 
 public interface SmsSender {
 

@@ -27,6 +27,8 @@ management:
 auth:
   google:
     web-client-id: ${GOOGLE_OAUTH_WEB_CLIENT_ID}
+  phone:
+    key-hmac-secret-base64: ${AUTH_PHONE_KEY_HMAC_SECRET_BASE64:}
   sms:
     local:
       fixed-otp: ${AUTH_SMS_LOCAL_FIXED_OTP:}

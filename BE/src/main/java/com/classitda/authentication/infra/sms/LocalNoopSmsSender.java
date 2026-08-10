@@ -1,6 +1,6 @@
 package com.classitda.authentication.infra.sms;
 
-import com.classitda.authentication.application.sms.SmsSender;
+import com.classitda.authentication.application.phone.SmsSender;
 
 public class LocalNoopSmsSender implements SmsSender {
 
