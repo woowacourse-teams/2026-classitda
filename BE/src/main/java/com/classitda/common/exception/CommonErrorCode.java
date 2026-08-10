@@ -11,7 +11,7 @@ public enum CommonErrorCode implements ErrorCode {
 
     API_VERSION_REQUIRED("API-001", "X-API-Version 헤더는 필수입니다.", HttpStatus.BAD_REQUEST),
     API_VERSION_UNSUPPORTED("API-002", "지원하지 않는 API 버전입니다.", HttpStatus.BAD_REQUEST),
-    ENDPOINT_NOT_FOUND("COMMON-003", "요청한 API를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    ENDPOINT_NOT_FOUND("API-003", "요청한 API를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
     private final String code;
     private final String message;
