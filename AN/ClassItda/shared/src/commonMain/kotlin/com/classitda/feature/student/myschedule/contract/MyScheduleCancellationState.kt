@@ -12,10 +12,10 @@ sealed interface MyScheduleCancellationFlowState {
 
 sealed interface MyScheduleCancellationResultUiModel {
     data class Reservation(
-        val item: ScheduleItemUiModel.ConfirmedReservation,
+        val item: UpcomingScheduleItemUiModel.ConfirmedReservation,
     ) : MyScheduleCancellationResultUiModel
 
     data class Waitlist(
-        val item: ScheduleItemUiModel.Waitlist,
+        val item: UpcomingScheduleItemUiModel.Waitlist,
     ) : MyScheduleCancellationResultUiModel
 }

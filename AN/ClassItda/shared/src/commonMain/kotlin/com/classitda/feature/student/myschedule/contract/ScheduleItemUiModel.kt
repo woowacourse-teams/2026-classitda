@@ -8,62 +8,57 @@ data class ScheduleItemId(
     }
 }
 
-data class ScheduleDateTimeUiModel(
-    val dateLabel: String,
-    val timeLabel: String,
-)
-
-sealed interface ScheduleItemUiModel {
+sealed interface MyScheduleItemUiModel {
     val id: ScheduleItemId
     val title: String
-    val dateTime: ScheduleDateTimeUiModel
     val locationLabel: String
     val instructorName: String
+}
+
+sealed interface UpcomingScheduleItemUiModel : MyScheduleItemUiModel {
+    val dateTime: UpcomingScheduleDateTimeUiModel
+    val cancellation: ScheduleCancellationAvailabilityUiModel
 
     data class ConfirmedReservation(
         override val id: ScheduleItemId,
         override val title: String,
-        override val dateTime: ScheduleDateTimeUiModel,
+        override val dateTime: UpcomingScheduleDateTimeUiModel,
         override val locationLabel: String,
         override val instructorName: String,
         val origin: ScheduleReservationOriginUiModel,
-        val cancellation: ScheduleCancellationAvailabilityUiModel,
-    ) : ActiveScheduleItemUiModel
+        override val cancellation: ScheduleCancellationAvailabilityUiModel,
+    ) : UpcomingScheduleItemUiModel
 
     data class Waitlist(
         override val id: ScheduleItemId,
         override val title: String,
-        override val dateTime: ScheduleDateTimeUiModel,
+        override val dateTime: UpcomingScheduleDateTimeUiModel,
         override val locationLabel: String,
         override val instructorName: String,
         val position: Int,
-        val cancellation: ScheduleCancellationAvailabilityUiModel,
-    ) : ActiveScheduleItemUiModel {
+        override val cancellation: ScheduleCancellationAvailabilityUiModel,
+    ) : UpcomingScheduleItemUiModel {
         init {
             require(position > 0) { "대기 순번은 1 이상이어야 합니다." }
         }
     }
-
-    data class History(
-        override val id: ScheduleItemId,
-        override val title: String,
-        override val dateTime: ScheduleDateTimeUiModel,
-        override val locationLabel: String,
-        override val instructorName: String,
-        val outcome: ScheduleHistoryOutcomeUiModel,
-    ) : ScheduleItemUiModel
 }
 
-sealed interface ActiveScheduleItemUiModel : ScheduleItemUiModel
+data class HistoryScheduleItemUiModel(
+    override val id: ScheduleItemId,
+    override val title: String,
+    val dateTime: HistoryScheduleDateTimeUiModel,
+    override val locationLabel: String,
+    override val instructorName: String,
+    val status: HistoryScheduleStatusUiModel,
+) : MyScheduleItemUiModel
 
 enum class ScheduleReservationOriginUiModel {
     DIRECT,
     CONFIRMED_FROM_WAITLIST,
 }
 
-enum class ScheduleHistoryOutcomeUiModel {
+enum class HistoryScheduleStatusUiModel {
     COMPLETED,
     RESERVATION_CANCELED,
-    NO_SHOW,
-    EXPIRED,
 }

@@ -1,24 +1,26 @@
 package com.classitda.feature.student.myschedule.preview
 
-import com.classitda.feature.student.myschedule.contract.ActiveScheduleItemUiModel
+import androidx.compose.runtime.Composable
 import com.classitda.feature.student.myschedule.contract.ScheduleCancellationAvailabilityUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleCancellationPolicyUiModel
-import com.classitda.feature.student.myschedule.contract.ScheduleDateTimeUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleItemId
-import com.classitda.feature.student.myschedule.contract.ScheduleItemUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleReservationOriginUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleTicketRestorationUiModel
 import com.classitda.feature.student.myschedule.contract.ScheduleWaitlistReapplicationUiModel
+import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel
+import com.classitda.feature.student.myschedule.utils.previewUpcomingScheduleDateTime
+import kotlin.time.Instant
 
-internal val myScheduleReservationsPreviewItems: List<ActiveScheduleItemUiModel> =
+@Composable
+internal fun myScheduleReservationsPreviewItems(): List<UpcomingScheduleItemUiModel> =
     listOf(
-        ScheduleItemUiModel.ConfirmedReservation(
+        UpcomingScheduleItemUiModel.ConfirmedReservation(
             id = ScheduleItemId("preview-confirmed-reservation"),
             title = "리포머 밸런스",
             dateTime =
-                ScheduleDateTimeUiModel(
-                    dateLabel = "8월 8일 토요일",
-                    timeLabel = "오후 7:30 - 8:20",
+                previewUpcomingScheduleDateTime(
+                    startAt = Instant.parse("2026-08-08T10:30:00Z"),
+                    endAt = Instant.parse("2026-08-08T11:20:00Z"),
                 ),
             locationLabel = "스튜디오 B",
             instructorName = "이지은",
@@ -32,13 +34,13 @@ internal val myScheduleReservationsPreviewItems: List<ActiveScheduleItemUiModel>
                         ),
                 ),
         ),
-        ScheduleItemUiModel.Waitlist(
+        UpcomingScheduleItemUiModel.Waitlist(
             id = ScheduleItemId("preview-waitlist"),
             title = "캐딜락 스트레칭",
             dateTime =
-                ScheduleDateTimeUiModel(
-                    dateLabel = "8월 9일 일요일",
-                    timeLabel = "오전 11:00 - 11:50",
+                previewUpcomingScheduleDateTime(
+                    startAt = Instant.parse("2026-08-09T02:00:00Z"),
+                    endAt = Instant.parse("2026-08-09T02:50:00Z"),
                 ),
             locationLabel = "하타룸",
             instructorName = "박소연",
@@ -51,13 +53,13 @@ internal val myScheduleReservationsPreviewItems: List<ActiveScheduleItemUiModel>
                         ),
                 ),
         ),
-        ScheduleItemUiModel.ConfirmedReservation(
+        UpcomingScheduleItemUiModel.ConfirmedReservation(
             id = ScheduleItemId("preview-confirmed-reservation-basic"),
             title = "리포머 베이직",
             dateTime =
-                ScheduleDateTimeUiModel(
-                    dateLabel = "8월 12일 수요일",
-                    timeLabel = "오전 10:00 - 10:50",
+                previewUpcomingScheduleDateTime(
+                    startAt = Instant.parse("2026-08-12T01:00:00Z"),
+                    endAt = Instant.parse("2026-08-12T01:50:00Z"),
                 ),
             locationLabel = "리포머룸",
             instructorName = "김하늘",
