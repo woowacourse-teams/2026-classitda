@@ -77,6 +77,9 @@ public class AuthAccount extends BaseEntity {
         if (providerSubject == null || providerSubject.isBlank()) {
             throw new AuthException(AuthErrorCode.AUTH_ACCOUNT_PROVIDER_SUBJECT_REQUIRED);
         }
+        if (providerSubject.length() > 255) {
+            throw new IllegalArgumentException("OAuth 제공자 사용자 식별자는 255자 이하여야 합니다.");
+        }
     }
 
     private void validateProviderEmail(String providerEmail) {

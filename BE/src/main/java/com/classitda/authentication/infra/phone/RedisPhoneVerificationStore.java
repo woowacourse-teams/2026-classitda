@@ -73,6 +73,13 @@ public class RedisPhoneVerificationStore implements PhoneVerificationStore {
     }
 
     @Override
+    public Optional<String> findVerifiedPhoneNumber(String signupJti) {
+        String phoneNumber = redisTemplate.opsForValue().get(verifiedPhoneKey(signupJti));
+
+        return Optional.ofNullable(phoneNumber);
+    }
+
+    @Override
     public boolean saveIfCooldownExpired(PhoneVerificationState state, long verificationTtlSeconds, long cooldownTtlSeconds) {
         String phoneHmac = phoneVerificationHasher.hashPhoneNumber(state.phoneNumber());
         Long result = redisTemplate.execute(
@@ -155,6 +162,11 @@ public class RedisPhoneVerificationStore implements PhoneVerificationStore {
         if (result != 0L && result != 1L) {
             throw new IllegalStateException("알 수 없는 휴대전화 인증번호 발송 정리 결과입니다.");
         }
+    }
+
+    @Override
+    public void deleteVerifiedPhoneNumber(String signupJti) {
+        redisTemplate.delete(verifiedPhoneKey(signupJti));
     }
 
     private String verificationKey(String verificationId) {

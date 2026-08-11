@@ -7,6 +7,8 @@ import com.classitda.authentication.presentation.dto.login.RegistrationRequiredL
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
+import com.classitda.authentication.presentation.dto.signup.SignupRequest;
+import com.classitda.authentication.presentation.dto.signup.SignupResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,7 +25,7 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-@Tag(name = "인증", description = "소셜 로그인, 인증 토큰 발급과 휴대전화 인증 API")
+@Tag(name = "인증", description = "소셜 로그인, 인증 토큰 발급, 휴대전화 인증과 회원가입 API")
 public interface AuthControllerApi {
 
     @Operation(
@@ -351,5 +353,146 @@ public interface AuthControllerApi {
             @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
             String verificationId,
             @Valid PhoneVerificationConfirmRequest request
+    );
+
+    @Operation(
+            summary = "회원가입 완료",
+            description = "Signup Token의 가입 세션을 사용해 신규 회원 계정을 생성하거나 동일한 소셜 계정의 "
+                    + "기존 회원 로그인을 완료하고 Access Token과 Refresh Token을 발급합니다.",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            requestBody = @RequestBody(
+                    required = true,
+                    description = "회원 이름과 동의한 최신 약관 row ID 목록",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SignupRequest.class),
+                            examples = @ExampleObject(value = "{\"name\":\"홍길동\",\"agreedTermIds\":[1,2]}")
+                    )
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "회원가입 완료 및 로그인 토큰 발급 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SignupResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":900,"
+                                            + "\"refreshToken\":\"refresh-token\","
+                                            + "\"refreshTokenExpiresIn\":2592000}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "요청 값, 약관 동의 또는 API 버전이 올바르지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "INVALID_INPUT",
+                                            value = "{\"code\":\"COMMON-001\","
+                                                    + "\"message\":\"요청 값이 올바르지 않습니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "API_VERSION_REQUIRED",
+                                            value = "{\"code\":\"API-001\","
+                                                    + "\"message\":\"X-API-Version 헤더는 필수입니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "API_VERSION_UNSUPPORTED",
+                                            value = "{\"code\":\"API-002\","
+                                                    + "\"message\":\"지원하지 않는 API 버전입니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "REQUIRED_TERM_MISSING",
+                                            value = "{\"code\":\"TERM-001\","
+                                                    + "\"message\":\"필수 약관에 모두 동의해야 합니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "TERM_NOT_FOUND",
+                                            value = "{\"code\":\"TERM-002\","
+                                                    + "\"message\":\"존재하지 않는 약관이 포함되어 있습니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "TERM_ID_DUPLICATED",
+                                            value = "{\"code\":\"TERM-003\","
+                                                    + "\"message\":\"중복된 약관 ID가 포함되어 있습니다.\"}"
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Signup Token 또는 활성 가입 세션이 없거나 유효하지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"AUTH-001\",\"message\":\"인증이 필요합니다.\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Signup Token이 아닌 인증 토큰을 사용함",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"AUTH-002\",\"message\":\"접근 권한이 없습니다.\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 가입된 전화번호 또는 변경된 약관",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "PHONE_ALREADY_REGISTERED",
+                                            value = "{\"code\":\"PHONE-001\","
+                                                    + "\"message\":\"이미 가입된 휴대전화 번호입니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "TERM_STALE",
+                                            value = "{\"code\":\"TERM-004\","
+                                                    + "\"message\":\"약관이 변경되었습니다. 최신 약관을 다시 확인해 주세요.\"}"
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "410",
+                    description = "인증 완료 휴대전화 번호가 없거나 만료됨",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"PHONE-008\","
+                                            + "\"message\":\"인증이 완료된 휴대전화 번호가 없거나 만료되었습니다.\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "가입 상태 손상, 알 수 없는 데이터 무결성 오류, 토큰 또는 내부 처리 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"COMMON-002\","
+                                            + "\"message\":\"서버 내부 오류가 발생했습니다.\"}"
+                            )
+                    )
+            )
+    })
+    ResponseEntity<SignupResponse> completeSignup(
+            @Parameter(hidden = true) Jwt signupJwt,
+            @Valid SignupRequest request
     );
 }

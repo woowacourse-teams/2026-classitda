@@ -48,6 +48,9 @@ public class Member extends BaseEntity {
         if (name == null || name.isBlank()) {
             throw new MemberException(MemberErrorCode.MEMBER_NAME_REQUIRED);
         }
+        if (name.length() > 50) {
+            throw new MemberException(MemberErrorCode.MEMBER_NAME_TOO_LONG);
+        }
     }
 
     private void validatePhoneNumber(String phoneNumber) {

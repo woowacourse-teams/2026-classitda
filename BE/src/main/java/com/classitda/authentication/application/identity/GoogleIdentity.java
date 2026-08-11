@@ -6,7 +6,7 @@ import com.classitda.authentication.exception.AuthException;
 public record GoogleIdentity(String providerSubject, String providerEmail) {
 
     public GoogleIdentity {
-        if (providerSubject == null || providerSubject.isBlank()) {
+        if (providerSubject == null || providerSubject.isBlank() || providerSubject.length() > 255) {
             throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
         }
 

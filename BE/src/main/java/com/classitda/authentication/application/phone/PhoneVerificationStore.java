@@ -14,9 +14,13 @@ public interface PhoneVerificationStore {
 
     Optional<PhoneVerificationState> findByVerificationId(String verificationId);
 
+    Optional<String> findVerifiedPhoneNumber(String signupJti);
+
     boolean saveIfCooldownExpired(PhoneVerificationState state, long verificationTtlSeconds, long cooldownTtlSeconds);
 
     ConfirmOutcome confirm(PhoneVerificationState state, boolean otpMatches, int maxAttempts, long verifiedPhoneTtlSeconds);
 
     void deleteIfActive(PhoneVerificationState state);
+
+    void deleteVerifiedPhoneNumber(String signupJti);
 }

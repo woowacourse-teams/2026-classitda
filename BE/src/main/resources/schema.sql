@@ -57,7 +57,6 @@ CREATE TABLE member_term_agreement
     member_id  BIGINT      NOT NULL,
     term_id    BIGINT      NOT NULL,
     agreed     BOOLEAN     NOT NULL,
-    agreed_at  DATETIME(6) NOT NULL,
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NULL,
     PRIMARY KEY (id),

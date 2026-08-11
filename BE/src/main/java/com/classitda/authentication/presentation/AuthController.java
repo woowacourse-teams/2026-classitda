@@ -2,6 +2,7 @@ package com.classitda.authentication.presentation;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
+import com.classitda.authentication.application.SignupService;
 import com.classitda.authentication.application.SocialLoginService;
 import com.classitda.authentication.application.phone.PhoneVerificationService;
 import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
@@ -9,6 +10,9 @@ import com.classitda.authentication.presentation.dto.login.LoginResponse;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
+import com.classitda.authentication.presentation.dto.signup.SignupRequest;
+import com.classitda.authentication.presentation.dto.signup.SignupResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,6 +30,7 @@ public class AuthController implements AuthControllerApi {
 
     private final SocialLoginService socialLoginService;
     private final PhoneVerificationService phoneVerificationService;
+    private final SignupService signupService;
 
     @Override
     @PostMapping(value = "/google", version = "1")
@@ -54,5 +59,15 @@ public class AuthController implements AuthControllerApi {
     ) {
         phoneVerificationService.confirm(signupJwt.getId(), verificationId, request.otp());
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PostMapping(value = "/signup", version = "1")
+    public ResponseEntity<SignupResponse> completeSignup(
+            @AuthenticationPrincipal Jwt signupJwt,
+            @Valid @RequestBody SignupRequest request
+    ) {
+        SignupResponse response = signupService.complete(signupJwt.getId(), request);
+        return ResponseEntity.status(CREATED).body(response);
     }
 }

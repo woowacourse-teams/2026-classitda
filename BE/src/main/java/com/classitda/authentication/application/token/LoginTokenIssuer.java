@@ -1,8 +1,6 @@
 package com.classitda.authentication.application.token;
 
 import com.classitda.authentication.domain.TokenUse;
-import com.classitda.authentication.exception.AuthErrorCode;
-import com.classitda.authentication.exception.AuthException;
 import com.classitda.authentication.infra.security.jwt.JwtTokenEncoder;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
 import java.nio.charset.StandardCharsets;
@@ -33,21 +31,14 @@ public class LoginTokenIssuer {
     private final TokenProperties tokenProperties;
 
     public IssuedLoginTokens issueLoginTokens(Long memberId) {
-        validateMemberId(memberId);
-
         String accessToken = issueAccessToken(memberId);
         String refreshToken = issueRefreshToken(memberId);
+
         return IssuedLoginTokens.of(
                 accessToken,
                 tokenProperties.accessTtl().toSeconds(),
                 refreshToken,
                 tokenProperties.refreshTtl().toSeconds());
-    }
-
-    private void validateMemberId(Long memberId) {
-        if (memberId == null || memberId < 1) {
-            throw new AuthException(AuthErrorCode.AUTH_ACCOUNT_MEMBER_ID_INVALID);
-        }
     }
 
     private String issueAccessToken(Long memberId) {
