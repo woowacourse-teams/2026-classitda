@@ -14,6 +14,7 @@ import com.classitda.studio.presentation.dto.RoomResponse;
 import com.classitda.studio.presentation.dto.RoomUpdateRequest;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,11 @@ public class RoomService {
         Studio studio = getStudio(studioId);
         studio.validateOwner(memberId);
         validateNameNotDuplicated(studioId, request.name());
-        return RoomResponse.from(roomRepository.save(request.toEntity(studio)));
+        try {
+            return RoomResponse.from(roomRepository.saveAndFlush(request.toEntity(studio)));
+        } catch (DataIntegrityViolationException exception) {
+            throw new StudioException(StudioErrorCode.ROOM_NAME_DUPLICATED);
+        }
     }
 
     public CursorResponse<RoomResponse> findWithCursor(Long studioId, String cursor, int size) {

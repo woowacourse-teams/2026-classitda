@@ -10,6 +10,7 @@ import com.classitda.studio.presentation.dto.StudioPolicyCreateRequest;
 import com.classitda.studio.presentation.dto.StudioPolicyResponse;
 import com.classitda.studio.presentation.dto.StudioPolicyUpdateRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +29,11 @@ public class StudioPolicyService {
         if (studioPolicyRepository.existsByStudioId(studioId)) {
             throw new StudioException(StudioErrorCode.POLICY_ALREADY_EXISTS);
         }
-        return StudioPolicyResponse.from(studioPolicyRepository.save(request.toEntity(studio)));
+        try {
+            return StudioPolicyResponse.from(studioPolicyRepository.saveAndFlush(request.toEntity(studio)));
+        } catch (DataIntegrityViolationException exception) {
+            throw new StudioException(StudioErrorCode.POLICY_ALREADY_EXISTS);
+        }
     }
 
     public StudioPolicyResponse findByStudioId(Long studioId) {
