@@ -7,6 +7,7 @@ import com.classitda.studio.presentation.dto.StudioUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -27,8 +28,28 @@ public interface StudioControllerApi {
             @ApiResponse(responseCode = "201", description = "시설 생성 성공"),
             @ApiResponse(
                     responseCode = "400",
-                    description = "요청 값이 올바르지 않거나 운영 시간이 잘못됨",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    description = "요청 값이 올바르지 않거나, 운영 시간이 잘못되었거나, API 버전 헤더가 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "요청 값 오류",
+                                            value = """
+                                                    {"code": "COMMON-001", "message": "요청 값이 올바르지 않습니다."}"""
+                                    ),
+                                    @ExampleObject(
+                                            name = "운영 시간 오류",
+                                            value = """
+                                                    {"code": "STUDIO-001", \
+                                                    "message": "운영 종료 시간은 시작 시간보다 늦어야 합니다."}"""
+                                    ),
+                                    @ExampleObject(
+                                            name = "버전 헤더 누락",
+                                            value = """
+                                                    {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}"""
+                                    )
+                            }
+                    )
             )
     })
     ResponseEntity<StudioResponse> save(
@@ -48,9 +69,22 @@ public interface StudioControllerApi {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(
+                    responseCode = "400",
+                    description = "API 버전 헤더가 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "버전 헤더 누락", value = """
+                                    {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}""")
+                    )
+            ),
+            @ApiResponse(
                     responseCode = "404",
                     description = "시설을 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "시설 없음", value = """
+                                    {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}""")
+                    )
             )
     })
     StudioResponse findById(
@@ -69,18 +103,46 @@ public interface StudioControllerApi {
             @ApiResponse(responseCode = "200", description = "수정 성공"),
             @ApiResponse(
                     responseCode = "400",
-                    description = "요청 값이 올바르지 않거나 운영 시간이 잘못됨",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    description = "요청 값이 올바르지 않거나, 운영 시간이 잘못되었거나, API 버전 헤더가 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "요청 값 오류",
+                                            value = """
+                                                    {"code": "COMMON-001", "message": "요청 값이 올바르지 않습니다."}"""
+                                    ),
+                                    @ExampleObject(
+                                            name = "운영 시간 오류",
+                                            value = """
+                                                    {"code": "STUDIO-001", \
+                                                    "message": "운영 종료 시간은 시작 시간보다 늦어야 합니다."}"""
+                                    ),
+                                    @ExampleObject(
+                                            name = "버전 헤더 누락",
+                                            value = """
+                                                    {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}"""
+                                    )
+                            }
+                    )
             ),
             @ApiResponse(
                     responseCode = "403",
                     description = "해당 시설의 대표 강사가 아님",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "대표 강사 아님", value = """
+                                    {"code": "STUDIO-003", "message": "해당 시설의 대표 강사가 아닙니다."}""")
+                    )
             ),
             @ApiResponse(
                     responseCode = "404",
                     description = "시설을 찾을 수 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "시설 없음", value = """
+                                    {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}""")
+                    )
             )
     })
     StudioResponse update(

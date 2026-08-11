@@ -82,10 +82,8 @@ CREATE TABLE studio_policy
 (
     id                               BIGINT      NOT NULL AUTO_INCREMENT,
     studio_id                        BIGINT      NOT NULL,
-    reservation_open_minutes_before  INT         NOT NULL,
     reservation_close_minutes_before INT         NOT NULL,
     free_cancel_minutes_before       INT         NOT NULL,
-    waiting_enabled                  BOOLEAN     NOT NULL DEFAULT TRUE,
     waiting_offer_response_minutes   INT         NOT NULL,
     created_at                       DATETIME(6) NOT NULL,
     updated_at                       DATETIME(6) NULL,

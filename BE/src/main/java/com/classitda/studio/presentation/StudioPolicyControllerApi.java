@@ -1,10 +1,9 @@
 package com.classitda.studio.presentation;
 
 import com.classitda.common.exception.ErrorResponse;
-import com.classitda.common.pagination.CursorResponse;
-import com.classitda.studio.presentation.dto.RoomCreateRequest;
-import com.classitda.studio.presentation.dto.RoomResponse;
-import com.classitda.studio.presentation.dto.RoomUpdateRequest;
+import com.classitda.studio.presentation.dto.StudioPolicyCreateRequest;
+import com.classitda.studio.presentation.dto.StudioPolicyResponse;
+import com.classitda.studio.presentation.dto.StudioPolicyUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,15 +14,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "룸", description = "시설에 속한 룸 관리 API")
-public interface RoomControllerApi {
+@Tag(name = "시설 운영 정책", description = "시설의 예약 마감, 무료 취소, 예약 대기 규칙을 관리하는 API")
+public interface StudioPolicyControllerApi {
 
     @Operation(
-            summary = "룸 등록",
-            description = "시설에 룸을 등록한다. 대표 강사만 등록할 수 있고, 같은 시설 안에서 룸 이름은 중복될 수 없다."
+            summary = "운영 정책 등록",
+            description = """
+                    시설의 운영 정책을 등록한다. 대표 강사만 등록할 수 있다.
+                    시설당 정책은 하나만 존재하며, 이미 등록되어 있으면 등록할 수 없다.
+                    모든 시간은 수업 시작 시각 기준으로 몇 분 전인지를 뜻하며, 값이 클수록 이른 시각이다.
+                    """
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "룸 등록 성공"),
+            @ApiResponse(responseCode = "201", description = "운영 정책 등록 성공"),
             @ApiResponse(
                     responseCode = "400",
                     description = "요청 값이 올바르지 않거나 API 버전 헤더가 없음",
@@ -63,15 +66,15 @@ public interface RoomControllerApi {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "이미 사용 중인 룸 이름",
+                    description = "이미 운영 정책이 등록된 시설",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "룸 이름 중복", value = """
-                                    {"code": "ROOM-002", "message": "이미 사용 중인 룸 이름입니다."}""")
+                            examples = @ExampleObject(name = "정책 중복", value = """
+                                    {"code": "POLICY-002", "message": "이미 운영 정책이 등록된 시설입니다."}""")
                     )
             )
     })
-    ResponseEntity<RoomResponse> save(
+    ResponseEntity<StudioPolicyResponse> save(
             @Parameter(
                     description = "요청자 회원 ID. 인증 연동 전까지만 사용하는 임시 헤더다.",
                     required = true,
@@ -80,64 +83,54 @@ public interface RoomControllerApi {
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")
             Long studioId,
-            RoomCreateRequest request
+            StudioPolicyCreateRequest request
     );
 
     @Operation(
-            summary = "룸 목록 조회",
-            description = """
-                    시설에 속한 룸을 id 오름차순으로 조회한다. 권한 제한이 없다.
-                    cursor를 생략하면 첫 페이지를 반환하고, 다음 페이지는 응답의 nextCursor를 그대로 전달한다.
-                    """
+            summary = "운영 정책 조회",
+            description = "시설의 운영 정책을 조회한다. 회원도 예약 규칙을 알아야 하므로 권한 제한이 없다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(
                     responseCode = "400",
-                    description = "cursor나 size가 올바르지 않거나 API 버전 헤더가 없음",
+                    description = "API 버전 헤더가 없음",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "요청 값 오류",
-                                            value = """
-                                                    {"code": "COMMON-001", "message": "요청 값이 올바르지 않습니다."}"""
-                                    ),
-                                    @ExampleObject(
-                                            name = "버전 헤더 누락",
-                                            value = """
-                                                    {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}"""
-                                    )
-                            }
+                            examples = @ExampleObject(name = "버전 헤더 누락", value = """
+                                    {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}""")
                     )
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "시설을 찾을 수 없음",
+                    description = "시설 또는 운영 정책을 찾을 수 없음",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "시설 없음", value = """
-                                    {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}""")
+                            examples = {
+                                    @ExampleObject(
+                                            name = "시설 없음",
+                                            value = """
+                                                    {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}"""
+                                    ),
+                                    @ExampleObject(
+                                            name = "정책 없음",
+                                            value = """
+                                                    {"code": "POLICY-001", "message": "운영 정책을 찾을 수 없습니다."}"""
+                                    )
+                            }
                     )
             )
     })
-    CursorResponse<RoomResponse> findWithCursor(
+    StudioPolicyResponse findByStudioId(
             @Parameter(description = "시설 ID", required = true, example = "1")
-            Long studioId,
-            @Parameter(
-                    description = "이전 응답의 nextCursor를 그대로 전달한다. 첫 페이지는 생략한다.",
-                    schema = @Schema(type = "string", example = "10")
-            )
-            String cursor,
-            @Parameter(description = "한 번에 가져올 개수. 1 이상 100 이하여야 한다.", example = "10")
-            int size
+            Long studioId
     );
 
     @Operation(
-            summary = "룸 정보 수정",
+            summary = "운영 정책 수정",
             description = """
-                    룸의 이름을 수정한다. 대표 강사만 수정할 수 있다.
-                    같은 시설 안에서 룸 이름은 중복될 수 없다.
+                    시설의 운영 정책을 수정한다. 대표 강사만 수정할 수 있다.
+                    전달한 필드만 변경되고, 보내지 않은 필드는 기존 값을 유지한다.
                     """
     )
     @ApiResponses({
@@ -172,24 +165,25 @@ public interface RoomControllerApi {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "룸을 찾을 수 없음. 시설이 없거나 다른 시설의 룸일 때도 이 응답이 나간다.",
+                    description = "시설 또는 운영 정책을 찾을 수 없음",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "룸 없음", value = """
-                                    {"code": "ROOM-001", "message": "룸을 찾을 수 없습니다."}""")
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "이미 사용 중인 룸 이름",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "룸 이름 중복", value = """
-                                    {"code": "ROOM-002", "message": "이미 사용 중인 룸 이름입니다."}""")
+                            examples = {
+                                    @ExampleObject(
+                                            name = "시설 없음",
+                                            value = """
+                                                    {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}"""
+                                    ),
+                                    @ExampleObject(
+                                            name = "정책 없음",
+                                            value = """
+                                                    {"code": "POLICY-001", "message": "운영 정책을 찾을 수 없습니다."}"""
+                                    )
+                            }
                     )
             )
     })
-    RoomResponse update(
+    StudioPolicyResponse update(
             @Parameter(
                     description = "요청자 회원 ID. 인증 연동 전까지만 사용하는 임시 헤더다.",
                     required = true,
@@ -198,8 +192,6 @@ public interface RoomControllerApi {
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")
             Long studioId,
-            @Parameter(description = "룸 ID", required = true, example = "1")
-            Long roomId,
-            RoomUpdateRequest request
+            StudioPolicyUpdateRequest request
     );
 }
