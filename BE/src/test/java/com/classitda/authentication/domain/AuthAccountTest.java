@@ -52,4 +52,35 @@ class AuthAccountTest {
         // then
         assertThat(authAccount.getProviderEmail()).isEqualTo(providerEmail);
     }
+
+    @Test
+    void 제공자_사용자_식별자는_255자까지_허용한다() {
+        // given
+        String providerSubject = "a".repeat(255);
+
+        // when
+        AuthAccount authAccount = AuthAccountFixture.인증_계정(
+                1L,
+                providerSubject,
+                "member@example.com"
+        );
+
+        // then
+        assertThat(authAccount.getProviderSubject()).isEqualTo(providerSubject);
+    }
+
+    @Test
+    void 제공자_사용자_식별자가_255자를_초과하면_거부한다() {
+        // given
+        String providerSubject = "a".repeat(256);
+
+        // when / then
+        assertThatThrownBy(() -> AuthAccountFixture.인증_계정(
+                1L,
+                providerSubject,
+                "member@example.com"
+        ))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("OAuth 제공자 사용자 식별자는 255자 이하여야 합니다.");
+    }
 }

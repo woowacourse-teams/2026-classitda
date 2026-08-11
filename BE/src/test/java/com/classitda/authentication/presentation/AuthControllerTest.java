@@ -5,6 +5,7 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.classitda.authentication.application.SignupService;
 import com.classitda.authentication.application.SocialLoginService;
 import com.classitda.authentication.application.phone.PhoneVerificationService;
 import com.classitda.authentication.application.token.IssuedLoginTokens;
@@ -20,16 +21,24 @@ import com.classitda.authentication.presentation.dto.login.LoginResponse;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
+import com.classitda.authentication.presentation.dto.signup.SignupRequest;
+import com.classitda.authentication.presentation.dto.signup.SignupResponse;
 import com.classitda.common.config.ApiVersionConfig;
+import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.GlobalExceptionHandler;
+import com.classitda.member.exception.MemberErrorCode;
+import com.classitda.member.exception.MemberException;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.jwt.BadJwtException;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -59,6 +68,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private PhoneVerificationService phoneVerificationService;
+
+    @MockitoBean
+    private SignupService signupService;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
@@ -416,6 +428,210 @@ class AuthControllerTest {
 
         // then
         assertError(result, 403, "PHONE-006", "현재 가입 세션의 인증 요청이 아닙니다.");
+    }
+
+    @Test
+    void 가입_토큰으로_회원가입을_완료하면_JTI를_위임하고_201과_엄격한_토큰_응답을_반환한다() {
+        // given
+        SignupRequest request = SignupRequest.of("홍길동", List.of(1L, 2L));
+        SignupResponse response = SignupResponse.from(
+                IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L)
+        );
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+        given(signupService.complete("signup-jti", request)).willReturn(response);
+
+        // when
+        RestTestClient.ResponseSpec result = signup("signup-token", "1", request);
+
+        // then
+        result.expectStatus().isCreated()
+                .expectBody()
+                .json("""
+                        {
+                          "accessToken": "access-token",
+                          "accessTokenExpiresIn": 900,
+                          "refreshToken": "refresh-token",
+                          "refreshTokenExpiresIn": 2592000
+                        }
+                        """, JsonCompareMode.STRICT);
+        verify(signupService).complete("signup-jti", request);
+    }
+
+    @Test
+    void 클라이언트가_전화번호와_소셜정보와_JTI를_보내도_가입_DTO에는_반영되지_않는다() {
+        // given
+        SignupRequest expectedRequest = SignupRequest.of("홍길동", List.of(1L, 2L));
+        SignupResponse response = SignupResponse.from(
+                IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L)
+        );
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("server-jti", TokenUse.SIGNUP));
+        given(signupService.complete("server-jti", expectedRequest)).willReturn(response);
+        String maliciousRequest = """
+                {
+                  "name": "홍길동",
+                  "agreedTermIds": [1, 2],
+                  "signupJti": "client-jti",
+                  "phoneNumber": "+821099999999",
+                  "provider": "GOOGLE",
+                  "providerSubject": "client-subject",
+                  "providerEmail": "client@example.com"
+                }
+                """;
+
+        // when
+        RestTestClient.ResponseSpec result = signup("signup-token", "1", maliciousRequest);
+
+        // then
+        result.expectStatus().isCreated();
+        verify(signupService).complete("server-jti", expectedRequest);
+    }
+
+    @Test
+    void 회원가입_이름이_비어있거나_50자를_초과하면_COMMON_001이고_서비스를_호출하지_않는다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+        String[] invalidNames = {"", " ", "가".repeat(51)};
+
+        // when / then
+        for (String invalidName : invalidNames) {
+            RestTestClient.ResponseSpec result = signup(
+                    "signup-token",
+                    "1",
+                    SignupRequest.of(invalidName, List.of(1L))
+            );
+
+            assertError(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        }
+        verifyNoInteractions(signupService);
+    }
+
+    @Test
+    void 회원가입_약관_목록이_없거나_원소가_양수가_아니면_COMMON_001이고_서비스를_호출하지_않는다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+        String[] invalidBodies = {
+                "{\"name\":\"홍길동\",\"agreedTermIds\":null}",
+                "{\"name\":\"홍길동\",\"agreedTermIds\":[]}",
+                "{\"name\":\"홍길동\",\"agreedTermIds\":[null]}",
+                "{\"name\":\"홍길동\",\"agreedTermIds\":[0]}",
+                "{\"name\":\"홍길동\",\"agreedTermIds\":[-1]}"
+        };
+
+        // when / then
+        for (String invalidBody : invalidBodies) {
+            RestTestClient.ResponseSpec result = signup("signup-token", "1", invalidBody);
+
+            assertError(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        }
+        verifyNoInteractions(signupService);
+    }
+
+    @Test
+    void 회원가입에서_버전_헤더가_없거나_지원하지_않으면_API_오류이고_서비스를_호출하지_않는다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+
+        // when
+        RestTestClient.ResponseSpec missing = signup(
+                "signup-token",
+                null,
+                SignupRequest.of("홍길동", List.of(1L, 2L))
+        );
+        RestTestClient.ResponseSpec unsupported = signup(
+                "signup-token",
+                "2",
+                SignupRequest.of("홍길동", List.of(1L, 2L))
+        );
+
+        // then
+        assertError(missing, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        assertError(unsupported, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verifyNoInteractions(signupService);
+    }
+
+    @Test
+    void 회원가입에서_인증이_없거나_유효하지_않으면_AUTH_001이고_서비스를_호출하지_않는다() {
+        // given
+        SignupRequest request = SignupRequest.of("홍길동", List.of(1L, 2L));
+        given(jwtDecoder.decode("invalid-token")).willThrow(new BadJwtException("invalid token"));
+
+        // when
+        RestTestClient.ResponseSpec missing = signup(null, "1", request);
+        RestTestClient.ResponseSpec invalid = signup("invalid-token", "1", request);
+
+        // then
+        assertError(missing, 401, "AUTH-001", "인증이 필요합니다.");
+        assertError(invalid, 401, "AUTH-001", "인증이 필요합니다.");
+        verifyNoInteractions(signupService);
+    }
+
+    @Test
+    void 액세스_토큰으로_회원가입하면_AUTH_002이고_서비스를_호출하지_않는다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("access-jti", TokenUse.ACCESS));
+
+        // when
+        RestTestClient.ResponseSpec result = signup(
+                "access-token",
+                "1",
+                SignupRequest.of("홍길동", List.of(1L, 2L))
+        );
+
+        // then
+        assertError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
+        verifyNoInteractions(signupService);
+    }
+
+    @Test
+    void 회원가입_제품_오류는_정해진_code와_status로_반환한다() {
+        // given
+        SignupRequest request = SignupRequest.of("홍길동", List.of(1L, 2L));
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+        ClassitdaException[] exceptions = {
+                new AuthException(AuthErrorCode.VERIFIED_PHONE_UNAVAILABLE),
+                new AuthException(AuthErrorCode.PHONE_ALREADY_REGISTERED),
+                new MemberException(MemberErrorCode.REQUIRED_TERM_AGREEMENT_MISSING),
+                new MemberException(MemberErrorCode.TERM_NOT_FOUND),
+                new MemberException(MemberErrorCode.TERM_ID_DUPLICATED),
+                new MemberException(MemberErrorCode.TERM_STALE)
+        };
+        int[] statuses = {410, 409, 400, 400, 400, 409};
+        String[] codes = {"PHONE-008", "PHONE-001", "TERM-001", "TERM-002", "TERM-003", "TERM-004"};
+        String[] messages = {
+                "인증이 완료된 휴대전화 번호가 없거나 만료되었습니다.",
+                "이미 가입된 휴대전화 번호입니다.",
+                "필수 약관에 모두 동의해야 합니다.",
+                "존재하지 않는 약관이 포함되어 있습니다.",
+                "중복된 약관 ID가 포함되어 있습니다.",
+                "약관이 변경되었습니다. 최신 약관을 다시 확인해 주세요."
+        };
+
+        // when / then
+        for (int index = 0; index < exceptions.length; index++) {
+            willThrow(exceptions[index])
+                    .given(signupService).complete("signup-jti", request);
+            RestTestClient.ResponseSpec result = signup("signup-token", "1", request);
+
+            assertError(result, statuses[index], codes[index], messages[index]);
+        }
+    }
+
+    private RestTestClient.ResponseSpec signup(
+            String token,
+            String apiVersion,
+            Object body
+    ) {
+        RestTestClient.RequestBodySpec request = client.post().uri("/api/auth/signup");
+        if (apiVersion != null) {
+            request.header("X-API-Version", apiVersion);
+        }
+        if (token != null) {
+            request.header("Authorization", "Bearer " + token);
+        }
+        if (body instanceof String) {
+            request.contentType(MediaType.APPLICATION_JSON);
+        }
+        return request.body(body).exchange();
     }
 
     private RestTestClient.ResponseSpec confirm(

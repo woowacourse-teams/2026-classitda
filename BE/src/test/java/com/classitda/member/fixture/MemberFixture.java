@@ -8,9 +8,13 @@ public final class MemberFixture {
     }
 
     public static Member 기본_회원() {
+        return 회원("회원", "+821012345678");
+    }
+
+    public static Member 회원(String name, String phoneNumber) {
         return Member.builder()
-                .name("회원")
-                .phoneNumber("+821012345678")
+                .name(name)
+                .phoneNumber(phoneNumber)
                 .profileImageUrl(null)
                 .build();
     }
