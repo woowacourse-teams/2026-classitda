@@ -11,15 +11,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "studio_policy")
 @Entity
 public class StudioPolicy extends BaseEntity {
@@ -33,18 +30,34 @@ public class StudioPolicy extends BaseEntity {
     private Studio studio;
 
     @Column(nullable = false)
-    private int reservationOpenMinutesBefore;
-
-    @Column(nullable = false)
     private int reservationCloseMinutesBefore;
 
     @Column(nullable = false)
     private int freeCancelMinutesBefore;
 
     @Column(nullable = false)
-    private boolean waitingEnabled;
-
-    @Column(nullable = false)
     private int waitingOfferResponseMinutes;
 
+    @Builder
+    private StudioPolicy(
+            Studio studio,
+            int reservationCloseMinutesBefore,
+            int freeCancelMinutesBefore,
+            int waitingOfferResponseMinutes
+    ) {
+        this.studio = studio;
+        this.reservationCloseMinutesBefore = reservationCloseMinutesBefore;
+        this.freeCancelMinutesBefore = freeCancelMinutesBefore;
+        this.waitingOfferResponseMinutes = waitingOfferResponseMinutes;
+    }
+
+    public void update(
+            int reservationCloseMinutesBefore,
+            int freeCancelMinutesBefore,
+            int waitingOfferResponseMinutes
+    ) {
+        this.reservationCloseMinutesBefore = reservationCloseMinutesBefore;
+        this.freeCancelMinutesBefore = freeCancelMinutesBefore;
+        this.waitingOfferResponseMinutes = waitingOfferResponseMinutes;
+    }
 }
