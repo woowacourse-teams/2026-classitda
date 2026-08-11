@@ -16,6 +16,8 @@ public class PhoneVerificationService {
 
     private static final long VERIFICATION_TTL_SECONDS = 180L;
     private static final long COOLDOWN_TTL_SECONDS = 60L;
+    private static final int MAX_CONFIRM_ATTEMPTS = 5;
+    private static final long VERIFIED_PHONE_TTL_SECONDS = 1_800L;
 
     private final MemberRepository memberRepository;
     private final PhoneVerificationStore phoneVerificationStore;
@@ -26,17 +28,13 @@ public class PhoneVerificationService {
     private final SmsSender smsSender;
 
     // 회원 조회와 인증 상태 저장, 외부 SMS 발송을 함께 수행하므로 DB 트랜잭션을 열지 않는다.
-    public PhoneVerificationResponse send(
-            String signupJti,
-            String phoneNumber
-    ) {
+    public PhoneVerificationResponse send(String signupJti, String phoneNumber) {
         if (memberRepository.existsByPhoneNumber(phoneNumber)) {
             throw new AuthException(AuthErrorCode.PHONE_ALREADY_REGISTERED);
         }
 
         String verificationId = UUID.randomUUID().toString();
         String otp = otpGenerator.generate();
-        String phoneHmac = phoneVerificationHasher.hashPhoneNumber(phoneNumber);
         String otpDigest = phoneVerificationHasher.hashOtp(
                 signupJti,
                 verificationId,
@@ -47,7 +45,6 @@ public class PhoneVerificationService {
                 verificationId,
                 signupJti,
                 phoneNumber,
-                phoneHmac,
                 otpDigest
         );
 
@@ -66,10 +63,32 @@ public class PhoneVerificationService {
         return PhoneVerificationResponse.of(verificationId, VERIFICATION_TTL_SECONDS, COOLDOWN_TTL_SECONDS);
     }
 
-    private void cleanupFailedDelivery(
-            PhoneVerificationState state,
-            RuntimeException senderException
-    ) {
+    public void confirm(String signupJti, String verificationId, String otp) {
+        PhoneVerificationState state = phoneVerificationStore.findByVerificationId(verificationId)
+                .orElseThrow(() -> new AuthException(AuthErrorCode.PHONE_VERIFICATION_UNAVAILABLE));
+
+        if (!state.signupJti().equals(signupJti)) {
+            throw new AuthException(AuthErrorCode.PHONE_VERIFICATION_SESSION_MISMATCH);
+        }
+
+        boolean otpMatches = phoneVerificationHasher.matchesOtp(state, otp);
+        PhoneVerificationStore.ConfirmOutcome outcome = phoneVerificationStore.confirm(
+                state,
+                otpMatches,
+                MAX_CONFIRM_ATTEMPTS,
+                VERIFIED_PHONE_TTL_SECONDS
+        );
+
+        switch (outcome) {
+            case CONFIRMED -> {}
+            case UNAVAILABLE -> throw new AuthException(AuthErrorCode.PHONE_VERIFICATION_UNAVAILABLE);
+            case SESSION_MISMATCH -> throw new AuthException(AuthErrorCode.PHONE_VERIFICATION_SESSION_MISMATCH);
+            case OTP_INVALID -> throw new AuthException(AuthErrorCode.PHONE_OTP_INVALID);
+            case ATTEMPTS_EXCEEDED -> throw new AuthException(AuthErrorCode.PHONE_OTP_ATTEMPTS_EXCEEDED);
+        }
+    }
+
+    private void cleanupFailedDelivery(PhoneVerificationState state, RuntimeException senderException) {
         try {
             phoneVerificationStore.deleteIfActive(state);
         } catch (RuntimeException cleanupException) {

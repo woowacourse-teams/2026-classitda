@@ -16,6 +16,10 @@ public enum AuthErrorCode implements ErrorCode {
     AUTH_ACCOUNT_PROVIDER_EMAIL_INVALID("AUTH-007", "OAuth 제공자 이메일은 비어 있지 않고 254자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     PHONE_ALREADY_REGISTERED("PHONE-001", "이미 가입된 휴대전화 번호입니다.", HttpStatus.CONFLICT),
     PHONE_RESEND_COOLDOWN("PHONE-002", "인증번호 재발송은 잠시 후 다시 시도해 주세요.", HttpStatus.TOO_MANY_REQUESTS),
+    PHONE_VERIFICATION_UNAVAILABLE("PHONE-003", "인증 요청이 만료되었거나 이미 처리되어 유효하지 않습니다.", HttpStatus.GONE),
+    PHONE_OTP_INVALID("PHONE-004", "인증번호가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    PHONE_OTP_ATTEMPTS_EXCEEDED("PHONE-005", "인증번호 입력 가능 횟수를 초과했습니다. 다시 인증해 주세요.", HttpStatus.TOO_MANY_REQUESTS),
+    PHONE_VERIFICATION_SESSION_MISMATCH("PHONE-006", "현재 가입 세션의 인증 요청이 아닙니다.", HttpStatus.FORBIDDEN),
     PHONE_DELIVERY_FAILED("PHONE-007", "문자 인증번호를 발송할 수 없습니다.", HttpStatus.BAD_GATEWAY);
 
     private final String code;

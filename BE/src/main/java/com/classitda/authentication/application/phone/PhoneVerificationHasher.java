@@ -2,6 +2,7 @@ package com.classitda.authentication.application.phone;
 
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import javax.crypto.Mac;
@@ -28,6 +29,20 @@ public class PhoneVerificationHasher {
             String otp
     ) {
         return hash("otp:" + signupJti + ":" + verificationId + ":" + phoneNumber + ":" + otp);
+    }
+
+    public boolean matchesOtp(PhoneVerificationState state, String submittedOtp) {
+        String actualOtpDigest = hashOtp(
+                state.signupJti(),
+                state.verificationId(),
+                state.phoneNumber(),
+                submittedOtp
+        );
+
+        return MessageDigest.isEqual(
+                state.otpDigest().getBytes(StandardCharsets.UTF_8),
+                actualOtpDigest.getBytes(StandardCharsets.UTF_8)
+        );
     }
 
     private String hash(String value) {
