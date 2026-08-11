@@ -13,6 +13,10 @@ springdoc:
   swagger-ui:
     enabled: true
 
+logging:
+  level:
+    org.hibernate.orm.jdbc.error: "ERROR"
+
 management:
   endpoints:
     web:
