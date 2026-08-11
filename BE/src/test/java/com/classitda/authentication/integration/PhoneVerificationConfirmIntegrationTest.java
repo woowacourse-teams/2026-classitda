@@ -11,7 +11,7 @@ import com.classitda.authentication.application.phone.PhoneVerificationService;
 import com.classitda.authentication.application.phone.SmsSender;
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
-import com.classitda.authentication.presentation.dto.PhoneVerificationResponse;
+import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
 import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.exception.ErrorResponse;
 import com.classitda.common.exception.GlobalExceptionHandler;

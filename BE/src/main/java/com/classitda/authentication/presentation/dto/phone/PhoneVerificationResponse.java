@@ -1,4 +1,4 @@
-package com.classitda.authentication.presentation.dto;
+package com.classitda.authentication.presentation.dto.phone;
 
 public record PhoneVerificationResponse(
         String verificationId,

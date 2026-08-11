@@ -2,7 +2,7 @@ package com.classitda.authentication.application.phone;
 
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
-import com.classitda.authentication.presentation.dto.PhoneVerificationResponse;
+import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
 import com.classitda.member.domain.repository.MemberRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;

@@ -1,12 +1,12 @@
 package com.classitda.authentication.presentation;
 
-import com.classitda.authentication.presentation.dto.GoogleLoginRequest;
-import com.classitda.authentication.presentation.dto.LoginResponse;
-import com.classitda.authentication.presentation.dto.PhoneVerificationConfirmRequest;
-import com.classitda.authentication.presentation.dto.PhoneVerificationResponse;
-import com.classitda.authentication.presentation.dto.PhoneVerificationSendRequest;
-import com.classitda.authentication.presentation.dto.RegisteredLoginResponse;
-import com.classitda.authentication.presentation.dto.RegistrationRequiredLoginResponse;
+import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
+import com.classitda.authentication.presentation.dto.login.LoginResponse;
+import com.classitda.authentication.presentation.dto.login.RegisteredLoginResponse;
+import com.classitda.authentication.presentation.dto.login.RegistrationRequiredLoginResponse;
+import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
+import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
+import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

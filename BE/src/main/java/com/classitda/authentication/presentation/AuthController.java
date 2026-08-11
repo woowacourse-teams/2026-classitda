@@ -4,11 +4,11 @@ import static org.springframework.http.HttpStatus.CREATED;
 
 import com.classitda.authentication.application.SocialLoginService;
 import com.classitda.authentication.application.phone.PhoneVerificationService;
-import com.classitda.authentication.presentation.dto.GoogleLoginRequest;
-import com.classitda.authentication.presentation.dto.LoginResponse;
-import com.classitda.authentication.presentation.dto.PhoneVerificationConfirmRequest;
-import com.classitda.authentication.presentation.dto.PhoneVerificationResponse;
-import com.classitda.authentication.presentation.dto.PhoneVerificationSendRequest;
+import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
+import com.classitda.authentication.presentation.dto.login.LoginResponse;
+import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
+import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
+import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

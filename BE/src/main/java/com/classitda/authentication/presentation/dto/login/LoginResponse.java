@@ -1,4 +1,4 @@
-package com.classitda.authentication.presentation.dto;
+package com.classitda.authentication.presentation.dto.login;
 
 import com.classitda.authentication.application.token.IssuedLoginTokens;
 import com.classitda.authentication.application.token.IssuedSignupToken;

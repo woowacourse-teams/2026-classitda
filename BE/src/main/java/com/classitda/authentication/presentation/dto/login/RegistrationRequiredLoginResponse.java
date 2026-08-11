@@ -1,4 +1,4 @@
-package com.classitda.authentication.presentation.dto;
+package com.classitda.authentication.presentation.dto.login;
 
 public record RegistrationRequiredLoginResponse(
         LoginStatus status,

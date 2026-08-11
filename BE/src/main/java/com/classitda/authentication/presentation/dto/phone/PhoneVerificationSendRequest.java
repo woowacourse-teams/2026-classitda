@@ -1,4 +1,4 @@
-package com.classitda.authentication.presentation.dto;
+package com.classitda.authentication.presentation.dto.phone;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
