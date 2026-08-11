@@ -105,4 +105,16 @@
     <string name="my_schedule_waitlist_progress_status">진행 상태</string>
     <string name="my_schedule_waitlist_auto_released">대기 자동 해제</string>
     <string name="my_schedule_waitlist_ticket_not_deducted">수강권이 차감되지 않은 상태입니다.</string>
+    <string name="my_schedule_class_detail_title">수업 상세</string>
+    <string name="my_schedule_class_detail_information">수업 정보</string>
+    <string name="my_schedule_class_detail_date">일시</string>
+    <string name="my_schedule_class_detail_time_with_duration">%1$s (%2$d분)</string>
+    <string name="my_schedule_class_detail_location">장소</string>
+    <string name="my_schedule_class_detail_ticket">사용 수강권</string>
+    <string name="my_schedule_class_detail_ticket_counts">잔여 %1$d회 / 총 %2$d회</string>
+    <string name="my_schedule_class_detail_instructor">강사 소개</string>
+    <string name="my_schedule_class_detail_open_instructor">강사 상세 보기</string>
+    <string name="my_schedule_class_detail_notice">유의사항</string>
+    <string name="my_schedule_class_detail_history_condition">출석 처리가 완료된 수업만 이용 내역에 표시됩니다.</string>
+    <string name="my_schedule_class_detail_ticket_inquiry">수강권 사용 및 환불 문의는 센터로 연락 바랍니다.</string>
 </resources>

@@ -1,7 +1,9 @@
 package com.classitda.feature.student.myschedule.component.error
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,12 +26,15 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun MyScheduleLoadErrorIcon(modifier: Modifier = Modifier) {
     Surface(
-        modifier = modifier.clearAndSetSemantics { },
+        modifier =
+            modifier
+                .size(AppSpacing.xxxl * 3)
+                .clearAndSetSemantics { },
         shape = CircleShape,
         color = StuColors.Surface,
     ) {
         Box(
-            modifier = Modifier.padding(AppSpacing.xxxl),
+            modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             Text(
