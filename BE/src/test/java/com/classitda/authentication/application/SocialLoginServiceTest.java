@@ -7,10 +7,10 @@ import static org.mockito.Mockito.verify;
 
 import com.classitda.authentication.application.identity.GoogleIdentity;
 import com.classitda.authentication.application.identity.GoogleIdentityVerifier;
-import com.classitda.authentication.application.token.IssuedLoginTokens;
-import com.classitda.authentication.application.token.IssuedSignupToken;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.SignupTokenIssuer;
+import com.classitda.authentication.application.token.result.IssuedLoginTokens;
+import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;

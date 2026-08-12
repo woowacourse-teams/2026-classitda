@@ -1,7 +1,7 @@
 package com.classitda.authentication.presentation.dto.login;
 
-import com.classitda.authentication.application.token.IssuedLoginTokens;
-import com.classitda.authentication.application.token.IssuedSignupToken;
+import com.classitda.authentication.application.token.result.IssuedLoginTokens;
+import com.classitda.authentication.application.token.result.IssuedSignupToken;
 
 public sealed interface LoginResponse permits RegisteredLoginResponse, RegistrationRequiredLoginResponse {
 

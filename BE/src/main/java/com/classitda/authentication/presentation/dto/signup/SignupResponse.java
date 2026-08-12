@@ -1,6 +1,6 @@
 package com.classitda.authentication.presentation.dto.signup;
 
-import com.classitda.authentication.application.token.IssuedLoginTokens;
+import com.classitda.authentication.application.token.result.IssuedLoginTokens;
 
 public record SignupResponse(
         String accessToken,

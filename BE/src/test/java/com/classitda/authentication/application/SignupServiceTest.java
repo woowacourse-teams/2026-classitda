@@ -12,7 +12,7 @@ import com.classitda.authentication.application.phone.PhoneVerificationStore;
 import com.classitda.authentication.application.session.SignupSession;
 import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
-import com.classitda.authentication.application.token.IssuedLoginTokens;
+import com.classitda.authentication.application.token.result.IssuedLoginTokens;
 import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;

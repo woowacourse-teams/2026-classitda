@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classitda.authentication.application.session.SignupSession;
 import com.classitda.authentication.application.session.SignupSessionStore;
-import com.classitda.authentication.application.token.IssuedLoginTokens;
-import com.classitda.authentication.application.token.IssuedSignupToken;
+import com.classitda.authentication.application.token.result.IssuedLoginTokens;
+import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.SignupTokenIssuer;
 import com.classitda.authentication.domain.OauthProvider;

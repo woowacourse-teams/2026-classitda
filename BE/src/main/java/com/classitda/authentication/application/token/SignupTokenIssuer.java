@@ -2,6 +2,7 @@ package com.classitda.authentication.application.token;
 
 import com.classitda.authentication.application.session.SignupSession;
 import com.classitda.authentication.application.session.SignupSessionStore;
+import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.TokenUse;
 import com.classitda.authentication.infra.security.jwt.JwtTokenEncoder;

@@ -1,5 +1,6 @@
 package com.classitda.authentication.application.token;
 
+import com.classitda.authentication.application.token.result.IssuedLoginTokens;
 import com.classitda.authentication.domain.TokenUse;
 import com.classitda.authentication.infra.security.jwt.JwtTokenEncoder;
 import com.classitda.authentication.infra.security.properties.TokenProperties;

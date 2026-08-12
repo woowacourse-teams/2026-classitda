@@ -1,4 +1,4 @@
-package com.classitda.authentication.application.token;
+package com.classitda.authentication.application.token.result;
 
 public record IssuedSignupToken(String signupToken, long signupTokenExpiresIn) {
 
