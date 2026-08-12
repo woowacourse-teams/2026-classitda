@@ -1,5 +1,7 @@
-package com.classitda.authentication.application.session;
+package com.classitda.authentication.infra.session;
 
+import com.classitda.authentication.application.session.SignupSession;
+import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +12,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @RequiredArgsConstructor
 @Component
-public class SignupSessionRegistry {
+public class RedisSignupSessionStore implements SignupSessionStore {
 
     private static final String SIGNUP_SESSION_KEY_PREFIX = "signup:session:";
 
@@ -18,6 +20,7 @@ public class SignupSessionRegistry {
     private final ObjectMapper objectMapper;
     private final TokenProperties tokenProperties;
 
+    @Override
     public void save(String signupJti, SignupSession session) {
         redisTemplate.opsForValue().set(
                 signupSessionKey(signupJti),
@@ -25,10 +28,12 @@ public class SignupSessionRegistry {
                 tokenProperties.signupTtl());
     }
 
+    @Override
     public boolean hasActiveSession(String signupJti) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(signupSessionKey(signupJti)));
     }
 
+    @Override
     public Optional<SignupSession> findBySignupJti(String signupJti) {
         String serializedSession = redisTemplate.opsForValue().get(signupSessionKey(signupJti));
         if (serializedSession == null) {
@@ -38,6 +43,7 @@ public class SignupSessionRegistry {
         return Optional.of(deserialize(serializedSession));
     }
 
+    @Override
     public void deleteBySignupJti(String signupJti) {
         redisTemplate.delete(signupSessionKey(signupJti));
     }

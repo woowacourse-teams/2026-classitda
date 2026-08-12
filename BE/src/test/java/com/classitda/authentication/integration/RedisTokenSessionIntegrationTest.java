@@ -3,7 +3,7 @@ package com.classitda.authentication.integration;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classitda.authentication.application.session.SignupSession;
-import com.classitda.authentication.application.session.SignupSessionRegistry;
+import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.application.token.IssuedLoginTokens;
 import com.classitda.authentication.application.token.IssuedSignupToken;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
@@ -12,6 +12,7 @@ import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.infra.security.jwt.JwtTokenEncoder;
 import com.classitda.authentication.infra.security.jwt.SignupSessionJwtValidator;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
+import com.classitda.authentication.infra.session.RedisSignupSessionStore;
 import com.classitda.authentication.support.JwtTestSupport;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -72,7 +73,7 @@ class RedisTokenSessionIntegrationTest {
     @Test
     void 가입_세션을_JSON과_TTL로_저장하고_다시_읽는다() throws Exception {
         // given
-        SignupSessionRegistry registry = signupSessionRegistry();
+        SignupSessionStore registry = signupSessionRegistry();
         SignupSession expected = new SignupSession(
                 OauthProvider.GOOGLE,
                 "provider-subject",
@@ -95,7 +96,7 @@ class RedisTokenSessionIntegrationTest {
     @Test
     void 가입_세션이_없거나_만료되면_조회되지_않는다() throws InterruptedException {
         // given
-        SignupSessionRegistry registry = signupSessionRegistry();
+        SignupSessionStore registry = signupSessionRegistry();
         registry.save(
                 "expired-jti",
                 new SignupSession(OauthProvider.GOOGLE, "provider-subject", "member@example.com")
@@ -112,7 +113,7 @@ class RedisTokenSessionIntegrationTest {
     void 회원가입_토큰을_발급하면_같은_JTI의_가입_세션을_만든다() {
         // given
         JwtTestSupport jwtSupport = JwtTestSupport.create();
-        SignupSessionRegistry registry = signupSessionRegistry();
+        SignupSessionStore registry = signupSessionRegistry();
         SignupSessionJwtValidator validator = new SignupSessionJwtValidator(registry);
         SignupTokenIssuer issuer = new SignupTokenIssuer(
                 registry,
@@ -159,8 +160,8 @@ class RedisTokenSessionIntegrationTest {
         assertThat(redisTemplate.getExpire(key, TimeUnit.SECONDS)).isBetween(2_591_950L, 2_592_000L);
     }
 
-    private SignupSessionRegistry signupSessionRegistry() {
-        return new SignupSessionRegistry(redisTemplate, objectMapper, tokenProperties);
+    private SignupSessionStore signupSessionRegistry() {
+        return new RedisSignupSessionStore(redisTemplate, objectMapper, tokenProperties);
     }
 
     private String sha256(String value) throws Exception {

@@ -10,9 +10,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.classitda.authentication.application.phone.PhoneVerificationStore;
 import com.classitda.authentication.application.session.SignupSession;
-import com.classitda.authentication.application.session.SignupSessionRegistry;
-import com.classitda.authentication.application.token.IssuedLoginTokens;
+import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
+import com.classitda.authentication.application.token.IssuedLoginTokens;
 import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
@@ -48,7 +48,7 @@ class SignupServiceTest {
     );
 
     @Mock
-    private SignupSessionRegistry signupSessionRegistry;
+    private SignupSessionStore signupSessionStore;
 
     @Mock
     private PhoneVerificationStore phoneVerificationStore;
@@ -71,7 +71,7 @@ class SignupServiceTest {
     @Test
     void 가입_세션이_없거나_만료되면_AUTH_001이고_후속_작업을_하지_않는다() {
         // given
-        given(signupSessionRegistry.findBySignupJti(SIGNUP_JTI)).willReturn(Optional.empty());
+        given(signupSessionStore.findBySignupJti(SIGNUP_JTI)).willReturn(Optional.empty());
 
         // when / then
         assertAuthError(
@@ -79,13 +79,13 @@ class SignupServiceTest {
                 AuthErrorCode.AUTHENTICATION_REQUIRED
         );
         verifyNoInteractions(phoneVerificationStore, signupAccountCreator, loginTokenIssuer);
-        verify(signupSessionRegistry, never()).deleteBySignupJti(SIGNUP_JTI);
+        verify(signupSessionStore, never()).deleteBySignupJti(SIGNUP_JTI);
     }
 
     @Test
     void 인증_완료_전화번호가_없거나_만료되면_PHONE_008이고_가입_상태를_소비하지_않는다() {
         // given
-        given(signupSessionRegistry.findBySignupJti(SIGNUP_JTI)).willReturn(Optional.of(SESSION));
+        given(signupSessionStore.findBySignupJti(SIGNUP_JTI)).willReturn(Optional.of(SESSION));
         given(phoneVerificationStore.findVerifiedPhoneNumber(SIGNUP_JTI)).willReturn(Optional.empty());
 
         // when / then
@@ -94,7 +94,7 @@ class SignupServiceTest {
                 AuthErrorCode.VERIFIED_PHONE_UNAVAILABLE
         );
         verifyNoInteractions(signupAccountCreator, loginTokenIssuer);
-        verify(signupSessionRegistry, never()).deleteBySignupJti(SIGNUP_JTI);
+        verify(signupSessionStore, never()).deleteBySignupJti(SIGNUP_JTI);
         verify(phoneVerificationStore, never()).deleteVerifiedPhoneNumber(SIGNUP_JTI);
     }
 
@@ -102,7 +102,7 @@ class SignupServiceTest {
     void 동일한_소셜_계정이_이미_있으면_전화번호_인증과_계정_생성을_건너뛰고_로그인에_성공한다() {
         // given
         AuthAccount existingAccount = existingAccount(42L);
-        given(signupSessionRegistry.findBySignupJti(SIGNUP_JTI)).willReturn(Optional.of(SESSION));
+        given(signupSessionStore.findBySignupJti(SIGNUP_JTI)).willReturn(Optional.of(SESSION));
         given(authAccountRepository.findByProviderAndProviderSubject(OauthProvider.GOOGLE, PROVIDER_SUBJECT))
                 .willReturn(Optional.of(existingAccount));
         given(loginTokenIssuer.issueLoginTokens(42L)).willReturn(issuedTokens());
@@ -114,7 +114,7 @@ class SignupServiceTest {
         assertThat(response).isEqualTo(SignupResponse.from(issuedTokens()));
         verify(phoneVerificationStore, never()).findVerifiedPhoneNumber(SIGNUP_JTI);
         verifyNoInteractions(signupAccountCreator, memberRepository);
-        verify(signupSessionRegistry).deleteBySignupJti(SIGNUP_JTI);
+        verify(signupSessionStore).deleteBySignupJti(SIGNUP_JTI);
         verify(phoneVerificationStore).deleteVerifiedPhoneNumber(SIGNUP_JTI);
     }
 
@@ -131,16 +131,16 @@ class SignupServiceTest {
         // then
         assertThat(response).isEqualTo(SignupResponse.from(issuedTokens()));
         InOrder order = inOrder(
-                signupSessionRegistry,
+                signupSessionStore,
                 phoneVerificationStore,
                 signupAccountCreator,
                 loginTokenIssuer
         );
-        order.verify(signupSessionRegistry).findBySignupJti(SIGNUP_JTI);
+        order.verify(signupSessionStore).findBySignupJti(SIGNUP_JTI);
         order.verify(phoneVerificationStore).findVerifiedPhoneNumber(SIGNUP_JTI);
         order.verify(signupAccountCreator).create(REQUEST, SESSION, PHONE_NUMBER);
         order.verify(loginTokenIssuer).issueLoginTokens(42L);
-        order.verify(signupSessionRegistry).deleteBySignupJti(SIGNUP_JTI);
+        order.verify(signupSessionStore).deleteBySignupJti(SIGNUP_JTI);
         order.verify(phoneVerificationStore).deleteVerifiedPhoneNumber(SIGNUP_JTI);
     }
 
@@ -161,7 +161,7 @@ class SignupServiceTest {
         // then
         assertThat(response).isEqualTo(SignupResponse.from(issuedTokens()));
         verifyNoInteractions(memberRepository);
-        verify(signupSessionRegistry).deleteBySignupJti(SIGNUP_JTI);
+        verify(signupSessionStore).deleteBySignupJti(SIGNUP_JTI);
         verify(phoneVerificationStore).deleteVerifiedPhoneNumber(SIGNUP_JTI);
     }
 
@@ -231,7 +231,7 @@ class SignupServiceTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("회원가입 후 로그인 토큰을 발급할 수 없습니다.")
                 .hasNoCause();
-        verify(signupSessionRegistry).deleteBySignupJti(SIGNUP_JTI);
+        verify(signupSessionStore).deleteBySignupJti(SIGNUP_JTI);
         verify(phoneVerificationStore).deleteVerifiedPhoneNumber(SIGNUP_JTI);
         assertSanitizedLog(output, "회원가입 후 로그인 토큰 발급 중 내부 오류가 발생했습니다.");
     }
@@ -243,7 +243,7 @@ class SignupServiceTest {
         given(signupAccountCreator.create(REQUEST, SESSION, PHONE_NUMBER)).willReturn(42L);
         given(loginTokenIssuer.issueLoginTokens(42L)).willReturn(issuedTokens());
         org.mockito.Mockito.doThrow(new IllegalStateException("sensitive-session-state"))
-                .when(signupSessionRegistry).deleteBySignupJti(SIGNUP_JTI);
+                .when(signupSessionStore).deleteBySignupJti(SIGNUP_JTI);
         org.mockito.Mockito.doThrow(new IllegalStateException("sensitive-phone-state"))
                 .when(phoneVerificationStore).deleteVerifiedPhoneNumber(SIGNUP_JTI);
 
@@ -252,7 +252,7 @@ class SignupServiceTest {
 
         // then
         assertThat(response).isEqualTo(SignupResponse.from(issuedTokens()));
-        verify(signupSessionRegistry).deleteBySignupJti(SIGNUP_JTI);
+        verify(signupSessionStore).deleteBySignupJti(SIGNUP_JTI);
         verify(phoneVerificationStore).deleteVerifiedPhoneNumber(SIGNUP_JTI);
         assertThat(output.getAll())
                 .contains(
@@ -265,7 +265,7 @@ class SignupServiceTest {
     @Test
     void 손상된_가입_세션_조회는_민감정보_없는_내부오류이고_후속_작업을_하지_않는다(CapturedOutput output) {
         // given
-        given(signupSessionRegistry.findBySignupJti(SIGNUP_JTI))
+        given(signupSessionStore.findBySignupJti(SIGNUP_JTI))
                 .willThrow(new IllegalStateException("sensitive-provider-state"));
 
         // when / then
@@ -278,7 +278,7 @@ class SignupServiceTest {
     }
 
     private void givenServerState() {
-        given(signupSessionRegistry.findBySignupJti(SIGNUP_JTI)).willReturn(Optional.of(SESSION));
+        given(signupSessionStore.findBySignupJti(SIGNUP_JTI)).willReturn(Optional.of(SESSION));
         given(authAccountRepository.findByProviderAndProviderSubject(OauthProvider.GOOGLE, PROVIDER_SUBJECT))
                 .willReturn(Optional.empty());
         given(phoneVerificationStore.findVerifiedPhoneNumber(SIGNUP_JTI))
@@ -311,7 +311,7 @@ class SignupServiceTest {
 
     private void assertNoTokenOrCleanup() {
         verifyNoInteractions(loginTokenIssuer);
-        verify(signupSessionRegistry, never()).deleteBySignupJti(SIGNUP_JTI);
+        verify(signupSessionStore, never()).deleteBySignupJti(SIGNUP_JTI);
         verify(phoneVerificationStore, never()).deleteVerifiedPhoneNumber(SIGNUP_JTI);
     }
 

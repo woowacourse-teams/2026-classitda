@@ -2,9 +2,9 @@ package com.classitda.authentication.application;
 
 import com.classitda.authentication.application.phone.PhoneVerificationStore;
 import com.classitda.authentication.application.session.SignupSession;
-import com.classitda.authentication.application.session.SignupSessionRegistry;
-import com.classitda.authentication.application.token.IssuedLoginTokens;
+import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
+import com.classitda.authentication.application.token.IssuedLoginTokens;
 import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
 import com.classitda.authentication.exception.AuthErrorCode;
@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class SignupService {
 
-    private final SignupSessionRegistry signupSessionRegistry;
+    private final SignupSessionStore signupSessionStore;
     private final PhoneVerificationStore phoneVerificationStore;
 
     private final SignupAccountCreator signupAccountCreator;
@@ -54,7 +54,7 @@ public class SignupService {
     private SignupSession findSignupSession(String signupJti) {
         Optional<SignupSession> signupSession;
         try {
-            signupSession = signupSessionRegistry.findBySignupJti(signupJti);
+            signupSession = signupSessionStore.findBySignupJti(signupJti);
         } catch (RuntimeException exception) {
             log.error(
                     "가입 세션 조회 중 내부 오류가 발생했습니다. exceptionType={}",
@@ -164,7 +164,7 @@ public class SignupService {
 
     private void cleanupSignupState(String signupJti) {
         try {
-            signupSessionRegistry.deleteBySignupJti(signupJti);
+            signupSessionStore.deleteBySignupJti(signupJti);
         } catch (RuntimeException exception) {
             log.error(
                     "가입 완료 후 가입 세션 정리에 실패했습니다. exceptionType={}",

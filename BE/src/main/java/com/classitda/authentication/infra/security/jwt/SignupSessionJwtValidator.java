@@ -1,6 +1,6 @@
 package com.classitda.authentication.infra.security.jwt;
 
-import com.classitda.authentication.application.session.SignupSessionRegistry;
+import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.domain.TokenUse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SignupSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
 
-    private final SignupSessionRegistry signupSessionRegistry;
+    private final SignupSessionStore signupSessionStore;
 
     @Override
     public OAuth2TokenValidatorResult validate(Jwt jwt) {
@@ -28,7 +28,7 @@ public class SignupSessionJwtValidator implements OAuth2TokenValidator<Jwt> {
             return invalidToken("가입 토큰 식별자(jti/sub)가 올바르지 않습니다.");
         }
 
-        if (!signupSessionRegistry.hasActiveSession(signupJti)) {
+        if (!signupSessionStore.hasActiveSession(signupJti)) {
             return invalidToken("활성 가입 세션이 존재하지 않습니다.");
         }
 

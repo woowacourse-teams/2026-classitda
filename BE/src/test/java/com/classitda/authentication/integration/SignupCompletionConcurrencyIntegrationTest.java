@@ -8,7 +8,7 @@ import static org.mockito.Mockito.reset;
 import com.classitda.authentication.application.SignupService;
 import com.classitda.authentication.application.phone.PhoneVerificationStore;
 import com.classitda.authentication.application.session.SignupSession;
-import com.classitda.authentication.application.session.SignupSessionRegistry;
+import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
 import com.classitda.authentication.exception.AuthErrorCode;
@@ -66,7 +66,7 @@ class SignupCompletionConcurrencyIntegrationTest {
     private MemberTermAgreementRepository memberTermAgreementRepository;
 
     @MockitoSpyBean
-    private SignupSessionRegistry signupSessionRegistry;
+    private SignupSessionStore signupSessionStore;
 
     @MockitoSpyBean
     private PhoneVerificationStore phoneVerificationStore;
@@ -103,7 +103,7 @@ class SignupCompletionConcurrencyIntegrationTest {
         // then
         assertTwoSuccessfulTokens(attempts);
         assertSingleCompleteAccount();
-        assertThat(signupSessionRegistry.hasActiveSession(signupJti)).isFalse();
+        assertThat(signupSessionStore.hasActiveSession(signupJti)).isFalse();
         assertThat(phoneVerificationStore.findVerifiedPhoneNumber(signupJti)).isEmpty();
     }
 
@@ -129,9 +129,9 @@ class SignupCompletionConcurrencyIntegrationTest {
                 .filter(attempt -> attempt.failure() == null)
                 .findFirst()
                 .orElseThrow();
-        assertThat(signupSessionRegistry.hasActiveSession(winner.signupJti())).isFalse();
+        assertThat(signupSessionStore.hasActiveSession(winner.signupJti())).isFalse();
         assertThat(phoneVerificationStore.findVerifiedPhoneNumber(winner.signupJti())).isEmpty();
-        assertThat(signupSessionRegistry.hasActiveSession(loser.signupJti())).isTrue();
+        assertThat(signupSessionStore.hasActiveSession(loser.signupJti())).isTrue();
         assertThat(phoneVerificationStore.findVerifiedPhoneNumber(loser.signupJti())).contains(phoneNumber);
     }
 
@@ -153,8 +153,8 @@ class SignupCompletionConcurrencyIntegrationTest {
         // then
         assertTwoSuccessfulTokens(attempts);
         assertSingleCompleteAccount();
-        assertThat(signupSessionRegistry.hasActiveSession("social-race-a")).isFalse();
-        assertThat(signupSessionRegistry.hasActiveSession("social-race-b")).isFalse();
+        assertThat(signupSessionStore.hasActiveSession("social-race-a")).isFalse();
+        assertThat(signupSessionStore.hasActiveSession("social-race-b")).isFalse();
         assertThat(phoneVerificationStore.findVerifiedPhoneNumber("social-race-a")).isEmpty();
         assertThat(phoneVerificationStore.findVerifiedPhoneNumber("social-race-b")).isEmpty();
     }
@@ -165,7 +165,7 @@ class SignupCompletionConcurrencyIntegrationTest {
             String providerEmail,
             String phoneNumber
     ) {
-        signupSessionRegistry.save(
+        signupSessionStore.save(
                 signupJti,
                 new SignupSession(OauthProvider.GOOGLE, providerSubject, providerEmail)
         );
@@ -184,7 +184,7 @@ class SignupCompletionConcurrencyIntegrationTest {
             Object result = invocation.callRealMethod();
             sessionBarrier.await(10, TimeUnit.SECONDS);
             return result;
-        }).when(signupSessionRegistry).findBySignupJti(anyString());
+        }).when(signupSessionStore).findBySignupJti(anyString());
         doAnswer(invocation -> {
             Object result = invocation.callRealMethod();
             phoneStateBarrier.await(10, TimeUnit.SECONDS);
@@ -279,7 +279,7 @@ class SignupCompletionConcurrencyIntegrationTest {
     }
 
     private void resetBoundarySpies() {
-        reset(signupSessionRegistry, phoneVerificationStore);
+        reset(signupSessionStore, phoneVerificationStore);
     }
 
     private void cleanState() {

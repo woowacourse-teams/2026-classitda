@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classitda.authentication.application.phone.PhoneVerificationService;
 import com.classitda.authentication.application.phone.PhoneVerificationStore;
-import com.classitda.authentication.application.session.SignupSessionRegistry;
-import com.classitda.authentication.application.token.IssuedSignupToken;
+import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.application.token.SignupTokenIssuer;
+import com.classitda.authentication.application.token.IssuedSignupToken;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
@@ -69,7 +69,7 @@ class SignupCompletionIntegrationTest {
     private MemberTermAgreementRepository memberTermAgreementRepository;
 
     @Autowired
-    private SignupSessionRegistry signupSessionRegistry;
+    private SignupSessionStore signupSessionStore;
 
     @Autowired
     private PhoneVerificationStore phoneVerificationStore;
@@ -109,7 +109,7 @@ class SignupCompletionIntegrationTest {
             assertThat(member.getPhoneNumber()).isEqualTo(phoneNumber);
         });
         assertThat(authAccountRepository.count()).isEqualTo(1L);
-        assertThat(signupSessionRegistry.hasActiveSession(signup.jti())).isFalse();
+        assertThat(signupSessionStore.hasActiveSession(signup.jti())).isFalse();
         assertThat(phoneVerificationStore.findVerifiedPhoneNumber(signup.jti())).isEmpty();
     }
 

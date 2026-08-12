@@ -3,7 +3,7 @@ package com.classitda.authentication.infra.security.jwt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import com.classitda.authentication.application.session.SignupSessionRegistry;
+import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.domain.TokenUse;
 import com.classitda.authentication.support.JwtTestSupport;
 import java.time.Duration;
@@ -19,8 +19,8 @@ class JwtTokenContractTest {
         // given
         JwtTestSupport jwtSupport = JwtTestSupport.create();
         JwtTokenEncoder jwtTokenEncoder = new JwtTokenEncoder(jwtSupport.encoder());
-        SignupSessionRegistry signupSessionRegistry = mock(SignupSessionRegistry.class);
-        JwtDecoder jwtDecoder = jwtSupport.decoder(new SignupSessionJwtValidator(signupSessionRegistry));
+        SignupSessionStore signupSessionStore = mock(SignupSessionStore.class);
+        JwtDecoder jwtDecoder = jwtSupport.decoder(new SignupSessionJwtValidator(signupSessionStore));
 
         // when
         String token = jwtTokenEncoder.encode(TokenUse.ACCESS, "42", "access-jti", Duration.ofMinutes(15));
