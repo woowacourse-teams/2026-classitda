@@ -1,5 +1,6 @@
 package com.classitda.studio.application;
 
+import com.classitda.studio.domain.PermissionCode;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioPolicy;
 import com.classitda.studio.domain.repository.StudioPolicyRepository;
@@ -20,12 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudioPolicyService {
 
     private final StudioPolicyRepository studioPolicyRepository;
+    private final StudioPermissionService studioPermissionService;
     private final StudioRepository studioRepository;
 
     @Transactional
     public StudioPolicyResponse save(Long memberId, Long studioId, StudioPolicyCreateRequest request) {
         Studio studio = getStudio(studioId);
-        studio.validateOwner(memberId);
+        studioPermissionService.validate(studio, memberId, PermissionCode.POLICY_MANAGE);
         if (studioPolicyRepository.existsByStudioId(studioId)) {
             throw new StudioException(StudioErrorCode.POLICY_ALREADY_EXISTS);
         }
@@ -44,7 +46,7 @@ public class StudioPolicyService {
     @Transactional
     public StudioPolicyResponse update(Long memberId, Long studioId, StudioPolicyUpdateRequest request) {
         Studio studio = getStudio(studioId);
-        studio.validateOwner(memberId);
+        studioPermissionService.validate(studio, memberId, PermissionCode.POLICY_MANAGE);
         StudioPolicy policy = getPolicy(studioId);
         policy.update(
                 resolve(request.reservationCloseMinutesBefore(), policy.getReservationCloseMinutesBefore()),

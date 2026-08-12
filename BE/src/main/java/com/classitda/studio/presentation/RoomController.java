@@ -1,6 +1,7 @@
 package com.classitda.studio.presentation;
 
 import com.classitda.common.pagination.CursorResponse;
+import com.classitda.authentication.presentation.annotation.CurrentMemberId;
 import com.classitda.studio.application.RoomService;
 import com.classitda.studio.presentation.dto.RoomCreateRequest;
 import com.classitda.studio.presentation.dto.RoomResponse;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,7 +29,7 @@ public class RoomController implements RoomControllerApi {
     @Override
     @PostMapping(version = "1")
     public ResponseEntity<RoomResponse> save(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @Valid @RequestBody RoomCreateRequest request
     ) {
@@ -51,7 +51,7 @@ public class RoomController implements RoomControllerApi {
     @Override
     @PatchMapping(path = "/{roomId}", version = "1")
     public RoomResponse update(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long roomId,
             @Valid @RequestBody RoomUpdateRequest request

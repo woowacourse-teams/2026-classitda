@@ -2,10 +2,11 @@ package com.classitda.studio.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.fixture.StudioPolicyFixture;
-import com.classitda.support.MySqlTestContainerConfiguration;
+import com.classitda.support.AuthenticationIntegrationTestConfiguration;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -23,7 +24,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @AutoConfigureRestTestClient
-@Import(MySqlTestContainerConfiguration.class)
+@Import(AuthenticationIntegrationTestConfiguration.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
         "spring.sql.init.mode=always"
@@ -39,6 +40,9 @@ class StudioPolicyConcurrencyTest {
     private StudioService studioService;
 
     @Autowired
+    private LoginTokenIssuer loginTokenIssuer;
+
+    @Autowired
     private TransactionTemplate transactionTemplate;
 
     @Autowired
@@ -49,13 +53,14 @@ class StudioPolicyConcurrencyTest {
         // given
         Long ownerId = 소유자를_저장한다();
         Long studioId = studioService.save(ownerId, StudioFixture.기본_시설_생성_요청()).id();
+        String accessToken = loginTokenIssuer.issueAccessToken(ownerId).accessToken();
         CyclicBarrier barrier = new CyclicBarrier(CONCURRENT_REQUEST_COUNT);
         ExecutorService executor = Executors.newFixedThreadPool(CONCURRENT_REQUEST_COUNT);
 
         // when
         List<Future<Integer>> futures = executor.invokeAll(List.<Callable<Integer>>of(
-                () -> 정책을_등록한다(barrier, ownerId, studioId),
-                () -> 정책을_등록한다(barrier, ownerId, studioId)
+                () -> 정책을_등록한다(barrier, accessToken, studioId),
+                () -> 정책을_등록한다(barrier, accessToken, studioId)
         ));
         executor.shutdown();
 
@@ -64,12 +69,12 @@ class StudioPolicyConcurrencyTest {
                 .containsExactlyInAnyOrder(201, 409);
     }
 
-    private int 정책을_등록한다(CyclicBarrier barrier, Long ownerId, Long studioId) throws Exception {
+    private int 정책을_등록한다(CyclicBarrier barrier, String accessToken, Long studioId) throws Exception {
         barrier.await();
         return client.post()
                 .uri("/api/studios/{studioId}/policy", studioId)
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", String.valueOf(ownerId))
+                .header("Authorization", "Bearer " + accessToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(StudioPolicyFixture.기본_정책_생성_요청())
                 .exchange()

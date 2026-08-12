@@ -1,5 +1,6 @@
 package com.classitda.studio.presentation;
 
+import com.classitda.authentication.presentation.annotation.CurrentMemberId;
 import com.classitda.studio.application.StudioService;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,7 +27,7 @@ public class StudioController implements StudioControllerApi {
     @Override
     @PostMapping(version = "1")
     public ResponseEntity<StudioResponse> save(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @CurrentMemberId Long memberId,
             @Valid @RequestBody StudioCreateRequest request
     ) {
         StudioResponse response = studioService.save(memberId, request);
@@ -46,7 +46,7 @@ public class StudioController implements StudioControllerApi {
     @Override
     @PatchMapping(path = "/{studioId}", version = "1")
     public StudioResponse update(
-            @RequestHeader("X-Member-Id") Long memberId,
+            @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @Valid @RequestBody StudioUpdateRequest request
     ) {

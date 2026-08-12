@@ -120,7 +120,6 @@ CREATE TABLE permission
 (
     id         BIGINT      NOT NULL AUTO_INCREMENT,
     code       VARCHAR(50) NOT NULL,
-    category   VARCHAR(50) NOT NULL,
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NULL,
     PRIMARY KEY (id),
@@ -134,26 +133,29 @@ CREATE TABLE studio_role
     id                 BIGINT      NOT NULL AUTO_INCREMENT,
     studio_id          BIGINT      NOT NULL,
     name               VARCHAR(50) NOT NULL,
-    is_system          BOOLEAN     NOT NULL DEFAULT FALSE,
-    implies_instructor BOOLEAN     NOT NULL DEFAULT FALSE,
+    system_role        VARCHAR(20) NULL,
+    is_instructor      BOOLEAN     NOT NULL DEFAULT FALSE,
     created_at         DATETIME(6) NOT NULL,
     updated_at         DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_role_studio_name (studio_id, name),
+    UNIQUE KEY uk_role_studio_system (studio_id, system_role),
     CONSTRAINT fk_role_studio FOREIGN KEY (studio_id) REFERENCES studio (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
 
-CREATE TABLE role_permission
+CREATE TABLE studio_role_permission
 (
-    studio_role_id BIGINT NOT NULL,
-    permission_id  BIGINT NOT NULL,
+    id             BIGINT      NOT NULL AUTO_INCREMENT,
+    studio_role_id BIGINT      NOT NULL,
+    permission_id  BIGINT      NOT NULL,
     created_at     DATETIME(6) NOT NULL,
     updated_at     DATETIME(6) NULL,
-    PRIMARY KEY (studio_role_id, permission_id),
-    CONSTRAINT fk_role_permission_role FOREIGN KEY (studio_role_id) REFERENCES studio_role (id),
-    CONSTRAINT fk_role_permission_permission FOREIGN KEY (permission_id) REFERENCES permission (id)
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_studio_role_permission (studio_role_id, permission_id),
+    CONSTRAINT fk_studio_role_permission_role FOREIGN KEY (studio_role_id) REFERENCES studio_role (id),
+    CONSTRAINT fk_studio_role_permission_permission FOREIGN KEY (permission_id) REFERENCES permission (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
@@ -164,8 +166,6 @@ CREATE TABLE studio_membership
     studio_id       BIGINT      NOT NULL,
     member_id       BIGINT      NOT NULL,
     studio_role_id  BIGINT      NOT NULL,
-    is_instructor   BOOLEAN     NOT NULL DEFAULT FALSE,
-    is_customer     BOOLEAN     NOT NULL DEFAULT TRUE,
     status          VARCHAR(20) NOT NULL,
     joined_at       DATETIME(6) NOT NULL,
     created_at      DATETIME(6) NOT NULL,
@@ -314,3 +314,22 @@ CREATE TABLE notice
     CONSTRAINT fk_notice_author FOREIGN KEY (author_membership_id) REFERENCES studio_membership (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
+-- 권한 코드. PermissionCode enum과 1:1로 대응한다.
+-- enum에 상수를 추가하면 이 파일에도 함께 추가해야 한다.
+INSERT INTO permission (code, created_at)
+VALUES ('STUDIO_UPDATE', NOW(6)),
+       ('POLICY_MANAGE', NOW(6)),
+       ('ROOM_MANAGE', NOW(6)),
+       ('ROLE_MANAGE', NOW(6)),
+       ('MEMBER_READ', NOW(6)),
+       ('MEMBER_INVITE', NOW(6)),
+       ('MEMBER_MANAGE', NOW(6)),
+       ('CLASS_TEMPLATE_MANAGE', NOW(6)),
+       ('CLASS_SESSION_MANAGE_OWN', NOW(6)),
+       ('CLASS_SESSION_MANAGE_ALL', NOW(6)),
+       ('RESERVATION_READ', NOW(6)),
+       ('RESERVATION_MANAGE', NOW(6)),
+       ('PASS_PRODUCT_MANAGE', NOW(6)),
+       ('PASS_MEMBER_MANAGE', NOW(6)),
+       ('NOTICE_MANAGE', NOW(6));

@@ -3,6 +3,7 @@ package com.classitda.studio.application;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.pagination.CursorResponse;
+import com.classitda.studio.domain.PermissionCode;
 import com.classitda.studio.domain.Room;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.repository.RoomRepository;
@@ -30,12 +31,13 @@ public class RoomService {
     private static final int MAX_SIZE = 100;
 
     private final RoomRepository roomRepository;
+    private final StudioPermissionService studioPermissionService;
     private final StudioRepository studioRepository;
 
     @Transactional
     public RoomResponse save(Long memberId, Long studioId, RoomCreateRequest request) {
         Studio studio = getStudio(studioId);
-        studio.validateOwner(memberId);
+        studioPermissionService.validate(studio, memberId, PermissionCode.ROOM_MANAGE);
         validateNameNotDuplicated(studioId, request.name());
         try {
             return RoomResponse.from(roomRepository.saveAndFlush(request.toEntity(studio)));
@@ -62,7 +64,7 @@ public class RoomService {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.ROOM_NOT_FOUND));
         room.validateBelongsTo(studioId);
-        room.getStudio().validateOwner(memberId);
+        studioPermissionService.validate(room.getStudio(), memberId, PermissionCode.ROOM_MANAGE);
         String name = request.name();
         if (!name.equals(room.getName())) {
             validateNameNotDuplicated(studioId, name);

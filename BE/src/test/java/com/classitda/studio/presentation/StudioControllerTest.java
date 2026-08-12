@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
+import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import com.classitda.studio.application.StudioService;
@@ -13,6 +14,7 @@ import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
 import com.classitda.studio.presentation.dto.StudioUpdateRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -33,9 +35,18 @@ class StudioControllerTest {
     @MockitoBean
     private StudioService studioService;
 
+    @MockitoBean
+    private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
+
     @Autowired
     StudioControllerTest(RestTestClient client) {
         this.client = client;
+    }
+
+    @BeforeEach
+    void 인증된_회원_아이디를_주입한다() throws Exception {
+        when(currentMemberIdArgumentResolver.supportsParameter(any())).thenReturn(true);
+        when(currentMemberIdArgumentResolver.resolveArgument(any(), any(), any(), any())).thenReturn(1L);
     }
 
     @Test
@@ -49,7 +60,6 @@ class StudioControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -79,7 +89,6 @@ class StudioControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -100,7 +109,6 @@ class StudioControllerTest {
         // when
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -153,16 +161,15 @@ class StudioControllerTest {
     }
 
     @Test
-    void 대표_강사가_아니면_STUDIO_003을_반환한다() {
+    void 권한이_없으면_PERMISSION_001을_반환한다() {
         // given
         when(studioService.update(anyLong(), anyLong(), any(StudioUpdateRequest.class)))
-                .thenThrow(new StudioException(StudioErrorCode.NOT_OWNER));
+                .thenThrow(new StudioException(StudioErrorCode.PERMISSION_DENIED));
 
         // when
         RestTestClient.ResponseSpec result = client.patch()
                 .uri("/api/studios/1")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(StudioFixture.이름만_바꾸는_수정_요청("남의 스튜디오"))
                 .exchange();
@@ -171,7 +178,7 @@ class StudioControllerTest {
         result.expectStatus().isForbidden()
                 .expectBody()
                 .json("""
-                        {"code":"STUDIO-003","message":"해당 시설의 대표 강사가 아닙니다."}
+                        {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}
                         """, JsonCompareMode.STRICT);
     }
 }

@@ -45,11 +45,16 @@ public interface RoomControllerApi {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "해당 시설의 대표 강사가 아님",
+                    description = "권한이 없거나 시설 소속이 아님",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "대표 강사 아님", value = """
-                                    {"code": "STUDIO-003", "message": "해당 시설의 대표 강사가 아닙니다."}""")
+                            examples = {
+                                    @ExampleObject(name = "권한 없음", value = """
+                                            {"code": "PERMISSION-001", \
+                                            "message": "이 작업을 수행할 권한이 없습니다."}"""),
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code": "MEMBERSHIP-001", "message": "해당 시설의 소속이 아닙니다."}""")
+                            }
                     )
             ),
             @ApiResponse(
@@ -72,11 +77,7 @@ public interface RoomControllerApi {
             )
     })
     ResponseEntity<RoomResponse> save(
-            @Parameter(
-                    description = "요청자 회원 ID. 인증 연동 전까지만 사용하는 임시 헤더다.",
-                    required = true,
-                    example = "1"
-            )
+            @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")
             Long studioId,
@@ -163,11 +164,16 @@ public interface RoomControllerApi {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "해당 시설의 대표 강사가 아님",
+                    description = "권한이 없거나 시설 소속이 아님",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "대표 강사 아님", value = """
-                                    {"code": "STUDIO-003", "message": "해당 시설의 대표 강사가 아닙니다."}""")
+                            examples = {
+                                    @ExampleObject(name = "권한 없음", value = """
+                                            {"code": "PERMISSION-001", \
+                                            "message": "이 작업을 수행할 권한이 없습니다."}"""),
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code": "MEMBERSHIP-001", "message": "해당 시설의 소속이 아닙니다."}""")
+                            }
                     )
             ),
             @ApiResponse(
@@ -190,11 +196,7 @@ public interface RoomControllerApi {
             )
     })
     RoomResponse update(
-            @Parameter(
-                    description = "요청자 회원 ID. 인증 연동 전까지만 사용하는 임시 헤더다.",
-                    required = true,
-                    example = "1"
-            )
+            @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")
             Long studioId,

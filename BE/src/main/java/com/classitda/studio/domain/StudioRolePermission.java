@@ -1,12 +1,13 @@
 package com.classitda.studio.domain;
 
 import com.classitda.common.domain.BaseEntity;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -15,26 +16,24 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "role_permission")
+@Table(name = "studio_role_permission")
 @Entity
-public class RolePermission extends BaseEntity {
+public class StudioRolePermission extends BaseEntity {
 
-    @EmbeddedId
-    private RolePermissionId id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @MapsId("studioRoleId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "studio_role_id", nullable = false)
     private StudioRole studioRole;
 
-    @MapsId("permissionId")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "permission_id", nullable = false)
     private Permission permission;
 
     @Builder
-    private RolePermission(StudioRole studioRole, Permission permission) {
-        this.id = new RolePermissionId();
+    private StudioRolePermission(StudioRole studioRole, Permission permission) {
         this.studioRole = studioRole;
         this.permission = permission;
     }
