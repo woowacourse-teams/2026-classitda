@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
+import com.classitda.authentication.application.LogoutService;
 import com.classitda.authentication.application.RefreshTokenService;
 import com.classitda.authentication.application.session.RefreshSession;
 import com.classitda.authentication.application.session.RefreshSessionStore;
@@ -26,6 +27,7 @@ import com.classitda.authentication.infra.security.jwt.SignupSessionJwtValidator
 import com.classitda.authentication.infra.security.properties.TokenProperties;
 import com.classitda.authentication.infra.session.RedisRefreshSessionStore;
 import com.classitda.authentication.infra.session.RedisSignupSessionStore;
+import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
 import com.classitda.authentication.support.JwtTestSupport;
@@ -82,6 +84,7 @@ class RedisTokenSessionIntegrationTest {
     private JwtTestSupport jwtSupport;
     private LoginTokenIssuer loginTokenIssuer;
     private RefreshTokenService refreshTokenService;
+    private LogoutService logoutService;
 
     @BeforeEach
     void setUp() {
@@ -109,6 +112,7 @@ class RedisTokenSessionIntegrationTest {
                 loginTokenIssuer,
                 tokenProperties
         );
+        logoutService = new LogoutService(refreshTokenVerifier, refreshSessionStore);
 
         try (RedisConnection connection = connectionFactory.getConnection()) {
             connection.serverCommands().flushDb();
@@ -441,12 +445,166 @@ class RedisTokenSessionIntegrationTest {
     }
 
     @Test
+    void 조건부_삭제는_정확한_세션만_삭제하고_다른_회원_해시_세션은_보존한다() {
+        // given
+        IssuedRefreshToken targetToken = refreshTokenIssuer.issue();
+        IssuedRefreshToken otherToken = refreshTokenIssuer.issue();
+        RefreshSession targetSession = activeSession(targetToken.tokenHash(), 42L);
+        RefreshSession otherSession = activeSession(otherToken.tokenHash(), 84L);
+        refreshSessionStore.save(targetToken.sessionId(), targetSession, 60L);
+        refreshSessionStore.save(otherToken.sessionId(), otherSession, 60L);
+
+        // when
+        RefreshSessionStore.DeleteOutcome wrongMember = refreshSessionStore.deleteIfMatches(
+                targetToken.sessionId(),
+                RefreshSession.of(
+                        targetSession.tokenHash(),
+                        84L,
+                        targetSession.expiresAtEpochSecond()
+                )
+        );
+        RefreshSessionStore.DeleteOutcome wrongHash = refreshSessionStore.deleteIfMatches(
+                targetToken.sessionId(),
+                RefreshSession.of(
+                        "f".repeat(64),
+                        targetSession.memberId(),
+                        targetSession.expiresAtEpochSecond()
+                )
+        );
+        RefreshSessionStore.DeleteOutcome deleted = refreshSessionStore.deleteIfMatches(
+                targetToken.sessionId(),
+                targetSession
+        );
+
+        // then
+        assertThat(wrongMember).isEqualTo(RefreshSessionStore.DeleteOutcome.SESSION_MISMATCH);
+        assertThat(wrongHash).isEqualTo(RefreshSessionStore.DeleteOutcome.SESSION_MISMATCH);
+        assertThat(deleted).isEqualTo(RefreshSessionStore.DeleteOutcome.DELETED);
+        assertThat(refreshSessionStore.findBySessionId(targetToken.sessionId())).isEmpty();
+        assertThat(refreshSessionStore.findBySessionId(otherToken.sessionId())).contains(otherSession);
+        assertThat(redisTemplate.opsForValue().get(REFRESH_KEY_PREFIX + otherToken.sessionId()))
+                .doesNotContain(targetToken.refreshToken(), otherToken.refreshToken());
+    }
+
+    @Test
+    void 없거나_논리적으로_만료된_세션의_로그아웃은_멱등하게_완료한다() {
+        // given
+        IssuedRefreshToken missing = refreshTokenIssuer.issue();
+        IssuedRefreshToken expired = refreshTokenIssuer.issue();
+        RefreshSession expiredSession = RefreshSession.of(
+                expired.tokenHash(),
+                42L,
+                Instant.now().minusSeconds(1).getEpochSecond()
+        );
+        refreshSessionStore.save(expired.sessionId(), expiredSession, 60L);
+
+        // when
+        logoutService.logout(42L, LogoutRequest.from(missing.refreshToken()));
+        logoutService.logout(42L, LogoutRequest.from(expired.refreshToken()));
+
+        // then
+        assertThat(refreshSessionStore.findBySessionId(missing.sessionId())).isEmpty();
+        assertThat(refreshSessionStore.findBySessionId(expired.sessionId())).contains(expiredSession);
+    }
+
+    @Test
+    void 조건부_삭제는_손상된_JSON과_필드를_삭제하지_않고_내부오류로_처리한다() {
+        // given
+        IssuedRefreshToken token = refreshTokenIssuer.issue();
+        RefreshSession expected = activeSession(token.tokenHash(), 42L);
+        List<String> corruptValues = List.of(
+                "not-json",
+                "{}",
+                "{\"tokenHash\":1,\"memberId\":42,\"expiresAtEpochSecond\":100}",
+                "{\"tokenHash\":\"%s\",\"memberId\":0,\"expiresAtEpochSecond\":100}"
+                        .formatted(token.tokenHash())
+        );
+
+        // when / then
+        for (String corruptValue : corruptValues) {
+            redisTemplate.opsForValue().set(
+                    REFRESH_KEY_PREFIX + token.sessionId(),
+                    corruptValue,
+                    Duration.ofMinutes(1)
+            );
+            assertThatThrownBy(() -> refreshSessionStore.deleteIfMatches(token.sessionId(), expected))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("리프레시 세션 저장소 처리에 실패했습니다.")
+                    .hasNoCause();
+            assertThat(redisTemplate.opsForValue().get(REFRESH_KEY_PREFIX + token.sessionId()))
+                    .isEqualTo(corruptValue);
+        }
+    }
+
+    @Test
+    void 로그아웃한_리프레시_토큰은_다시_갱신할_수_없다() {
+        // given
+        IssuedLoginTokens loginTokens = loginTokenIssuer.issueLoginTokens(42L);
+
+        // when
+        logoutService.logout(42L, LogoutRequest.from(loginTokens.refreshToken()));
+
+        // then
+        assertThat(redisTemplate.hasKey(refreshKey(loginTokens.refreshToken()))).isFalse();
+        assertAuthError(() -> refreshTokenService.refresh(
+                RefreshTokenRequest.from(loginTokens.refreshToken())
+        ));
+    }
+
+    @Test
+    void 로그아웃과_갱신이_동시에_요청되면_정확히_하나의_Redis_mutation만_성공한다() throws Exception {
+        // given
+        IssuedLoginTokens loginTokens = loginTokenIssuer.issueLoginTokens(42L);
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        Future<Void> logoutFuture = executor.submit(() -> {
+            ready.countDown();
+            start.await();
+            logoutService.logout(42L, LogoutRequest.from(loginTokens.refreshToken()));
+            return null;
+        });
+        Future<RotationAttempt> refreshFuture = executor.submit(() -> {
+            ready.countDown();
+            start.await();
+            try {
+                return RotationAttempt.success(refreshTokenService.refresh(
+                        RefreshTokenRequest.from(loginTokens.refreshToken())
+                ));
+            } catch (AuthException exception) {
+                return RotationAttempt.failure(exception);
+            }
+        });
+        assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+
+        // when
+        start.countDown();
+        logoutFuture.get(10, TimeUnit.SECONDS);
+        RotationAttempt refreshAttempt = refreshFuture.get(10, TimeUnit.SECONDS);
+        executor.shutdownNow();
+
+        // then
+        assertThat(redisTemplate.hasKey(refreshKey(loginTokens.refreshToken()))).isFalse();
+        if (refreshAttempt.succeeded()) {
+            assertThat(redisTemplate.keys(REFRESH_KEY_PREFIX + "*"))
+                    .containsExactly(refreshKey(refreshAttempt.response().refreshToken()));
+            assertThat(redisTemplate.opsForValue().get(refreshKey(refreshAttempt.response().refreshToken())))
+                    .doesNotContain(loginTokens.refreshToken(), refreshAttempt.response().refreshToken());
+        } else {
+            assertThat(refreshAttempt.errorCode()).isEqualTo(AuthErrorCode.REFRESH_TOKEN_INVALID);
+            assertThat(redisTemplate.keys(REFRESH_KEY_PREFIX + "*")).isEmpty();
+        }
+    }
+
+    @Test
     void Redis_연결_실패는_하위_오류를_숨긴_내부오류다() {
         // given
+        IssuedRefreshToken token = refreshTokenIssuer.issue();
+        RefreshSession session = activeSession(token.tokenHash(), 42L);
         connectionFactory.stop();
 
         // when / then
-        assertThatThrownBy(() -> refreshSessionStore.findBySessionId("A".repeat(43)))
+        assertThatThrownBy(() -> refreshSessionStore.deleteIfMatches(token.sessionId(), session))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("리프레시 세션 저장소 처리에 실패했습니다.")
                 .hasNoCause();
