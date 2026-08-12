@@ -9,7 +9,7 @@ public enum StudioErrorCode implements ErrorCode {
     // STUDIO
     INVALID_OPERATING_TIME("STUDIO-001", "운영 종료 시간은 시작 시간보다 늦어야 합니다.", HttpStatus.BAD_REQUEST),
     NOT_FOUND("STUDIO-002", "시설을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    NOT_OWNER("STUDIO-003", "해당 시설의 대표 강사가 아닙니다.", HttpStatus.FORBIDDEN),
+    MEMBER_NOT_FOUND("STUDIO-003", "회원을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
     // ROOM
     ROOM_NOT_FOUND("ROOM-001", "룸을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
@@ -17,7 +17,14 @@ public enum StudioErrorCode implements ErrorCode {
 
     // POLICY
     POLICY_NOT_FOUND("POLICY-001", "운영 정책을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    POLICY_ALREADY_EXISTS("POLICY-002", "이미 운영 정책이 등록된 시설입니다.", HttpStatus.CONFLICT);
+    POLICY_ALREADY_EXISTS("POLICY-002", "이미 운영 정책이 등록된 시설입니다.", HttpStatus.CONFLICT),
+
+    // MEMBERSHIP
+    NOT_MEMBERSHIP("MEMBERSHIP-001", "해당 시설의 소속이 아닙니다.", HttpStatus.FORBIDDEN),
+    MEMBERSHIP_INACTIVE("MEMBERSHIP-002", "이용이 정지된 소속입니다.", HttpStatus.FORBIDDEN),
+
+    // PERMISSION
+    PERMISSION_DENIED("PERMISSION-001", "이 작업을 수행할 권한이 없습니다.", HttpStatus.FORBIDDEN);
 
     private final String code;
     private final String message;
