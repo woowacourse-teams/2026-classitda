@@ -5,9 +5,11 @@ import com.classitda.classes.application.ClassTypeService;
 import com.classitda.classes.presentation.dto.ClassTypeCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClassTypeController implements ClassTypeControllerApi {
 
     private final ClassTypeService classTypeService;
+
+    @Override
+    @GetMapping(version = "1")
+    public List<ClassTypeResponse> findAll(
+            @PathVariable Long studioId
+    ) {
+        return classTypeService.findAll(studioId);
+    }
 
     @Override
     @PostMapping(version = "1")

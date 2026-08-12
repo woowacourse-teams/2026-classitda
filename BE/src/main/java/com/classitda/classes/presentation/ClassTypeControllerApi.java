@@ -5,16 +5,57 @@ import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 
 @Tag(name = "수업 종류", description = "시설에 속한 수업 종류 관리 API")
 public interface ClassTypeControllerApi {
+
+    @Operation(
+            summary = "수업 종류 목록 조회",
+            description = "시설에 속한 모든 수업 종류를 id 오름차순으로 조회한다. "
+                    + "드롭다운 전체 옵션용 데이터로 페이지네이션을 적용하지 않으며, 권한 제한이 없다."
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "수업 종류 전체 목록 조회 성공. 수업 종류가 없으면 빈 배열을 반환함",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ClassTypeResponse.class)))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "API 버전 헤더가 없거나 지원하지 않는 버전임",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "버전 헤더 누락", value = """
+                                            {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 버전", value = """
+                                            {"code": "API-002", "message": "지원하지 않는 API 버전입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설을 찾을 수 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "시설 없음", value = """
+                                    {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}""")
+                    )
+            )
+    })
+    List<ClassTypeResponse> findAll(
+            @Parameter(description = "시설 ID", required = true, example = "1")
+            Long studioId
+    );
 
     @Operation(
             summary = "수업 종류 등록",

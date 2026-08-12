@@ -12,6 +12,7 @@ import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -40,5 +41,15 @@ public class ClassTypeService {
         } catch (DataIntegrityViolationException exception) {
             throw new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED);
         }
+    }
+
+    public List<ClassTypeResponse> findAll(Long studioId) {
+        if (!studioRepository.existsById(studioId)) {
+            throw new StudioException(StudioErrorCode.NOT_FOUND);
+        }
+
+        return classTypeRepository.findAllByStudioIdOrderByIdAsc(studioId).stream()
+                .map(classType -> ClassTypeResponse.of(classType.getId(), classType.getName()))
+                .toList();
     }
 }
