@@ -1,26 +1,47 @@
 package com.classitda.authentication.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
+import com.classitda.authentication.application.RefreshTokenService;
+import com.classitda.authentication.application.session.RefreshSession;
 import com.classitda.authentication.application.session.RefreshSessionStore;
 import com.classitda.authentication.application.session.SignupSession;
 import com.classitda.authentication.application.session.SignupSessionStore;
-import com.classitda.authentication.application.token.result.IssuedLoginTokens;
-import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.RefreshTokenIssuer;
+import com.classitda.authentication.application.token.RefreshTokenVerifier;
 import com.classitda.authentication.application.token.SignupTokenIssuer;
+import com.classitda.authentication.application.token.result.IssuedLoginTokens;
+import com.classitda.authentication.application.token.result.IssuedRefreshToken;
+import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.domain.OauthProvider;
+import com.classitda.authentication.domain.TokenUse;
+import com.classitda.authentication.exception.AuthErrorCode;
+import com.classitda.authentication.exception.AuthException;
+import com.classitda.authentication.infra.security.jwt.JwtContract;
 import com.classitda.authentication.infra.security.jwt.JwtTokenEncoder;
 import com.classitda.authentication.infra.security.jwt.SignupSessionJwtValidator;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
 import com.classitda.authentication.infra.session.RedisRefreshSessionStore;
 import com.classitda.authentication.infra.session.RedisSignupSessionStore;
+import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
+import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
 import com.classitda.authentication.support.JwtTestSupport;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,6 +50,7 @@ import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -42,6 +64,8 @@ class RedisTokenSessionIntegrationTest {
     private static final Duration SIGNUP_TTL = Duration.ofMinutes(30);
     private static final Duration ACCESS_TTL = Duration.ofMinutes(15);
     private static final Duration REFRESH_TTL = Duration.ofDays(30);
+    private static final long REFRESH_TTL_SECONDS = 2_592_000L;
+    private static final String REFRESH_KEY_PREFIX = "auth:refresh:";
 
     @Container
     private static final GenericContainer<?> REDIS = new GenericContainer<>(
@@ -52,6 +76,12 @@ class RedisTokenSessionIntegrationTest {
     private StringRedisTemplate redisTemplate;
     private ObjectMapper objectMapper;
     private TokenProperties tokenProperties;
+    private RefreshTokenIssuer refreshTokenIssuer;
+    private RefreshTokenVerifier refreshTokenVerifier;
+    private RefreshSessionStore refreshSessionStore;
+    private JwtTestSupport jwtSupport;
+    private LoginTokenIssuer loginTokenIssuer;
+    private RefreshTokenService refreshTokenService;
 
     @BeforeEach
     void setUp() {
@@ -62,6 +92,23 @@ class RedisTokenSessionIntegrationTest {
         redisTemplate.afterPropertiesSet();
         objectMapper = new ObjectMapper();
         tokenProperties = new TokenProperties(SIGNUP_TTL, ACCESS_TTL, REFRESH_TTL);
+        refreshTokenIssuer = new RefreshTokenIssuer();
+        refreshTokenVerifier = new RefreshTokenVerifier();
+        refreshSessionStore = new RedisRefreshSessionStore(redisTemplate, objectMapper);
+        jwtSupport = JwtTestSupport.create();
+        loginTokenIssuer = new LoginTokenIssuer(
+                refreshTokenIssuer,
+                refreshSessionStore,
+                new JwtTokenEncoder(jwtSupport.encoder()),
+                tokenProperties
+        );
+        refreshTokenService = new RefreshTokenService(
+                refreshTokenIssuer,
+                refreshTokenVerifier,
+                refreshSessionStore,
+                loginTokenIssuer,
+                tokenProperties
+        );
 
         try (RedisConnection connection = connectionFactory.getConnection()) {
             connection.serverCommands().flushDb();
@@ -76,7 +123,7 @@ class RedisTokenSessionIntegrationTest {
     @Test
     void 가입_세션을_JSON과_TTL로_저장하고_다시_읽는다() throws Exception {
         // given
-        SignupSessionStore registry = signupSessionRegistry();
+        SignupSessionStore signupSessionStore = signupSessionStore();
         SignupSession expected = new SignupSession(
                 OauthProvider.GOOGLE,
                 "provider-subject",
@@ -84,23 +131,23 @@ class RedisTokenSessionIntegrationTest {
         );
 
         // when
-        registry.save("signup-jti", expected);
+        signupSessionStore.save("signup-jti", expected);
 
         // then
-        assertThat(registry.findBySignupJti("signup-jti")).contains(expected);
+        assertThat(signupSessionStore.findBySignupJti("signup-jti")).contains(expected);
         String key = "signup:session:signup-jti";
         JsonNode stored = objectMapper.readTree(redisTemplate.opsForValue().get(key));
         assertThat(stored.get("provider").asText()).isEqualTo("GOOGLE");
         assertThat(stored.get("providerSubject").asText()).isEqualTo("provider-subject");
         assertThat(stored.get("providerEmail").asText()).isEqualTo("member@example.com");
-        assertThat(redisTemplate.getExpire(key, TimeUnit.SECONDS)).isBetween(1750L, 1800L);
+        assertThat(redisTemplate.getExpire(key, TimeUnit.SECONDS)).isBetween(1_750L, 1_800L);
     }
 
     @Test
     void 가입_세션이_없거나_만료되면_조회되지_않는다() throws InterruptedException {
         // given
-        SignupSessionStore registry = signupSessionRegistry();
-        registry.save(
+        SignupSessionStore signupSessionStore = signupSessionStore();
+        signupSessionStore.save(
                 "expired-jti",
                 new SignupSession(OauthProvider.GOOGLE, "provider-subject", "member@example.com")
         );
@@ -108,18 +155,17 @@ class RedisTokenSessionIntegrationTest {
         awaitAbsent("signup:session:expired-jti");
 
         // when / then
-        assertThat(registry.findBySignupJti("missing-jti")).isEmpty();
-        assertThat(registry.findBySignupJti("expired-jti")).isEmpty();
+        assertThat(signupSessionStore.findBySignupJti("missing-jti")).isEmpty();
+        assertThat(signupSessionStore.findBySignupJti("expired-jti")).isEmpty();
     }
 
     @Test
     void 회원가입_토큰을_발급하면_같은_JTI의_가입_세션을_만든다() {
         // given
-        JwtTestSupport jwtSupport = JwtTestSupport.create();
-        SignupSessionStore registry = signupSessionRegistry();
-        SignupSessionJwtValidator validator = new SignupSessionJwtValidator(registry);
+        SignupSessionStore signupSessionStore = signupSessionStore();
+        SignupSessionJwtValidator validator = new SignupSessionJwtValidator(signupSessionStore);
         SignupTokenIssuer issuer = new SignupTokenIssuer(
-                registry,
+                signupSessionStore,
                 new JwtTokenEncoder(jwtSupport.encoder()),
                 tokenProperties
         );
@@ -133,44 +179,314 @@ class RedisTokenSessionIntegrationTest {
         Jwt jwt = jwtSupport.decoder(validator).decode(issued.signupToken());
 
         // then
-        assertThat(registry.findBySignupJti(jwt.getId())).contains(
+        assertThat(signupSessionStore.findBySignupJti(jwt.getId())).contains(
                 new SignupSession(OauthProvider.GOOGLE, "provider-subject", "member@example.com")
         );
     }
 
     @Test
-    void 로그인_토큰은_리프레시_토큰의_해시만_Redis에_저장한다() throws Exception {
-        // given
-        JwtTestSupport jwtSupport = JwtTestSupport.create();
-        RefreshSessionStore refreshSessionStore = new RedisRefreshSessionStore(redisTemplate, objectMapper);
-        LoginTokenIssuer issuer = new LoginTokenIssuer(
-                new RefreshTokenIssuer(),
-                refreshSessionStore,
-                new JwtTokenEncoder(jwtSupport.encoder()),
-                tokenProperties
-        );
-
-        // when
-        IssuedLoginTokens issued = issuer.issueLoginTokens(42L);
+    void 로그인_토큰은_액세스_claim을_유지하고_리프레시_해시만_Redis에_저장한다() throws Exception {
+        // given / when
+        IssuedLoginTokens issued = loginTokenIssuer.issueLoginTokens(42L);
+        Jwt accessJwt = accessDecoder().decode(issued.accessToken());
 
         // then
-        String[] refreshParts = issued.refreshToken().split("\\.", 2);
-        String key = "auth:refresh:" + refreshParts[0];
+        assertThat(issued.accessTokenExpiresIn()).isEqualTo(900L);
+        assertThat(issued.refreshTokenExpiresIn()).isEqualTo(REFRESH_TTL_SECONDS);
+        assertAccessClaims(accessJwt, 42L);
+        String key = refreshKey(issued.refreshToken());
         String storedValue = redisTemplate.opsForValue().get(key);
         JsonNode stored = objectMapper.readTree(storedValue);
         assertThat(storedValue).doesNotContain(issued.refreshToken());
         assertThat(stored.get("tokenHash").asText()).isEqualTo(sha256(issued.refreshToken()));
         assertThat(stored.get("memberId").asLong()).isEqualTo(42L);
-        assertThat(redisTemplate.getExpire(key, TimeUnit.SECONDS)).isBetween(2_591_950L, 2_592_000L);
+        assertThat(redisTemplate.getExpire(key, TimeUnit.SECONDS))
+                .isBetween(2_591_950L, REFRESH_TTL_SECONDS);
     }
 
-    private SignupSessionStore signupSessionRegistry() {
+    @Test
+    void 정상_갱신은_기존_session을_소비하고_새_30일_session과_15분_JWT를_만든다() throws Exception {
+        // given
+        IssuedLoginTokens loginTokens = loginTokenIssuer.issueLoginTokens(42L);
+        String oldKey = refreshKey(loginTokens.refreshToken());
+        long beforeExpiry = Instant.now().plusSeconds(REFRESH_TTL_SECONDS).getEpochSecond();
+
+        // when
+        RefreshTokenResponse response = refreshTokenService.refresh(
+                RefreshTokenRequest.from(loginTokens.refreshToken())
+        );
+
+        // then
+        long afterExpiry = Instant.now().plusSeconds(REFRESH_TTL_SECONDS).getEpochSecond();
+        assertThat(response.accessTokenExpiresIn()).isEqualTo(900L);
+        assertThat(response.refreshTokenExpiresIn()).isEqualTo(REFRESH_TTL_SECONDS);
+        assertThat(response.refreshToken())
+                .matches("^[A-Za-z0-9_-]{43}\\.[A-Za-z0-9_-]{43}$")
+                .isNotEqualTo(loginTokens.refreshToken());
+        assertThat(redisTemplate.hasKey(oldKey)).isFalse();
+        String newKey = refreshKey(response.refreshToken());
+        String newValue = redisTemplate.opsForValue().get(newKey);
+        JsonNode newSession = objectMapper.readTree(newValue);
+        assertThat(newValue).doesNotContain(loginTokens.refreshToken(), response.refreshToken());
+        assertThat(newSession.get("tokenHash").asText()).isEqualTo(sha256(response.refreshToken()));
+        assertThat(newSession.get("memberId").asLong()).isEqualTo(42L);
+        assertThat(newSession.get("expiresAtEpochSecond").asLong()).isBetween(beforeExpiry, afterExpiry);
+        assertThat(redisTemplate.getExpire(newKey, TimeUnit.SECONDS))
+                .isBetween(2_591_950L, REFRESH_TTL_SECONDS);
+        assertAccessClaims(accessDecoder().decode(response.accessToken()), 42L);
+    }
+
+    @Test
+    void 없거나_만료되거나_해시가_다르거나_소비된_토큰은_모두_AUTH_008이다() {
+        // given
+        IssuedRefreshToken missing = refreshTokenIssuer.issue();
+        IssuedRefreshToken expired = refreshTokenIssuer.issue();
+        refreshSessionStore.save(
+                expired.sessionId(),
+                RefreshSession.of(expired.tokenHash(), 42L, Instant.now().minusSeconds(1).getEpochSecond()),
+                60L
+        );
+        IssuedRefreshToken original = refreshTokenIssuer.issue();
+        String forged = original.sessionId() + "." + "Z".repeat(43);
+        refreshSessionStore.save(
+                original.sessionId(),
+                RefreshSession.of(original.tokenHash(), 42L, Instant.now().plusSeconds(60).getEpochSecond()),
+                60L
+        );
+        IssuedLoginTokens consumable = loginTokenIssuer.issueLoginTokens(42L);
+        refreshTokenService.refresh(RefreshTokenRequest.from(consumable.refreshToken()));
+
+        // when / then
+        List<String> invalidTokens = List.of(
+                missing.refreshToken(),
+                expired.refreshToken(),
+                forged,
+                consumable.refreshToken()
+        );
+        for (String invalidToken : invalidTokens) {
+            assertAuthError(() -> refreshTokenService.refresh(RefreshTokenRequest.from(invalidToken)));
+        }
+    }
+
+    @Test
+    void 손상된_리프레시_JSON과_필드는_인증실패가_아닌_내부오류다() {
+        // given
+        String sessionId = "A".repeat(43);
+        List<String> corruptValues = List.of(
+                "not-json",
+                "{}",
+                "{\"tokenHash\":1,\"memberId\":42,\"expiresAtEpochSecond\":100}",
+                "{\"tokenHash\":\"%s\",\"memberId\":\"42\",\"expiresAtEpochSecond\":100}"
+                        .formatted("a".repeat(64)),
+                "{\"tokenHash\":\"invalid\",\"memberId\":42,\"expiresAtEpochSecond\":100}",
+                "{\"tokenHash\":\"%s\",\"memberId\":0,\"expiresAtEpochSecond\":100}"
+                        .formatted("a".repeat(64)),
+                "{\"tokenHash\":\"%s\",\"memberId\":42,\"expiresAtEpochSecond\":0}"
+                        .formatted("a".repeat(64))
+        );
+
+        // when / then
+        for (String corruptValue : corruptValues) {
+            redisTemplate.opsForValue().set(REFRESH_KEY_PREFIX + sessionId, corruptValue, Duration.ofMinutes(1));
+            assertThatThrownBy(() -> refreshSessionStore.findBySessionId(sessionId))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessage("리프레시 세션 저장소 처리에 실패했습니다.")
+                    .hasNoCause();
+        }
+    }
+
+    @Test
+    void Lua의_새_key_충돌과_손상된_old_JSON은_기존_상태를_소비하지_않는다() {
+        // given
+        IssuedRefreshToken oldToken = refreshTokenIssuer.issue();
+        IssuedRefreshToken newToken = refreshTokenIssuer.issue();
+        RefreshSession oldSession = activeSession(oldToken.tokenHash(), 42L);
+        RefreshSession newSession = activeSession(newToken.tokenHash(), 42L);
+        refreshSessionStore.save(oldToken.sessionId(), oldSession, 60L);
+        refreshSessionStore.save(newToken.sessionId(), newSession, 60L);
+
+        // when
+        RefreshSessionStore.RotateOutcome collision = refreshSessionStore.rotate(
+                oldToken.sessionId(),
+                oldSession,
+                newToken.sessionId(),
+                newSession,
+                60L
+        );
+
+        // then
+        assertThat(collision).isEqualTo(RefreshSessionStore.RotateOutcome.NEW_SESSION_CONFLICT);
+        assertThat(refreshSessionStore.findBySessionId(oldToken.sessionId())).contains(oldSession);
+        assertThat(refreshSessionStore.findBySessionId(newToken.sessionId())).contains(newSession);
+
+        // given
+        redisTemplate.opsForValue().set(
+                REFRESH_KEY_PREFIX + oldToken.sessionId(),
+                "{broken-json",
+                Duration.ofMinutes(1)
+        );
+
+        // when / then
+        assertThatThrownBy(() -> refreshSessionStore.rotate(
+                oldToken.sessionId(),
+                oldSession,
+                newToken.sessionId() + "X",
+                newSession,
+                60L
+        )).isInstanceOf(IllegalStateException.class)
+                .hasMessage("리프레시 세션 저장소 처리에 실패했습니다.")
+                .hasNoCause();
+        assertThat(redisTemplate.hasKey(REFRESH_KEY_PREFIX + oldToken.sessionId())).isTrue();
+    }
+
+    @Test
+    void Lua는_2의_53승을_넘는_인접한_회원_ID를_정확히_구분한다() {
+        // given
+        IssuedRefreshToken oldToken = refreshTokenIssuer.issue();
+        IssuedRefreshToken newToken = refreshTokenIssuer.issue();
+        long expiresAtEpochSecond = Instant.now().plusSeconds(60).getEpochSecond();
+        RefreshSession storedOldSession = RefreshSession.of(
+                oldToken.tokenHash(),
+                9_007_199_254_740_992L,
+                expiresAtEpochSecond
+        );
+        RefreshSession adjacentExpectedSession = RefreshSession.of(
+                oldToken.tokenHash(),
+                9_007_199_254_740_993L,
+                expiresAtEpochSecond
+        );
+        RefreshSession newSession = RefreshSession.of(
+                newToken.tokenHash(),
+                storedOldSession.memberId(),
+                expiresAtEpochSecond
+        );
+        refreshSessionStore.save(oldToken.sessionId(), storedOldSession, 60L);
+
+        // when
+        RefreshSessionStore.RotateOutcome mismatch = refreshSessionStore.rotate(
+                oldToken.sessionId(),
+                adjacentExpectedSession,
+                newToken.sessionId(),
+                newSession,
+                60L
+        );
+
+        // then
+        assertThat(mismatch).isEqualTo(RefreshSessionStore.RotateOutcome.OLD_SESSION_MISMATCH);
+        assertThat(refreshSessionStore.findBySessionId(oldToken.sessionId())).contains(storedOldSession);
+        assertThat(refreshSessionStore.findBySessionId(newToken.sessionId())).isEmpty();
+
+        // when
+        RefreshSessionStore.RotateOutcome matching = refreshSessionStore.rotate(
+                oldToken.sessionId(),
+                storedOldSession,
+                newToken.sessionId(),
+                newSession,
+                60L
+        );
+
+        // then
+        assertThat(matching).isEqualTo(RefreshSessionStore.RotateOutcome.ROTATED);
+        assertThat(refreshSessionStore.findBySessionId(oldToken.sessionId())).isEmpty();
+        assertThat(refreshSessionStore.findBySessionId(newToken.sessionId())).contains(newSession);
+    }
+
+    @Test
+    void 동일_리프레시_토큰의_동시_요청은_정확히_하나만_성공하고_새_session_하나만_남긴다() throws Exception {
+        // given
+        IssuedLoginTokens loginTokens = loginTokenIssuer.issueLoginTokens(42L);
+        int requestCount = 8;
+        CountDownLatch ready = new CountDownLatch(requestCount);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(requestCount);
+        List<Future<RotationAttempt>> futures = new ArrayList<>();
+        for (int index = 0; index < requestCount; index++) {
+            futures.add(executor.submit(() -> {
+                ready.countDown();
+                start.await();
+                try {
+                    RefreshTokenResponse response = refreshTokenService.refresh(
+                            RefreshTokenRequest.from(loginTokens.refreshToken())
+                    );
+                    return RotationAttempt.success(response);
+                } catch (AuthException exception) {
+                    return RotationAttempt.failure(exception);
+                }
+            }));
+        }
+        assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+
+        // when
+        start.countDown();
+        List<RotationAttempt> attempts = new ArrayList<>();
+        for (Future<RotationAttempt> future : futures) {
+            attempts.add(future.get(10, TimeUnit.SECONDS));
+        }
+        executor.shutdownNow();
+
+        // then
+        assertThat(attempts).filteredOn(RotationAttempt::succeeded).singleElement();
+        assertThat(attempts).filteredOn(attempt -> !attempt.succeeded()).hasSize(requestCount - 1)
+                .allSatisfy(attempt -> assertThat(attempt.errorCode())
+                        .isEqualTo(AuthErrorCode.REFRESH_TOKEN_INVALID));
+        RefreshTokenResponse winner = attempts.stream()
+                .filter(RotationAttempt::succeeded)
+                .map(RotationAttempt::response)
+                .findFirst()
+                .orElseThrow();
+        assertThat(redisTemplate.hasKey(refreshKey(loginTokens.refreshToken()))).isFalse();
+        assertThat(redisTemplate.keys(REFRESH_KEY_PREFIX + "*")).containsExactly(refreshKey(winner.refreshToken()));
+        assertThat(redisTemplate.opsForValue().get(refreshKey(winner.refreshToken())))
+                .doesNotContain(loginTokens.refreshToken(), winner.refreshToken());
+    }
+
+    @Test
+    void Redis_연결_실패는_하위_오류를_숨긴_내부오류다() {
+        // given
+        connectionFactory.stop();
+
+        // when / then
+        assertThatThrownBy(() -> refreshSessionStore.findBySessionId("A".repeat(43)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("리프레시 세션 저장소 처리에 실패했습니다.")
+                .hasNoCause();
+    }
+
+    private SignupSessionStore signupSessionStore() {
         return new RedisSignupSessionStore(redisTemplate, objectMapper, tokenProperties);
+    }
+
+    private JwtDecoder accessDecoder() {
+        return jwtSupport.decoder(new SignupSessionJwtValidator(mock(SignupSessionStore.class)));
+    }
+
+    private RefreshSession activeSession(String hash, Long memberId) {
+        return RefreshSession.of(hash, memberId, Instant.now().plusSeconds(60).getEpochSecond());
+    }
+
+    private String refreshKey(String refreshToken) {
+        return REFRESH_KEY_PREFIX + refreshTokenVerifier.extractSessionId(refreshToken);
     }
 
     private String sha256(String value) throws Exception {
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         return HexFormat.of().formatHex(messageDigest.digest(value.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    private void assertAccessClaims(Jwt jwt, Long memberId) {
+        assertThat(jwt.getHeaders()).containsEntry("alg", "RS256");
+        assertThat(jwt.getClaimAsString("iss")).isEqualTo(JwtContract.ISSUER);
+        assertThat(jwt.getClaimAsString(JwtContract.TOKEN_USE_CLAIM)).isEqualTo(TokenUse.ACCESS.name());
+        assertThat(jwt.getSubject()).isEqualTo(memberId.toString());
+        assertThat(UUID.fromString(jwt.getId())).isNotNull();
+        assertThat(Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt())).isEqualTo(ACCESS_TTL);
+    }
+
+    private void assertAuthError(Runnable action) {
+        assertThatThrownBy(action::run)
+                .isInstanceOf(AuthException.class)
+                .extracting(exception -> ((AuthException) exception).getErrorCode())
+                .isEqualTo(AuthErrorCode.REFRESH_TOKEN_INVALID);
     }
 
     private void awaitAbsent(String key) throws InterruptedException {
@@ -179,5 +495,23 @@ class RedisTokenSessionIntegrationTest {
             Thread.sleep(25L);
         }
         assertThat(redisTemplate.hasKey(key)).isFalse();
+    }
+
+    private record RotationAttempt(
+            RefreshTokenResponse response,
+            AuthErrorCode errorCode
+    ) {
+
+        private static RotationAttempt success(RefreshTokenResponse response) {
+            return new RotationAttempt(response, null);
+        }
+
+        private static RotationAttempt failure(AuthException exception) {
+            return new RotationAttempt(null, (AuthErrorCode) exception.getErrorCode());
+        }
+
+        private boolean succeeded() {
+            return response != null;
+        }
     }
 }
