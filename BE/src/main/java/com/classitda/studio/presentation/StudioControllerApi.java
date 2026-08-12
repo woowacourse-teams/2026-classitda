@@ -53,11 +53,7 @@ public interface StudioControllerApi {
             )
     })
     ResponseEntity<StudioResponse> save(
-            @Parameter(
-                    description = "요청자 회원 ID. 인증 연동 전까지만 사용하는 임시 헤더다.",
-                    required = true,
-                    example = "1"
-            )
+            @Parameter(hidden = true)
             Long memberId,
             StudioCreateRequest request
     );
@@ -151,11 +147,7 @@ public interface StudioControllerApi {
             )
     })
     StudioResponse update(
-            @Parameter(
-                    description = "요청자 회원 ID. 인증 연동 전까지만 사용하는 임시 헤더다.",
-                    required = true,
-                    example = "1"
-            )
+            @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")
             Long studioId,
