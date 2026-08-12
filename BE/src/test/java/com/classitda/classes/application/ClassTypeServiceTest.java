@@ -2,6 +2,7 @@ package com.classitda.classes.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.groups.Tuple.tuple;
 
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
@@ -27,6 +28,7 @@ import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -166,6 +168,60 @@ class ClassTypeServiceTest {
         // then
         assertThat(response.id()).isNotNull();
         assertThat(classTypeRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    void 시설의_모든_수업_종류를_아이디_오름차순으로_조회하고_다른_시설은_제외한다() {
+        // given
+        Member owner = 회원을_저장한다("class-type-list-owner");
+        Studio studio = 시설을_만든다(owner);
+        Studio otherStudio = 시설을_만든다(owner);
+
+        ClassType first = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(studio, "일반 요가"));
+        ClassType second = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(studio, "리포머 요가"));
+        ClassType third = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(studio, "플라잉 요가"));
+
+        classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(otherStudio, "다른 시설 요가"));
+
+        // when
+        List<ClassTypeResponse> responses = classTypeService.findAll(studio.getId());
+
+        // then
+        assertThat(responses)
+                .extracting(ClassTypeResponse::id, ClassTypeResponse::name)
+                .containsExactly(
+                        tuple(first.getId(), first.getName()),
+                        tuple(second.getId(), second.getName()),
+                        tuple(third.getId(), third.getName())
+                );
+    }
+
+    @Test
+    void 수업_종류가_없는_기존_시설을_조회하면_빈_목록을_반환한다() {
+        // given
+        Member owner = 회원을_저장한다("empty-class-type-owner");
+        Studio studio = 시설을_만든다(owner);
+
+        // when
+        List<ClassTypeResponse> responses = classTypeService.findAll(studio.getId());
+
+        // then
+        assertThat(responses).isEmpty();
+    }
+
+    @Test
+    void 없는_시설의_수업_종류를_조회하면_STUDIO_002_예외가_발생한다() {
+        // given
+        Long missingStudioId = 999L;
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.findAll(missingStudioId))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_FOUND));
     }
 
     private Member 회원을_저장한다(String providerId) {
