@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS pass_product;
 DROP TABLE IF EXISTS class_session;
 DROP TABLE IF EXISTS class_template;
 DROP TABLE IF EXISTS studio_membership;
-DROP TABLE IF EXISTS role_permission;
+DROP TABLE IF EXISTS studio_role_permission;
 DROP TABLE IF EXISTS studio_role;
 DROP TABLE IF EXISTS permission;
 DROP TABLE IF EXISTS studio_policy;
