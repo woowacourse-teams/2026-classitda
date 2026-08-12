@@ -12,3 +12,34 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+
+logging:
+  level:
+    org.hibernate.orm.jdbc.error: "ERROR"
+
+management:
+  endpoints:
+    web:
+      discovery:
+        enabled: false
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+auth:
+  google:
+    web-client-id: ${GOOGLE_OAUTH_WEB_CLIENT_ID}
+  phone:
+    key-hmac-secret-base64: ${AUTH_PHONE_KEY_HMAC_SECRET_BASE64:}
+  sms:
+    local:
+      fixed-otp: ${AUTH_SMS_LOCAL_FIXED_OTP:}
+  jwt:
+    private-key-base64: ${AUTH_JWT_PRIVATE_KEY_BASE64}
+    public-key-base64: ${AUTH_JWT_PUBLIC_KEY_BASE64}
+  token:
+    signup-ttl: PT30M
+    access-ttl: PT15M
+    refresh-ttl: P30D

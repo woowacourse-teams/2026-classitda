@@ -1,16 +1,17 @@
 package com.classitda.studio.fixture;
 
 import com.classitda.member.domain.Member;
-import com.classitda.member.domain.OauthProvider;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioUpdateRequest;
 import java.time.LocalTime;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class StudioFixture {
 
     private static final LocalTime OPEN_TIME = LocalTime.of(9, 0);
     private static final LocalTime CLOSE_TIME = LocalTime.of(22, 0);
+    private static final AtomicLong MEMBER_SEQUENCE = new AtomicLong(10_000_000L);
 
     public static Member 기본_소유자() {
         return 아이디가_다른_소유자("owner");
@@ -18,10 +19,8 @@ public class StudioFixture {
 
     public static Member 아이디가_다른_소유자(String providerId) {
         return Member.builder()
-                .provider(OauthProvider.GOOGLE)
-                .providerId("provider-" + providerId)
-                .name("김강사")
-                .phoneNumber("01012345678")
+                .name("김강사-" + providerId)
+                .phoneNumber("+8210%08d".formatted(MEMBER_SEQUENCE.getAndIncrement()))
                 .build();
     }
 

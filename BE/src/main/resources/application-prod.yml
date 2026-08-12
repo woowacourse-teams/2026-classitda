@@ -1,4 +1,12 @@
 spring:
+  data:
+    redis:
+      host: ${REDIS_ENDPOINT}
+      port: ${REDIS_PORT}
+      username: ${REDIS_USERNAME}
+      password: ${REDIS_PASSWORD}
+      ssl:
+        enabled: true
   sql:
     init:
       mode: never

@@ -1,4 +1,4 @@
-package com.classitda.member.domain;
+package com.classitda.authentication.domain;
 
 public enum OauthProvider {
     GOOGLE,

@@ -223,10 +223,14 @@ void 스튜디오_이름으로_조회할_수_있다() {
 | 계층 | 방식 |
 | --- | --- |
 | 통합 테스트 | `XXXIntegrationTest`를 만들어서 테스트 |
-| Controller | 단위 테스트 — Service를 모킹 |
-| Service | 단위 테스트 — Repository를 모킹 |
-| Repository | Testcontainers로 운영과 동일한 환경에서 테스트 |
+| Controller | 슬라이스 테스트 — `@WebMvcTest`에서 Service를 모킹 |
+| Service | 통합 테스트 — `@MySqlRepositoryTest`로 실제 Repository와 MySQL Testcontainers를 사용 |
+| Repository | 단독 테스트를 작성하지 않음 |
 | 도메인 | 단위 테스트 |
+
+- Repository 동작과 영속성 매핑은 Service 통합 테스트에서 함께 검증한다.
+- Service 테스트는 대상 Service를 import하고 Repository를 모킹하지 않는다.
+- Controller 테스트는 HTTP 요청·응답 계약과 Service 위임을 검증한다.
 
 ---
 

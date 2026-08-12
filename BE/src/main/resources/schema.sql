@@ -1,31 +1,54 @@
 CREATE TABLE member
 (
     id                BIGINT       NOT NULL AUTO_INCREMENT,
-    provider          VARCHAR(20)  NOT NULL,
-    provider_id       VARCHAR(255) NOT NULL,
     name              VARCHAR(50)  NOT NULL,
-    phone_number      VARCHAR(20)  NULL,
+    phone_number      VARCHAR(20)  NOT NULL,
     profile_image_url VARCHAR(500) NULL,
     created_at        DATETIME(6)  NOT NULL,
     updated_at        DATETIME(6)  NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_member_provider (provider, provider_id)
+    UNIQUE KEY uk_member_phone_number (phone_number)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
+CREATE TABLE auth_account
+(
+    id               BIGINT       NOT NULL AUTO_INCREMENT,
+    member_id        BIGINT       NOT NULL,
+    provider         VARCHAR(20)  NOT NULL,
+    provider_subject VARCHAR(255) NOT NULL,
+    provider_email   VARCHAR(254) NULL,
+    created_at       DATETIME(6)  NOT NULL,
+    updated_at       DATETIME(6)  NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_auth_account_member (member_id),
+    UNIQUE KEY uk_auth_account_provider_subject (provider, provider_subject),
+    CONSTRAINT fk_auth_account_member FOREIGN KEY (member_id) REFERENCES member (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
 
 CREATE TABLE term
 (
-    id          BIGINT       NOT NULL AUTO_INCREMENT,
+    id          BIGINT      NOT NULL AUTO_INCREMENT,
+    code        VARCHAR(50) NOT NULL,
     title       VARCHAR(100) NOT NULL,
     url         VARCHAR(500) NOT NULL,
-    is_required BOOLEAN      NOT NULL,
-    version     VARCHAR(20)  NOT NULL,
-    created_at  DATETIME(6)  NOT NULL,
-    updated_at  DATETIME(6)  NULL,
-    PRIMARY KEY (id)
+    is_required BOOLEAN     NOT NULL,
+    version     INT         NOT NULL,
+    created_at  DATETIME(6) NOT NULL,
+    updated_at  DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_term_code_version (code, version)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
+
+INSERT INTO term (code, title, url, is_required, version, created_at, updated_at)
+VALUES ('SERVICE_TERMS', '서비스 이용약관', 'https://example.invalid/terms/service-v1', TRUE, 1, CURRENT_TIMESTAMP(6), NULL),
+       ('PRIVACY_POLICY', '개인정보 처리방침', 'https://example.invalid/terms/privacy-v1', TRUE, 1, CURRENT_TIMESTAMP(6), NULL),
+       ('MARKETING_CONSENT', '마케팅 정보 수신 동의', 'https://example.invalid/terms/marketing-v1', FALSE, 1, CURRENT_TIMESTAMP(6), NULL);
 
 
 CREATE TABLE member_term_agreement
@@ -34,7 +57,6 @@ CREATE TABLE member_term_agreement
     member_id  BIGINT      NOT NULL,
     term_id    BIGINT      NOT NULL,
     agreed     BOOLEAN     NOT NULL,
-    agreed_at  DATETIME(6) NOT NULL,
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NULL,
     PRIMARY KEY (id),
