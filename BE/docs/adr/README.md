@@ -14,6 +14,7 @@
 | [0006](0006-layer-contract.md) | 계층 간 계약 | 엔티티는 서비스 밖으로 나가지 않고, 트랜잭션·예외 처리 위치를 고정해요 |
 | [0007](0007-test-strategy.md) | 테스트 전략과 대체 금지 | 계층마다 격리 수준을 다르게 하고, 검증 수단을 임의로 바꾸지 않아요 |
 | [0008](0008-review-severity.md) | 리뷰 심각도 기준 | P0/P1/P2로 나누고 규약 위반은 P1로 고정해요 |
+| [0009](0009-authentication-token-and-session-boundary.md) | 인증 토큰과 세션 경계 | SIGNUP·ACCESS JWT의 용도를 나누고 상태 전이가 필요한 세션만 Redis에서 관리해요 |
 
 ## 다른 문서와의 관계
 

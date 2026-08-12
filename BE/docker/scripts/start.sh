@@ -19,11 +19,12 @@ fi
 
 cd "${PROJECT_DIR}"
 
-echo "클래스잇다 서버와 MySQL을 시작합니다."
-docker compose -f "${COMPOSE_FILE}" up -d --build
+echo "클래스잇다 서버와 MySQL, Redis를 시작합니다."
+docker compose -f "${COMPOSE_FILE}" up -d --build --wait --wait-timeout 120
 docker compose -f "${COMPOSE_FILE}" ps
 
 echo
 echo "실행 완료"
-echo "- 서버: http://localhost:${LOCAL_APP_PORT:-8080}"
-echo "- MySQL: localhost:${LOCAL_DB_PORT:-3306}"
+echo "- 서버: http://localhost:8080"
+echo "- MySQL: localhost:3306"
+echo "- Redis: localhost:6379"

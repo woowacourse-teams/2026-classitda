@@ -15,7 +15,8 @@ import org.springframework.context.annotation.Import;
 @Retention(RetentionPolicy.RUNTIME)
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
-        "spring.sql.init.mode=always"
+        "spring.sql.init.mode=always",
+        "spring.sql.init.data-locations=optional:classpath:/test-data.sql"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @Import({MySqlTestContainerConfiguration.class, JpaAuditingConfig.class})
