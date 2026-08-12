@@ -5,10 +5,13 @@ import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.classitda.authentication.application.RefreshTokenService;
 import com.classitda.authentication.application.SignupService;
 import com.classitda.authentication.application.SocialLoginService;
 import com.classitda.authentication.application.phone.PhoneVerificationService;
+import com.classitda.authentication.application.token.result.IssuedAccessToken;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
+import com.classitda.authentication.application.token.result.IssuedRefreshToken;
 import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.domain.TokenUse;
 import com.classitda.authentication.exception.AuthErrorCode;
@@ -23,6 +26,8 @@ import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResp
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupResponse;
+import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
+import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.GlobalExceptionHandler;
@@ -60,6 +65,10 @@ class AuthControllerTest {
     private static final String ID_TOKEN = "google-id-token";
     private static final String VERIFICATION_ID = "550e8400-e29b-41d4-a716-446655440000";
     private static final String OTP = "123456";
+    private static final String REFRESH_TOKEN =
+            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
+    private static final String ROTATED_REFRESH_TOKEN =
+            "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC.DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD";
 
     private final RestTestClient client;
 
@@ -71,6 +80,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private SignupService signupService;
+
+    @MockitoBean
+    private RefreshTokenService refreshTokenService;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
@@ -176,6 +188,132 @@ class AuthControllerTest {
         // then
         assertError(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
         verifyNoInteractions(socialLoginService);
+    }
+
+    @Test
+    void 인증_헤더_없이_리프레시_토큰을_갱신하면_200과_엄격한_회전_응답을_반환한다() {
+        // given
+        RefreshTokenRequest request = RefreshTokenRequest.from(REFRESH_TOKEN);
+        RefreshTokenResponse response = RefreshTokenResponse.of(
+                IssuedAccessToken.of("access-token", 900L),
+                IssuedRefreshToken.of(
+                        ROTATED_REFRESH_TOKEN,
+                        "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
+                        "b".repeat(64)
+                ),
+                2_592_000L
+        );
+        given(refreshTokenService.refresh(request)).willReturn(response);
+
+        // when
+        RestTestClient.ResponseSpec result = refresh("1", request);
+
+        // then
+        result.expectStatus().isOk()
+                .expectBody()
+                .json("""
+                        {
+                          "accessToken": "access-token",
+                          "accessTokenExpiresIn": 900,
+                          "refreshToken": "%s",
+                          "refreshTokenExpiresIn": 2592000
+                        }
+                        """.formatted(ROTATED_REFRESH_TOKEN), JsonCompareMode.STRICT);
+        verify(refreshTokenService).refresh(request);
+    }
+
+    @Test
+    void 리프레시_요청_body가_없거나_null_blank이면_COMMON_001이고_서비스를_호출하지_않는다() {
+        // given / when
+        RestTestClient.ResponseSpec missingBody = client.post()
+                .uri("/api/auth/tokens/refresh")
+                .header("X-API-Version", "1")
+                .exchange();
+        String[] invalidBodies = {
+                "{}",
+                "{\"refreshToken\":null}",
+                "{\"refreshToken\":\"\"}",
+                "{\"refreshToken\":\" \"}"
+        };
+
+        // then
+        assertError(missingBody, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        for (String invalidBody : invalidBodies) {
+            assertError(
+                    refresh("1", invalidBody),
+                    400,
+                    "COMMON-001",
+                    "요청 값이 올바르지 않습니다."
+            );
+        }
+        verifyNoInteractions(refreshTokenService);
+    }
+
+    @Test
+    void 리프레시_토큰의_구분자_segment_길이_문자_전체길이가_잘못되면_COMMON_001이다() {
+        // given
+        String[] invalidTokens = {
+                "A".repeat(43),
+                "A".repeat(43) + "." + "B".repeat(43) + "." + "C".repeat(43),
+                "A".repeat(42) + "." + "B".repeat(43),
+                "A".repeat(44) + "." + "B".repeat(43),
+                "+" + "A".repeat(42) + "." + "B".repeat(43),
+                REFRESH_TOKEN + "C"
+        };
+
+        // when / then
+        for (String invalidToken : invalidTokens) {
+            assertError(
+                    refresh("1", RefreshTokenRequest.from(invalidToken)),
+                    400,
+                    "COMMON-001",
+                    "요청 값이 올바르지 않습니다."
+            );
+        }
+        verifyNoInteractions(refreshTokenService);
+    }
+
+    @Test
+    void 리프레시_API의_버전_헤더가_없거나_지원하지_않으면_API_오류다() {
+        // given
+        RefreshTokenRequest request = RefreshTokenRequest.from(REFRESH_TOKEN);
+
+        // when
+        RestTestClient.ResponseSpec missing = refresh(null, request);
+        RestTestClient.ResponseSpec unsupported = refresh("2", request);
+
+        // then
+        assertError(missing, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        assertError(unsupported, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verifyNoInteractions(refreshTokenService);
+    }
+
+    @Test
+    void 유효하지_않은_리프레시_토큰은_AUTH_008을_반환하고_원문을_노출하지_않는다() {
+        // given
+        RefreshTokenRequest request = RefreshTokenRequest.from(REFRESH_TOKEN);
+        given(refreshTokenService.refresh(request))
+                .willThrow(new AuthException(AuthErrorCode.REFRESH_TOKEN_INVALID));
+
+        // when
+        RestTestClient.ResponseSpec result = refresh("1", request);
+
+        // then
+        assertError(result, 401, "AUTH-008", "리프레시 토큰이 유효하지 않습니다.");
+    }
+
+    @Test
+    void 리프레시_내부_오류는_COMMON_002의_고정_응답만_반환한다() {
+        // given
+        RefreshTokenRequest request = RefreshTokenRequest.from(REFRESH_TOKEN);
+        given(refreshTokenService.refresh(request))
+                .willThrow(new IllegalStateException("리프레시 토큰 갱신 중 내부 오류가 발생했습니다."));
+
+        // when
+        RestTestClient.ResponseSpec result = refresh("1", request);
+
+        // then
+        assertError(result, 500, "COMMON-002", "서버 내부 오류가 발생했습니다.");
     }
 
     @Test
@@ -627,6 +765,17 @@ class AuthControllerTest {
         }
         if (token != null) {
             request.header("Authorization", "Bearer " + token);
+        }
+        if (body instanceof String) {
+            request.contentType(MediaType.APPLICATION_JSON);
+        }
+        return request.body(body).exchange();
+    }
+
+    private RestTestClient.ResponseSpec refresh(String apiVersion, Object body) {
+        RestTestClient.RequestBodySpec request = client.post().uri("/api/auth/tokens/refresh");
+        if (apiVersion != null) {
+            request.header("X-API-Version", apiVersion);
         }
         if (body instanceof String) {
             request.contentType(MediaType.APPLICATION_JSON);
