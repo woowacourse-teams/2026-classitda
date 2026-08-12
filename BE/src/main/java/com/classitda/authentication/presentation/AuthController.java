@@ -2,6 +2,7 @@ package com.classitda.authentication.presentation;
 
 import static org.springframework.http.HttpStatus.CREATED;
 
+import com.classitda.authentication.application.RefreshTokenService;
 import com.classitda.authentication.application.SignupService;
 import com.classitda.authentication.application.SocialLoginService;
 import com.classitda.authentication.application.phone.PhoneVerificationService;
@@ -12,6 +13,8 @@ import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResp
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupResponse;
+import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
+import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +34,7 @@ public class AuthController implements AuthControllerApi {
     private final SocialLoginService socialLoginService;
     private final PhoneVerificationService phoneVerificationService;
     private final SignupService signupService;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     @PostMapping(value = "/google", version = "1")
@@ -38,6 +42,14 @@ public class AuthController implements AuthControllerApi {
             @RequestBody GoogleLoginRequest request
     ) {
         return socialLoginService.loginWithGoogle(request);
+    }
+
+    @Override
+    @PostMapping(value = "/tokens/refresh", version = "1")
+    public RefreshTokenResponse refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        return refreshTokenService.refresh(request);
     }
 
     @Override

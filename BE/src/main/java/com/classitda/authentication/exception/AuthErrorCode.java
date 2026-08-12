@@ -14,6 +14,7 @@ public enum AuthErrorCode implements ErrorCode {
     AUTH_ACCOUNT_PROVIDER_SUBJECT_REQUIRED("AUTH-005", "OAuth 제공자 사용자 식별자는 필수입니다.", HttpStatus.BAD_REQUEST),
     GOOGLE_ID_TOKEN_INVALID("AUTH-006", "Google ID 토큰이 유효하지 않습니다.", HttpStatus.UNAUTHORIZED),
     AUTH_ACCOUNT_PROVIDER_EMAIL_INVALID("AUTH-007", "OAuth 제공자 이메일은 비어 있지 않고 254자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
+    REFRESH_TOKEN_INVALID("AUTH-008", "리프레시 토큰이 유효하지 않습니다.", HttpStatus.UNAUTHORIZED),
 
     PHONE_ALREADY_REGISTERED("PHONE-001", "이미 가입된 휴대전화 번호입니다.", HttpStatus.CONFLICT),
     PHONE_RESEND_COOLDOWN("PHONE-002", "인증번호 재발송은 잠시 후 다시 시도해 주세요.", HttpStatus.TOO_MANY_REQUESTS),

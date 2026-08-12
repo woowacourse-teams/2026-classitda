@@ -9,6 +9,8 @@ import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResp
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupResponse;
+import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
+import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -106,6 +108,92 @@ public interface AuthControllerApi {
     })
     LoginResponse loginWithGoogle(
             @Valid GoogleLoginRequest request
+    );
+
+    @Operation(
+            summary = "로그인 토큰 갱신",
+            description = "유효한 Refresh Token을 한 번 사용해 새 Access Token과 Refresh Token을 발급합니다. "
+                    + "성공한 요청의 기존 Refresh Token은 다시 사용할 수 없습니다.",
+            requestBody = @RequestBody(
+                    required = true,
+                    description = "로그인 시 발급받은 opaque Refresh Token",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = RefreshTokenRequest.class),
+                            examples = @ExampleObject(
+                                    value = "{\"refreshToken\":"
+                                            + "\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA."
+                                            + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\"}"
+                            )
+                    )
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Access Token과 Refresh Token 회전 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = RefreshTokenResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":900,"
+                                            + "\"refreshToken\":\"new-refresh-token\","
+                                            + "\"refreshTokenExpiresIn\":2592000}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "요청 값 또는 API 버전이 올바르지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "INVALID_INPUT",
+                                            value = "{\"code\":\"COMMON-001\","
+                                                    + "\"message\":\"요청 값이 올바르지 않습니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "API_VERSION_REQUIRED",
+                                            value = "{\"code\":\"API-001\","
+                                                    + "\"message\":\"X-API-Version 헤더는 필수입니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "API_VERSION_UNSUPPORTED",
+                                            value = "{\"code\":\"API-002\","
+                                                    + "\"message\":\"지원하지 않는 API 버전입니다.\"}"
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Refresh Token이 만료, 위조, 소비되었거나 유효하지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"AUTH-008\","
+                                            + "\"message\":\"리프레시 토큰이 유효하지 않습니다.\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "리프레시 세션 또는 토큰 발급 내부 처리 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"COMMON-002\","
+                                            + "\"message\":\"서버 내부 오류가 발생했습니다.\"}"
+                            )
+                    )
+            )
+    })
+    RefreshTokenResponse refreshToken(
+            @Valid RefreshTokenRequest request
     );
 
     @Operation(
