@@ -9,30 +9,30 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.fixture.StudioPolicyFixture;
 import com.classitda.studio.presentation.dto.StudioPolicyResponse;
-import com.classitda.support.MySqlTestContainerConfiguration;
+import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Transactional;
 
-@Transactional
-@Import(MySqlTestContainerConfiguration.class)
-@SpringBootTest(properties = {
-        "spring.jpa.hibernate.ddl-auto=validate",
-        "spring.sql.init.mode=always"
-})
+@Import({StudioPolicyService.class, StudioService.class, StudioPermissionService.class})
+@MySqlRepositoryTest
 class StudioPolicyServiceTest {
 
-    @Autowired
-    private StudioPolicyService studioPolicyService;
+    private final StudioPolicyService studioPolicyService;
+    private final StudioService studioService;
+    private final EntityManager entityManager;
 
     @Autowired
-    private StudioService studioService;
-
-    @Autowired
-    private EntityManager entityManager;
+    StudioPolicyServiceTest(
+            StudioPolicyService studioPolicyService,
+            StudioService studioService,
+            EntityManager entityManager
+    ) {
+        this.studioPolicyService = studioPolicyService;
+        this.studioService = studioService;
+        this.entityManager = entityManager;
+    }
 
     @Test
     void 운영_정책을_등록하면_정책_정보를_반환한다() {

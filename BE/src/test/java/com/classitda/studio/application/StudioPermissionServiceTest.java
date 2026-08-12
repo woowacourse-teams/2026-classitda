@@ -17,40 +17,40 @@ import com.classitda.studio.domain.repository.StudioRoleRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlTestContainerConfiguration;
+import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Transactional;
 
-@Transactional
-@Import(MySqlTestContainerConfiguration.class)
-@SpringBootTest(properties = {
-        "spring.jpa.hibernate.ddl-auto=validate",
-        "spring.sql.init.mode=always"
-})
+@Import({StudioPermissionService.class, StudioService.class})
+@MySqlRepositoryTest
 class StudioPermissionServiceTest {
 
-    @Autowired
-    private StudioPermissionService permissionChecker;
+    private final StudioPermissionService permissionChecker;
+    private final StudioService studioService;
+    private final StudioRepository studioRepository;
+    private final StudioRoleRepository studioRoleRepository;
+    private final StudioRolePermissionRepository studioRolePermissionRepository;
+    private final EntityManager entityManager;
 
     @Autowired
-    private StudioService studioService;
-
-    @Autowired
-    private StudioRepository studioRepository;
-
-    @Autowired
-    private StudioRoleRepository studioRoleRepository;
-
-    @Autowired
-    private StudioRolePermissionRepository studioRolePermissionRepository;
-
-    @Autowired
-    private EntityManager entityManager;
+    StudioPermissionServiceTest(
+            StudioPermissionService permissionChecker,
+            StudioService studioService,
+            StudioRepository studioRepository,
+            StudioRoleRepository studioRoleRepository,
+            StudioRolePermissionRepository studioRolePermissionRepository,
+            EntityManager entityManager
+    ) {
+        this.permissionChecker = permissionChecker;
+        this.studioService = studioService;
+        this.studioRepository = studioRepository;
+        this.studioRoleRepository = studioRoleRepository;
+        this.studioRolePermissionRepository = studioRolePermissionRepository;
+        this.entityManager = entityManager;
+    }
 
     @Test
     void 대표_강사는_모든_권한을_통과한다() {

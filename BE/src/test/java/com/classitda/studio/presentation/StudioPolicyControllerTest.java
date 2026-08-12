@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
+import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import com.classitda.studio.application.StudioPolicyService;
@@ -13,6 +14,7 @@ import com.classitda.studio.fixture.StudioPolicyFixture;
 import com.classitda.studio.presentation.dto.StudioPolicyCreateRequest;
 import com.classitda.studio.presentation.dto.StudioPolicyResponse;
 import com.classitda.studio.presentation.dto.StudioPolicyUpdateRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -33,9 +35,18 @@ class StudioPolicyControllerTest {
     @MockitoBean
     private StudioPolicyService studioPolicyService;
 
+    @MockitoBean
+    private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
+
     @Autowired
     StudioPolicyControllerTest(RestTestClient client) {
         this.client = client;
+    }
+
+    @BeforeEach
+    void 인증된_회원_아이디를_주입한다() throws Exception {
+        when(currentMemberIdArgumentResolver.supportsParameter(any())).thenReturn(true);
+        when(currentMemberIdArgumentResolver.resolveArgument(any(), any(), any(), any())).thenReturn(1L);
     }
 
     @Test
@@ -48,7 +59,6 @@ class StudioPolicyControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios/1/policy")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(StudioPolicyFixture.기본_정책_생성_요청())
                 .exchange();
@@ -71,7 +81,6 @@ class StudioPolicyControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios/1/policy")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -93,7 +102,6 @@ class StudioPolicyControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios/1/policy")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -115,7 +123,6 @@ class StudioPolicyControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios/1/policy")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -138,7 +145,6 @@ class StudioPolicyControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios/1/policy")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(StudioPolicyFixture.기본_정책_생성_요청())
                 .exchange();
@@ -202,7 +208,6 @@ class StudioPolicyControllerTest {
         RestTestClient.ResponseSpec result = client.patch()
                 .uri("/api/studios/1/policy")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(StudioPolicyFixture.무료_취소_시간만_바꾸는_수정_요청(180))
                 .exchange();
@@ -226,7 +231,6 @@ class StudioPolicyControllerTest {
         RestTestClient.ResponseSpec result = client.patch()
                 .uri("/api/studios/1/policy")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(StudioPolicyFixture.무료_취소_시간만_바꾸는_수정_요청(180))
                 .exchange();

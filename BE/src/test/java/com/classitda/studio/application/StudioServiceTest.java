@@ -16,38 +16,38 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
-import com.classitda.support.MySqlTestContainerConfiguration;
+import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Transactional;
 
-@Transactional
-@Import(MySqlTestContainerConfiguration.class)
-@SpringBootTest(properties = {
-        "spring.jpa.hibernate.ddl-auto=validate",
-        "spring.sql.init.mode=always"
-})
+@Import({StudioService.class, StudioPermissionService.class})
+@MySqlRepositoryTest
 class StudioServiceTest {
 
-    @Autowired
-    private StudioService studioService;
+    private final StudioService studioService;
+    private final StudioRepository studioRepository;
+    private final StudioRoleRepository studioRoleRepository;
+    private final StudioMembershipRepository studioMembershipRepository;
+    private final EntityManager entityManager;
 
     @Autowired
-    private StudioRepository studioRepository;
-
-    @Autowired
-    private StudioRoleRepository studioRoleRepository;
-
-    @Autowired
-    private StudioMembershipRepository studioMembershipRepository;
-
-    @Autowired
-    private EntityManager entityManager;
+    StudioServiceTest(
+            StudioService studioService,
+            StudioRepository studioRepository,
+            StudioRoleRepository studioRoleRepository,
+            StudioMembershipRepository studioMembershipRepository,
+            EntityManager entityManager
+    ) {
+        this.studioService = studioService;
+        this.studioRepository = studioRepository;
+        this.studioRoleRepository = studioRoleRepository;
+        this.studioMembershipRepository = studioMembershipRepository;
+        this.entityManager = entityManager;
+    }
 
     @Test
     void 시설을_생성하면_시설_정보를_반환한다() {

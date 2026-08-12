@@ -6,9 +6,10 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
 
+import com.classitda.common.pagination.CursorResponse;
+import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
-import com.classitda.common.pagination.CursorResponse;
 import com.classitda.studio.application.RoomService;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
@@ -17,6 +18,7 @@ import com.classitda.studio.presentation.dto.RoomCreateRequest;
 import com.classitda.studio.presentation.dto.RoomResponse;
 import com.classitda.studio.presentation.dto.RoomUpdateRequest;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -37,9 +39,18 @@ class RoomControllerTest {
     @MockitoBean
     private RoomService roomService;
 
+    @MockitoBean
+    private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
+
     @Autowired
     RoomControllerTest(RestTestClient client) {
         this.client = client;
+    }
+
+    @BeforeEach
+    void 인증된_회원_아이디를_주입한다() throws Exception {
+        when(currentMemberIdArgumentResolver.supportsParameter(any())).thenReturn(true);
+        when(currentMemberIdArgumentResolver.resolveArgument(any(), any(), any(), any())).thenReturn(1L);
     }
 
     @Test
@@ -52,7 +63,6 @@ class RoomControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios/1/rooms")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(RoomFixture.기본_룸_생성_요청())
                 .exchange();
@@ -74,7 +84,6 @@ class RoomControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios/1/rooms")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -97,7 +106,6 @@ class RoomControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios/1/rooms")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(RoomFixture.기본_룸_생성_요청())
                 .exchange();
@@ -160,7 +168,6 @@ class RoomControllerTest {
         RestTestClient.ResponseSpec result = client.patch()
                 .uri("/api/studios/1/rooms/1")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(RoomFixture.이름만_바꾸는_수정_요청("B룸"))
                 .exchange();
@@ -182,7 +189,6 @@ class RoomControllerTest {
         RestTestClient.ResponseSpec result = client.patch()
                 .uri("/api/studios/1/rooms/1")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -205,7 +211,6 @@ class RoomControllerTest {
         RestTestClient.ResponseSpec result = client.patch()
                 .uri("/api/studios/1/rooms/1")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(RoomFixture.이름만_바꾸는_수정_요청("B룸"))
                 .exchange();
@@ -228,7 +233,6 @@ class RoomControllerTest {
         RestTestClient.ResponseSpec result = client.patch()
                 .uri("/api/studios/1/rooms/999")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(RoomFixture.이름만_바꾸는_수정_요청("B룸"))
                 .exchange();
@@ -251,7 +255,6 @@ class RoomControllerTest {
         RestTestClient.ResponseSpec result = client.patch()
                 .uri("/api/studios/1/rooms/1")
                 .header("X-API-Version", "1")
-                .header("X-Member-Id", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(RoomFixture.이름만_바꾸는_수정_요청("B룸"))
                 .exchange();

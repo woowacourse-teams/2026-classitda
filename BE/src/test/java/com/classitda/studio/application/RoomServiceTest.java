@@ -13,30 +13,30 @@ import com.classitda.studio.fixture.RoomFixture;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.presentation.dto.RoomResponse;
 import com.classitda.studio.presentation.dto.StudioResponse;
-import com.classitda.support.MySqlTestContainerConfiguration;
+import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Transactional;
 
-@Transactional
-@Import(MySqlTestContainerConfiguration.class)
-@SpringBootTest(properties = {
-        "spring.jpa.hibernate.ddl-auto=validate",
-        "spring.sql.init.mode=always"
-})
+@Import({RoomService.class, StudioService.class, StudioPermissionService.class})
+@MySqlRepositoryTest
 class RoomServiceTest {
 
-    @Autowired
-    private RoomService roomService;
+    private final RoomService roomService;
+    private final StudioService studioService;
+    private final EntityManager entityManager;
 
     @Autowired
-    private StudioService studioService;
-
-    @Autowired
-    private EntityManager entityManager;
+    RoomServiceTest(
+            RoomService roomService,
+            StudioService studioService,
+            EntityManager entityManager
+    ) {
+        this.roomService = roomService;
+        this.studioService = studioService;
+        this.entityManager = entityManager;
+    }
 
     @Test
     void 룸을_등록하면_룸_정보를_반환한다() {
