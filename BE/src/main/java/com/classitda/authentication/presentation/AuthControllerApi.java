@@ -1,9 +1,11 @@
 package com.classitda.authentication.presentation;
 
+import com.classitda.authentication.presentation.annotation.CurrentMemberId;
 import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.login.LoginResponse;
 import com.classitda.authentication.presentation.dto.login.RegisteredLoginResponse;
 import com.classitda.authentication.presentation.dto.login.RegistrationRequiredLoginResponse;
+import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
@@ -27,7 +29,7 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 
-@Tag(name = "인증", description = "소셜 로그인, 인증 토큰 발급, 휴대전화 인증과 회원가입 API")
+@Tag(name = "인증", description = "소셜 로그인, 인증 토큰 발급·폐기, 휴대전화 인증과 회원가입 API")
 public interface AuthControllerApi {
 
     @Operation(
@@ -194,6 +196,99 @@ public interface AuthControllerApi {
     })
     RefreshTokenResponse refreshToken(
             @Valid RefreshTokenRequest request
+    );
+
+    @Operation(
+            summary = "현재 기기 로그아웃",
+            description = "인증된 회원의 현재 기기에서 제출한 Refresh Token에 대응하는 현재 로그인 세션만 "
+                    + "폐기합니다. 세션이 없거나 만료되었거나 제출한 인증 정보와 일치하지 않아도 멱등하게 "
+                    + "완료하며 다른 기기의 로그인 세션은 폐기하지 않습니다. Access Token 차단 목록을 사용하지 "
+                    + "않으므로 이미 발급된 Access Token은 최대 15분 동안 자연 만료 전까지 유효할 수 있습니다. "
+                    + "클라이언트는 서버 응답의 성공 또는 실패 여부와 관계없이 로컬 Access Token, Refresh Token, "
+                    + "기기 내 민감정보를 반드시 삭제해야 합니다.",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            requestBody = @RequestBody(
+                    required = true,
+                    description = "현재 기기 로그인에 사용 중인 opaque Refresh Token",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LogoutRequest.class),
+                            examples = @ExampleObject(
+                                    value = "{\"refreshToken\":"
+                                            + "\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA."
+                                            + "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\"}"
+                            )
+                    )
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "서버 로그아웃 처리 또는 멱등 처리 완료. 응답 본문 없음"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "요청 값 또는 API 버전이 올바르지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "INVALID_INPUT",
+                                            value = "{\"code\":\"COMMON-001\","
+                                                    + "\"message\":\"요청 값이 올바르지 않습니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "API_VERSION_REQUIRED",
+                                            value = "{\"code\":\"API-001\","
+                                                    + "\"message\":\"X-API-Version 헤더는 필수입니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "API_VERSION_UNSUPPORTED",
+                                            value = "{\"code\":\"API-002\","
+                                                    + "\"message\":\"지원하지 않는 API 버전입니다.\"}"
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Access Token이 없거나 유효하지 않음",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"AUTH-001\",\"message\":\"인증이 필요합니다.\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access Token이 아닌 인증 토큰을 사용함",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"AUTH-002\",\"message\":\"접근 권한이 없습니다.\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "로그인 세션이 손상되었거나 내부 처리에 실패함",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"COMMON-002\","
+                                            + "\"message\":\"서버 내부 오류가 발생했습니다.\"}"
+                            )
+                    )
+            )
+    })
+    ResponseEntity<Void> logout(
+            @Parameter(hidden = true) @CurrentMemberId Long memberId,
+            @Valid LogoutRequest request
     );
 
     @Operation(
