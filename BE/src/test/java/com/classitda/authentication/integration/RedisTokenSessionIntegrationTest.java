@@ -2,16 +2,19 @@ package com.classitda.authentication.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.classitda.authentication.application.session.RefreshSessionStore;
 import com.classitda.authentication.application.session.SignupSession;
 import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
 import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
+import com.classitda.authentication.application.token.RefreshTokenIssuer;
 import com.classitda.authentication.application.token.SignupTokenIssuer;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.infra.security.jwt.JwtTokenEncoder;
 import com.classitda.authentication.infra.security.jwt.SignupSessionJwtValidator;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
+import com.classitda.authentication.infra.session.RedisRefreshSessionStore;
 import com.classitda.authentication.infra.session.RedisSignupSessionStore;
 import com.classitda.authentication.support.JwtTestSupport;
 import java.nio.charset.StandardCharsets;
@@ -136,12 +139,13 @@ class RedisTokenSessionIntegrationTest {
     }
 
     @Test
-    void 로그인_토큰은_리프레시_토큰의_digest만_Redis에_저장한다() throws Exception {
+    void 로그인_토큰은_리프레시_토큰의_해시만_Redis에_저장한다() throws Exception {
         // given
         JwtTestSupport jwtSupport = JwtTestSupport.create();
+        RefreshSessionStore refreshSessionStore = new RedisRefreshSessionStore(redisTemplate, objectMapper);
         LoginTokenIssuer issuer = new LoginTokenIssuer(
-                redisTemplate,
-                objectMapper,
+                new RefreshTokenIssuer(),
+                refreshSessionStore,
                 new JwtTokenEncoder(jwtSupport.encoder()),
                 tokenProperties
         );
@@ -155,7 +159,7 @@ class RedisTokenSessionIntegrationTest {
         String storedValue = redisTemplate.opsForValue().get(key);
         JsonNode stored = objectMapper.readTree(storedValue);
         assertThat(storedValue).doesNotContain(issued.refreshToken());
-        assertThat(stored.get("tokenDigest").asText()).isEqualTo(sha256(issued.refreshToken()));
+        assertThat(stored.get("tokenHash").asText()).isEqualTo(sha256(issued.refreshToken()));
         assertThat(stored.get("memberId").asLong()).isEqualTo(42L);
         assertThat(redisTemplate.getExpire(key, TimeUnit.SECONDS)).isBetween(2_591_950L, 2_592_000L);
     }
