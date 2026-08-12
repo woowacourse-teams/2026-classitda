@@ -1,10 +1,12 @@
 package com.classitda.authentication.presentation;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
+import com.classitda.authentication.application.LogoutService;
 import com.classitda.authentication.application.RefreshTokenService;
 import com.classitda.authentication.application.SignupService;
 import com.classitda.authentication.application.SocialLoginService;
@@ -19,8 +21,10 @@ import com.classitda.authentication.exception.AuthException;
 import com.classitda.authentication.infra.security.AuthenticationErrorHandler;
 import com.classitda.authentication.infra.security.SecurityConfig;
 import com.classitda.authentication.infra.security.jwt.JwtAuthenticationConverter;
+import com.classitda.authentication.presentation.config.AuthenticationWebMvcConfig;
 import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.login.LoginResponse;
+import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSendRequest;
@@ -28,6 +32,7 @@ import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupResponse;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.GlobalExceptionHandler;
@@ -38,14 +43,14 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.jwt.BadJwtException;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.client.RestTestClient;
@@ -56,6 +61,8 @@ import org.springframework.test.web.servlet.client.RestTestClient;
         SecurityConfig.class,
         AuthenticationErrorHandler.class,
         JwtAuthenticationConverter.class,
+        CurrentMemberIdArgumentResolver.class,
+        AuthenticationWebMvcConfig.class,
         AuthControllerTest.TestSecurityConfiguration.class
 })
 @AutoConfigureRestTestClient
@@ -83,6 +90,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private RefreshTokenService refreshTokenService;
+
+    @MockitoBean
+    private LogoutService logoutService;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
@@ -314,6 +324,169 @@ class AuthControllerTest {
 
         // then
         assertError(result, 500, "COMMON-002", "서버 내부 오류가 발생했습니다.");
+    }
+
+    @Test
+    void 액세스_토큰과_현재_리프레시_토큰으로_로그아웃하면_엄격한_빈_204를_반환한다() {
+        // given
+        LogoutRequest request = LogoutRequest.from(REFRESH_TOKEN);
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("42", TokenUse.ACCESS));
+
+        // when
+        RestTestClient.ResponseSpec result = logout("access-token", "1", request);
+
+        // then
+        result.expectStatus().isNoContent().expectBody().isEmpty();
+        verify(logoutService).logout(42L, request);
+    }
+
+    @Test
+    void 로그아웃의_버전_헤더가_없거나_지원하지_않으면_API_오류이고_서비스를_호출하지_않는다() {
+        // given
+        LogoutRequest request = LogoutRequest.from(REFRESH_TOKEN);
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("42", TokenUse.ACCESS));
+
+        // when
+        RestTestClient.ResponseSpec missing = logout("access-token", null, request);
+        RestTestClient.ResponseSpec unsupported = logout("access-token", "2", request);
+
+        // then
+        assertError(missing, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        assertError(unsupported, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verifyNoInteractions(logoutService);
+    }
+
+    @Test
+    void 로그아웃에서_인증이_없거나_유효하지_않으면_AUTH_001이고_서비스를_호출하지_않는다() {
+        // given
+        LogoutRequest request = LogoutRequest.from(REFRESH_TOKEN);
+        given(jwtDecoder.decode("invalid-token")).willThrow(new BadJwtException("invalid token"));
+
+        // when
+        RestTestClient.ResponseSpec missing = logout(null, "1", request);
+        RestTestClient.ResponseSpec invalid = logout("invalid-token", "1", request);
+
+        // then
+        assertError(missing, 401, "AUTH-001", "인증이 필요합니다.");
+        assertError(invalid, 401, "AUTH-001", "인증이 필요합니다.");
+        verifyNoInteractions(logoutService);
+    }
+
+    @Test
+    void 가입_토큰으로_로그아웃하면_AUTH_002이고_서비스를_호출하지_않는다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+
+        // when
+        RestTestClient.ResponseSpec result = logout(
+                "signup-token",
+                "1",
+                LogoutRequest.from(REFRESH_TOKEN)
+        );
+
+        // then
+        assertError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
+        verifyNoInteractions(logoutService);
+    }
+
+    @Test
+    void 숫자가_아닌_회원_subject의_액세스_토큰으로_로그아웃하면_COMMON_002이고_서비스를_호출하지_않는다() {
+        // given
+        given(jwtDecoder.decode("malformed-subject-token"))
+                .willReturn(jwt("sensitive-member-subject", TokenUse.ACCESS));
+
+        // when
+        RestTestClient.ResponseSpec result = logout(
+                "malformed-subject-token",
+                "1",
+                LogoutRequest.from(REFRESH_TOKEN)
+        );
+
+        // then
+        result.expectStatus().isEqualTo(500)
+                .expectBody()
+                .consumeWith(response -> assertThat(new String(response.getResponseBody()))
+                        .isEqualTo("{\"code\":\"COMMON-002\",\"message\":\"서버 내부 오류가 발생했습니다.\"}")
+                        .doesNotContain("malformed-subject-token", "sensitive-member-subject"));
+        verifyNoInteractions(logoutService);
+    }
+
+    @Test
+    void 로그아웃_body가_없거나_null_blank이면_COMMON_001이고_서비스를_호출하지_않는다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("42", TokenUse.ACCESS));
+        String[] invalidBodies = {
+                "{",
+                "null",
+                "{}",
+                "{\"refreshToken\":null}",
+                "{\"refreshToken\":\"\"}",
+                "{\"refreshToken\":\" \"}"
+        };
+
+        // when
+        RestTestClient.ResponseSpec missingBody = client.post()
+                .uri("/api/auth/logout")
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer access-token")
+                .exchange();
+
+        // then
+        assertError(missingBody, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        for (String invalidBody : invalidBodies) {
+            assertError(logout("access-token", "1", invalidBody), 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        }
+        verifyNoInteractions(logoutService);
+    }
+
+    @Test
+    void 로그아웃_토큰_형식이_잘못되면_COMMON_001이고_서비스를_호출하지_않는다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("42", TokenUse.ACCESS));
+        String[] invalidTokens = {
+                "A".repeat(43),
+                "A".repeat(42) + "." + "B".repeat(43),
+                "A".repeat(43) + "." + "B".repeat(44),
+                "+" + "A".repeat(42) + "." + "B".repeat(43),
+                REFRESH_TOKEN + ".C"
+        };
+
+        // when / then
+        for (String invalidToken : invalidTokens) {
+            assertError(
+                    logout("access-token", "1", LogoutRequest.from(invalidToken)),
+                    400,
+                    "COMMON-001",
+                    "요청 값이 올바르지 않습니다."
+            );
+        }
+        verifyNoInteractions(logoutService);
+    }
+
+    @Test
+    void 로그아웃_내부_오류는_민감정보_없는_COMMON_002의_고정_응답만_반환한다() {
+        // given
+        LogoutRequest request = LogoutRequest.from(REFRESH_TOKEN);
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("42", TokenUse.ACCESS));
+        willThrow(new IllegalStateException("sensitive-tokenHash-sessionId-memberId-auth:refresh:"))
+                .given(logoutService).logout(42L, request);
+
+        // when
+        RestTestClient.ResponseSpec result = logout("access-token", "1", request);
+
+        // then
+        result.expectStatus().isEqualTo(500)
+                .expectBody()
+                .consumeWith(response -> assertThat(new String(response.getResponseBody()))
+                        .isEqualTo("{\"code\":\"COMMON-002\",\"message\":\"서버 내부 오류가 발생했습니다.\"}")
+                        .doesNotContain(
+                                REFRESH_TOKEN,
+                                "access-token",
+                                "tokenHash",
+                                "sessionId",
+                                "memberId",
+                                "auth:refresh:"
+                        ));
     }
 
     @Test
@@ -776,6 +949,24 @@ class AuthControllerTest {
         RestTestClient.RequestBodySpec request = client.post().uri("/api/auth/tokens/refresh");
         if (apiVersion != null) {
             request.header("X-API-Version", apiVersion);
+        }
+        if (body instanceof String) {
+            request.contentType(MediaType.APPLICATION_JSON);
+        }
+        return request.body(body).exchange();
+    }
+
+    private RestTestClient.ResponseSpec logout(
+            String token,
+            String apiVersion,
+            Object body
+    ) {
+        RestTestClient.RequestBodySpec request = client.post().uri("/api/auth/logout");
+        if (apiVersion != null) {
+            request.header("X-API-Version", apiVersion);
+        }
+        if (token != null) {
+            request.header("Authorization", "Bearer " + token);
         }
         if (body instanceof String) {
             request.contentType(MediaType.APPLICATION_JSON);
