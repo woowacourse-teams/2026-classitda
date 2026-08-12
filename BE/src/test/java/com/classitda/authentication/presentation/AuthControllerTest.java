@@ -31,7 +31,7 @@ import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSend
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupResponse;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
@@ -204,7 +204,7 @@ class AuthControllerTest {
     void 인증_헤더_없이_리프레시_토큰을_갱신하면_200과_엄격한_회전_응답을_반환한다() {
         // given
         RefreshTokenRequest request = RefreshTokenRequest.from(REFRESH_TOKEN);
-        RefreshTokenResponse response = RefreshTokenResponse.of(
+        LoginTokenResponse response = LoginTokenResponse.of(
                 IssuedAccessToken.of("access-token", 900L),
                 IssuedRefreshToken.of(
                         ROTATED_REFRESH_TOKEN,

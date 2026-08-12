@@ -2,7 +2,7 @@ package com.classitda.authentication.presentation;
 
 import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,11 +21,11 @@ public class LocalTokenController implements LocalTokenControllerApi {
 
     @Override
     @PostMapping(value = "/members/{memberId}/tokens", version = "1")
-    public RefreshTokenResponse issueTokens(
+    public LoginTokenResponse issueTokens(
             @PathVariable Long memberId
     ) {
         IssuedLoginTokens issuedTokens = loginTokenIssuer.issueLoginTokens(memberId);
-        return new RefreshTokenResponse(
+        return new LoginTokenResponse(
                 issuedTokens.accessToken(),
                 issuedTokens.accessTokenExpiresIn(),
                 issuedTokens.refreshToken(),

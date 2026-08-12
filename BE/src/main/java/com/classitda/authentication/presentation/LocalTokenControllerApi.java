@@ -1,6 +1,6 @@
 package com.classitda.authentication.presentation;
 
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,7 +23,7 @@ public interface LocalTokenControllerApi {
             description = "로그인 토큰 발급 성공",
             content = @Content(
                     mediaType = "application/json",
-                    schema = @Schema(implementation = RefreshTokenResponse.class),
+                    schema = @Schema(implementation = LoginTokenResponse.class),
                     examples = @ExampleObject(
                             value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":900,"
                                     + "\"refreshToken\":\"refresh-token\","
@@ -31,7 +31,7 @@ public interface LocalTokenControllerApi {
                     )
             )
     )
-    RefreshTokenResponse issueTokens(
+    LoginTokenResponse issueTokens(
             @Parameter(description = "토큰 subject로 사용할 회원 ID", example = "1", required = true) Long memberId
     );
 }

@@ -12,7 +12,7 @@ import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSend
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupResponse;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -136,7 +136,7 @@ public interface AuthControllerApi {
                     description = "Access Token과 Refresh Token 회전 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = RefreshTokenResponse.class),
+                            schema = @Schema(implementation = LoginTokenResponse.class),
                             examples = @ExampleObject(
                                     value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":900,"
                                             + "\"refreshToken\":\"new-refresh-token\","
@@ -194,7 +194,7 @@ public interface AuthControllerApi {
                     )
             )
     })
-    RefreshTokenResponse refreshToken(
+    LoginTokenResponse refreshToken(
             @Valid RefreshTokenRequest request
     );
 

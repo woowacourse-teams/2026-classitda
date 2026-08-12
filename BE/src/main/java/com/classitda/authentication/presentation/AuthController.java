@@ -17,7 +17,7 @@ import com.classitda.authentication.presentation.dto.phone.PhoneVerificationSend
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupResponse;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +50,7 @@ public class AuthController implements AuthControllerApi {
 
     @Override
     @PostMapping(value = "/tokens/refresh", version = "1")
-    public RefreshTokenResponse refreshToken(
+    public LoginTokenResponse refreshToken(
             @Valid @RequestBody RefreshTokenRequest request
     ) {
         return refreshTokenService.refresh(request);

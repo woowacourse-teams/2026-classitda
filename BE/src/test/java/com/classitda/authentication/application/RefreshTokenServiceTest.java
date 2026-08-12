@@ -19,7 +19,7 @@ import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -95,7 +95,7 @@ class RefreshTokenServiceTest {
         long before = Instant.now().plusSeconds(REFRESH_TTL_SECONDS).getEpochSecond();
 
         // when
-        RefreshTokenResponse response = refreshTokenService.refresh(RefreshTokenRequest.from(OLD_TOKEN));
+        LoginTokenResponse response = refreshTokenService.refresh(RefreshTokenRequest.from(OLD_TOKEN));
 
         // then
         long after = Instant.now().plusSeconds(REFRESH_TTL_SECONDS).getEpochSecond();

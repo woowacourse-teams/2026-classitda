@@ -11,7 +11,7 @@ import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +28,7 @@ public class RefreshTokenService {
     private final LoginTokenIssuer loginTokenIssuer;
     private final TokenProperties tokenProperties;
 
-    public RefreshTokenResponse refresh(RefreshTokenRequest request) {
+    public LoginTokenResponse refresh(RefreshTokenRequest request) {
         try {
             String refreshToken = request == null ? null : request.refreshToken();
             return refreshInternal(refreshToken);
@@ -43,7 +43,7 @@ public class RefreshTokenService {
         }
     }
 
-    private RefreshTokenResponse refreshInternal(String refreshToken) {
+    private LoginTokenResponse refreshInternal(String refreshToken) {
         String oldSessionId = extractSessionId(refreshToken);
         RefreshSession oldSession = refreshSessionStore.findBySessionId(oldSessionId)
                 .orElseThrow(this::invalidRefreshToken);
@@ -76,7 +76,7 @@ public class RefreshTokenService {
             throw new IllegalStateException("리프레시 세션을 회전할 수 없습니다.");
         }
 
-        return RefreshTokenResponse.of(accessToken, newRefreshToken, refreshTokenExpiresIn);
+        return LoginTokenResponse.of(accessToken, newRefreshToken, refreshTokenExpiresIn);
     }
 
     private String extractSessionId(String refreshToken) {

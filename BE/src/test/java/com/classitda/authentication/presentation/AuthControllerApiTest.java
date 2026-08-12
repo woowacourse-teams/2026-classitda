@@ -6,7 +6,7 @@ import com.classitda.authentication.presentation.annotation.CurrentMemberId;
 import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -105,7 +105,7 @@ class AuthControllerApiTest {
                             .doesNotContain("memberId", "sessionId", "tokenHash", "auth:refresh:"));
         });
         assertThat(success.content()).singleElement().satisfies(content -> {
-            assertThat(content.schema().implementation()).isEqualTo(RefreshTokenResponse.class);
+            assertThat(content.schema().implementation()).isEqualTo(LoginTokenResponse.class);
             assertThat(content.examples())
                     .extracting(ExampleObject::value)
                     .singleElement()

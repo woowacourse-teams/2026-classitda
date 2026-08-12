@@ -29,7 +29,7 @@ import com.classitda.authentication.infra.session.RedisRefreshSessionStore;
 import com.classitda.authentication.infra.session.RedisSignupSessionStore;
 import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
-import com.classitda.authentication.presentation.dto.token.RefreshTokenResponse;
+import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import com.classitda.authentication.support.JwtTestSupport;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -38,7 +38,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -216,7 +215,7 @@ class RedisTokenSessionIntegrationTest {
         long beforeExpiry = Instant.now().plusSeconds(REFRESH_TTL_SECONDS).getEpochSecond();
 
         // when
-        RefreshTokenResponse response = refreshTokenService.refresh(
+        LoginTokenResponse response = refreshTokenService.refresh(
                 RefreshTokenRequest.from(loginTokens.refreshToken())
         );
 
@@ -409,7 +408,7 @@ class RedisTokenSessionIntegrationTest {
                 ready.countDown();
                 start.await();
                 try {
-                    RefreshTokenResponse response = refreshTokenService.refresh(
+                    LoginTokenResponse response = refreshTokenService.refresh(
                             RefreshTokenRequest.from(loginTokens.refreshToken())
                     );
                     return RotationAttempt.success(response);
@@ -433,7 +432,7 @@ class RedisTokenSessionIntegrationTest {
         assertThat(attempts).filteredOn(attempt -> !attempt.succeeded()).hasSize(requestCount - 1)
                 .allSatisfy(attempt -> assertThat(attempt.errorCode())
                         .isEqualTo(AuthErrorCode.REFRESH_TOKEN_INVALID));
-        RefreshTokenResponse winner = attempts.stream()
+        LoginTokenResponse winner = attempts.stream()
                 .filter(RotationAttempt::succeeded)
                 .map(RotationAttempt::response)
                 .findFirst()
@@ -656,11 +655,11 @@ class RedisTokenSessionIntegrationTest {
     }
 
     private record RotationAttempt(
-            RefreshTokenResponse response,
+            LoginTokenResponse response,
             AuthErrorCode errorCode
     ) {
 
-        private static RotationAttempt success(RefreshTokenResponse response) {
+        private static RotationAttempt success(LoginTokenResponse response) {
             return new RotationAttempt(response, null);
         }
 
