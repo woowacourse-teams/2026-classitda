@@ -202,8 +202,9 @@ public interface AuthControllerApi {
             summary = "현재 기기 로그아웃",
             description = "인증된 회원의 현재 기기에서 제출한 Refresh Token에 대응하는 현재 로그인 세션만 "
                     + "폐기합니다. 세션이 없거나 만료되었거나 제출한 인증 정보와 일치하지 않아도 멱등하게 "
-                    + "완료하며 다른 기기의 로그인 세션은 폐기하지 않습니다. Access Token 차단 목록을 사용하지 "
-                    + "않으므로 이미 발급된 Access Token은 최대 15분 동안 자연 만료 전까지 유효할 수 있습니다. "
+                    + "완료하며 다른 기기의 로그인 세션은 폐기하지 않습니다.\n\n"
+                    + "Access Token 차단 목록을 사용하지 "
+                    + "않으므로 이미 발급된 Access Token은 최대 15분 동안 자연 만료 전까지 유효할 수 있습니다.\n\n"
                     + "클라이언트는 서버 응답의 성공 또는 실패 여부와 관계없이 로컬 Access Token, Refresh Token, "
                     + "기기 내 민감정보를 반드시 삭제해야 합니다.",
             security = @SecurityRequirement(name = "bearerAuth"),

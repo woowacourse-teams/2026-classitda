@@ -13,3 +13,4 @@ spring:
       schema-locations:
         - classpath:reset-schema.sql
         - classpath:schema.sql
+      data-locations: classpath:local-data.sql
