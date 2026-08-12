@@ -3,6 +3,7 @@ package com.classitda.common.exception;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.accept.InvalidApiVersionException;
 import org.springframework.web.accept.MissingApiVersionException;
@@ -25,7 +26,8 @@ public class GlobalExceptionHandler {
             MethodArgumentNotValidException.class,
             BindException.class,
             HandlerMethodValidationException.class,
-            ConstraintViolationException.class
+            ConstraintViolationException.class,
+            HttpMessageNotReadableException.class
     })
     public ResponseEntity<ErrorResponse> handleInvalidInput(Exception exception) {
         return toResponseEntity(CommonErrorCode.INVALID_INPUT);
