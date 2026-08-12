@@ -20,6 +20,10 @@ import tools.jackson.databind.ObjectMapper;
 public class RedisRefreshSessionStore implements RefreshSessionStore {
 
     private static final String REFRESH_SESSION_KEY_PREFIX = "auth:refresh:";
+    private static final RedisScript<Long> COMPARE_AND_DELETE_SCRIPT = RedisScript.of(
+            new ClassPathResource("redis/authentication/compare-and-delete-refresh-session.lua"),
+            Long.class
+    );
     private static final RedisScript<Long> ROTATE_SCRIPT = RedisScript.of(
             new ClassPathResource("redis/authentication/rotate-refresh-session.lua"),
             Long.class
@@ -51,6 +55,27 @@ public class RedisRefreshSessionStore implements RefreshSessionStore {
             }
 
             return Optional.of(deserialize(value).toSession());
+        } catch (RuntimeException exception) {
+            throw infrastructureFailure();
+        }
+    }
+
+    @Override
+    public DeleteOutcome deleteIfMatches(String sessionId, RefreshSession expectedSession) {
+        try {
+            Long result = redisTemplate.execute(
+                    COMPARE_AND_DELETE_SCRIPT,
+                    List.of(refreshSessionKey(sessionId)),
+                    serialize(RefreshSessionValue.from(expectedSession))
+            );
+
+            if (Long.valueOf(0L).equals(result)) {
+                return DeleteOutcome.DELETED;
+            }
+            if (Long.valueOf(1L).equals(result)) {
+                return DeleteOutcome.SESSION_MISMATCH;
+            }
+            throw new IllegalStateException("리프레시 세션 삭제 결과가 올바르지 않습니다.");
         } catch (RuntimeException exception) {
             throw infrastructureFailure();
         }
