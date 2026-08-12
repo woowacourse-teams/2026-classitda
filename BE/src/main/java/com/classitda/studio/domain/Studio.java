@@ -76,10 +76,8 @@ public class Studio extends BaseEntity {
         this.closeTime = closeTime;
     }
 
-    public void validateOwner(Long memberId) {
-        if (!owner.getId().equals(memberId)) {
-            throw new StudioException(StudioErrorCode.NOT_OWNER);
-        }
+    public boolean isOwner(Long memberId) {
+        return owner.getId().equals(memberId);
     }
 
     public void update(
