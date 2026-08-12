@@ -37,6 +37,10 @@ public class AuthenticationIntegrationTestConfiguration {
                     .encodeToString(JWT_KEY_PAIR.getPrivate().getEncoded()));
             registry.add("auth.jwt.public-key-base64", () -> Base64.getEncoder()
                     .encodeToString(JWT_KEY_PAIR.getPublic().getEncoded()));
+            registry.add(
+                    "spring.sql.init.data-locations",
+                    () -> "optional:classpath:/test-data.sql"
+            );
         };
     }
 
