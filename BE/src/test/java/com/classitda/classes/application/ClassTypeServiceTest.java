@@ -1,0 +1,209 @@
+package com.classitda.classes.application;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.classitda.classes.domain.ClassType;
+import com.classitda.classes.domain.repository.ClassTypeRepository;
+import com.classitda.classes.exception.ClassTypeErrorCode;
+import com.classitda.classes.exception.ClassTypeException;
+import com.classitda.classes.fixture.ClassTypeFixture;
+import com.classitda.classes.presentation.dto.ClassTypeResponse;
+import com.classitda.member.domain.Member;
+import com.classitda.studio.application.StudioPermissionService;
+import com.classitda.studio.application.StudioService;
+import com.classitda.studio.domain.MembershipStatus;
+import com.classitda.studio.domain.PermissionCode;
+import com.classitda.studio.domain.Studio;
+import com.classitda.studio.domain.StudioMembership;
+import com.classitda.studio.domain.StudioRole;
+import com.classitda.studio.domain.SystemRole;
+import com.classitda.studio.domain.repository.StudioRepository;
+import com.classitda.studio.domain.repository.StudioRolePermissionRepository;
+import com.classitda.studio.domain.repository.StudioRoleRepository;
+import com.classitda.studio.exception.StudioErrorCode;
+import com.classitda.studio.exception.StudioException;
+import com.classitda.studio.fixture.StudioFixture;
+import com.classitda.support.MySqlRepositoryTest;
+import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
+
+@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class})
+@MySqlRepositoryTest
+class ClassTypeServiceTest {
+
+    private final ClassTypeService classTypeService;
+    private final StudioService studioService;
+    private final StudioRepository studioRepository;
+    private final ClassTypeRepository classTypeRepository;
+    private final StudioRoleRepository studioRoleRepository;
+    private final StudioRolePermissionRepository studioRolePermissionRepository;
+    private final EntityManager entityManager;
+
+    @Autowired
+    ClassTypeServiceTest(
+            ClassTypeService classTypeService,
+            StudioService studioService,
+            StudioRepository studioRepository,
+            ClassTypeRepository classTypeRepository,
+            StudioRoleRepository studioRoleRepository,
+            StudioRolePermissionRepository studioRolePermissionRepository,
+            EntityManager entityManager
+    ) {
+        this.classTypeService = classTypeService;
+        this.studioService = studioService;
+        this.studioRepository = studioRepository;
+        this.classTypeRepository = classTypeRepository;
+        this.studioRoleRepository = studioRoleRepository;
+        this.studioRolePermissionRepository = studioRolePermissionRepository;
+        this.entityManager = entityManager;
+    }
+
+    @Test
+    void 대표_강사가_수업_종류를_등록하면_저장하고_응답한다() {
+        // given
+        Member owner = 회원을_저장한다("class-type-owner");
+        Studio studio = 시설을_만든다(owner);
+
+        // when
+        ClassTypeResponse response = classTypeService.save(
+                owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
+
+        // then
+        ClassType saved = classTypeRepository.findById(response.id()).orElseThrow();
+        assertThat(response.name()).isEqualTo("일반 요가");
+        assertThat(saved.getStudio().getId()).isEqualTo(studio.getId());
+        assertThat(saved.getName()).isEqualTo(response.name());
+
+        StudioRole ownerRole = 역할을_찾는다(studio, SystemRole.OWNER);
+        assertThat(studioRolePermissionRepository.existsByStudioRoleIdAndPermissionCode(
+                ownerRole.getId(), PermissionCode.CLASS_TYPE_MANAGE)).isTrue();
+    }
+
+    @Test
+    void 없는_시설에는_수업_종류를_등록할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("missing-studio-owner");
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.save(
+                owner.getId(), 999L, ClassTypeFixture.기본_수업_종류_생성_요청()))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void 일반_강사는_수업_종류를_등록할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("permission-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member instructor = 소속을_만든다(studio, "regular-instructor", SystemRole.INSTRUCTOR, MembershipStatus.ACTIVE);
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.save(
+                instructor.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청()))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.PERMISSION_DENIED.getMessage());
+    }
+
+    @Test
+    void 소속이_아니면_수업_종류를_등록할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("membership-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member stranger = 회원을_저장한다("class-type-stranger");
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.save(
+                stranger.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청()))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.NOT_MEMBERSHIP.getMessage());
+    }
+
+    @Test
+    void 비활성_소속은_수업_종류를_등록할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("inactive-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member inactive = 소속을_만든다(studio, "inactive-instructor", SystemRole.INSTRUCTOR, MembershipStatus.INACTIVE);
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.save(
+                inactive.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청()))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.MEMBERSHIP_INACTIVE.getMessage());
+    }
+
+    @Test
+    void 같은_시설에_같은_이름의_수업_종류를_등록할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("duplicate-owner");
+        Studio studio = 시설을_만든다(owner);
+        classTypeService.save(owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.save(
+                owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청()))
+                .isInstanceOf(ClassTypeException.class)
+                .hasMessage(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED.getMessage());
+    }
+
+    @Test
+    void 다른_시설에는_같은_이름의_수업_종류를_등록할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("other-studio-owner");
+        Studio firstStudio = 시설을_만든다(owner);
+        Studio secondStudio = 시설을_만든다(owner);
+        classTypeService.save(owner.getId(), firstStudio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
+
+        // when
+        ClassTypeResponse response = classTypeService.save(
+                owner.getId(), secondStudio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
+
+        // then
+        assertThat(response.id()).isNotNull();
+        assertThat(classTypeRepository.count()).isEqualTo(2);
+    }
+
+    private Member 회원을_저장한다(String providerId) {
+        Member member = StudioFixture.아이디가_다른_소유자(providerId);
+        entityManager.persist(member);
+        entityManager.flush();
+        return member;
+    }
+
+    private Studio 시설을_만든다(Member owner) {
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        entityManager.flush();
+        return studioRepository.findById(studioId).orElseThrow();
+    }
+
+    private StudioRole 역할을_찾는다(Studio studio, SystemRole systemRole) {
+        return studioRoleRepository.findAllByStudioId(studio.getId()).stream()
+                .filter(role -> role.getSystemRole() == systemRole)
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private Member 소속을_만든다(
+            Studio studio,
+            String providerId,
+            SystemRole systemRole,
+            MembershipStatus status
+    ) {
+        Member member = 회원을_저장한다(providerId);
+        StudioRole role = 역할을_찾는다(studio, systemRole);
+        entityManager.persist(StudioMembership.builder()
+                .studio(studio)
+                .member(member)
+                .studioRole(role)
+                .status(status)
+                .joinedAt(LocalDateTime.now())
+                .build());
+        entityManager.flush();
+        return member;
+    }
+}
