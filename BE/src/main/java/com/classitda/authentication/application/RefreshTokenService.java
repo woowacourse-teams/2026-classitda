@@ -30,7 +30,8 @@ public class RefreshTokenService {
 
     public RefreshTokenResponse refresh(RefreshTokenRequest request) {
         try {
-            return refreshInternal(request);
+            String refreshToken = request == null ? null : request.refreshToken();
+            return refreshInternal(refreshToken);
         } catch (AuthException exception) {
             throw exception;
         } catch (RuntimeException exception) {
@@ -42,8 +43,7 @@ public class RefreshTokenService {
         }
     }
 
-    private RefreshTokenResponse refreshInternal(RefreshTokenRequest request) {
-        String refreshToken = request == null ? null : request.refreshToken();
+    private RefreshTokenResponse refreshInternal(String refreshToken) {
         String oldSessionId = extractSessionId(refreshToken);
         RefreshSession oldSession = refreshSessionStore.findBySessionId(oldSessionId)
                 .orElseThrow(this::invalidRefreshToken);
