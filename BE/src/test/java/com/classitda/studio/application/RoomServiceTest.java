@@ -66,7 +66,7 @@ class RoomServiceTest {
     }
 
     @Test
-    void 대표_강사가_아니면_룸을_등록할_수_없다() {
+    void 소속이_아니면_룸을_등록할_수_없다() {
         // given
         Member owner = 소유자를_저장한다();
         Member other = StudioFixture.아이디가_다른_소유자("other");
@@ -76,7 +76,7 @@ class RoomServiceTest {
         // when / then
         assertThatThrownBy(() -> roomService.save(other.getId(), studioId, RoomFixture.기본_룸_생성_요청()))
                 .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.NOT_OWNER.getMessage());
+                .hasMessage(StudioErrorCode.NOT_MEMBERSHIP.getMessage());
     }
 
     @Test
@@ -201,7 +201,7 @@ class RoomServiceTest {
     }
 
     @Test
-    void 대표_강사가_아니면_룸을_수정할_수_없다() {
+    void 소속이_아니면_룸을_수정할_수_없다() {
         // given
         Member owner = 소유자를_저장한다();
         Member other = StudioFixture.아이디가_다른_소유자("other");
@@ -214,7 +214,7 @@ class RoomServiceTest {
         assertThatThrownBy(() -> roomService.update(
                 other.getId(), studioId, created.id(), RoomFixture.이름만_바꾸는_수정_요청("B룸")))
                 .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.NOT_OWNER.getMessage());
+                .hasMessage(StudioErrorCode.NOT_MEMBERSHIP.getMessage());
     }
 
     @Test

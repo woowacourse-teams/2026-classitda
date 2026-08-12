@@ -217,10 +217,10 @@ class StudioPolicyControllerTest {
     }
 
     @Test
-    void 대표_강사가_아니면_STUDIO_003을_반환한다() {
+    void 권한이_없으면_PERMISSION_001을_반환한다() {
         // given
         when(studioPolicyService.update(anyLong(), anyLong(), any(StudioPolicyUpdateRequest.class)))
-                .thenThrow(new StudioException(StudioErrorCode.NOT_OWNER));
+                .thenThrow(new StudioException(StudioErrorCode.PERMISSION_DENIED));
 
         // when
         RestTestClient.ResponseSpec result = client.patch()
@@ -235,7 +235,7 @@ class StudioPolicyControllerTest {
         result.expectStatus().isForbidden()
                 .expectBody()
                 .json("""
-                        {"code":"STUDIO-003","message":"해당 시설의 대표 강사가 아닙니다."}
+                        {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}
                         """, JsonCompareMode.STRICT);
     }
 

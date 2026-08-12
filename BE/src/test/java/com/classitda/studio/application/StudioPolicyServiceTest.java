@@ -70,7 +70,7 @@ class StudioPolicyServiceTest {
     }
 
     @Test
-    void 대표_강사가_아니면_운영_정책을_등록할_수_없다() {
+    void 소속이_아니면_운영_정책을_등록할_수_없다() {
         // given
         Member owner = 소유자를_저장한다();
         Member other = StudioFixture.아이디가_다른_소유자("other");
@@ -81,7 +81,7 @@ class StudioPolicyServiceTest {
         assertThatThrownBy(() -> studioPolicyService.save(
                 other.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청()))
                 .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.NOT_OWNER.getMessage());
+                .hasMessage(StudioErrorCode.NOT_MEMBERSHIP.getMessage());
     }
 
     @Test
@@ -191,7 +191,7 @@ class StudioPolicyServiceTest {
     }
 
     @Test
-    void 대표_강사가_아니면_운영_정책을_수정할_수_없다() {
+    void 소속이_아니면_운영_정책을_수정할_수_없다() {
         // given
         Member owner = 소유자를_저장한다();
         Member other = StudioFixture.아이디가_다른_소유자("other");
@@ -204,7 +204,7 @@ class StudioPolicyServiceTest {
         assertThatThrownBy(() -> studioPolicyService.update(
                 other.getId(), studioId, StudioPolicyFixture.무료_취소_시간만_바꾸는_수정_요청(180)))
                 .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.NOT_OWNER.getMessage());
+                .hasMessage(StudioErrorCode.NOT_MEMBERSHIP.getMessage());
     }
 
     @Test
