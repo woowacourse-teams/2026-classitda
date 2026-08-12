@@ -24,8 +24,8 @@ import org.springframework.stereotype.Service;
  * 계정 생성의 커밋 또는 롤백이 끝난 뒤에만
  * 로그인 토큰을 발급하고 Redis 가입 상태를 정리하기 위해 이 조정 서비스는 트랜잭션을 열지 않았음.
  */
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 @Service
 public class SignupService {
 
