@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 @Service
 public class ClassTypeService {
 
@@ -27,14 +27,10 @@ public class ClassTypeService {
     private final StudioPermissionService studioPermissionService;
     private final StudioRepository studioRepository;
 
-    @Transactional
     public ClassTypeResponse save(Long memberId, Long studioId, ClassTypeCreateRequest request) {
-        Studio studio = studioRepository.findById(studioId)
-                .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
-
-        studioPermissionService.validate(studio, memberId, PermissionCode.CLASS_TYPE_MANAGE);
-
+        Studio studio = getManageableStudio(memberId, studioId);
         ClassType classType = request.toEntity(studio);
+
         try {
             ClassType savedClassType = classTypeRepository.saveAndFlush(classType);
             return ClassTypeResponse.of(savedClassType.getId(), savedClassType.getName());
@@ -43,6 +39,7 @@ public class ClassTypeService {
         }
     }
 
+    @Transactional(readOnly = true)
     public List<ClassTypeResponse> findAll(Long studioId) {
         if (!studioRepository.existsById(studioId)) {
             throw new StudioException(StudioErrorCode.NOT_FOUND);
@@ -55,14 +52,23 @@ public class ClassTypeService {
 
     @Transactional
     public void delete(Long memberId, Long studioId, Long classTypeId) {
+        ClassType classType = getManageableClassType(memberId, studioId, classTypeId);
+        classTypeRepository.delete(classType);
+    }
+
+    private ClassType getManageableClassType(Long memberId, Long studioId, Long classTypeId) {
+        getManageableStudio(memberId, studioId);
+
+        return classTypeRepository.findByIdAndStudioId(classTypeId, studioId)
+                .orElseThrow(() -> new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+    }
+
+    private Studio getManageableStudio(Long memberId, Long studioId) {
         Studio studio = studioRepository.findById(studioId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
 
         studioPermissionService.validate(studio, memberId, PermissionCode.CLASS_TYPE_MANAGE);
 
-        ClassType classType = classTypeRepository.findByIdAndStudioId(classTypeId, studioId)
-                .orElseThrow(() -> new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
-
-        classTypeRepository.delete(classType);
+        return studio;
     }
 }
