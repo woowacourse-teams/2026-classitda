@@ -1,5 +1,7 @@
 package com.classitda.studio.application;
 
+import com.classitda.classes.domain.ClassType;
+import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
@@ -33,11 +35,15 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class StudioService {
 
+    private static final String DEFAULT_YOGA_CLASS_TYPE_NAME = "요가";
+    private static final String DEFAULT_PILATES_CLASS_TYPE_NAME = "필라테스";
+
     private final StudioRepository studioRepository;
     private final StudioRoleRepository studioRoleRepository;
     private final StudioMembershipRepository studioMembershipRepository;
     private final StudioRolePermissionRepository studioRolePermissionRepository;
     private final PermissionRepository permissionRepository;
+    private final ClassTypeRepository classTypeRepository;
     private final StudioPermissionService studioPermissionService;
     private final EntityManager entityManager;
 
@@ -47,6 +53,7 @@ public class StudioService {
         Studio studio = studioRepository.save(request.toEntity(owner));
         StudioRole ownerRole = saveSystemRoles(studio);
         saveOwnerMembership(studio, owner, ownerRole);
+        saveDefaultClassTypes(studio);
         return StudioResponse.from(studio);
     }
 
@@ -124,5 +131,19 @@ public class StudioService {
                 .status(MembershipStatus.ACTIVE)
                 .joinedAt(LocalDateTime.now())
                 .build());
+    }
+
+    private void saveDefaultClassTypes(Studio studio) {
+        List<ClassType> defaultClassTypes = List.of(
+                ClassType.builder()
+                        .studio(studio)
+                        .name(DEFAULT_YOGA_CLASS_TYPE_NAME)
+                        .build(),
+                ClassType.builder()
+                        .studio(studio)
+                        .name(DEFAULT_PILATES_CLASS_TYPE_NAME)
+                        .build()
+        );
+        classTypeRepository.saveAll(defaultClassTypes);
     }
 }
