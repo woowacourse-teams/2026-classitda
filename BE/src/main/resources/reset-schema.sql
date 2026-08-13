@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS reservation;
 DROP TABLE IF EXISTS member_pass_product;
 DROP TABLE IF EXISTS pass_product_class_type;
 DROP TABLE IF EXISTS pass_product;
+DROP TABLE IF EXISTS class_session_class_type;
 DROP TABLE IF EXISTS class_session;
 DROP TABLE IF EXISTS class_template_class_type;
 DROP TABLE IF EXISTS class_template_recurring_day;

@@ -246,10 +246,12 @@ CREATE TABLE class_session
 (
     id                       BIGINT      NOT NULL AUTO_INCREMENT,
     studio_id                BIGINT      NOT NULL,
-    class_template_id        BIGINT      NOT NULL,
-    room_id                  BIGINT      NOT NULL,
+    room_id                  BIGINT      NULL,
     instructor_membership_id BIGINT      NOT NULL,
+    name                     VARCHAR(100) NOT NULL,
     description              TEXT        NULL,
+    class_form               VARCHAR(20) NOT NULL,
+    duration_minutes         INT         NOT NULL,
     capacity                 INT         NOT NULL,
     start_at                 DATETIME(6) NOT NULL,
     end_at                   DATETIME(6) NOT NULL,
@@ -261,9 +263,25 @@ CREATE TABLE class_session
     UNIQUE KEY uk_session_instructor_active (instructor_membership_id, start_at, active_flag),
     UNIQUE KEY uk_session_room_active (room_id, start_at, active_flag),
     CONSTRAINT fk_session_studio FOREIGN KEY (studio_id) REFERENCES studio (id),
-    CONSTRAINT fk_session_template FOREIGN KEY (class_template_id) REFERENCES class_template (id),
     CONSTRAINT fk_session_room FOREIGN KEY (room_id) REFERENCES room (id),
     CONSTRAINT fk_session_instructor FOREIGN KEY (instructor_membership_id) REFERENCES studio_membership (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
+CREATE TABLE class_session_class_type
+(
+    id               BIGINT      NOT NULL AUTO_INCREMENT,
+    class_session_id BIGINT      NOT NULL,
+    class_type_id    BIGINT      NOT NULL,
+    created_at       DATETIME(6) NOT NULL,
+    updated_at       DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_session_class_type (class_session_id, class_type_id),
+    CONSTRAINT fk_session_class_type_session
+        FOREIGN KEY (class_session_id) REFERENCES class_session (id) ON DELETE CASCADE,
+    CONSTRAINT fk_session_class_type_type
+        FOREIGN KEY (class_type_id) REFERENCES class_type (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
