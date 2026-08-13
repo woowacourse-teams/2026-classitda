@@ -2,7 +2,6 @@ package com.classitda.classes.presentation.dto;
 
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassTemplate;
-import com.classitda.classes.domain.ClassType;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
@@ -21,13 +20,10 @@ public record ClassTemplateResponse(
 
     public static ClassTemplateResponse of(
             ClassTemplate classTemplate,
-            List<ClassType> classTypes
+            List<ClassTypeResponse> classTypes
     ) {
         List<DayOfWeek> recurringDays = classTemplate.getRecurringDays().stream()
                 .sorted()
-                .toList();
-        List<ClassTypeResponse> classTypeResponses = classTypes.stream()
-                .map(classType -> ClassTypeResponse.of(classType.getId(), classType.getName()))
                 .toList();
         return new ClassTemplateResponse(
                 classTemplate.getId(),
@@ -38,7 +34,7 @@ public record ClassTemplateResponse(
                 classTemplate.getStartTime(),
                 recurringDays,
                 classTemplate.getCapacity(),
-                classTypeResponses
+                classTypes
         );
     }
 }
