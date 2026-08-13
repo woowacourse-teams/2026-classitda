@@ -1,9 +1,8 @@
 package com.classitda.classes.presentation;
 
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
-import com.classitda.classes.application.ClassTemplateService;
+import com.classitda.classes.application.ClassTemplateCommandService;
 import com.classitda.classes.presentation.dto.ClassTemplateCreateRequest;
-import com.classitda.classes.presentation.dto.ClassTemplateResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,16 +18,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class ClassTemplateController implements ClassTemplateControllerApi {
 
-    private final ClassTemplateService classTemplateService;
+    private final ClassTemplateCommandService classTemplateCommandService;
 
     @Override
     @PostMapping(version = "1")
-    public ResponseEntity<ClassTemplateResponse> save(
+    public ResponseEntity<Void> save(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @Valid @RequestBody ClassTemplateCreateRequest request
     ) {
-        ClassTemplateResponse response = classTemplateService.save(memberId, studioId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        classTemplateCommandService.save(memberId, studioId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

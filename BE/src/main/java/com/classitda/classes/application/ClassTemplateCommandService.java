@@ -9,7 +9,6 @@ import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.presentation.dto.ClassTemplateCreateRequest;
-import com.classitda.classes.presentation.dto.ClassTemplateResponse;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.studio.application.StudioPermissionService;
@@ -27,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional
 @Service
-public class ClassTemplateService {
+public class ClassTemplateCommandService {
 
     private final ClassTemplateRepository classTemplateRepository;
     private final ClassTemplateClassTypeRepository classTemplateClassTypeRepository;
@@ -35,14 +34,12 @@ public class ClassTemplateService {
     private final StudioPermissionService studioPermissionService;
     private final StudioRepository studioRepository;
 
-    public ClassTemplateResponse save(Long memberId, Long studioId, ClassTemplateCreateRequest request) {
+    public void save(Long memberId, Long studioId, ClassTemplateCreateRequest request) {
         Studio studio = getManageableStudio(memberId, studioId);
         List<ClassType> classTypes = getClassTypes(studioId, request.classTypeIds());
 
         ClassTemplate classTemplate = classTemplateRepository.save(createClassTemplate(studio, request));
         saveTemplateClassTypes(classTemplate.getId(), classTypes);
-
-        return ClassTemplateResponse.of(classTemplate, classTypes);
     }
 
     private Studio getManageableStudio(Long memberId, Long studioId) {

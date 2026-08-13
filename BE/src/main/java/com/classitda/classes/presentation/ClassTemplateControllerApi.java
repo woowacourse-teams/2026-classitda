@@ -1,7 +1,6 @@
 package com.classitda.classes.presentation;
 
 import com.classitda.classes.presentation.dto.ClassTemplateCreateRequest;
-import com.classitda.classes.presentation.dto.ClassTemplateResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,8 +24,7 @@ public interface ClassTemplateControllerApi {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
-                    description = "수업 템플릿이 정상적으로 등록됩니다.",
-                    content = @Content(schema = @Schema(implementation = ClassTemplateResponse.class))
+                    description = "수업 템플릿이 정상적으로 등록됩니다."
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -83,7 +81,7 @@ public interface ClassTemplateControllerApi {
                     )
             )
     })
-    ResponseEntity<ClassTemplateResponse> save(
+    ResponseEntity<Void> save(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
