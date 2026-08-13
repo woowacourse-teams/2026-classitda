@@ -4,8 +4,13 @@ spring:
   profiles:
     default: local
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: validate
+  data:
+    redis:
+      repositories:
+        enabled: false
 
 springdoc:
   api-docs:
