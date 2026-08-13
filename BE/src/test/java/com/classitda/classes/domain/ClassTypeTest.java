@@ -85,6 +85,78 @@ class ClassTypeTest {
         assertThat(classType.getName()).hasSize(50);
     }
 
+    @Test
+    void 수업_종류_이름을_수정할_수_있다() {
+        // given
+        ClassType classType = ClassTypeFixture.기본_수업_종류(기본_시설());
+
+        // when
+        classType.updateName("리포머 요가");
+
+        // then
+        assertThat(classType.getName()).isEqualTo("리포머 요가");
+    }
+
+    @Test
+    void 수정할_이름이_null이면_예외가_발생하고_기존_이름이_유지된다() {
+        // given
+        ClassType classType = ClassTypeFixture.기본_수업_종류(기본_시설());
+
+        // when / then
+        assertThatThrownBy(() -> classType.updateName(null))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.INVALID_NAME));
+        assertThat(classType.getName()).isEqualTo("일반 요가");
+    }
+
+    @Test
+    void 수정할_이름이_공백이면_예외가_발생하고_기존_이름이_유지된다() {
+        // given
+        ClassType classType = ClassTypeFixture.기본_수업_종류(기본_시설());
+
+        // when / then
+        assertThatThrownBy(() -> classType.updateName("   "))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.INVALID_NAME));
+        assertThat(classType.getName()).isEqualTo("일반 요가");
+    }
+
+    @Test
+    void 수정할_이름이_51자면_예외가_발생하고_기존_이름이_유지된다() {
+        // given
+        ClassType classType = ClassTypeFixture.기본_수업_종류(기본_시설());
+
+        // when / then
+        assertThatThrownBy(() -> classType.updateName("가".repeat(51)))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.INVALID_NAME));
+        assertThat(classType.getName()).isEqualTo("일반 요가");
+    }
+
+    @Test
+    void 수업_종류_이름을_1자로_수정할_수_있다() {
+        // given
+        ClassType classType = ClassTypeFixture.기본_수업_종류(기본_시설());
+
+        // when
+        classType.updateName("가");
+
+        // then
+        assertThat(classType.getName()).hasSize(1);
+    }
+
+    @Test
+    void 수업_종류_이름을_50자로_수정할_수_있다() {
+        // given
+        ClassType classType = ClassTypeFixture.기본_수업_종류(기본_시설());
+
+        // when
+        classType.updateName("가".repeat(50));
+
+        // then
+        assertThat(classType.getName()).hasSize(50);
+    }
+
     private Studio 기본_시설() {
         Member owner = StudioFixture.기본_소유자();
         return StudioFixture.기본_시설(owner);

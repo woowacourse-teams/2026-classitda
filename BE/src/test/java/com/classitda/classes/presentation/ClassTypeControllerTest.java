@@ -15,6 +15,7 @@ import com.classitda.classes.exception.ClassTypeException;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassTypeCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
+import com.classitda.classes.presentation.dto.ClassTypeUpdateRequest;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import com.classitda.studio.exception.StudioErrorCode;
@@ -187,6 +188,104 @@ class ClassTypeControllerTest {
     }
 
     @Test
+    void 수업_종류_이름을_수정하면_200과_정확한_수업_종류_정보를_반환하고_서비스에_위임한다() {
+        // given
+        ClassTypeUpdateRequest request = ClassTypeFixture.기본_수업_종류_수정_요청();
+        when(classTypeService.update(anyLong(), anyLong(), anyLong(), any(ClassTypeUpdateRequest.class)))
+                .thenReturn(ClassTypeResponse.of(13L, "리포머 요가"));
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(7L, 13L, "1", request);
+
+        // then
+        result.expectStatus().isOk()
+                .expectBody()
+                .json("""
+                        {"id":13,"name":"리포머 요가"}
+                        """, JsonCompareMode.STRICT);
+        verify(classTypeService).update(eq(1L), eq(7L), eq(13L), eq(request));
+    }
+
+    @Test
+    void 수정할_수업_종류_이름이_비어_있으면_COMMON_001을_반환하고_서비스를_호출하지_않는다() {
+        // given
+        ClassTypeUpdateRequest request = ClassTypeFixture.이름이_다른_수업_종류_수정_요청(" ");
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(7L, 13L, "1", request);
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(classTypeService, never()).update(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 수정할_수업_종류_이름이_51자면_COMMON_001을_반환하고_서비스를_호출하지_않는다() {
+        // given
+        ClassTypeUpdateRequest request = ClassTypeFixture.이름이_다른_수업_종류_수정_요청("가".repeat(51));
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(7L, 13L, "1", request);
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(classTypeService, never()).update(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 없는_수업_종류를_수정하면_CLASS_TYPE_003을_정확히_반환한다() {
+        // given
+        when(classTypeService.update(anyLong(), anyLong(), anyLong(), any(ClassTypeUpdateRequest.class)))
+                .thenThrow(new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(
+                7L, 999L, "1", ClassTypeFixture.기본_수업_종류_수정_요청());
+
+        // then
+        오류를_검증한다(result, 404, "CLASS_TYPE-003", "수업 종류를 찾을 수 없습니다.");
+    }
+
+    @Test
+    void 중복된_이름으로_수업_종류를_수정하면_CLASS_TYPE_002를_정확히_반환한다() {
+        // given
+        when(classTypeService.update(anyLong(), anyLong(), anyLong(), any(ClassTypeUpdateRequest.class)))
+                .thenThrow(new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED));
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(
+                7L, 13L, "1", ClassTypeFixture.기본_수업_종류_수정_요청());
+
+        // then
+        오류를_검증한다(result, 409, "CLASS_TYPE-002", "이미 존재하는 수업 종류 이름입니다.");
+    }
+
+    @Test
+    void 수업_종류_수정_버전_헤더가_없으면_API_001을_반환하고_서비스를_호출하지_않는다() {
+        // given / when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri("/api/studios/7/class-types/13")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ClassTypeFixture.기본_수업_종류_수정_요청())
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        verify(classTypeService, never()).update(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 수업_종류_수정_버전이_지원되지_않으면_API_002를_반환하고_서비스를_호출하지_않는다() {
+        // given / when
+        RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(
+                7L, 13L, "2", ClassTypeFixture.기본_수업_종류_수정_요청());
+
+        // then
+        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(classTypeService, never()).update(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
     void 수업_종류를_삭제하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
         // given / when
         RestTestClient.ResponseSpec result = 수업_종류를_삭제한다(7L, 13L, "1");
@@ -260,6 +359,20 @@ class ClassTypeControllerTest {
         return client.delete()
                 .uri("/api/studios/{studioId}/class-types/{classTypeId}", studioId, classTypeId)
                 .header("X-API-Version", apiVersion)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec 수업_종류_이름을_수정한다(
+            Long studioId,
+            Long classTypeId,
+            String apiVersion,
+            ClassTypeUpdateRequest request
+    ) {
+        return client.patch()
+                .uri("/api/studios/{studioId}/class-types/{classTypeId}", studioId, classTypeId)
+                .header("X-API-Version", apiVersion)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
                 .exchange();
     }
 

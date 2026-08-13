@@ -10,6 +10,7 @@ import com.classitda.classes.exception.ClassTypeErrorCode;
 import com.classitda.classes.exception.ClassTypeException;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
+import com.classitda.classes.presentation.dto.ClassTypeUpdateRequest;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.application.StudioPermissionService;
 import com.classitda.studio.application.StudioService;
@@ -222,6 +223,164 @@ class ClassTypeServiceTest {
         assertThatThrownBy(() -> classTypeService.findAll(missingStudioId))
                 .isInstanceOfSatisfying(StudioException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_FOUND));
+    }
+
+    @Test
+    void 대표_강사가_수업_종류_이름을_수정하면_같은_아이디와_새_이름을_응답하고_저장한다() {
+        // given
+        Member owner = 회원을_저장한다("update-owner");
+        Studio studio = 시설을_만든다(owner);
+        ClassType classType = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
+        ClassTypeUpdateRequest request = ClassTypeFixture.기본_수업_종류_수정_요청();
+
+        // when
+        ClassTypeResponse response = classTypeService.update(
+                owner.getId(), studio.getId(), classType.getId(), request);
+        entityManager.clear();
+
+        // then
+        ClassType updated = classTypeRepository.findById(classType.getId()).orElseThrow();
+        assertThat(response.id()).isEqualTo(classType.getId());
+        assertThat(response.name()).isEqualTo("리포머 요가");
+        assertThat(updated.getName()).isEqualTo("리포머 요가");
+    }
+
+    @Test
+    void 수업_종류를_현재_이름으로_수정할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("same-name-update-owner");
+        Studio studio = 시설을_만든다(owner);
+        ClassType classType = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
+
+        // when
+        ClassTypeResponse response = classTypeService.update(
+                owner.getId(), studio.getId(), classType.getId(),
+                ClassTypeFixture.이름이_다른_수업_종류_수정_요청(classType.getName()));
+
+        // then
+        assertThat(response.id()).isEqualTo(classType.getId());
+        assertThat(response.name()).isEqualTo("일반 요가");
+    }
+
+    @Test
+    void 같은_시설의_다른_수업_종류_이름으로_수정하면_CLASS_TYPE_002가_발생한다() {
+        // given
+        Member owner = 회원을_저장한다("duplicate-update-owner");
+        Studio studio = 시설을_만든다(owner);
+        ClassType target = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
+        ClassType duplicate = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(studio, "리포머 요가"));
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.update(
+                owner.getId(), studio.getId(), target.getId(),
+                ClassTypeFixture.이름이_다른_수업_종류_수정_요청(duplicate.getName())))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED));
+    }
+
+    @Test
+    void 다른_시설에서만_사용하는_이름으로_수정할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("other-studio-update-owner");
+        Studio studio = 시설을_만든다(owner);
+        Studio otherStudio = 시설을_만든다(owner);
+        ClassType target = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
+        classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(otherStudio, "리포머 요가"));
+
+        // when
+        ClassTypeResponse response = classTypeService.update(
+                owner.getId(), studio.getId(), target.getId(), ClassTypeFixture.기본_수업_종류_수정_요청());
+
+        // then
+        assertThat(response.name()).isEqualTo("리포머 요가");
+        assertThat(classTypeRepository.findById(target.getId()).orElseThrow().getName())
+                .isEqualTo("리포머 요가");
+    }
+
+    @Test
+    void 없는_시설의_수업_종류를_수정하면_STUDIO_002가_먼저_발생하고_행이_유지된다() {
+        // given
+        Member owner = 회원을_저장한다("missing-studio-update-owner");
+        Studio studio = 시설을_만든다(owner);
+        ClassType classType = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.update(
+                owner.getId(), 999L, classType.getId(), ClassTypeFixture.기본_수업_종류_수정_요청()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_FOUND));
+        assertThat(classTypeRepository.findById(classType.getId()).orElseThrow().getName())
+                .isEqualTo("일반 요가");
+    }
+
+    @Test
+    void 일반_강사가_없는_수업_종류를_수정하면_PERMISSION_001이_먼저_발생하고_행이_유지된다() {
+        // given
+        Member owner = 회원을_저장한다("update-permission-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member instructor = 소속을_만든다(
+                studio, "update-regular-instructor", SystemRole.INSTRUCTOR, MembershipStatus.ACTIVE);
+        ClassType classType = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.update(
+                instructor.getId(), studio.getId(), 999L, ClassTypeFixture.기본_수업_종류_수정_요청()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.PERMISSION_DENIED));
+        assertThat(classTypeRepository.findById(classType.getId()).orElseThrow().getName())
+                .isEqualTo("일반 요가");
+    }
+
+    @Test
+    void 소속이_아닌_회원이_없는_수업_종류를_수정하면_MEMBERSHIP_001이_먼저_발생하고_행이_유지된다() {
+        // given
+        Member owner = 회원을_저장한다("update-membership-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member stranger = 회원을_저장한다("update-stranger");
+        ClassType classType = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.update(
+                stranger.getId(), studio.getId(), 999L, ClassTypeFixture.기본_수업_종류_수정_요청()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_MEMBERSHIP));
+        assertThat(classTypeRepository.findById(classType.getId()).orElseThrow().getName())
+                .isEqualTo("일반 요가");
+    }
+
+    @Test
+    void 기존_시설에_없는_수업_종류를_수정하면_CLASS_TYPE_003이_발생한다() {
+        // given
+        Member owner = 회원을_저장한다("missing-class-type-update-owner");
+        Studio studio = 시설을_만든다(owner);
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.update(
+                owner.getId(), studio.getId(), 999L, ClassTypeFixture.기본_수업_종류_수정_요청()))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+    }
+
+    @Test
+    void 다른_시설의_수업_종류를_수정하면_CLASS_TYPE_003이_발생하고_행이_유지된다() {
+        // given
+        Member owner = 회원을_저장한다("cross-studio-update-owner");
+        Studio requestedStudio = 시설을_만든다(owner);
+        Studio owningStudio = 시설을_만든다(owner);
+        ClassType classType = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(owningStudio, "다른 시설 요가"));
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.update(
+                owner.getId(), requestedStudio.getId(), classType.getId(),
+                ClassTypeFixture.기본_수업_종류_수정_요청()))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+        assertThat(classTypeRepository.findById(classType.getId()).orElseThrow().getName())
+                .isEqualTo("다른 시설 요가");
     }
 
     @Test
