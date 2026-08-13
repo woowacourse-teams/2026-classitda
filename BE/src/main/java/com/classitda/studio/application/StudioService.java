@@ -1,5 +1,6 @@
 package com.classitda.studio.application;
 
+import com.classitda.classes.application.ClassTypeService;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
@@ -38,6 +39,7 @@ public class StudioService {
     private final StudioMembershipRepository studioMembershipRepository;
     private final StudioRolePermissionRepository studioRolePermissionRepository;
     private final PermissionRepository permissionRepository;
+    private final ClassTypeService classTypeService;
     private final StudioPermissionService studioPermissionService;
     private final EntityManager entityManager;
 
@@ -47,6 +49,7 @@ public class StudioService {
         Studio studio = studioRepository.save(request.toEntity(owner));
         StudioRole ownerRole = saveSystemRoles(studio);
         saveOwnerMembership(studio, owner, ownerRole);
+        classTypeService.saveDefaultClassTypes(studio);
         return StudioResponse.from(studio);
     }
 

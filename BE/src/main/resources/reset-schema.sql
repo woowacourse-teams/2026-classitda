@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS studio_role_permission;
 DROP TABLE IF EXISTS studio_role;
 DROP TABLE IF EXISTS permission;
 DROP TABLE IF EXISTS studio_policy;
+DROP TABLE IF EXISTS class_type;
 DROP TABLE IF EXISTS room;
 DROP TABLE IF EXISTS studio;
 DROP TABLE IF EXISTS member_term_agreement;

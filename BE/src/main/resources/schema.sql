@@ -100,6 +100,20 @@ CREATE TABLE room
   DEFAULT CHARSET = utf8mb4;
 
 
+CREATE TABLE class_type
+(
+    id         BIGINT      NOT NULL AUTO_INCREMENT,
+    studio_id  BIGINT      NOT NULL,
+    name       VARCHAR(50) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_class_type_studio_name (studio_id, name),
+    CONSTRAINT fk_class_type_studio FOREIGN KEY (studio_id) REFERENCES studio (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
 CREATE TABLE studio_policy
 (
     id                               BIGINT      NOT NULL AUTO_INCREMENT,
@@ -325,6 +339,7 @@ VALUES ('STUDIO_UPDATE', NOW(6)),
        ('MEMBER_READ', NOW(6)),
        ('MEMBER_INVITE', NOW(6)),
        ('MEMBER_MANAGE', NOW(6)),
+       ('CLASS_TYPE_MANAGE', NOW(6)),
        ('CLASS_TEMPLATE_MANAGE', NOW(6)),
        ('CLASS_SESSION_MANAGE_OWN', NOW(6)),
        ('CLASS_SESSION_MANAGE_ALL', NOW(6)),

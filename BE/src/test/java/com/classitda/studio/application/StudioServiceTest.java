@@ -3,6 +3,9 @@ package com.classitda.studio.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classitda.classes.application.ClassTypeService;
+import com.classitda.classes.domain.ClassType;
+import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.StudioMembership;
@@ -24,7 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
-@Import({StudioService.class, StudioPermissionService.class})
+@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class})
 @MySqlRepositoryTest
 class StudioServiceTest {
 
@@ -32,6 +35,7 @@ class StudioServiceTest {
     private final StudioRepository studioRepository;
     private final StudioRoleRepository studioRoleRepository;
     private final StudioMembershipRepository studioMembershipRepository;
+    private final ClassTypeRepository classTypeRepository;
     private final EntityManager entityManager;
 
     @Autowired
@@ -40,12 +44,14 @@ class StudioServiceTest {
             StudioRepository studioRepository,
             StudioRoleRepository studioRoleRepository,
             StudioMembershipRepository studioMembershipRepository,
+            ClassTypeRepository classTypeRepository,
             EntityManager entityManager
     ) {
         this.studioService = studioService;
         this.studioRepository = studioRepository;
         this.studioRoleRepository = studioRoleRepository;
         this.studioMembershipRepository = studioMembershipRepository;
+        this.classTypeRepository = classTypeRepository;
         this.entityManager = entityManager;
     }
 
@@ -114,6 +120,21 @@ class StudioServiceTest {
         assertThat(membership.get().getStudioRole().getName()).isEqualTo(SystemRole.OWNER.getRoleName());
         assertThat(membership.get().isInstructor()).isTrue();
         assertThat(membership.get().getStatus()).isEqualTo(MembershipStatus.ACTIVE);
+    }
+
+    @Test
+    void 시설을_생성하면_기본_수업_종류_두_개가_저장된다() {
+        // given
+        Member owner = 소유자를_저장한다();
+
+        // when
+        StudioResponse response = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청());
+        entityManager.flush();
+
+        // then
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(response.id()))
+                .extracting(ClassType::getName)
+                .containsExactlyInAnyOrder("요가", "필라테스");
     }
 
     @Test
