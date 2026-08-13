@@ -76,6 +76,7 @@ public class ClassTemplate extends BaseEntity {
             Set<DayOfWeek> recurringDays,
             int capacity
     ) {
+        validateStudioId(studioId);
         validateDetails(name, classForm, durationMinutes, startTime, capacity);
         Set<DayOfWeek> copiedRecurringDays = copyRecurringDays(recurringDays);
         this.studioId = studioId;
@@ -86,6 +87,12 @@ public class ClassTemplate extends BaseEntity {
         this.startTime = startTime;
         this.recurringDays = copiedRecurringDays;
         this.capacity = capacity;
+    }
+
+    private void validateStudioId(Long studioId) {
+        if (studioId == null) {
+            throw new ClassException(ClassErrorCode.CLASS_TEMPLATE_STUDIO_REQUIRED);
+        }
     }
 
     public void updateDetails(

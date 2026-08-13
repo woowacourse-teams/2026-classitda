@@ -198,7 +198,6 @@ CREATE TABLE class_template
 (
     id               BIGINT       NOT NULL AUTO_INCREMENT,
     studio_id        BIGINT       NOT NULL,
-    room_id          BIGINT       NOT NULL,
     name             VARCHAR(100) NOT NULL,
     description      TEXT         NULL,
     class_form       VARCHAR(20)  NOT NULL,
@@ -208,8 +207,7 @@ CREATE TABLE class_template
     created_at       DATETIME(6)  NOT NULL,
     updated_at       DATETIME(6)  NULL,
     PRIMARY KEY (id),
-    CONSTRAINT fk_template_studio FOREIGN KEY (studio_id) REFERENCES studio (id),
-    CONSTRAINT fk_template_room FOREIGN KEY (room_id) REFERENCES room (id)
+    CONSTRAINT fk_template_studio FOREIGN KEY (studio_id) REFERENCES studio (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
@@ -246,7 +244,6 @@ CREATE TABLE class_session
 (
     id                       BIGINT      NOT NULL AUTO_INCREMENT,
     studio_id                BIGINT      NOT NULL,
-    room_id                  BIGINT      NOT NULL,
     instructor_membership_id BIGINT      NOT NULL,
     name                     VARCHAR(100) NOT NULL,
     description              TEXT        NULL,
@@ -261,9 +258,7 @@ CREATE TABLE class_session
     updated_at               DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_session_instructor_active (instructor_membership_id, start_at, active_flag),
-    UNIQUE KEY uk_session_room_active (room_id, start_at, active_flag),
     CONSTRAINT fk_session_studio FOREIGN KEY (studio_id) REFERENCES studio (id),
-    CONSTRAINT fk_session_room FOREIGN KEY (room_id) REFERENCES room (id),
     CONSTRAINT fk_session_instructor FOREIGN KEY (instructor_membership_id) REFERENCES studio_membership (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;

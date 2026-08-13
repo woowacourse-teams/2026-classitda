@@ -6,9 +6,13 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 public enum ClassErrorCode implements ErrorCode {
+
+    // CLASS TYPE
     INVALID_NAME("CLASS_TYPE-001", "수업 종류 이름은 1자 이상 50자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_TYPE_NAME_DUPLICATED("CLASS_TYPE-002", "이미 존재하는 수업 종류 이름입니다.", HttpStatus.CONFLICT),
     CLASS_TYPE_NOT_FOUND("CLASS_TYPE-003", "수업 종류를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    // CLASS TEMPLATE
     INVALID_CLASS_TEMPLATE_NAME("CLASS_TEMPLATE-001", "수업 템플릿 이름은 1자 이상 100자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_CLASS_FORM("CLASS_TEMPLATE-002", "수업 형태는 필수입니다.", HttpStatus.BAD_REQUEST),
     INVALID_DURATION_MINUTES("CLASS_TEMPLATE-003", "진행 시간은 1분 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
@@ -16,8 +20,10 @@ public enum ClassErrorCode implements ErrorCode {
     CLASS_TYPES_REQUIRED("CLASS_TEMPLATE-005", "수업 종류를 하나 이상 선택해야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_TYPES_DUPLICATED("CLASS_TEMPLATE-006", "중복된 수업 종류를 선택할 수 없습니다.", HttpStatus.BAD_REQUEST),
     INVALID_START_TIME("CLASS_TEMPLATE-009", "시작 시간은 필수입니다.", HttpStatus.BAD_REQUEST),
-    RECURRING_DAYS_REQUIRED("CLASS_TEMPLATE-010", "반복 요일을 하나 이상 선택해야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_RECURRING_DAY("CLASS_TEMPLATE-011", "반복 요일에는 null을 포함할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    CLASS_TEMPLATE_STUDIO_REQUIRED("CLASS_TEMPLATE-012", "수업 템플릿 시설은 필수입니다.", HttpStatus.BAD_REQUEST),
+
+    // CLASS SESSION
     INVALID_CLASS_SESSION_NAME("CLASS_SESSION-001", "수업 이름은 1자 이상 100자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_CLASS_SESSION_FORM("CLASS_SESSION-002", "수업 형태는 필수입니다.", HttpStatus.BAD_REQUEST),
     INVALID_CLASS_SESSION_DURATION_MINUTES("CLASS_SESSION-003", "진행 시간은 1분 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
@@ -25,8 +31,7 @@ public enum ClassErrorCode implements ErrorCode {
     INVALID_CLASS_SESSION_CAPACITY("CLASS_SESSION-005", "정원은 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_SESSION_STUDIO_REQUIRED("CLASS_SESSION-006", "수업 시설은 필수입니다.", HttpStatus.BAD_REQUEST),
     CLASS_SESSION_INSTRUCTOR_REQUIRED("CLASS_SESSION-007", "담당 강사는 필수입니다.", HttpStatus.BAD_REQUEST),
-    CLASS_SESSION_STATUS_REQUIRED("CLASS_SESSION-008", "수업 상태는 필수입니다.", HttpStatus.BAD_REQUEST),
-    CLASS_SESSION_ROOM_REQUIRED("CLASS_SESSION-009", "수업 룸은 필수입니다.", HttpStatus.BAD_REQUEST);
+    CLASS_SESSION_STATUS_REQUIRED("CLASS_SESSION-008", "수업 상태는 필수입니다.", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String message;
