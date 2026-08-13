@@ -3,7 +3,6 @@ package com.classitda.classes.domain;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;
-import com.classitda.studio.domain.Room;
 import com.classitda.studio.domain.StudioMembership;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -39,10 +38,6 @@ public class ClassSession extends BaseEntity {
     private Long studioId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "room_id", nullable = false)
-    private Room room;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "instructor_membership_id", nullable = false)
     private StudioMembership instructorMembership;
 
@@ -75,7 +70,6 @@ public class ClassSession extends BaseEntity {
     @Builder
     private ClassSession(
             Long studioId,
-            Room room,
             StudioMembership instructorMembership,
             String name,
             String description,
@@ -86,7 +80,6 @@ public class ClassSession extends BaseEntity {
             ClassSessionStatus status
     ) {
         validateStudioId(studioId);
-        validateRoom(room);
         validateInstructorMembership(instructorMembership);
         validateName(name);
         validateClassForm(classForm);
@@ -95,7 +88,6 @@ public class ClassSession extends BaseEntity {
         validateStartAt(startAt);
         validateStatus(status);
         this.studioId = studioId;
-        this.room = room;
         this.instructorMembership = instructorMembership;
         this.name = name;
         this.description = description;
@@ -110,12 +102,6 @@ public class ClassSession extends BaseEntity {
     private void validateStudioId(Long studioId) {
         if (studioId == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_STUDIO_REQUIRED);
-        }
-    }
-
-    private void validateRoom(Room room) {
-        if (room == null) {
-            throw new ClassException(ClassErrorCode.CLASS_SESSION_ROOM_REQUIRED);
         }
     }
 

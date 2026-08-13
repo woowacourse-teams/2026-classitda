@@ -3,7 +3,6 @@ package com.classitda.classes.domain;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;
-import com.classitda.studio.domain.Room;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -15,7 +14,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
@@ -41,10 +39,6 @@ public class ClassTemplate extends BaseEntity {
 
     @Column(name = "studio_id", nullable = false)
     private Long studioId;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "room_id", nullable = false)
-    private Room room;
 
     @Column(nullable = false, length = MAX_NAME_LENGTH)
     private String name;
@@ -74,7 +68,6 @@ public class ClassTemplate extends BaseEntity {
     @Builder
     private ClassTemplate(
             Long studioId,
-            Room room,
             String name,
             String description,
             ClassForm classForm,
@@ -83,20 +76,19 @@ public class ClassTemplate extends BaseEntity {
             Set<DayOfWeek> recurringDays,
             int capacity
     ) {
-        validateDetails(name, classForm, durationMinutes, startTime, recurringDays, capacity);
+        validateDetails(name, classForm, durationMinutes, startTime, capacity);
+        Set<DayOfWeek> copiedRecurringDays = copyRecurringDays(recurringDays);
         this.studioId = studioId;
-        this.room = room;
         this.name = name;
         this.description = description;
         this.classForm = classForm;
         this.durationMinutes = durationMinutes;
         this.startTime = startTime;
-        this.recurringDays = EnumSet.copyOf(recurringDays);
+        this.recurringDays = copiedRecurringDays;
         this.capacity = capacity;
     }
 
     public void updateDetails(
-            Room room,
             String name,
             String description,
             ClassForm classForm,
@@ -105,19 +97,19 @@ public class ClassTemplate extends BaseEntity {
             Set<DayOfWeek> recurringDays,
             int capacity
     ) {
-        validateDetails(name, classForm, durationMinutes, startTime, recurringDays, capacity);
-        this.room = room;
+        validateDetails(name, classForm, durationMinutes, startTime, capacity);
+        Set<DayOfWeek> copiedRecurringDays = copyRecurringDays(recurringDays);
         this.name = name;
         this.description = description;
         this.classForm = classForm;
         this.durationMinutes = durationMinutes;
         this.startTime = startTime;
-        this.recurringDays = EnumSet.copyOf(recurringDays);
+        this.recurringDays = copiedRecurringDays;
         this.capacity = capacity;
     }
 
     public Set<DayOfWeek> getRecurringDays() {
-        return Collections.unmodifiableSet(EnumSet.copyOf(recurringDays));
+        return Collections.unmodifiableSet(copyRecurringDays(recurringDays));
     }
 
     private void validateDetails(
@@ -125,14 +117,12 @@ public class ClassTemplate extends BaseEntity {
             ClassForm classForm,
             int durationMinutes,
             LocalTime startTime,
-            Set<DayOfWeek> recurringDays,
             int capacity
     ) {
         validateName(name);
         validateClassForm(classForm);
         validateDurationMinutes(durationMinutes);
         validateStartTime(startTime);
-        validateRecurringDays(recurringDays);
         validateCapacity(capacity);
     }
 
@@ -160,13 +150,14 @@ public class ClassTemplate extends BaseEntity {
         }
     }
 
-    private void validateRecurringDays(Set<DayOfWeek> recurringDays) {
-        if (recurringDays == null || recurringDays.isEmpty()) {
-            throw new ClassException(ClassErrorCode.RECURRING_DAYS_REQUIRED);
+    private Set<DayOfWeek> copyRecurringDays(Set<DayOfWeek> source) {
+        if (source == null || source.isEmpty()) {
+            return EnumSet.noneOf(DayOfWeek.class);
         }
-        if (recurringDays.contains(null)) {
+        if (source.contains(null)) {
             throw new ClassException(ClassErrorCode.INVALID_RECURRING_DAY);
         }
+        return EnumSet.copyOf(source);
     }
 
     private void validateCapacity(int capacity) {
