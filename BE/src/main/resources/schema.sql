@@ -246,7 +246,7 @@ CREATE TABLE class_session
 (
     id                       BIGINT      NOT NULL AUTO_INCREMENT,
     studio_id                BIGINT      NOT NULL,
-    room_id                  BIGINT      NULL,
+    room_id                  BIGINT      NOT NULL,
     instructor_membership_id BIGINT      NOT NULL,
     name                     VARCHAR(100) NOT NULL,
     description              TEXT        NULL,

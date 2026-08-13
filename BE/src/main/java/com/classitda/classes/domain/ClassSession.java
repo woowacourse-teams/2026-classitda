@@ -38,8 +38,8 @@ public class ClassSession extends BaseEntity {
     @Column(name = "studio_id", nullable = false)
     private Long studioId;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "room_id", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "room_id", nullable = false)
     private Room room;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -86,6 +86,7 @@ public class ClassSession extends BaseEntity {
             ClassSessionStatus status
     ) {
         validateStudioId(studioId);
+        validateRoom(room);
         validateInstructorMembership(instructorMembership);
         validateName(name);
         validateClassForm(classForm);
@@ -109,6 +110,12 @@ public class ClassSession extends BaseEntity {
     private void validateStudioId(Long studioId) {
         if (studioId == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_STUDIO_REQUIRED);
+        }
+    }
+
+    private void validateRoom(Room room) {
+        if (room == null) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_ROOM_REQUIRED);
         }
     }
 
