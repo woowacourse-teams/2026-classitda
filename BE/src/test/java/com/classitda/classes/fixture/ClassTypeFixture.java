@@ -20,7 +20,7 @@ public class ClassTypeFixture {
     }
 
     public static ClassTypeUpdateRequest 이름이_다른_수업_종류_수정_요청(String name) {
-        return ClassTypeUpdateRequest.from(name);
+        return new ClassTypeUpdateRequest(name);
     }
 
     public static ClassType 기본_수업_종류(Studio studio) {
