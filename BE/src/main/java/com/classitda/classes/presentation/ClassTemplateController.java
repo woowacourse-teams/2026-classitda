@@ -11,6 +11,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,6 +57,17 @@ public class ClassTemplateController implements ClassTemplateControllerApi {
             @Valid @RequestBody ClassTemplateUpdateRequest request
     ) {
         classTemplateCommandService.update(memberId, studioId, classTemplateId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @DeleteMapping(path = "/{classTemplateId}", version = "1")
+    public ResponseEntity<Void> delete(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classTemplateId
+    ) {
+        classTemplateCommandService.delete(memberId, studioId, classTemplateId);
         return ResponseEntity.noContent().build();
     }
 }

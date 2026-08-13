@@ -68,6 +68,15 @@ public class ClassTemplateCommandService {
         updateTemplateClassTypes(classTemplateId, classTypes);
     }
 
+    public void delete(Long memberId, Long studioId, Long classTemplateId) {
+        getManageableStudio(memberId, studioId);
+
+        int deletedCount = classTemplateRepository.deleteByIdAndStudioId(classTemplateId, studioId);
+        if (deletedCount == 0) {
+            throw new ClassException(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND);
+        }
+    }
+
     private Studio getManageableStudio(Long memberId, Long studioId) {
         Studio studio = studioRepository.findById(studioId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
