@@ -52,4 +52,17 @@ public class ClassTypeService {
                 .map(classType -> ClassTypeResponse.of(classType.getId(), classType.getName()))
                 .toList();
     }
+
+    @Transactional
+    public void delete(Long memberId, Long studioId, Long classTypeId) {
+        Studio studio = studioRepository.findById(studioId)
+                .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
+
+        studioPermissionService.validate(studio, memberId, PermissionCode.CLASS_TYPE_MANAGE);
+
+        ClassType classType = classTypeRepository.findByIdAndStudioId(classTypeId, studioId)
+                .orElseThrow(() -> new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+
+        classTypeRepository.delete(classType);
+    }
 }
