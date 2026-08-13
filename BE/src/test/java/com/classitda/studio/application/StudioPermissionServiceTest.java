@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classitda.classes.application.ClassTypeService;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.PermissionCode;
@@ -24,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
-@Import({StudioPermissionService.class, StudioService.class})
+@Import({ClassTypeService.class, StudioPermissionService.class, StudioService.class})
 @MySqlRepositoryTest
 class StudioPermissionServiceTest {
 
