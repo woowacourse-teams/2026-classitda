@@ -93,6 +93,22 @@ class ClassTypeServiceTest {
     }
 
     @Test
+    void 기본_수업_종류를_저장하면_요가와_필라테스가_생성된다() {
+        // given
+        Member owner = 회원을_저장한다("default-class-type-owner");
+        Studio studio = 시설을_만든다(owner);
+
+        // when
+        classTypeService.saveDefaultClassTypes(studio);
+        entityManager.flush();
+
+        // then
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(studio.getId()))
+                .extracting(ClassType::getName)
+                .containsExactlyInAnyOrder("요가", "필라테스");
+    }
+
+    @Test
     void 없는_시설에는_수업_종류를_등록할_수_없다() {
         // given
         Member owner = 회원을_저장한다("missing-studio-owner");
