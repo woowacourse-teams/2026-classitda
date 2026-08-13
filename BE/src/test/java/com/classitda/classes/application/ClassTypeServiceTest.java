@@ -562,6 +562,8 @@ class ClassTypeServiceTest {
     private Studio 시설을_만든다(Member owner) {
         Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
         entityManager.flush();
+        classTypeRepository.deleteAll(classTypeRepository.findAllByStudioIdOrderByIdAsc(studioId));
+        classTypeRepository.flush();
         return studioRepository.findById(studioId).orElseThrow();
     }
 
