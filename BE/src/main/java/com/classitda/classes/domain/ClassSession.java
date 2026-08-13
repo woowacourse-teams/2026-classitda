@@ -4,7 +4,6 @@ import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.studio.domain.Room;
-import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -36,9 +35,8 @@ public class ClassSession extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "studio_id", nullable = false)
-    private Studio studio;
+    @Column(name = "studio_id", nullable = false)
+    private Long studioId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "room_id", nullable = true)
@@ -76,7 +74,7 @@ public class ClassSession extends BaseEntity {
 
     @Builder
     private ClassSession(
-            Studio studio,
+            Long studioId,
             Room room,
             StudioMembership instructorMembership,
             String name,
@@ -87,7 +85,7 @@ public class ClassSession extends BaseEntity {
             LocalDateTime startAt,
             ClassSessionStatus status
     ) {
-        validateStudio(studio);
+        validateStudioId(studioId);
         validateInstructorMembership(instructorMembership);
         validateName(name);
         validateClassForm(classForm);
@@ -95,7 +93,7 @@ public class ClassSession extends BaseEntity {
         validateCapacity(capacity);
         validateStartAt(startAt);
         validateStatus(status);
-        this.studio = studio;
+        this.studioId = studioId;
         this.room = room;
         this.instructorMembership = instructorMembership;
         this.name = name;
@@ -108,8 +106,8 @@ public class ClassSession extends BaseEntity {
         this.status = status;
     }
 
-    private void validateStudio(Studio studio) {
-        if (studio == null) {
+    private void validateStudioId(Long studioId) {
+        if (studioId == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_STUDIO_REQUIRED);
         }
     }

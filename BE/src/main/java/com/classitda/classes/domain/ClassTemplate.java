@@ -4,7 +4,6 @@ import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.studio.domain.Room;
-import com.classitda.studio.domain.Studio;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -40,9 +39,8 @@ public class ClassTemplate extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "studio_id", nullable = false)
-    private Studio studio;
+    @Column(name = "studio_id", nullable = false)
+    private Long studioId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "room_id", nullable = false)
@@ -75,7 +73,7 @@ public class ClassTemplate extends BaseEntity {
 
     @Builder
     private ClassTemplate(
-            Studio studio,
+            Long studioId,
             Room room,
             String name,
             String description,
@@ -86,7 +84,7 @@ public class ClassTemplate extends BaseEntity {
             int capacity
     ) {
         validateDetails(name, classForm, durationMinutes, startTime, recurringDays, capacity);
-        this.studio = studio;
+        this.studioId = studioId;
         this.room = room;
         this.name = name;
         this.description = description;
