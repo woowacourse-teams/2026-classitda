@@ -169,7 +169,7 @@ public interface ClassTypeControllerApi {
                     + "같은 시설 안에서 이름은 중복될 수 없다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "수업 종류 이름 수정 성공"),
+            @ApiResponse(responseCode = "204", description = "수업 종류 이름 수정 성공"),
             @ApiResponse(
                     responseCode = "400",
                     description = "요청 값이 올바르지 않거나 API 버전 헤더가 없거나 지원하지 않는 버전임",
@@ -234,7 +234,7 @@ public interface ClassTypeControllerApi {
                     )
             )
     })
-    ClassTypeResponse update(
+    ResponseEntity<Void> update(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")

@@ -48,13 +48,14 @@ public class ClassTypeController implements ClassTypeControllerApi {
 
     @Override
     @PatchMapping(path = "/{classTypeId}", version = "1")
-    public ClassTypeResponse update(
+    public ResponseEntity<Void> update(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long classTypeId,
             @Valid @RequestBody ClassTypeUpdateRequest request
     ) {
-        return classTypeService.update(memberId, studioId, classTypeId, request);
+        classTypeService.update(memberId, studioId, classTypeId, request);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

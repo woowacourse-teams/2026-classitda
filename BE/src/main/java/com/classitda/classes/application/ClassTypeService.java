@@ -65,7 +65,7 @@ public class ClassTypeService {
                 .toList();
     }
 
-    public ClassTypeResponse update(Long memberId, Long studioId, Long classTypeId, ClassTypeUpdateRequest request) {
+    public void update(Long memberId, Long studioId, Long classTypeId, ClassTypeUpdateRequest request) {
         ClassType classType = getManageableClassType(memberId, studioId, classTypeId);
         classType.updateName(request.name());
 
@@ -74,8 +74,6 @@ public class ClassTypeService {
         } catch (DataIntegrityViolationException exception) {
             throw new ClassException(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED);
         }
-
-        return ClassTypeResponse.of(classType.getId(), classType.getName());
     }
 
     public void delete(Long memberId, Long studioId, Long classTypeId) {

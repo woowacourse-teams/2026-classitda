@@ -314,7 +314,7 @@ class ClassTypeServiceTest {
     }
 
     @Test
-    void 대표_강사가_수업_종류_이름을_수정하면_같은_아이디와_새_이름을_응답하고_저장한다() {
+    void 대표_강사가_수업_종류_이름을_수정하면_새_이름을_저장한다() {
         // given
         Member owner = 회원을_저장한다("update-owner");
         Studio studio = 시설을_만든다(owner);
@@ -322,14 +322,11 @@ class ClassTypeServiceTest {
         ClassTypeUpdateRequest request = ClassTypeFixture.기본_수업_종류_수정_요청();
 
         // when
-        ClassTypeResponse response = classTypeService.update(
-                owner.getId(), studio.getId(), classType.getId(), request);
+        classTypeService.update(owner.getId(), studio.getId(), classType.getId(), request);
         entityManager.clear();
 
         // then
         ClassType updated = classTypeRepository.findById(classType.getId()).orElseThrow();
-        assertThat(response.id()).isEqualTo(classType.getId());
-        assertThat(response.name()).isEqualTo("리포머 요가");
         assertThat(updated.getName()).isEqualTo("리포머 요가");
     }
 
@@ -341,13 +338,14 @@ class ClassTypeServiceTest {
         ClassType classType = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
 
         // when
-        ClassTypeResponse response = classTypeService.update(
+        classTypeService.update(
                 owner.getId(), studio.getId(), classType.getId(),
                 ClassTypeFixture.이름이_다른_수업_종류_수정_요청(classType.getName()));
+        entityManager.clear();
 
         // then
-        assertThat(response.id()).isEqualTo(classType.getId());
-        assertThat(response.name()).isEqualTo("일반 요가");
+        assertThat(classTypeRepository.findById(classType.getId()).orElseThrow().getName())
+                .isEqualTo("일반 요가");
     }
 
     @Test
@@ -379,11 +377,11 @@ class ClassTypeServiceTest {
                 ClassTypeFixture.이름이_다른_수업_종류(otherStudio, "리포머 요가"));
 
         // when
-        ClassTypeResponse response = classTypeService.update(
+        classTypeService.update(
                 owner.getId(), studio.getId(), target.getId(), ClassTypeFixture.기본_수업_종류_수정_요청());
+        entityManager.clear();
 
         // then
-        assertThat(response.name()).isEqualTo("리포머 요가");
         assertThat(classTypeRepository.findById(target.getId()).orElseThrow().getName())
                 .isEqualTo("리포머 요가");
     }

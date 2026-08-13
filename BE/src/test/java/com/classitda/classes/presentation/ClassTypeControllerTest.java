@@ -206,21 +206,16 @@ class ClassTypeControllerTest {
     }
 
     @Test
-    void 수업_종류_이름을_수정하면_200과_정확한_수업_종류_정보를_반환하고_서비스에_위임한다() {
+    void 수업_종류_이름을_수정하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
         // given
         ClassTypeUpdateRequest request = ClassTypeFixture.기본_수업_종류_수정_요청();
-        when(classTypeService.update(anyLong(), anyLong(), anyLong(), any(ClassTypeUpdateRequest.class)))
-                .thenReturn(ClassTypeResponse.of(13L, "리포머 요가"));
 
         // when
         RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(7L, 13L, "1", request);
 
         // then
-        result.expectStatus().isOk()
-                .expectBody()
-                .json("""
-                        {"id":13,"name":"리포머 요가"}
-                        """, JsonCompareMode.STRICT);
+        result.expectStatus().isNoContent()
+                .expectBody().isEmpty();
         verify(classTypeService).update(eq(1L), eq(7L), eq(13L), eq(request));
     }
 
@@ -253,8 +248,8 @@ class ClassTypeControllerTest {
     @Test
     void 없는_수업_종류를_수정하면_CLASS_TYPE_003을_정확히_반환한다() {
         // given
-        when(classTypeService.update(anyLong(), anyLong(), anyLong(), any(ClassTypeUpdateRequest.class)))
-                .thenThrow(new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
+        doThrow(new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND))
+                .when(classTypeService).update(anyLong(), anyLong(), anyLong(), any(ClassTypeUpdateRequest.class));
 
         // when
         RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(
@@ -267,8 +262,8 @@ class ClassTypeControllerTest {
     @Test
     void 중복된_이름으로_수업_종류를_수정하면_CLASS_TYPE_002를_정확히_반환한다() {
         // given
-        when(classTypeService.update(anyLong(), anyLong(), anyLong(), any(ClassTypeUpdateRequest.class)))
-                .thenThrow(new ClassException(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED));
+        doThrow(new ClassException(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED))
+                .when(classTypeService).update(anyLong(), anyLong(), anyLong(), any(ClassTypeUpdateRequest.class));
 
         // when
         RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(
