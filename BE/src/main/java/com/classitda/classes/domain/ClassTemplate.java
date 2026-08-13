@@ -19,6 +19,7 @@ import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -161,7 +162,7 @@ public class ClassTemplate extends BaseEntity {
         if (source == null || source.isEmpty()) {
             return EnumSet.noneOf(DayOfWeek.class);
         }
-        if (source.contains(null)) {
+        if (source.stream().anyMatch(Objects::isNull)) {
             throw new ClassException(ClassErrorCode.INVALID_RECURRING_DAY);
         }
         return EnumSet.copyOf(source);
