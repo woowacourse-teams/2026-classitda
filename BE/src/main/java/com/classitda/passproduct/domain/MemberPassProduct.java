@@ -40,6 +40,7 @@ public class MemberPassProduct extends BaseEntity {
     @JoinColumn(name = "pass_product_id", nullable = false)
     private PassProduct passProduct;
 
+    @Column
     private Integer remainingCount;
 
     @Column(nullable = false)
