@@ -121,6 +121,7 @@ CREATE TABLE studio_policy
     reservation_close_minutes_before INT         NOT NULL,
     free_cancel_minutes_before       INT         NOT NULL,
     waiting_offer_response_minutes   INT         NOT NULL,
+    max_hold_days                    INT         NOT NULL DEFAULT 0,
     created_at                       DATETIME(6) NOT NULL,
     updated_at                       DATETIME(6) NULL,
     PRIMARY KEY (id),
@@ -238,18 +239,34 @@ CREATE TABLE class_session
 
 CREATE TABLE pass_product
 (
-    id                BIGINT       NOT NULL AUTO_INCREMENT,
-    studio_id         BIGINT       NOT NULL,
-    name              VARCHAR(100) NOT NULL,
-    pass_product_type VARCHAR(20)  NOT NULL,
-    total_count       INT          NULL,
-    total_hold_days   INT          NOT NULL DEFAULT 0,
-    valid_days        INT          NOT NULL,
-    is_active         BOOLEAN      NOT NULL DEFAULT TRUE,
-    created_at        DATETIME(6)  NOT NULL,
-    updated_at        DATETIME(6)  NULL,
+    id                  BIGINT       NOT NULL AUTO_INCREMENT,
+    studio_id           BIGINT       NOT NULL,
+    name                VARCHAR(100) NOT NULL,
+    class_kind          VARCHAR(20)  NOT NULL,
+    total_count         INT          NULL,
+    valid_period_amount INT          NULL,
+    valid_period_unit   VARCHAR(10)  NULL,
+    total_hold_days     INT          NOT NULL DEFAULT 0,
+    is_active           BOOLEAN      NOT NULL DEFAULT TRUE,
+    created_at          DATETIME(6)  NOT NULL,
+    updated_at          DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_pass_product_studio FOREIGN KEY (studio_id) REFERENCES studio (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
+CREATE TABLE pass_product_class_type
+(
+    id              BIGINT      NOT NULL AUTO_INCREMENT,
+    pass_product_id BIGINT      NOT NULL,
+    class_type_id   BIGINT      NOT NULL,
+    created_at      DATETIME(6) NOT NULL,
+    updated_at      DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_pass_product_class_type (pass_product_id, class_type_id),
+    CONSTRAINT fk_pass_product_class_type_pass_product FOREIGN KEY (pass_product_id) REFERENCES pass_product (id),
+    CONSTRAINT fk_pass_product_class_type_class_type FOREIGN KEY (class_type_id) REFERENCES class_type (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
