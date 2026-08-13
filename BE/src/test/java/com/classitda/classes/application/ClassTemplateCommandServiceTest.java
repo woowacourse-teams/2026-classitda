@@ -2,6 +2,9 @@ package com.classitda.classes.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.reset;
 
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassTemplate;
@@ -14,13 +17,18 @@ import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassTemplateFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
+import com.classitda.classes.presentation.dto.ClassTemplateUpdateRequest;
+import com.classitda.common.exception.ClassitdaException;
+import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.member.domain.Member;
+import com.classitda.member.domain.repository.MemberRepository;
 import com.classitda.studio.application.StudioPermissionService;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.SystemRole;
+import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
@@ -31,9 +39,15 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Import({ClassTemplateCommandService.class, StudioPermissionService.class})
 @MySqlRepositoryTest
@@ -41,22 +55,28 @@ class ClassTemplateCommandServiceTest {
 
     private final ClassTemplateCommandService commandService;
     private final ClassTemplateRepository classTemplateRepository;
-    private final ClassTemplateClassTypeRepository linkRepository;
     private final ClassTypeRepository classTypeRepository;
+    private final StudioRepository studioRepository;
+    private final MemberRepository memberRepository;
     private final EntityManager entityManager;
+
+    @MockitoSpyBean
+    private ClassTemplateClassTypeRepository linkRepository;
 
     @Autowired
     ClassTemplateCommandServiceTest(
             ClassTemplateCommandService commandService,
             ClassTemplateRepository classTemplateRepository,
-            ClassTemplateClassTypeRepository linkRepository,
             ClassTypeRepository classTypeRepository,
+            StudioRepository studioRepository,
+            MemberRepository memberRepository,
             EntityManager entityManager
     ) {
         this.commandService = commandService;
         this.classTemplateRepository = classTemplateRepository;
-        this.linkRepository = linkRepository;
         this.classTypeRepository = classTypeRepository;
+        this.studioRepository = studioRepository;
+        this.memberRepository = memberRepository;
         this.entityManager = entityManager;
     }
 
@@ -159,6 +179,295 @@ class ClassTemplateCommandServiceTest {
                         assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_FOUND));
     }
 
+    @Test
+    void 수업_템플릿을_수정하면_모든_기본_정보와_반복_요일을_교체한다() {
+        // given
+        Member owner = 회원을_저장한다("template-update-owner");
+        Studio studio = 시설을_저장한다(owner, "수정 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassTemplate template = 템플릿을_저장한다(studio, "저녁 요가", "기존 설명",
+                Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
+        연결을_저장한다(template, yoga);
+
+        // when
+        commandService.update(owner.getId(), studio.getId(), template.getId(),
+                ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(yoga.getId())));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassTemplate updated = classTemplateRepository.findById(template.getId()).orElseThrow();
+        assertThat(updated.getStudioId()).isEqualTo(studio.getId());
+        assertThat(updated.getName()).isEqualTo("아침 개인 필라테스");
+        assertThat(updated.getDescription()).isEqualTo("개인별 자세 교정 수업");
+        assertThat(updated.getClassForm()).isEqualTo(ClassForm.INDIVIDUAL);
+        assertThat(updated.getDurationMinutes()).isEqualTo(50);
+        assertThat(updated.getStartTime()).isEqualTo(java.time.LocalTime.of(9, 30));
+        assertThat(updated.getRecurringDays()).containsExactly(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY);
+        assertThat(updated.getCapacity()).isEqualTo(1);
+    }
+
+    @Test
+    void description이_null이면_메모를_삭제하고_반복_요일이_null이면_모두_제거한다() {
+        // given
+        Member owner = 회원을_저장한다("template-clear-null-owner");
+        Studio studio = 시설을_저장한다(owner, "null 초기화 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassTemplate template = 템플릿을_저장한다(studio, "저녁 요가", "삭제할 설명",
+                Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
+        연결을_저장한다(template, yoga);
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.수업_템플릿_수정_요청(
+                "설명과 요일 초기화", null, ClassForm.GROUP, 60,
+                java.time.LocalTime.of(20, 0), null, 12, List.of(yoga.getId()));
+
+        // when
+        commandService.update(owner.getId(), studio.getId(), template.getId(), request);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassTemplate updated = classTemplateRepository.findById(template.getId()).orElseThrow();
+        assertThat(updated.getDescription()).isNull();
+        assertThat(updated.getRecurringDays()).isEmpty();
+    }
+
+    @Test
+    void 반복_요일이_빈_목록이면_기존_요일을_모두_제거한다() {
+        // given
+        Member owner = 회원을_저장한다("template-clear-empty-owner");
+        Studio studio = 시설을_저장한다(owner, "빈 요일 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassTemplate template = 템플릿을_저장한다(studio, "저녁 요가", null,
+                Set.of(DayOfWeek.FRIDAY));
+        연결을_저장한다(template, yoga);
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.수업_템플릿_수정_요청(
+                "요일 초기화", null, ClassForm.GROUP, 60,
+                java.time.LocalTime.of(20, 0), Set.of(), 12, List.of(yoga.getId()));
+
+        // when
+        commandService.update(owner.getId(), studio.getId(), template.getId(), request);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(classTemplateRepository.findById(template.getId()).orElseThrow().getRecurringDays()).isEmpty();
+    }
+
+    @Test
+    void 수업_종류가_같으면_기존_연결의_ID와_생성_시각을_보존한다() {
+        // given
+        Member owner = 회원을_저장한다("template-same-links-owner");
+        Studio studio = 시설을_저장한다(owner, "연결 유지 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassType pilates = 수업_종류를_저장한다(studio, "필라테스");
+        ClassTemplate template = 템플릿을_저장한다(studio, "기존 템플릿", null, Set.of());
+        연결을_저장한다(template, yoga, pilates);
+        entityManager.flush();
+        entityManager.clear();
+        List<ClassTemplateClassType> before = 템플릿_연결을_조회한다(template.getId());
+
+        // when
+        commandService.update(owner.getId(), studio.getId(), template.getId(),
+                ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(pilates.getId(), yoga.getId())));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        List<ClassTemplateClassType> after = 템플릿_연결을_조회한다(template.getId());
+        assertThat(after).extracting(ClassTemplateClassType::getId)
+                .containsExactlyInAnyOrderElementsOf(before.stream().map(ClassTemplateClassType::getId).toList());
+        assertThat(after).extracting(ClassTemplateClassType::getCreatedAt)
+                .containsExactlyInAnyOrderElementsOf(before.stream().map(ClassTemplateClassType::getCreatedAt).toList());
+    }
+
+    @Test
+    void 수업_종류_하나를_교체하면_제거된_연결만_삭제하고_추가된_연결만_저장한다() {
+        // given
+        Member owner = 회원을_저장한다("template-link-delta-owner");
+        Studio studio = 시설을_저장한다(owner, "연결 변경 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassType pilates = 수업_종류를_저장한다(studio, "필라테스");
+        ClassType ballet = 수업_종류를_저장한다(studio, "발레");
+        ClassTemplate template = 템플릿을_저장한다(studio, "기존 템플릿", null, Set.of());
+        연결을_저장한다(template, yoga, pilates);
+        entityManager.flush();
+        entityManager.clear();
+        ClassTemplateClassType retainedBefore = 템플릿_연결을_조회한다(template.getId()).stream()
+                .filter(link -> link.getClassTypeId().equals(pilates.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        // when
+        commandService.update(owner.getId(), studio.getId(), template.getId(),
+                ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(pilates.getId(), ballet.getId())));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        var linksByTypeId = 템플릿_연결을_조회한다(template.getId()).stream()
+                .collect(Collectors.toMap(ClassTemplateClassType::getClassTypeId, Function.identity()));
+        assertThat(linksByTypeId).containsOnlyKeys(pilates.getId(), ballet.getId());
+        assertThat(linksByTypeId.get(pilates.getId()).getId()).isEqualTo(retainedBefore.getId());
+        assertThat(linksByTypeId.get(pilates.getId()).getCreatedAt()).isEqualTo(retainedBefore.getCreatedAt());
+        assertThat(linksByTypeId.get(ballet.getId()).getId()).isNotEqualTo(retainedBefore.getId());
+    }
+
+    @Test
+    void 없거나_다른_시설의_템플릿은_수정할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("template-not-found-owner");
+        Studio studio = 시설을_저장한다(owner, "요청 시설");
+        Studio otherStudio = 시설을_저장한다(owner, "다른 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassTemplate otherTemplate = 템플릿을_저장한다(otherStudio, "다른 템플릿", "기존 설명", Set.of());
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(yoga.getId()));
+
+        // when / then
+        assertThatThrownBy(() -> commandService.update(owner.getId(), studio.getId(), 999L, request))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND));
+        assertThatThrownBy(() -> commandService.update(owner.getId(), studio.getId(), otherTemplate.getId(), request))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND));
+        assertThat(classTemplateRepository.findById(otherTemplate.getId()).orElseThrow().getDescription())
+                .isEqualTo("기존 설명");
+    }
+
+    @Test
+    void 없거나_다른_시설의_수업_종류가_포함되면_템플릿과_연결을_변경하지_않는다() {
+        // given
+        Member owner = 회원을_저장한다("template-type-not-found-owner");
+        Studio studio = 시설을_저장한다(owner, "요청 시설");
+        Studio otherStudio = 시설을_저장한다(owner, "다른 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassType otherType = 수업_종류를_저장한다(otherStudio, "필라테스");
+        ClassTemplate template = 템플릿을_저장한다(studio, "기존 템플릿", "기존 설명",
+                Set.of(DayOfWeek.MONDAY));
+        연결을_저장한다(template, yoga);
+        ClassTemplateUpdateRequest missingTypeRequest = ClassTemplateFixture.기본_수업_템플릿_수정_요청(
+                List.of(yoga.getId(), 999L));
+        ClassTemplateUpdateRequest crossStudioTypeRequest = ClassTemplateFixture.기본_수업_템플릿_수정_요청(
+                List.of(yoga.getId(), otherType.getId()));
+
+        // when / then
+        수업_종류_없음과_기존_상태를_검증한다(owner, studio, template, yoga, missingTypeRequest);
+        수업_종류_없음과_기존_상태를_검증한다(owner, studio, template, yoga, crossStudioTypeRequest);
+    }
+
+    @Test
+    void 중복되거나_비어_있는_수업_종류_ID는_거절하고_기존_상태를_보존한다() {
+        // given
+        Member owner = 회원을_저장한다("template-invalid-types-owner");
+        Studio studio = 시설을_저장한다(owner, "유효성 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassTemplate template = 템플릿을_저장한다(studio, "기존 템플릿", "기존 설명",
+                Set.of(DayOfWeek.MONDAY));
+        연결을_저장한다(template, yoga);
+
+        // when / then
+        assertThatThrownBy(() -> commandService.update(owner.getId(), studio.getId(), template.getId(),
+                ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(yoga.getId(), yoga.getId()))))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPES_DUPLICATED));
+        assertThatThrownBy(() -> commandService.update(owner.getId(), studio.getId(), template.getId(),
+                ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of())))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPES_REQUIRED));
+        assertThatThrownBy(() -> commandService.update(owner.getId(), studio.getId(), template.getId(),
+                ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(0L))))
+                .isInstanceOfSatisfying(ClassitdaException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(CommonErrorCode.INVALID_INPUT));
+        기존_템플릿과_연결을_검증한다(template, yoga);
+    }
+
+    @Test
+    void 도메인_검증에_실패하면_템플릿과_수업_종류_연결을_모두_롤백한다() {
+        // given
+        Member owner = 회원을_저장한다("template-rollback-owner");
+        Studio studio = 시설을_저장한다(owner, "롤백 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassType pilates = 수업_종류를_저장한다(studio, "필라테스");
+        ClassTemplate template = 템플릿을_저장한다(studio, "기존 템플릿", "기존 설명",
+                Set.of(DayOfWeek.MONDAY));
+        연결을_저장한다(template, yoga);
+        ClassTemplateUpdateRequest invalidRequest = ClassTemplateFixture.수업_템플릿_수정_요청(
+                " ", null, ClassForm.INDIVIDUAL, 50, java.time.LocalTime.of(9, 30),
+                Set.of(DayOfWeek.TUESDAY), 1, List.of(pilates.getId()));
+
+        // when / then
+        assertThatThrownBy(() -> commandService.update(
+                owner.getId(), studio.getId(), template.getId(), invalidRequest))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.INVALID_CLASS_TEMPLATE_NAME));
+        기존_템플릿과_연결을_검증한다(template, yoga);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 연결_저장에_실패하면_앞서_변경한_템플릿과_삭제한_연결도_모두_롤백한다() {
+        // given
+        Member owner = memberRepository.saveAndFlush(StudioFixture.아이디가_다른_소유자(
+                "template-persistence-rollback-owner"));
+        Studio studio = studioRepository.saveAndFlush(Studio.builder()
+                .owner(owner)
+                .name("영속성 롤백 시설")
+                .openTime(java.time.LocalTime.of(9, 0))
+                .closeTime(java.time.LocalTime.of(22, 0))
+                .build());
+        ClassType yoga = 수업_종류를_저장한다(studio, "요가");
+        ClassType pilates = 수업_종류를_저장한다(studio, "필라테스");
+        ClassTemplate template = classTemplateRepository.saveAndFlush(ClassTemplate.builder()
+                .studioId(studio.getId())
+                .name("기존 템플릿")
+                .description("기존 설명")
+                .classForm(ClassForm.GROUP)
+                .durationMinutes(60)
+                .startTime(java.time.LocalTime.of(20, 0))
+                .recurringDays(Set.of(DayOfWeek.MONDAY))
+                .capacity(12)
+                .build());
+        ClassTemplateClassType originalLink = linkRepository.saveAndFlush(ClassTemplateClassType.builder()
+                .classTemplateId(template.getId())
+                .classTypeId(yoga.getId())
+                .build());
+        doThrow(new DataIntegrityViolationException("연결 저장 실패"))
+                .when(linkRepository).saveAll(any());
+
+        // when / then
+        try {
+            assertThatThrownBy(() -> commandService.update(
+                    owner.getId(),
+                    studio.getId(),
+                    template.getId(),
+                    ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(pilates.getId()))
+            )).isInstanceOf(DataIntegrityViolationException.class);
+
+            reset(linkRepository);
+            ClassTemplate unchanged = classTemplateRepository
+                    .findAllByIdInOrderByIdAsc(List.of(template.getId()))
+                    .getFirst();
+            assertThat(unchanged.getName()).isEqualTo("기존 템플릿");
+            assertThat(unchanged.getDescription()).isEqualTo("기존 설명");
+            assertThat(unchanged.getClassForm()).isEqualTo(ClassForm.GROUP);
+            assertThat(unchanged.getRecurringDays()).containsExactly(DayOfWeek.MONDAY);
+            assertThat(템플릿_연결을_조회한다(template.getId()))
+                    .extracting(ClassTemplateClassType::getId, ClassTemplateClassType::getClassTypeId)
+                    .containsExactly(org.assertj.core.groups.Tuple.tuple(originalLink.getId(), yoga.getId()));
+        } finally {
+            reset(linkRepository);
+            linkRepository.deleteAll(템플릿_연결을_조회한다(template.getId()));
+            linkRepository.flush();
+            classTemplateRepository.deleteById(template.getId());
+            classTemplateRepository.flush();
+            classTypeRepository.deleteAllById(List.of(yoga.getId(), pilates.getId()));
+            classTypeRepository.flush();
+            studioRepository.deleteById(studio.getId());
+            studioRepository.flush();
+            memberRepository.deleteById(owner.getId());
+            memberRepository.flush();
+        }
+    }
+
     private Member 회원을_저장한다(String id) {
         Member member = StudioFixture.아이디가_다른_소유자(id);
         entityManager.persist(member);
@@ -180,6 +489,67 @@ class ClassTemplateCommandServiceTest {
 
     private ClassType 수업_종류를_저장한다(Studio studio, String name) {
         return classTypeRepository.saveAndFlush(ClassTypeFixture.이름이_다른_수업_종류(studio, name));
+    }
+
+    private ClassTemplate 템플릿을_저장한다(
+            Studio studio,
+            String name,
+            String description,
+            Set<DayOfWeek> recurringDays
+    ) {
+        ClassTemplate template = ClassTemplate.builder()
+                .studioId(studio.getId())
+                .name(name)
+                .description(description)
+                .classForm(ClassForm.GROUP)
+                .durationMinutes(60)
+                .startTime(java.time.LocalTime.of(20, 0))
+                .recurringDays(recurringDays)
+                .capacity(12)
+                .build();
+        return classTemplateRepository.saveAndFlush(template);
+    }
+
+    private void 연결을_저장한다(ClassTemplate template, ClassType... classTypes) {
+        List<ClassTemplateClassType> links = List.of(classTypes).stream()
+                .map(classType -> ClassTemplateClassType.builder()
+                        .classTemplateId(template.getId())
+                        .classTypeId(classType.getId())
+                        .build())
+                .toList();
+        linkRepository.saveAllAndFlush(links);
+    }
+
+    private List<ClassTemplateClassType> 템플릿_연결을_조회한다(Long classTemplateId) {
+        return linkRepository.findAll().stream()
+                .filter(link -> link.getClassTemplateId().equals(classTemplateId))
+                .toList();
+    }
+
+    private void 수업_종류_없음과_기존_상태를_검증한다(
+            Member owner,
+            Studio studio,
+            ClassTemplate template,
+            ClassType originalClassType,
+            ClassTemplateUpdateRequest request
+    ) {
+        assertThatThrownBy(() -> commandService.update(
+                owner.getId(), studio.getId(), template.getId(), request))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
+        기존_템플릿과_연결을_검증한다(template, originalClassType);
+    }
+
+    private void 기존_템플릿과_연결을_검증한다(ClassTemplate template, ClassType classType) {
+        entityManager.flush();
+        entityManager.clear();
+        ClassTemplate unchanged = classTemplateRepository.findById(template.getId()).orElseThrow();
+        assertThat(unchanged.getName()).isEqualTo("기존 템플릿");
+        assertThat(unchanged.getDescription()).isEqualTo("기존 설명");
+        assertThat(unchanged.getRecurringDays()).containsExactly(DayOfWeek.MONDAY);
+        assertThat(템플릿_연결을_조회한다(template.getId()))
+                .extracting(ClassTemplateClassType::getClassTypeId)
+                .containsExactly(classType.getId());
     }
 
     private void 소속을_저장한다(Studio studio, Member member, SystemRole systemRole) {

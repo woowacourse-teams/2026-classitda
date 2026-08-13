@@ -17,6 +17,7 @@ import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassTemplateFixture;
 import com.classitda.classes.presentation.dto.ClassTemplateCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTemplateResponse;
+import com.classitda.classes.presentation.dto.ClassTemplateUpdateRequest;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
@@ -122,6 +123,119 @@ class ClassTemplateControllerTest {
     }
 
     @Test
+    void 수업_템플릿을_전체_수정하면_204와_빈_본문을_반환하고_정확한_요청을_위임한다() {
+        // given
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(
+                List.of(3L, 1L));
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_템플릿을_수정한다(7L, 11L, "1", request);
+
+        // then
+        result.expectStatus().isNoContent().expectBody().isEmpty();
+        verify(commandService).update(1L, 7L, 11L, request);
+    }
+
+    @Test
+    void description과_반복_요일이_null이어도_전체_수정_요청으로_위임한다() {
+        // given
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.수업_템플릿_수정_요청(
+                "요일 없는 템플릿", null, ClassForm.GROUP, 60,
+                LocalTime.of(20, 0), null, 12, List.of(1L));
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_템플릿을_수정한다(7L, 11L, "1", request);
+
+        // then
+        result.expectStatus().isNoContent().expectBody().isEmpty();
+        verify(commandService).update(1L, 7L, 11L, request);
+    }
+
+    @Test
+    void 반복_요일을_생략해도_null로_역직렬화하여_전체_수정_요청으로_위임한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.put()
+                .uri("/api/studios/7/class-templates/11")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"name":"요일 없는 템플릿","description":null,"classForm":"GROUP",
+                        "durationMinutes":60,"startTime":"20:00:00","capacity":12,"classTypeIds":[1]}
+                        """)
+                .exchange();
+
+        // then
+        result.expectStatus().isNoContent().expectBody().isEmpty();
+        verify(commandService).update(eq(1L), eq(7L), eq(11L),
+                eq(ClassTemplateFixture.수업_템플릿_수정_요청(
+                        "요일 없는 템플릿", null, ClassForm.GROUP, 60,
+                        LocalTime.of(20, 0), null, 12, List.of(1L))));
+    }
+
+    @Test
+    void 전체_수정의_필수값이_누락되면_COMMON_001을_반환하고_서비스를_호출하지_않는다() {
+        // given
+        List<ClassTemplateUpdateRequest> invalidRequests = List.of(
+                ClassTemplateFixture.수업_템플릿_수정_요청(
+                        null, null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, 12, List.of(1L)),
+                ClassTemplateFixture.수업_템플릿_수정_요청(
+                        "템플릿", null, null, 60, LocalTime.of(20, 0), null, 12, List.of(1L)),
+                ClassTemplateFixture.수업_템플릿_수정_요청(
+                        "템플릿", null, ClassForm.GROUP, null, LocalTime.of(20, 0), null, 12, List.of(1L)),
+                ClassTemplateFixture.수업_템플릿_수정_요청(
+                        "템플릿", null, ClassForm.GROUP, 60, null, null, 12, List.of(1L)),
+                ClassTemplateFixture.수업_템플릿_수정_요청(
+                        "템플릿", null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, null, List.of(1L)),
+                ClassTemplateFixture.수업_템플릿_수정_요청(
+                        "템플릿", null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, 12, List.of())
+        );
+
+        // when / then
+        invalidRequests.forEach(request -> 오류를_검증한다(
+                수업_템플릿을_수정한다(7L, 11L, "1", request),
+                400,
+                "COMMON-001",
+                "요청 값이 올바르지 않습니다."
+        ));
+        verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 전체_수정_버전이_없거나_지원되지_않으면_서비스를_호출하지_않는다() {
+        // given
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(1L));
+
+        // when / then
+        오류를_검증한다(client.put()
+                .uri("/api/studios/7/class-templates/11")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange(), 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        오류를_검증한다(수업_템플릿을_수정한다(7L, 11L, "2", request),
+                400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 전체_수정_서비스의_권한과_템플릿과_수업_종류_예외를_정확히_직렬화한다() {
+        // given
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(1L));
+        doThrow(
+                new StudioException(StudioErrorCode.PERMISSION_DENIED),
+                new ClassException(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND),
+                new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND)
+        ).when(commandService).update(1L, 7L, 11L, request);
+
+        // when / then
+        오류를_검증한다(수업_템플릿을_수정한다(7L, 11L, "1", request),
+                403, "PERMISSION-001", "이 작업을 수행할 권한이 없습니다.");
+        오류를_검증한다(수업_템플릿을_수정한다(7L, 11L, "1", request),
+                404, "CLASS_TEMPLATE-007", "수업 템플릿을 찾을 수 없습니다.");
+        오류를_검증한다(수업_템플릿을_수정한다(7L, 11L, "1", request),
+                404, "CLASS_TYPE-003", "수업 종류를 찾을 수 없습니다.");
+    }
+
+    @Test
     void 수업_템플릿_목록은_200과_순서가_유지된_최상위_배열을_반환한다() {
         // given
         when(queryService.findAll(1L, 7L)).thenReturn(List.of(new ClassTemplateResponse(
@@ -187,6 +301,20 @@ class ClassTemplateControllerTest {
         return client.get()
                 .uri("/api/studios/{studioId}/class-templates", studioId)
                 .header("X-API-Version", version)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec 수업_템플릿을_수정한다(
+            Long studioId,
+            Long classTemplateId,
+            String version,
+            ClassTemplateUpdateRequest request
+    ) {
+        return client.put()
+                .uri("/api/studios/{studioId}/class-templates/{classTemplateId}", studioId, classTemplateId)
+                .header("X-API-Version", version)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
                 .exchange();
     }
 
