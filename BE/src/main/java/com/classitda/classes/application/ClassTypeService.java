@@ -24,6 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ClassTypeService {
 
+    private static final String DEFAULT_YOGA_CLASS_TYPE_NAME = "요가";
+    private static final String DEFAULT_PILATES_CLASS_TYPE_NAME = "필라테스";
+
     private final ClassTypeRepository classTypeRepository;
     private final StudioPermissionService studioPermissionService;
     private final StudioRepository studioRepository;
@@ -38,6 +41,20 @@ public class ClassTypeService {
         } catch (DataIntegrityViolationException exception) {
             throw new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED);
         }
+    }
+
+    public void saveDefaultClassTypes(Studio studio) {
+        List<ClassType> defaultClassTypes = List.of(
+                ClassType.builder()
+                        .studio(studio)
+                        .name(DEFAULT_YOGA_CLASS_TYPE_NAME)
+                        .build(),
+                ClassType.builder()
+                        .studio(studio)
+                        .name(DEFAULT_PILATES_CLASS_TYPE_NAME)
+                        .build()
+        );
+        classTypeRepository.saveAll(defaultClassTypes);
     }
 
     @Transactional(readOnly = true)
