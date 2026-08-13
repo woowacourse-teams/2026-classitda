@@ -196,17 +196,48 @@ CREATE TABLE studio_membership
 
 CREATE TABLE class_template
 (
-    id                       BIGINT       NOT NULL AUTO_INCREMENT,
-    studio_id                BIGINT       NOT NULL,
-    instructor_membership_id BIGINT       NOT NULL,
-    name                     VARCHAR(100) NOT NULL,
-    description              TEXT         NULL,
-    capacity                 INT          NOT NULL,
-    created_at               DATETIME(6)  NOT NULL,
-    updated_at               DATETIME(6)  NULL,
+    id               BIGINT       NOT NULL AUTO_INCREMENT,
+    studio_id        BIGINT       NOT NULL,
+    room_id          BIGINT       NOT NULL,
+    name             VARCHAR(100) NOT NULL,
+    description      TEXT         NULL,
+    class_form       VARCHAR(20)  NOT NULL,
+    duration_minutes INT          NOT NULL,
+    start_time       TIME         NOT NULL,
+    capacity         INT          NOT NULL,
+    created_at       DATETIME(6)  NOT NULL,
+    updated_at       DATETIME(6)  NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_template_studio FOREIGN KEY (studio_id) REFERENCES studio (id),
-    CONSTRAINT fk_template_instructor FOREIGN KEY (instructor_membership_id) REFERENCES studio_membership (id)
+    CONSTRAINT fk_template_room FOREIGN KEY (room_id) REFERENCES room (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
+CREATE TABLE class_template_recurring_day
+(
+    class_template_id BIGINT      NOT NULL,
+    day_of_week       VARCHAR(10) NOT NULL,
+    PRIMARY KEY (class_template_id, day_of_week),
+    CONSTRAINT fk_template_recurring_day_template
+        FOREIGN KEY (class_template_id) REFERENCES class_template (id) ON DELETE CASCADE
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
+CREATE TABLE class_template_class_type
+(
+    id                BIGINT      NOT NULL AUTO_INCREMENT,
+    class_template_id BIGINT      NOT NULL,
+    class_type_id     BIGINT      NOT NULL,
+    created_at        DATETIME(6) NOT NULL,
+    updated_at        DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_template_class_type (class_template_id, class_type_id),
+    CONSTRAINT fk_template_class_type_template
+        FOREIGN KEY (class_template_id) REFERENCES class_template (id) ON DELETE CASCADE,
+    CONSTRAINT fk_template_class_type_type
+        FOREIGN KEY (class_type_id) REFERENCES class_type (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
