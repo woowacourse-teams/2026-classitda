@@ -41,10 +41,8 @@ public class ClassTypeService {
     }
 
     @Transactional(readOnly = true)
-    public List<ClassTypeResponse> findAll(Long studioId) {
-        if (!studioRepository.existsById(studioId)) {
-            throw new StudioException(StudioErrorCode.NOT_FOUND);
-        }
+    public List<ClassTypeResponse> findAll(Long memberId, Long studioId) {
+        getManageableStudio(memberId, studioId);
 
         return classTypeRepository.findAllByStudioIdOrderByIdAsc(studioId).stream()
                 .map(classType -> ClassTypeResponse.of(classType.getId(), classType.getName()))

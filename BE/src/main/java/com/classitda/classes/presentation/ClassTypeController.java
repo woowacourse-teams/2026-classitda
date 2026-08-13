@@ -29,9 +29,10 @@ public class ClassTypeController implements ClassTypeControllerApi {
     @Override
     @GetMapping(version = "1")
     public List<ClassTypeResponse> findAll(
+            @CurrentMemberId Long memberId,
             @PathVariable Long studioId
     ) {
-        return classTypeService.findAll(studioId);
+        return classTypeService.findAll(memberId, studioId);
     }
 
     @Override
