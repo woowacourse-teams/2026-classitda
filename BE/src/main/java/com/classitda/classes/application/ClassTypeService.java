@@ -2,8 +2,8 @@ package com.classitda.classes.application;
 
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
-import com.classitda.classes.exception.ClassTypeErrorCode;
-import com.classitda.classes.exception.ClassTypeException;
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.presentation.dto.ClassTypeCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.classes.presentation.dto.ClassTypeUpdateRequest;
@@ -39,7 +39,7 @@ public class ClassTypeService {
             ClassType savedClassType = classTypeRepository.saveAndFlush(classType);
             return ClassTypeResponse.of(savedClassType.getId(), savedClassType.getName());
         } catch (DataIntegrityViolationException exception) {
-            throw new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED);
+            throw new ClassException(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED);
         }
     }
 
@@ -73,7 +73,7 @@ public class ClassTypeService {
         try {
             classTypeRepository.flush();
         } catch (DataIntegrityViolationException exception) {
-            throw new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED);
+            throw new ClassException(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED);
         }
 
         return ClassTypeResponse.of(classType.getId(), classType.getName());
@@ -88,7 +88,7 @@ public class ClassTypeService {
         getManageableStudio(memberId, studioId);
 
         return classTypeRepository.findByIdAndStudioId(classTypeId, studioId)
-                .orElseThrow(() -> new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
     }
 
     private Studio getManageableStudio(Long memberId, Long studioId) {

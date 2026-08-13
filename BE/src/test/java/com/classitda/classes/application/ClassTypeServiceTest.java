@@ -6,8 +6,8 @@ import static org.assertj.core.groups.Tuple.tuple;
 
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
-import com.classitda.classes.exception.ClassTypeErrorCode;
-import com.classitda.classes.exception.ClassTypeException;
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.classes.presentation.dto.ClassTypeUpdateRequest;
@@ -172,8 +172,8 @@ class ClassTypeServiceTest {
         // when / then
         assertThatThrownBy(() -> classTypeService.save(
                 owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청()))
-                .isInstanceOf(ClassTypeException.class)
-                .hasMessage(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED.getMessage());
+                .isInstanceOf(ClassException.class)
+                .hasMessage(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED.getMessage());
     }
 
     @Test
@@ -357,9 +357,9 @@ class ClassTypeServiceTest {
         assertThatThrownBy(() -> classTypeService.update(
                 owner.getId(), studio.getId(), target.getId(),
                 ClassTypeFixture.이름이_다른_수업_종류_수정_요청(duplicate.getName())))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                .isInstanceOfSatisfying(ClassException.class, exception ->
                         assertThat(exception.getErrorCode())
-                                .isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED));
+                                .isEqualTo(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED));
     }
 
     @Test
@@ -442,8 +442,8 @@ class ClassTypeServiceTest {
         // when / then
         assertThatThrownBy(() -> classTypeService.update(
                 owner.getId(), studio.getId(), 999L, ClassTypeFixture.기본_수업_종류_수정_요청()))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
     }
 
     @Test
@@ -459,8 +459,8 @@ class ClassTypeServiceTest {
         assertThatThrownBy(() -> classTypeService.update(
                 owner.getId(), requestedStudio.getId(), classType.getId(),
                 ClassTypeFixture.기본_수업_종류_수정_요청()))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
         assertThat(classTypeRepository.findById(classType.getId()).orElseThrow().getName())
                 .isEqualTo("다른 시설 요가");
     }
@@ -529,8 +529,8 @@ class ClassTypeServiceTest {
 
         // when / then
         assertThatThrownBy(() -> classTypeService.delete(owner.getId(), studio.getId(), 999L))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
     }
 
     @Test
@@ -545,8 +545,8 @@ class ClassTypeServiceTest {
         // when / then
         assertThatThrownBy(() -> classTypeService.delete(
                 owner.getId(), requestedStudio.getId(), classType.getId()))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
         assertThat(classTypeRepository.findById(classType.getId())).isPresent();
     }
 
@@ -564,8 +564,8 @@ class ClassTypeServiceTest {
 
         // when / then
         assertThatThrownBy(() -> classTypeService.delete(owner.getId(), studio.getId(), classTypeId))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
     }
 
     private Member 회원을_저장한다(String providerId) {
