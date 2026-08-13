@@ -224,6 +224,109 @@ class ClassTypeServiceTest {
                         assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_FOUND));
     }
 
+    @Test
+    void 대표_강사가_수업_종류를_삭제하면_행이_사라지고_같은_이름을_다시_등록할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("delete-owner");
+        Studio studio = 시설을_만든다(owner);
+        ClassType classType = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(studio, "삭제할 요가"));
+
+        // when
+        classTypeService.delete(owner.getId(), studio.getId(), classType.getId());
+        entityManager.flush();
+        entityManager.clear();
+        boolean deleted = classTypeRepository.findById(classType.getId()).isEmpty();
+
+        ClassTypeResponse recreated = classTypeService.save(
+                owner.getId(), studio.getId(),
+                ClassTypeFixture.이름이_다른_수업_종류_생성_요청("삭제할 요가"));
+
+        // then
+        assertThat(deleted).isTrue();
+        assertThat(recreated.name()).isEqualTo("삭제할 요가");
+    }
+
+    @Test
+    void 일반_강사는_수업_종류를_삭제할_수_없고_행이_유지된다() {
+        // given
+        Member owner = 회원을_저장한다("delete-permission-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member instructor = 소속을_만든다(
+                studio, "delete-regular-instructor", SystemRole.INSTRUCTOR, MembershipStatus.ACTIVE);
+        ClassType classType = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(studio, "권한 확인 요가"));
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.delete(
+                instructor.getId(), studio.getId(), classType.getId()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.PERMISSION_DENIED));
+        assertThat(classTypeRepository.findById(classType.getId())).isPresent();
+    }
+
+    @Test
+    void 없는_시설의_수업_종류를_삭제하면_STUDIO_002가_발생하고_행이_유지된다() {
+        // given
+        Member owner = 회원을_저장한다("delete-missing-studio-owner");
+        Studio studio = 시설을_만든다(owner);
+        ClassType classType = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(studio, "시설 확인 요가"));
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.delete(owner.getId(), 999L, classType.getId()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_FOUND));
+        assertThat(classTypeRepository.findById(classType.getId())).isPresent();
+    }
+
+    @Test
+    void 기존_시설에_없는_수업_종류를_삭제하면_CLASS_TYPE_003이_발생한다() {
+        // given
+        Member owner = 회원을_저장한다("delete-missing-class-type-owner");
+        Studio studio = 시설을_만든다(owner);
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.delete(owner.getId(), studio.getId(), 999L))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+    }
+
+    @Test
+    void 다른_시설의_수업_종류를_삭제하면_CLASS_TYPE_003이_발생하고_행이_유지된다() {
+        // given
+        Member owner = 회원을_저장한다("delete-cross-studio-owner");
+        Studio requestedStudio = 시설을_만든다(owner);
+        Studio owningStudio = 시설을_만든다(owner);
+        ClassType classType = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(owningStudio, "다른 시설 요가"));
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.delete(
+                owner.getId(), requestedStudio.getId(), classType.getId()))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+        assertThat(classTypeRepository.findById(classType.getId())).isPresent();
+    }
+
+    @Test
+    void 이미_삭제한_수업_종류를_다시_삭제하면_CLASS_TYPE_003이_발생한다() {
+        // given
+        Member owner = 회원을_저장한다("delete-repeated-owner");
+        Studio studio = 시설을_만든다(owner);
+        ClassType classType = classTypeRepository.saveAndFlush(
+                ClassTypeFixture.이름이_다른_수업_종류(studio, "반복 삭제 요가"));
+        Long classTypeId = classType.getId();
+        classTypeService.delete(owner.getId(), studio.getId(), classTypeId);
+        entityManager.flush();
+        entityManager.clear();
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.delete(owner.getId(), studio.getId(), classTypeId))
+                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+    }
+
     private Member 회원을_저장한다(String providerId) {
         Member member = StudioFixture.아이디가_다른_소유자(providerId);
         entityManager.persist(member);

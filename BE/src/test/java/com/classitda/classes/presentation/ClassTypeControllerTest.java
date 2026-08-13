@@ -3,6 +3,7 @@ package com.classitda.classes.presentation;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -185,6 +186,52 @@ class ClassTypeControllerTest {
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
     }
 
+    @Test
+    void 수업_종류를_삭제하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
+        // given / when
+        RestTestClient.ResponseSpec result = 수업_종류를_삭제한다(7L, 13L, "1");
+
+        // then
+        result.expectStatus().isNoContent()
+                .expectBody().isEmpty();
+        verify(classTypeService).delete(1L, 7L, 13L);
+    }
+
+    @Test
+    void 없는_수업_종류를_삭제하면_CLASS_TYPE_003을_정확히_반환한다() {
+        // given
+        doThrow(new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND))
+                .when(classTypeService).delete(anyLong(), anyLong(), anyLong());
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_종류를_삭제한다(7L, 999L, "1");
+
+        // then
+        오류를_검증한다(result, 404, "CLASS_TYPE-003", "수업 종류를 찾을 수 없습니다.");
+    }
+
+    @Test
+    void 수업_종류_삭제_버전_헤더가_없으면_API_001을_반환하고_서비스를_호출하지_않는다() {
+        // given / when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri("/api/studios/7/class-types/13")
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        verify(classTypeService, never()).delete(anyLong(), anyLong(), anyLong());
+    }
+
+    @Test
+    void 수업_종류_삭제_버전이_지원되지_않으면_API_002를_반환하고_서비스를_호출하지_않는다() {
+        // given / when
+        RestTestClient.ResponseSpec result = 수업_종류를_삭제한다(7L, 13L, "2");
+
+        // then
+        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(classTypeService, never()).delete(anyLong(), anyLong(), anyLong());
+    }
+
     private RestTestClient.ResponseSpec 수업_종류_목록을_조회한다(Long studioId, String apiVersion) {
         return client.get()
                 .uri("/api/studios/{studioId}/class-types", studioId)
@@ -202,6 +249,17 @@ class ClassTypeControllerTest {
                 .header("X-API-Version", apiVersion)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec 수업_종류를_삭제한다(
+            Long studioId,
+            Long classTypeId,
+            String apiVersion
+    ) {
+        return client.delete()
+                .uri("/api/studios/{studioId}/class-types/{classTypeId}", studioId, classTypeId)
+                .header("X-API-Version", apiVersion)
                 .exchange();
     }
 
