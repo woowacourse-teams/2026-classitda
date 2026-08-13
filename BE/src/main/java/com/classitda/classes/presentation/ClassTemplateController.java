@@ -5,6 +5,7 @@ import com.classitda.classes.application.ClassTemplateCommandService;
 import com.classitda.classes.application.ClassTemplateQueryService;
 import com.classitda.classes.presentation.dto.ClassTemplateCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTemplateResponse;
+import com.classitda.classes.presentation.dto.ClassTemplateUpdateRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,5 +45,17 @@ public class ClassTemplateController implements ClassTemplateControllerApi {
             @PathVariable Long studioId
     ) {
         return classTemplateQueryService.findAll(memberId, studioId);
+    }
+
+    @Override
+    @PutMapping(path = "/{classTemplateId}", version = "1")
+    public ResponseEntity<Void> update(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classTemplateId,
+            @Valid @RequestBody ClassTemplateUpdateRequest request
+    ) {
+        classTemplateCommandService.update(memberId, studioId, classTemplateId, request);
+        return ResponseEntity.noContent().build();
     }
 }

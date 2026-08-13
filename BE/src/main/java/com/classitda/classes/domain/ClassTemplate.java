@@ -112,7 +112,8 @@ public class ClassTemplate extends BaseEntity {
         this.classForm = classForm;
         this.durationMinutes = durationMinutes;
         this.startTime = startTime;
-        this.recurringDays = copiedRecurringDays;
+        this.recurringDays.clear();
+        this.recurringDays.addAll(copiedRecurringDays);
         this.capacity = capacity;
     }
 

@@ -19,6 +19,7 @@ public enum ClassErrorCode implements ErrorCode {
     INVALID_CAPACITY("CLASS_TEMPLATE-004", "정원은 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_TYPES_REQUIRED("CLASS_TEMPLATE-005", "수업 종류를 하나 이상 선택해야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_TYPES_DUPLICATED("CLASS_TEMPLATE-006", "중복된 수업 종류를 선택할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    CLASS_TEMPLATE_NOT_FOUND("CLASS_TEMPLATE-007", "수업 템플릿을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     INVALID_START_TIME("CLASS_TEMPLATE-009", "시작 시간은 필수입니다.", HttpStatus.BAD_REQUEST),
     INVALID_RECURRING_DAY("CLASS_TEMPLATE-011", "반복 요일에는 null을 포함할 수 없습니다.", HttpStatus.BAD_REQUEST),
     CLASS_TEMPLATE_STUDIO_REQUIRED("CLASS_TEMPLATE-012", "수업 템플릿 시설은 필수입니다.", HttpStatus.BAD_REQUEST),

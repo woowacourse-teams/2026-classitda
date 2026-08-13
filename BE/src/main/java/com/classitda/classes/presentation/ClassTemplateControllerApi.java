@@ -2,6 +2,7 @@ package com.classitda.classes.presentation;
 
 import com.classitda.classes.presentation.dto.ClassTemplateCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTemplateResponse;
+import com.classitda.classes.presentation.dto.ClassTemplateUpdateRequest;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -162,5 +163,86 @@ public interface ClassTemplateControllerApi {
             Long memberId,
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
             Long studioId
+    );
+
+    @Operation(
+            summary = "수업 템플릿 전체 수정",
+            description = """
+                    수업 템플릿의 모든 수정 가능한 정보를 새 값으로 교체합니다.
+                    description이 null이면 메모를 삭제하고, recurringDays가 null이거나 비어 있으면 반복 요일을 모두 삭제합니다.
+                    description과 recurringDays를 제외한 모든 필드는 필수이며, 수업 종류를 하나 이상 선택해야 합니다.
+                    존재하지 않는 수업 템플릿은 새로 생성하지 않으며, 수업 템플릿 관리 권한이 필요합니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "수업 템플릿을 정상적으로 수정합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "요청 값이 올바르지 않거나 API 버전 헤더가 없거나 지원하지 않는 버전입니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "요청 값 오류", value = """
+                                            {"code": "COMMON-001", "message": "요청 값이 올바르지 않습니다."}"""),
+                                    @ExampleObject(name = "버전 헤더 누락", value = """
+                                            {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 버전", value = """
+                                            {"code": "API-002", "message": "지원하지 않는 API 버전입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "인증 실패", value = """
+                                    {"code": "AUTH-001", "message": "인증이 필요합니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "ACCESS 토큰이 아니거나 시설 소속이 아니거나 소속이 비활성 상태이거나 권한이 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "접근 권한 없음", value = """
+                                            {"code": "AUTH-002", "message": "접근 권한이 없습니다."}"""),
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code": "MEMBERSHIP-001", "message": "해당 시설의 소속이 아닙니다."}"""),
+                                    @ExampleObject(name = "비활성 소속", value = """
+                                            {"code": "MEMBERSHIP-002", "message": "이용이 정지된 소속입니다."}"""),
+                                    @ExampleObject(name = "권한 없음", value = """
+                                            {"code": "PERMISSION-001", "message": "이 작업을 수행할 권한이 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설, 수업 템플릿 또는 수업 종류를 찾을 수 없습니다. 다른 시설의 자원도 동일하게 처리합니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "시설 없음", value = """
+                                            {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "수업 템플릿 없음", value = """
+                                            {"code": "CLASS_TEMPLATE-007", "message": "수업 템플릿을 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "수업 종류 없음", value = """
+                                            {"code": "CLASS_TYPE-003", "message": "수업 종류를 찾을 수 없습니다."}""")
+                            }
+                    )
+            )
+    })
+    ResponseEntity<Void> update(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            @Parameter(description = "수정할 수업 템플릿 ID입니다.", required = true, example = "1")
+            Long classTemplateId,
+            ClassTemplateUpdateRequest request
     );
 }

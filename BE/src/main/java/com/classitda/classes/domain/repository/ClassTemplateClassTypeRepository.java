@@ -4,6 +4,7 @@ import com.classitda.classes.domain.ClassTemplateClassType;
 import com.classitda.classes.domain.repository.projection.TemplateClassTypeProjection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,5 +22,23 @@ public interface ClassTemplateClassTypeRepository extends JpaRepository<ClassTem
             """)
     List<TemplateClassTypeProjection> findAllByTemplateIds(
             @Param("classTemplateIds") List<Long> classTemplateIds
+    );
+
+    @Query("""
+            SELECT link.classTypeId
+            FROM ClassTemplateClassType link
+            WHERE link.classTemplateId = :classTemplateId
+            """)
+    List<Long> findClassTypeIdsByTemplateId(@Param("classTemplateId") Long classTemplateId);
+
+    @Modifying
+    @Query("""
+            DELETE FROM ClassTemplateClassType link
+            WHERE link.classTemplateId = :classTemplateId
+              AND link.classTypeId IN :classTypeIds
+            """)
+    void deleteAllByTemplateIdAndClassTypeIds(
+            @Param("classTemplateId") Long classTemplateId,
+            @Param("classTypeIds") List<Long> classTypeIds
     );
 }
