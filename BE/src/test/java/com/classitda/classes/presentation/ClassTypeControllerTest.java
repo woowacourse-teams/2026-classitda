@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -137,7 +138,7 @@ class ClassTypeControllerTest {
     @Test
     void 수업_종류_목록을_조회하면_200과_정렬된_최상위_배열을_반환한다() {
         // given
-        when(classTypeService.findAll(7L)).thenReturn(List.of(
+        when(classTypeService.findAll(1L, 7L)).thenReturn(List.of(
                 ClassTypeResponse.of(1L, "일반 요가"),
                 ClassTypeResponse.of(4L, "리포머 요가")
         ));
@@ -151,20 +152,42 @@ class ClassTypeControllerTest {
                 .json("""
                         [{"id":1,"name":"일반 요가"},{"id":4,"name":"리포머 요가"}]
                         """, JsonCompareMode.STRICT);
-        verify(classTypeService).findAll(7L);
-        verify(currentMemberIdArgumentResolver, never()).resolveArgument(any(), any(), any(), any());
+        verify(classTypeService).findAll(1L, 7L);
+        verify(currentMemberIdArgumentResolver).resolveArgument(any(), any(), any(), any());
     }
 
     @Test
     void 없는_시설의_수업_종류_목록을_조회하면_STUDIO_002를_반환한다() {
         // given
-        when(classTypeService.findAll(999L)).thenThrow(new StudioException(StudioErrorCode.NOT_FOUND));
+        when(classTypeService.findAll(1L, 999L)).thenThrow(new StudioException(StudioErrorCode.NOT_FOUND));
 
         // when
         RestTestClient.ResponseSpec result = 수업_종류_목록을_조회한다(999L, "1");
 
         // then
         오류를_검증한다(result, 404, "STUDIO-002", "시설을 찾을 수 없습니다.");
+    }
+
+    @Test
+    void 목록_조회_권한_예외들은_문서화된_403_응답으로_직렬화한다() {
+        // given
+        when(classTypeService.findAll(1L, 7L)).thenThrow(
+                new StudioException(StudioErrorCode.NOT_MEMBERSHIP),
+                new StudioException(StudioErrorCode.MEMBERSHIP_INACTIVE),
+                new StudioException(StudioErrorCode.PERMISSION_DENIED)
+        );
+        String[] codes = {"MEMBERSHIP-001", "MEMBERSHIP-002", "PERMISSION-001"};
+        String[] messages = {
+                "해당 시설의 소속이 아닙니다.",
+                "이용이 정지된 소속입니다.",
+                "이 작업을 수행할 권한이 없습니다."
+        };
+
+        // when / then
+        for (int index = 0; index < codes.length; index++) {
+            오류를_검증한다(수업_종류_목록을_조회한다(7L, "1"), 403, codes[index], messages[index]);
+        }
+        verify(classTypeService, times(3)).findAll(1L, 7L);
     }
 
     @Test

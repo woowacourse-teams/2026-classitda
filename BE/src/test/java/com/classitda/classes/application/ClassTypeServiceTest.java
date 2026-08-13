@@ -15,11 +15,14 @@ import com.classitda.member.domain.Member;
 import com.classitda.studio.application.StudioPermissionService;
 import com.classitda.studio.application.StudioService;
 import com.classitda.studio.domain.MembershipStatus;
+import com.classitda.studio.domain.Permission;
 import com.classitda.studio.domain.PermissionCode;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.StudioRole;
+import com.classitda.studio.domain.StudioRolePermission;
 import com.classitda.studio.domain.SystemRole;
+import com.classitda.studio.domain.repository.PermissionRepository;
 import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.domain.repository.StudioRolePermissionRepository;
 import com.classitda.studio.domain.repository.StudioRoleRepository;
@@ -42,6 +45,7 @@ class ClassTypeServiceTest {
     private final StudioService studioService;
     private final StudioRepository studioRepository;
     private final ClassTypeRepository classTypeRepository;
+    private final PermissionRepository permissionRepository;
     private final StudioRoleRepository studioRoleRepository;
     private final StudioRolePermissionRepository studioRolePermissionRepository;
     private final EntityManager entityManager;
@@ -52,6 +56,7 @@ class ClassTypeServiceTest {
             StudioService studioService,
             StudioRepository studioRepository,
             ClassTypeRepository classTypeRepository,
+            PermissionRepository permissionRepository,
             StudioRoleRepository studioRoleRepository,
             StudioRolePermissionRepository studioRolePermissionRepository,
             EntityManager entityManager
@@ -60,6 +65,7 @@ class ClassTypeServiceTest {
         this.studioService = studioService;
         this.studioRepository = studioRepository;
         this.classTypeRepository = classTypeRepository;
+        this.permissionRepository = permissionRepository;
         this.studioRoleRepository = studioRoleRepository;
         this.studioRolePermissionRepository = studioRolePermissionRepository;
         this.entityManager = entityManager;
@@ -189,7 +195,7 @@ class ClassTypeServiceTest {
                 ClassTypeFixture.이름이_다른_수업_종류(otherStudio, "다른 시설 요가"));
 
         // when
-        List<ClassTypeResponse> responses = classTypeService.findAll(studio.getId());
+        List<ClassTypeResponse> responses = classTypeService.findAll(owner.getId(), studio.getId());
 
         // then
         assertThat(responses)
@@ -208,7 +214,7 @@ class ClassTypeServiceTest {
         Studio studio = 시설을_만든다(owner);
 
         // when
-        List<ClassTypeResponse> responses = classTypeService.findAll(studio.getId());
+        List<ClassTypeResponse> responses = classTypeService.findAll(owner.getId(), studio.getId());
 
         // then
         assertThat(responses).isEmpty();
@@ -220,9 +226,69 @@ class ClassTypeServiceTest {
         Long missingStudioId = 999L;
 
         // when / then
-        assertThatThrownBy(() -> classTypeService.findAll(missingStudioId))
+        assertThatThrownBy(() -> classTypeService.findAll(999L, missingStudioId))
                 .isInstanceOfSatisfying(StudioException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_FOUND));
+    }
+
+    @Test
+    void 수업_종류_관리_권한을_받은_활성_일반_강사는_목록을_조회할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("granted-list-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member instructor = 소속을_만든다(
+                studio, "granted-list-instructor", SystemRole.INSTRUCTOR, MembershipStatus.ACTIVE);
+        수업_종류_관리_권한을_부여한다(studio, SystemRole.INSTRUCTOR);
+        ClassType classType = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
+
+        // when
+        List<ClassTypeResponse> responses = classTypeService.findAll(instructor.getId(), studio.getId());
+
+        // then
+        assertThat(responses)
+                .extracting(ClassTypeResponse::id, ClassTypeResponse::name)
+                .containsExactly(tuple(classType.getId(), classType.getName()));
+    }
+
+    @Test
+    void 소속이_아닌_회원은_수업_종류_목록을_조회할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("list-membership-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member stranger = 회원을_저장한다("list-stranger");
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.findAll(stranger.getId(), studio.getId()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.NOT_MEMBERSHIP));
+    }
+
+    @Test
+    void 비활성_소속은_수업_종류_목록을_조회할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("inactive-list-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member inactive = 소속을_만든다(
+                studio, "inactive-list-instructor", SystemRole.INSTRUCTOR, MembershipStatus.INACTIVE);
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.findAll(inactive.getId(), studio.getId()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.MEMBERSHIP_INACTIVE));
+    }
+
+    @Test
+    void 관리_권한이_없는_활성_일반_강사는_수업_종류_목록을_조회할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("denied-list-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member instructor = 소속을_만든다(
+                studio, "denied-list-instructor", SystemRole.INSTRUCTOR, MembershipStatus.ACTIVE);
+
+        // when / then
+        assertThatThrownBy(() -> classTypeService.findAll(instructor.getId(), studio.getId()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.PERMISSION_DENIED));
     }
 
     @Test
@@ -504,6 +570,18 @@ class ClassTypeServiceTest {
                 .filter(role -> role.getSystemRole() == systemRole)
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private void 수업_종류_관리_권한을_부여한다(Studio studio, SystemRole systemRole) {
+        StudioRole role = 역할을_찾는다(studio, systemRole);
+        Permission permission = permissionRepository.findByCodeIn(List.of(PermissionCode.CLASS_TYPE_MANAGE))
+                .stream()
+                .findFirst()
+                .orElseThrow();
+        studioRolePermissionRepository.saveAndFlush(StudioRolePermission.builder()
+                .studioRole(role)
+                .permission(permission)
+                .build());
     }
 
     private Member 소속을_만든다(
