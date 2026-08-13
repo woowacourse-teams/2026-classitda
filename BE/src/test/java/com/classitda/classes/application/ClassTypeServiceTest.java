@@ -72,20 +72,21 @@ class ClassTypeServiceTest {
     }
 
     @Test
-    void 대표_강사가_수업_종류를_등록하면_저장하고_응답한다() {
+    void 대표_강사가_수업_종류를_등록하면_저장한다() {
         // given
         Member owner = 회원을_저장한다("class-type-owner");
         Studio studio = 시설을_만든다(owner);
 
         // when
-        ClassTypeResponse response = classTypeService.save(
-                owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
+        classTypeService.save(owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
 
         // then
-        ClassType saved = classTypeRepository.findById(response.id()).orElseThrow();
-        assertThat(response.name()).isEqualTo("일반 요가");
-        assertThat(saved.getStudio().getId()).isEqualTo(studio.getId());
-        assertThat(saved.getName()).isEqualTo(response.name());
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(studio.getId()))
+                .singleElement()
+                .satisfies(saved -> {
+                    assertThat(saved.getStudio().getId()).isEqualTo(studio.getId());
+                    assertThat(saved.getName()).isEqualTo("일반 요가");
+                });
 
         StudioRole ownerRole = 역할을_찾는다(studio, SystemRole.OWNER);
         assertThat(studioRolePermissionRepository.existsByStudioRoleIdAndPermissionCode(
@@ -185,12 +186,17 @@ class ClassTypeServiceTest {
         classTypeService.save(owner.getId(), firstStudio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
 
         // when
-        ClassTypeResponse response = classTypeService.save(
+        classTypeService.save(
                 owner.getId(), secondStudio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
 
         // then
-        assertThat(response.id()).isNotNull();
         assertThat(classTypeRepository.count()).isEqualTo(2);
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(firstStudio.getId()))
+                .extracting(ClassType::getName)
+                .containsExactly("일반 요가");
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(secondStudio.getId()))
+                .extracting(ClassType::getName)
+                .containsExactly("일반 요가");
     }
 
     @Test
@@ -479,13 +485,15 @@ class ClassTypeServiceTest {
         entityManager.clear();
         boolean deleted = classTypeRepository.findById(classType.getId()).isEmpty();
 
-        ClassTypeResponse recreated = classTypeService.save(
+        classTypeService.save(
                 owner.getId(), studio.getId(),
                 ClassTypeFixture.이름이_다른_수업_종류_생성_요청("삭제할 요가"));
 
         // then
         assertThat(deleted).isTrue();
-        assertThat(recreated.name()).isEqualTo("삭제할 요가");
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(studio.getId()))
+                .extracting(ClassType::getName)
+                .containsExactly("삭제할 요가");
     }
 
     @Test

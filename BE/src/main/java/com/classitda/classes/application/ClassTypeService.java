@@ -31,13 +31,12 @@ public class ClassTypeService {
     private final StudioPermissionService studioPermissionService;
     private final StudioRepository studioRepository;
 
-    public ClassTypeResponse save(Long memberId, Long studioId, ClassTypeCreateRequest request) {
+    public void save(Long memberId, Long studioId, ClassTypeCreateRequest request) {
         Studio studio = getManageableStudio(memberId, studioId);
         ClassType classType = request.toEntity(studio);
 
         try {
-            ClassType savedClassType = classTypeRepository.saveAndFlush(classType);
-            return ClassTypeResponse.of(savedClassType.getId(), savedClassType.getName());
+            classTypeRepository.saveAndFlush(classType);
         } catch (DataIntegrityViolationException exception) {
             throw new ClassException(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED);
         }

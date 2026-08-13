@@ -155,7 +155,7 @@ public interface ClassTypeControllerApi {
                     )
             )
     })
-    ResponseEntity<ClassTypeResponse> save(
+    ResponseEntity<Void> save(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")

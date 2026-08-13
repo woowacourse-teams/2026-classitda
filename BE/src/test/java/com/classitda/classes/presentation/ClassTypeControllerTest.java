@@ -58,21 +58,16 @@ class ClassTypeControllerTest {
     }
 
     @Test
-    void 수업_종류를_등록하면_201과_정확한_수업_종류_정보를_반환한다() {
+    void 수업_종류를_등록하면_201과_빈_본문을_반환하고_서비스에_위임한다() {
         // given
         ClassTypeCreateRequest request = ClassTypeFixture.기본_수업_종류_생성_요청();
-        when(classTypeService.save(anyLong(), anyLong(), any(ClassTypeCreateRequest.class)))
-                .thenReturn(ClassTypeResponse.of(1L, "일반 요가"));
 
         // when
         RestTestClient.ResponseSpec result = 수업_종류를_등록한다(7L, "1", request);
 
         // then
         result.expectStatus().isCreated()
-                .expectBody()
-                .json("""
-                        {"id":1,"name":"일반 요가"}
-                        """, JsonCompareMode.STRICT);
+                .expectBody().isEmpty();
         verify(classTypeService).save(eq(1L), eq(7L), eq(request));
     }
 
@@ -103,8 +98,8 @@ class ClassTypeControllerTest {
     @Test
     void 이름이_중복되면_CLASS_TYPE_002를_반환한다() {
         // given
-        when(classTypeService.save(anyLong(), anyLong(), any(ClassTypeCreateRequest.class)))
-                .thenThrow(new ClassException(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED));
+        doThrow(new ClassException(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED))
+                .when(classTypeService).save(anyLong(), anyLong(), any(ClassTypeCreateRequest.class));
 
         // when
         RestTestClient.ResponseSpec result = 수업_종류를_등록한다(1L, "1", ClassTypeFixture.기본_수업_종류_생성_요청());

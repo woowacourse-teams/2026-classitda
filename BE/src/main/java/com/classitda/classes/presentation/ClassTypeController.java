@@ -37,13 +37,13 @@ public class ClassTypeController implements ClassTypeControllerApi {
 
     @Override
     @PostMapping(version = "1")
-    public ResponseEntity<ClassTypeResponse> save(
+    public ResponseEntity<Void> save(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @Valid @RequestBody ClassTypeCreateRequest request
     ) {
-        ClassTypeResponse response = classTypeService.save(memberId, studioId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        classTypeService.save(memberId, studioId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
