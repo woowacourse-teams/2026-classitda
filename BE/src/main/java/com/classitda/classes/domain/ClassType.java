@@ -44,6 +44,11 @@ public class ClassType extends BaseEntity {
         this.name = name;
     }
 
+    public void updateName(String name) {
+        validateName(name);
+        this.name = name;
+    }
+
     private void validateName(String name) {
         if (name == null || name.isBlank() || name.length() > MAX_NAME_LENGTH) {
             throw new ClassTypeException(ClassTypeErrorCode.INVALID_NAME);

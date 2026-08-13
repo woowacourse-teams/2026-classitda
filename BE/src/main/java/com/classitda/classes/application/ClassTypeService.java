@@ -6,6 +6,7 @@ import com.classitda.classes.exception.ClassTypeErrorCode;
 import com.classitda.classes.exception.ClassTypeException;
 import com.classitda.classes.presentation.dto.ClassTypeCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
+import com.classitda.classes.presentation.dto.ClassTypeUpdateRequest;
 import com.classitda.studio.application.StudioPermissionService;
 import com.classitda.studio.domain.PermissionCode;
 import com.classitda.studio.domain.Studio;
@@ -50,7 +51,19 @@ public class ClassTypeService {
                 .toList();
     }
 
-    @Transactional
+    public ClassTypeResponse update(Long memberId, Long studioId, Long classTypeId, ClassTypeUpdateRequest request) {
+        ClassType classType = getManageableClassType(memberId, studioId, classTypeId);
+        classType.updateName(request.name());
+
+        try {
+            classTypeRepository.flush();
+        } catch (DataIntegrityViolationException exception) {
+            throw new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED);
+        }
+
+        return ClassTypeResponse.of(classType.getId(), classType.getName());
+    }
+
     public void delete(Long memberId, Long studioId, Long classTypeId) {
         ClassType classType = getManageableClassType(memberId, studioId, classTypeId);
         classTypeRepository.delete(classType);
