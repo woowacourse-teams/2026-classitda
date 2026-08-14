@@ -323,6 +323,20 @@ class ClassTypeControllerTest {
     }
 
     @Test
+    void 사용_중인_수업_종류를_삭제하면_CLASS_TYPE_004를_정확히_반환한다() {
+        // given
+        doThrow(new ClassException(ClassErrorCode.CLASS_TYPE_IN_USE))
+                .when(classTypeService).delete(anyLong(), anyLong(), anyLong());
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_종류를_삭제한다(7L, 13L, "1");
+
+        // then
+        오류를_검증한다(result, 409, "CLASS_TYPE-004", "사용 중인 수업 종류는 삭제할 수 없습니다.");
+        verify(classTypeService).delete(1L, 7L, 13L);
+    }
+
+    @Test
     void 수업_종류_삭제_버전_헤더가_없으면_API_001을_반환하고_서비스를_호출하지_않는다() {
         // given / when
         RestTestClient.ResponseSpec result = client.delete()

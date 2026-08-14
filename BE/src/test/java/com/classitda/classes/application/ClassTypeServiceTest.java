@@ -4,6 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
+import com.classitda.classes.domain.ClassForm;
+import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.ClassSessionClassType;
+import com.classitda.classes.domain.ClassSessionStatus;
+import com.classitda.classes.domain.ClassTemplate;
+import com.classitda.classes.domain.ClassTemplateClassType;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.exception.ClassErrorCode;
@@ -31,11 +37,17 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class})
 @MySqlRepositoryTest
@@ -49,6 +61,7 @@ class ClassTypeServiceTest {
     private final StudioRoleRepository studioRoleRepository;
     private final StudioRolePermissionRepository studioRolePermissionRepository;
     private final EntityManager entityManager;
+    private final TransactionTemplate transactionTemplate;
 
     @Autowired
     ClassTypeServiceTest(
@@ -59,7 +72,8 @@ class ClassTypeServiceTest {
             PermissionRepository permissionRepository,
             StudioRoleRepository studioRoleRepository,
             StudioRolePermissionRepository studioRolePermissionRepository,
-            EntityManager entityManager
+            EntityManager entityManager,
+            TransactionTemplate transactionTemplate
     ) {
         this.classTypeService = classTypeService;
         this.studioService = studioService;
@@ -69,6 +83,7 @@ class ClassTypeServiceTest {
         this.studioRoleRepository = studioRoleRepository;
         this.studioRolePermissionRepository = studioRolePermissionRepository;
         this.entityManager = entityManager;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @Test
@@ -495,6 +510,100 @@ class ClassTypeServiceTest {
     }
 
     @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 템플릿에서_사용_중인_수업_종류를_삭제하면_CLASS_TYPE_004가_발생하고_데이터가_유지된다() {
+        // given
+        DeleteConflictScenario scenario = 삭제_충돌_상황을_저장한다(
+                "template-linked-delete-owner", true, false);
+
+        try {
+            // when / then
+            사용_중_삭제_충돌을_검증한다(scenario);
+            transactionTemplate.executeWithoutResult(status -> {
+                assertThat(행_수("class_type", "id", scenario.classTypeId())).isOne();
+                assertThat(행_수("class_template", "id", scenario.classTemplateId())).isOne();
+                assertThat(행_수("class_template_class_type", "class_type_id", scenario.classTypeId())).isOne();
+            });
+        } finally {
+            삭제_충돌_상황을_정리한다(scenario);
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 수업_회차에서_사용_중인_수업_종류를_삭제하면_CLASS_TYPE_004가_발생하고_데이터가_유지된다() {
+        // given
+        DeleteConflictScenario scenario = 삭제_충돌_상황을_저장한다(
+                "session-linked-delete-owner", false, true);
+
+        try {
+            // when / then
+            사용_중_삭제_충돌을_검증한다(scenario);
+            transactionTemplate.executeWithoutResult(status -> {
+                assertThat(행_수("class_type", "id", scenario.classTypeId())).isOne();
+                assertThat(행_수("class_session", "id", scenario.classSessionId())).isOne();
+                assertThat(행_수("class_session_class_type", "class_type_id", scenario.classTypeId())).isOne();
+            });
+        } finally {
+            삭제_충돌_상황을_정리한다(scenario);
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 템플릿_연결만_제거해도_회차에서_사용_중이면_수업_종류를_삭제할_수_없다() {
+        // given
+        DeleteConflictScenario scenario = 삭제_충돌_상황을_저장한다(
+                "partially-linked-delete-owner", true, true);
+
+        try {
+            transactionTemplate.executeWithoutResult(status -> {
+                entityManager.remove(entityManager.find(ClassTemplate.class, scenario.classTemplateId()));
+                entityManager.flush();
+            });
+
+            // when / then
+            사용_중_삭제_충돌을_검증한다(scenario);
+            transactionTemplate.executeWithoutResult(status -> {
+                assertThat(행_수("class_template", "id", scenario.classTemplateId())).isZero();
+                assertThat(행_수("class_template_class_type", "class_type_id", scenario.classTypeId())).isZero();
+                assertThat(행_수("class_type", "id", scenario.classTypeId())).isOne();
+                assertThat(행_수("class_session", "id", scenario.classSessionId())).isOne();
+                assertThat(행_수("class_session_class_type", "class_type_id", scenario.classTypeId())).isOne();
+            });
+        } finally {
+            삭제_충돌_상황을_정리한다(scenario);
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 템플릿과_회차가_삭제되어_모든_연결이_사라지면_수업_종류를_삭제할_수_있다() {
+        // given
+        DeleteConflictScenario scenario = 삭제_충돌_상황을_저장한다(
+                "unlinked-delete-owner", true, true);
+        transactionTemplate.executeWithoutResult(status -> {
+            entityManager.remove(entityManager.find(ClassTemplate.class, scenario.classTemplateId()));
+            entityManager.remove(entityManager.find(ClassSession.class, scenario.classSessionId()));
+            entityManager.flush();
+        });
+
+        try {
+            // when
+            classTypeService.delete(scenario.ownerId(), scenario.studioId(), scenario.classTypeId());
+
+            // then
+            transactionTemplate.executeWithoutResult(status -> {
+                assertThat(행_수("class_template_class_type", "class_type_id", scenario.classTypeId())).isZero();
+                assertThat(행_수("class_session_class_type", "class_type_id", scenario.classTypeId())).isZero();
+                assertThat(행_수("class_type", "id", scenario.classTypeId())).isZero();
+            });
+        } finally {
+            삭제_충돌_상황을_정리한다(scenario);
+        }
+    }
+
+    @Test
     void 일반_강사는_수업_종류를_삭제할_수_없고_행이_유지된다() {
         // given
         Member owner = 회원을_저장한다("delete-permission-owner");
@@ -574,6 +683,143 @@ class ClassTypeServiceTest {
                         assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
     }
 
+    private DeleteConflictScenario 삭제_충돌_상황을_저장한다(
+            String ownerProviderId,
+            boolean templateLinked,
+            boolean sessionLinked
+    ) {
+        return transactionTemplate.execute(status -> {
+            Member owner = StudioFixture.아이디가_다른_소유자(ownerProviderId);
+            entityManager.persist(owner);
+            Studio studio = Studio.builder()
+                    .owner(owner)
+                    .name("수업 종류 삭제 충돌 시설")
+                    .openTime(LocalTime.of(9, 0))
+                    .closeTime(LocalTime.of(22, 0))
+                    .build();
+            entityManager.persist(studio);
+            ClassType classType = ClassTypeFixture.이름이_다른_수업_종류(studio, "사용 중인 요가");
+            entityManager.persist(classType);
+            entityManager.flush();
+
+            Long classTemplateId = null;
+            if (templateLinked) {
+                ClassTemplate template = ClassTemplate.builder()
+                        .studioId(studio.getId())
+                        .name("사용 중인 템플릿")
+                        .description("삭제 충돌 검증")
+                        .classForm(ClassForm.GROUP)
+                        .durationMinutes(60)
+                        .startTime(LocalTime.of(20, 0))
+                        .recurringDays(Set.of(DayOfWeek.MONDAY))
+                        .capacity(10)
+                        .build();
+                entityManager.persist(template);
+                entityManager.flush();
+                entityManager.persist(ClassTemplateClassType.builder()
+                        .classTemplateId(template.getId())
+                        .classTypeId(classType.getId())
+                        .build());
+                classTemplateId = template.getId();
+            }
+
+            Long instructorId = null;
+            Long classSessionId = null;
+            if (sessionLinked) {
+                Member instructor = StudioFixture.아이디가_다른_소유자(ownerProviderId + "-instructor");
+                entityManager.persist(instructor);
+                StudioRole instructorRole = SystemRole.INSTRUCTOR.toStudioRole(studio);
+                entityManager.persist(instructorRole);
+                StudioMembership instructorMembership = StudioMembership.builder()
+                        .studio(studio)
+                        .member(instructor)
+                        .studioRole(instructorRole)
+                        .status(MembershipStatus.ACTIVE)
+                        .joinedAt(LocalDateTime.now())
+                        .build();
+                entityManager.persist(instructorMembership);
+                ClassSession session = ClassSession.builder()
+                        .studioId(studio.getId())
+                        .instructorMembership(instructorMembership)
+                        .name("사용 중인 회차")
+                        .description("삭제 충돌 검증")
+                        .classForm(ClassForm.GROUP)
+                        .durationMinutes(60)
+                        .capacity(10)
+                        .startAt(LocalDateTime.of(2026, 8, 17, 20, 0))
+                        .status(ClassSessionStatus.OPENED)
+                        .build();
+                entityManager.persist(session);
+                entityManager.flush();
+                entityManager.persist(ClassSessionClassType.builder()
+                        .classSessionId(session.getId())
+                        .classTypeId(classType.getId())
+                        .build());
+                instructorId = instructor.getId();
+                classSessionId = session.getId();
+            }
+            entityManager.flush();
+
+            return new DeleteConflictScenario(
+                    owner.getId(), instructorId, studio.getId(), classType.getId(), classTemplateId, classSessionId);
+        });
+    }
+
+    private void 사용_중_삭제_충돌을_검증한다(DeleteConflictScenario scenario) {
+        assertThatThrownBy(() -> classTypeService.delete(
+                scenario.ownerId(), scenario.studioId(), scenario.classTypeId()))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_IN_USE));
+    }
+
+    private long 행_수(String tableName, String columnName, Long id) {
+        return ((Number) entityManager.createNativeQuery(
+                        "SELECT COUNT(*) FROM " + tableName + " WHERE " + columnName + " = :id")
+                .setParameter("id", id)
+                .getSingleResult()).longValue();
+    }
+
+    private void 삭제_충돌_상황을_정리한다(DeleteConflictScenario scenario) {
+        transactionTemplate.executeWithoutResult(status -> {
+            entityManager.createNativeQuery("DELETE FROM class_template_class_type WHERE class_type_id = :classTypeId")
+                    .setParameter("classTypeId", scenario.classTypeId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM class_session_class_type WHERE class_type_id = :classTypeId")
+                    .setParameter("classTypeId", scenario.classTypeId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM class_template WHERE studio_id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM class_session WHERE studio_id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM class_type WHERE id = :classTypeId")
+                    .setParameter("classTypeId", scenario.classTypeId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM studio_membership WHERE studio_id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM studio_role_permission WHERE studio_role_id IN "
+                            + "(SELECT id FROM studio_role WHERE studio_id = :studioId)")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM studio_role WHERE studio_id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM studio WHERE id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            if (scenario.instructorId() != null) {
+                entityManager.createNativeQuery("DELETE FROM member WHERE id = :memberId")
+                        .setParameter("memberId", scenario.instructorId())
+                        .executeUpdate();
+            }
+            entityManager.createNativeQuery("DELETE FROM member WHERE id = :memberId")
+                    .setParameter("memberId", scenario.ownerId())
+                    .executeUpdate();
+        });
+    }
+
     private Member 회원을_저장한다(String providerId) {
         Member member = StudioFixture.아이디가_다른_소유자(providerId);
         entityManager.persist(member);
@@ -625,5 +871,15 @@ class ClassTypeServiceTest {
                 .build());
         entityManager.flush();
         return member;
+    }
+
+    private record DeleteConflictScenario(
+            Long ownerId,
+            Long instructorId,
+            Long studioId,
+            Long classTypeId,
+            Long classTemplateId,
+            Long classSessionId
+    ) {
     }
 }
