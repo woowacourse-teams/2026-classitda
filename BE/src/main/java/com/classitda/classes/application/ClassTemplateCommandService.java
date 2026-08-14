@@ -52,7 +52,7 @@ public class ClassTemplateCommandService {
             ClassTemplateUpdateRequest request
     ) {
         getManageableStudio(memberId, studioId);
-        ClassTemplate classTemplate = getClassTemplate(studioId, classTemplateId);
+        ClassTemplate classTemplate = getClassTemplateForUpdate(studioId, classTemplateId);
         List<ClassType> classTypes = getClassTypes(studioId, request.classTypeIds());
 
         classTemplate.updateDetails(
@@ -86,7 +86,7 @@ public class ClassTemplateCommandService {
         return studio;
     }
 
-    private ClassTemplate getClassTemplate(Long studioId, Long classTemplateId) {
+    private ClassTemplate getClassTemplateForUpdate(Long studioId, Long classTemplateId) {
         return classTemplateRepository.findByIdAndStudioId(classTemplateId, studioId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND));
     }

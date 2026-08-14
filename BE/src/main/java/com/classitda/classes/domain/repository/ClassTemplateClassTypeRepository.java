@@ -2,8 +2,10 @@ package com.classitda.classes.domain.repository;
 
 import com.classitda.classes.domain.ClassTemplateClassType;
 import com.classitda.classes.domain.repository.projection.TemplateClassTypeProjection;
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,6 +31,7 @@ public interface ClassTemplateClassTypeRepository extends JpaRepository<ClassTem
             FROM ClassTemplateClassType link
             WHERE link.classTemplateId = :classTemplateId
             """)
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Long> findClassTypeIdsByTemplateId(@Param("classTemplateId") Long classTemplateId);
 
     @Modifying
