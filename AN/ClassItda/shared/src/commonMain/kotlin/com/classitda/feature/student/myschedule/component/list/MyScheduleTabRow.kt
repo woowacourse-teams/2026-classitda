@@ -66,7 +66,7 @@ internal fun MyScheduleTabRow(
                             ),
                         color =
                             if (isSelected) {
-                                StuColors.PrimaryGreen
+                                StuColors.Green
                             } else {
                                 StuColors.TextSecondary
                             },
@@ -75,7 +75,7 @@ internal fun MyScheduleTabRow(
                 HorizontalDivider(
                     color =
                         if (isSelected) {
-                            StuColors.PrimaryGreen
+                            StuColors.Green
                         } else {
                             StuColors.Divider
                         },

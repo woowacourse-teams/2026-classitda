@@ -22,10 +22,10 @@ private val DefaultScheme =
 private val StudentScheme =
     lightColorScheme(
         // Primary
-        primary = StuColors.PrimaryGreen,
+        primary = StuColors.Green,
         onPrimary = StuColors.White,
-        primaryContainer = StuColors.SecondaryGreen,
-        onPrimaryContainer = StuColors.PrimaryGreen,
+        primaryContainer = StuColors.GreenLight,
+        onPrimaryContainer = StuColors.Green,
         // Background
         background = StuColors.Background,
         onBackground = StuColors.TextPrimary,
@@ -35,24 +35,24 @@ private val StudentScheme =
         surfaceVariant = StuColors.SurfaceVariant,
         onSurfaceVariant = StuColors.TextSecondary,
         // Outline / Divider
-        outline = StuColors.Divider,
+        outline = StuColors.DividerStrong,
         outlineVariant = StuColors.Divider,
         // Error
-        error = StuColors.AccentRed,
+        error = StuColors.Red,
         onError = StuColors.White,
-        errorContainer = StuColors.SecondaryRed,
-        onErrorContainer = StuColors.AccentRed,
+        errorContainer = StuColors.RedLight,
+        onErrorContainer = StuColors.Red,
         // 모달 뒷 배경
-        scrim = StuColors.dim,
+        scrim = StuColors.Dim,
     )
 
 private val InstructorScheme =
     lightColorScheme(
         // Primary
-        primary = InsColors.PrimaryPurple,
+        primary = InsColors.Purple,
         onPrimary = InsColors.White,
-        primaryContainer = InsColors.SecondaryPurple,
-        onPrimaryContainer = InsColors.PrimaryPurple,
+        primaryContainer = InsColors.PurpleLight,
+        onPrimaryContainer = InsColors.Purple,
         // Background
         background = InsColors.Background,
         onBackground = InsColors.TextPrimary,
@@ -62,15 +62,15 @@ private val InstructorScheme =
         surfaceVariant = InsColors.SurfaceVariant,
         onSurfaceVariant = InsColors.TextSecondary,
         // Outline / Divider
-        outline = InsColors.Divider,
+        outline = InsColors.DividerStrong,
         outlineVariant = InsColors.Divider,
         // Error
-        error = InsColors.AccentRed,
+        error = InsColors.Red,
         onError = InsColors.White,
-        errorContainer = InsColors.SecondaryRed,
-        onErrorContainer = InsColors.AccentRed,
+        errorContainer = InsColors.RedLight,
+        onErrorContainer = InsColors.Red,
         // 모달 뒷 배경
-        scrim = InsColors.dim,
+        scrim = InsColors.Dim,
     )
 
 @Composable

@@ -37,7 +37,6 @@ import classitda.shared.generated.resources.my_schedule_cancel_confirm_policy_pr
 import classitda.shared.generated.resources.my_schedule_cancel_confirm_policy_suffix
 import classitda.shared.generated.resources.my_schedule_cancel_confirm_title
 import classitda.shared.generated.resources.my_schedule_cancel_reservation
-import com.classitda.core.designsystem.AppColor
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -82,7 +81,7 @@ internal fun ReservationCancellationConfirmDialog(
                     modifier =
                         Modifier
                             .background(
-                                color = AppColor.SecondaryRed,
+                                color = StuColors.RedLight,
                                 shape = AppShape.Pill,
                             ).padding(AppSpacing.md),
                     contentAlignment = Alignment.Center,
@@ -90,7 +89,7 @@ internal fun ReservationCancellationConfirmDialog(
                     Icon(
                         painter = painterResource(Res.drawable.ic_error),
                         contentDescription = null,
-                        tint = AppColor.AccentRed,
+                        tint = StuColors.Red,
                     )
                 }
                 Text(
@@ -168,7 +167,7 @@ private fun ReservationCancellationAvailability(
             Text(
                 text = stringResource(Res.string.my_schedule_cancel_confirm_available),
                 style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                color = StuColors.PrimaryGreen,
+                color = StuColors.Green,
             )
         }
         HorizontalDivider(color = StuColors.Divider)
@@ -179,7 +178,7 @@ private fun ReservationCancellationAvailability(
             Icon(
                 painter = painterResource(Res.drawable.ic_info),
                 contentDescription = null,
-                tint = StuColors.PrimaryGreen,
+                tint = StuColors.Green,
             )
             Text(
                 text =
@@ -187,7 +186,7 @@ private fun ReservationCancellationAvailability(
                         append(policyPrefix)
                         withStyle(
                             SpanStyle(
-                                color = StuColors.PrimaryGreen,
+                                color = StuColors.Green,
                                 fontWeight = FontWeight.Bold,
                             ),
                         ) {

@@ -51,7 +51,7 @@ internal fun ScheduleItemCard(
                     style = typography.bodyLarge,
                     color =
                         if (item is UpcomingScheduleItemUiModel.ConfirmedReservation) {
-                            StuColors.PrimaryGreen
+                            StuColors.Green
                         } else {
                             StuColors.TextSecondary
                         },

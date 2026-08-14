@@ -92,7 +92,7 @@ private fun ReservationCancelledHero() {
         Icon(
             painter = painterResource(Res.drawable.ic_error),
             contentDescription = null,
-            tint = StuColors.PrimaryGreen,
+            tint = StuColors.Green,
         )
         Text(
             text = stringResource(Res.string.my_schedule_reservation_cancelled_title),
@@ -170,7 +170,7 @@ private fun ReservationCancellationHistory(
                     Res.string.my_schedule_ticket_restoration_completed,
                     restoredTicketCount,
                 ),
-            valueColor = StuColors.PrimaryGreen,
+            valueColor = StuColors.Green,
         )
     }
 }

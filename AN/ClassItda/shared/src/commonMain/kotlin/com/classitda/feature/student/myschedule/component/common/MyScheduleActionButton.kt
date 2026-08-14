@@ -17,7 +17,6 @@ import classitda.shared.generated.resources.my_schedule_cancel_reservation
 import classitda.shared.generated.resources.my_schedule_cancel_waitlist
 import classitda.shared.generated.resources.my_schedule_go_home
 import classitda.shared.generated.resources.my_schedule_retry
-import com.classitda.core.designsystem.AppColor
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -38,7 +37,7 @@ internal fun MySchedulePrimaryButton(
         shape = AppShape.Card,
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = StuColors.PrimaryGreen,
+                containerColor = StuColors.Green,
                 contentColor = StuColors.White,
             ),
     ) {
@@ -105,7 +104,7 @@ internal fun MyScheduleDestructiveButton(
         shape = AppShape.Card,
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = AppColor.AccentRed,
+                containerColor = StuColors.Red,
                 contentColor = StuColors.White,
                 disabledContainerColor = StuColors.Divider,
                 disabledContentColor = StuColors.TextTertiary,
@@ -133,7 +132,7 @@ internal fun MyScheduleWarningButton(
         shape = AppShape.Card,
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = AppColor.DarkOrange,
+                containerColor = StuColors.Orange,
                 contentColor = StuColors.White,
                 disabledContainerColor = StuColors.Divider,
                 disabledContentColor = StuColors.TextTertiary,
