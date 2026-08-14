@@ -57,6 +57,12 @@ public class StudioService {
         return StudioResponse.from(getStudio(studioId));
     }
 
+    public List<StudioResponse> findAllByMemberId(Long memberId) {
+        return studioMembershipRepository.findAllStudiosByMemberId(memberId).stream()
+                .map(StudioResponse::from)
+                .toList();
+    }
+
     @Transactional
     public StudioResponse update(Long memberId, Long studioId, StudioUpdateRequest request) {
         Studio studio = getStudio(studioId);
@@ -124,6 +130,7 @@ public class StudioService {
                 .studio(studio)
                 .member(owner)
                 .studioRole(ownerRole)
+                .name(owner.getName())
                 .status(MembershipStatus.ACTIVE)
                 .joinedAt(LocalDateTime.now())
                 .build());
