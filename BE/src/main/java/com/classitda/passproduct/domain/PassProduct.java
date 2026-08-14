@@ -1,10 +1,12 @@
 package com.classitda.passproduct.domain;
 
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.passproduct.exception.PassProductErrorCode;
 import com.classitda.passproduct.exception.PassProductException;
 import com.classitda.studio.domain.Studio;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,7 +15,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -51,7 +52,7 @@ public class PassProduct extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private ClassKind classKind;
+    private ClassForm classForm;
 
     @Column
     private Integer totalCount;
@@ -76,17 +77,17 @@ public class PassProduct extends BaseEntity {
     private PassProduct(
             Studio studio,
             String name,
-            ClassKind classKind,
+            ClassForm classForm,
             List<ClassType> classTypes,
             Integer totalCount,
             Integer validPeriodAmount,
             PassProductPeriodUnit validPeriodUnit,
             int totalHoldDays
     ) {
-        validate(name, classKind, totalCount, validPeriodAmount, validPeriodUnit, totalHoldDays);
+        validate(name, classForm, totalCount, validPeriodAmount, validPeriodUnit, totalHoldDays);
         this.studio = studio;
         this.name = name;
-        this.classKind = classKind;
+        this.classForm = classForm;
         this.totalCount = totalCount;
         this.validPeriodAmount = validPeriodAmount;
         this.validPeriodUnit = validPeriodUnit;
@@ -98,16 +99,16 @@ public class PassProduct extends BaseEntity {
 
     public void update(
             String name,
-            ClassKind classKind,
+            ClassForm classForm,
             Integer totalCount,
             Integer validPeriodAmount,
             PassProductPeriodUnit validPeriodUnit,
             int totalHoldDays,
             boolean active
     ) {
-        validate(name, classKind, totalCount, validPeriodAmount, validPeriodUnit, totalHoldDays);
+        validate(name, classForm, totalCount, validPeriodAmount, validPeriodUnit, totalHoldDays);
         this.name = name;
-        this.classKind = classKind;
+        this.classForm = classForm;
         this.totalCount = totalCount;
         this.validPeriodAmount = validPeriodAmount;
         this.validPeriodUnit = validPeriodUnit;
@@ -166,14 +167,14 @@ public class PassProduct extends BaseEntity {
 
     private void validate(
             String name,
-            ClassKind classKind,
+            ClassForm classForm,
             Integer totalCount,
             Integer validPeriodAmount,
             PassProductPeriodUnit validPeriodUnit,
             int totalHoldDays
     ) {
         validateName(name);
-        validateClassKind(classKind);
+        validateClassForm(classForm);
         validateTotalCount(totalCount);
         validateValidPeriod(validPeriodAmount, validPeriodUnit);
         validateExpirationCondition(totalCount, validPeriodAmount);
@@ -186,8 +187,8 @@ public class PassProduct extends BaseEntity {
         }
     }
 
-    private void validateClassKind(ClassKind classKind) {
-        if (classKind == null) {
+    private void validateClassForm(ClassForm classForm) {
+        if (classForm == null) {
             throw new PassProductException(PassProductErrorCode.INVALID_CLASS_KIND);
         }
     }

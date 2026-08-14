@@ -8,7 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
-import com.classitda.passproduct.domain.ClassKind;
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
@@ -75,7 +75,7 @@ class PassProductControllerTest {
                         {
                           "id": 1,
                           "name": "3개월 그룹 20회권",
-                          "classKind": "GROUP",
+                          "classForm": "GROUP",
                           "classTypes": [{"id": 3, "name": "요가"}],
                           "totalCount": 20,
                           "validPeriodAmount": 3,
@@ -92,7 +92,7 @@ class PassProductControllerTest {
         // given
         when(passProductService.save(anyLong(), anyLong(), any(PassProductCreateRequest.class)))
                 .thenReturn(new PassProductResponse(
-                        2L, "기한 없는 20회권", ClassKind.PERSONAL, List.of(), 20, null, null, 0, true));
+                        2L, "기한 없는 20회권", ClassForm.INDIVIDUAL, List.of(), 20, null, null, 0, true));
 
         // when
         RestTestClient.ResponseSpec result = 수강권을_등록한다(7L, "1", PassProductFixture.기본_수강권_생성_요청());
@@ -104,7 +104,7 @@ class PassProductControllerTest {
                         {
                           "id": 2,
                           "name": "기한 없는 20회권",
-                          "classKind": "PERSONAL",
+                          "classForm": "INDIVIDUAL",
                           "classTypes": [],
                           "totalCount": 20,
                           "validPeriodAmount": null,
@@ -119,7 +119,7 @@ class PassProductControllerTest {
     void 수강권_이름이_비어_있으면_COMMON_001을_반환한다() {
         // given
         PassProductCreateRequest request = PassProductFixture.수강권_생성_요청(
-                " ", ClassKind.GROUP, null, 20, 3, PassProductPeriodUnit.MONTH, 0);
+                " ", ClassForm.GROUP, null, 20, 3, PassProductPeriodUnit.MONTH, 0);
 
         // when
         RestTestClient.ResponseSpec result = 수강권을_등록한다(1L, "1", request);
@@ -145,7 +145,7 @@ class PassProductControllerTest {
     void 홀딩_일수가_음수면_COMMON_001을_반환한다() {
         // given
         PassProductCreateRequest request = PassProductFixture.수강권_생성_요청(
-                "이름", ClassKind.GROUP, null, 20, 3, PassProductPeriodUnit.MONTH, -1);
+                "이름", ClassForm.GROUP, null, 20, 3, PassProductPeriodUnit.MONTH, -1);
 
         // when
         RestTestClient.ResponseSpec result = 수강권을_등록한다(1L, "1", request);
@@ -217,7 +217,7 @@ class PassProductControllerTest {
                         [{
                           "id": 1,
                           "name": "3개월 그룹 20회권",
-                          "classKind": "GROUP",
+                          "classForm": "GROUP",
                           "classTypes": [{"id": 3, "name": "요가"}],
                           "totalCount": 20,
                           "validPeriodAmount": 3,
@@ -270,7 +270,7 @@ class PassProductControllerTest {
         PassProductUpdateRequest request = PassProductFixture.기본_수강권_수정_요청();
         when(passProductService.update(anyLong(), anyLong(), anyLong(), any(PassProductUpdateRequest.class)))
                 .thenReturn(new PassProductResponse(
-                        1L, "6개월 그룹 30회권", ClassKind.GROUP, List.of(), 30, 6, PassProductPeriodUnit.MONTH, 14, false));
+                        1L, "6개월 그룹 30회권", ClassForm.GROUP, List.of(), 30, 6, PassProductPeriodUnit.MONTH, 14, false));
 
         // when
         RestTestClient.ResponseSpec result = 수강권을_수정한다(7L, 1L, "1", request);
@@ -282,7 +282,7 @@ class PassProductControllerTest {
                         {
                           "id": 1,
                           "name": "6개월 그룹 30회권",
-                          "classKind": "GROUP",
+                          "classForm": "GROUP",
                           "classTypes": [],
                           "totalCount": 30,
                           "validPeriodAmount": 6,
@@ -298,7 +298,7 @@ class PassProductControllerTest {
     void 판매_여부가_없으면_COMMON_001을_반환한다() {
         // given
         PassProductUpdateRequest request = PassProductFixture.수강권_수정_요청(
-                "이름", ClassKind.GROUP, null, 20, 3, PassProductPeriodUnit.MONTH, 0, null);
+                "이름", ClassForm.GROUP, null, 20, 3, PassProductPeriodUnit.MONTH, 0, null);
 
         // when
         RestTestClient.ResponseSpec result = 수강권을_수정한다(7L, 1L, "1", request);
@@ -337,7 +337,7 @@ class PassProductControllerTest {
         return new PassProductResponse(
                 1L,
                 PassProductFixture.기본_이름,
-                ClassKind.GROUP,
+                ClassForm.GROUP,
                 List.of(ClassTypeResponse.of(3L, "요가")),
                 PassProductFixture.기본_횟수,
                 PassProductFixture.기본_유효기간,

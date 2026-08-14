@@ -1,16 +1,16 @@
 package com.classitda.passproduct.presentation.dto;
 
-import com.classitda.passproduct.domain.ClassKind;
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
-import com.classitda.passproduct.domain.PassProductPeriodUnit;
 import com.classitda.passproduct.domain.PassProduct;
+import com.classitda.passproduct.domain.PassProductPeriodUnit;
 import java.util.List;
 
 public record PassProductResponse(
         Long id,
         String name,
-        ClassKind classKind,
+        ClassForm classForm,
         List<ClassTypeResponse> classTypes,
         Integer totalCount,
         Integer validPeriodAmount,
@@ -22,7 +22,7 @@ public record PassProductResponse(
         return new PassProductResponse(
                 passProduct.getId(),
                 passProduct.getName(),
-                passProduct.getClassKind(),
+                passProduct.getClassForm(),
                 classTypes.stream()
                         .map(classType -> ClassTypeResponse.of(classType.getId(), classType.getName()))
                         .toList(),
