@@ -673,6 +673,7 @@ class ClassTemplateCommandServiceTest {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .name(member.getName())
                 .studioRole(role)
                 .status(MembershipStatus.ACTIVE)
                 .joinedAt(LocalDateTime.now())
