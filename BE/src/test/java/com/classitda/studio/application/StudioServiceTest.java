@@ -219,6 +219,42 @@ class StudioServiceTest {
                 .hasMessage(StudioErrorCode.NOT_FOUND.getMessage());
     }
 
+    @Test
+    void 내가_속한_시설을_아이디_오름차순으로_조회한다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        StudioResponse first = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청());
+        StudioResponse second = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청());
+        Member other = StudioFixture.아이디가_다른_소유자("other-studio-owner");
+        entityManager.persist(other);
+        entityManager.flush();
+        studioService.save(other.getId(), StudioFixture.기본_시설_생성_요청());
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        List<StudioResponse> responses = studioService.findAllByMemberId(owner.getId());
+
+        // then
+        assertThat(responses)
+                .extracting(StudioResponse::id)
+                .containsExactly(first.id(), second.id());
+    }
+
+    @Test
+    void 속한_시설이_없으면_빈_목록을_반환한다() {
+        // given
+        Member member = StudioFixture.아이디가_다른_소유자("no-studio-member");
+        entityManager.persist(member);
+        entityManager.flush();
+
+        // when
+        List<StudioResponse> responses = studioService.findAllByMemberId(member.getId());
+
+        // then
+        assertThat(responses).isEmpty();
+    }
+
     private Member 소유자를_저장한다() {
         Member owner = StudioFixture.기본_소유자();
         entityManager.persist(owner);
