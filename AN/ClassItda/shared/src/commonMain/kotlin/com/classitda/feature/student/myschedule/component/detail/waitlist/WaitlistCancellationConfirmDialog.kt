@@ -29,7 +29,6 @@ import classitda.shared.generated.resources.my_schedule_waitlist_cancel_confirm_
 import classitda.shared.generated.resources.my_schedule_waitlist_cancel_confirm_dismiss
 import classitda.shared.generated.resources.my_schedule_waitlist_cancel_confirm_submit
 import classitda.shared.generated.resources.my_schedule_waitlist_cancel_confirm_title
-import com.classitda.core.designsystem.AppColor
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -72,7 +71,7 @@ internal fun WaitlistCancellationConfirmDialog(
                     modifier =
                         Modifier
                             .background(
-                                color = AppColor.DarkOrange,
+                                color = StuColors.Orange,
                                 shape = AppShape.Pill,
                             ).padding(AppSpacing.md),
                     contentAlignment = Alignment.Center,

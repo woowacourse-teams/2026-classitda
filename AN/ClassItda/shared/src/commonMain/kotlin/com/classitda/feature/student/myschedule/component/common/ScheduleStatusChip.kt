@@ -24,7 +24,6 @@ import classitda.shared.generated.resources.my_schedule_status_confirmed_mark
 import classitda.shared.generated.resources.my_schedule_status_reservation_canceled
 import classitda.shared.generated.resources.my_schedule_status_reservation_canceled_mark
 import classitda.shared.generated.resources.my_schedule_status_waitlist
-import com.classitda.core.designsystem.AppColor
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -59,16 +58,16 @@ internal fun ScheduleStatusChip(
             label = Res.string.my_schedule_status_confirmed
             mark = Res.string.my_schedule_status_confirmed_mark
             showWaitlistMark = false
-            containerColor = StuColors.SecondaryGreen
-            contentColor = StuColors.PrimaryGreen
+            containerColor = StuColors.GreenLight
+            contentColor = StuColors.Green
         }
 
         ScheduleStatusChipType.WAITLIST -> {
             label = Res.string.my_schedule_status_waitlist
             mark = null
             showWaitlistMark = true
-            containerColor = AppColor.SecondaryOrange
-            contentColor = AppColor.AccentOrange
+            containerColor = StuColors.OrangeLight
+            contentColor = StuColors.Orange
         }
 
         ScheduleStatusChipType.COMPLETED -> {
@@ -83,8 +82,8 @@ internal fun ScheduleStatusChip(
             label = Res.string.my_schedule_status_reservation_canceled
             mark = Res.string.my_schedule_status_reservation_canceled_mark
             showWaitlistMark = false
-            containerColor = AppColor.SecondaryRed
-            contentColor = AppColor.AccentRed
+            containerColor = StuColors.RedLight
+            contentColor = StuColors.Red
         }
     }
 

@@ -215,7 +215,7 @@ private fun CompletedClassInformationRow(
                 style = typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color =
                     if (emphasizeSecondaryValue) {
-                        StuColors.PrimaryGreen
+                        StuColors.Green
                     } else {
                         StuColors.TextSecondary
                     },

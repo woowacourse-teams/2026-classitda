@@ -35,7 +35,6 @@ import classitda.shared.generated.resources.my_schedule_waitlist_position_descri
 import classitda.shared.generated.resources.my_schedule_waitlist_position_title
 import classitda.shared.generated.resources.my_schedule_waitlist_position_value
 import classitda.shared.generated.resources.my_schedule_waitlist_time
-import com.classitda.core.designsystem.AppColor
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -210,7 +209,7 @@ private fun WaitlistPositionCard(position: Int) {
                 Text(
                     text = stringResource(Res.string.my_schedule_waitlist_position_value, position),
                     style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = AppColor.DarkOrange,
+                    color = StuColors.Orange,
                 )
             }
             Text(

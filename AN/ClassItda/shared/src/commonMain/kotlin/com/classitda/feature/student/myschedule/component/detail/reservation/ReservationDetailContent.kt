@@ -261,7 +261,7 @@ private fun ReservationTicketSection(model: ReservationDetailUiModel) {
                         model.ticket.remainingReservationCount,
                     ),
                 style = typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                color = StuColors.PrimaryGreen,
+                color = StuColors.Green,
             )
         }
         HorizontalDivider(
