@@ -2,8 +2,8 @@ package com.classitda.passproduct.application;
 
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
-import com.classitda.classes.exception.ClassTypeErrorCode;
-import com.classitda.classes.exception.ClassTypeException;
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.passproduct.domain.PassProduct;
 import com.classitda.passproduct.domain.repository.PassProductRepository;
 import com.classitda.passproduct.exception.PassProductErrorCode;
@@ -89,7 +89,7 @@ public class PassProductService {
         List<ClassType> classTypes = classTypeRepository.findAllByIdInAndStudioIdOrderByIdAsc(
                 distinctClassTypeIds, studioId);
         if (classTypes.size() != distinctClassTypeIds.size()) {
-            throw new ClassTypeException(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND);
+            throw new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND);
         }
 
         return classTypes;

@@ -13,4 +13,6 @@ public interface ClassTypeRepository extends JpaRepository<ClassType, Long> {
     List<ClassType> findAllByIdInAndStudioIdOrderByIdAsc(Collection<Long> classTypeIds, Long studioId);
 
     Optional<ClassType> findByIdAndStudioId(Long classTypeId, Long studioId);
+
+    List<ClassType> findAllByStudioIdAndIdInOrderByIdAsc(Long studioId, List<Long> classTypeIds);
 }

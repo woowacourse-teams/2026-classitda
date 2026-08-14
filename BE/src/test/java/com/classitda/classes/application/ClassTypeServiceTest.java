@@ -4,10 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
+import com.classitda.classes.domain.ClassForm;
+import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.ClassSessionClassType;
+import com.classitda.classes.domain.ClassSessionStatus;
+import com.classitda.classes.domain.ClassTemplate;
+import com.classitda.classes.domain.ClassTemplateClassType;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
-import com.classitda.classes.exception.ClassTypeErrorCode;
-import com.classitda.classes.exception.ClassTypeException;
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.classes.presentation.dto.ClassTypeUpdateRequest;
@@ -31,11 +37,17 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class})
 @MySqlRepositoryTest
@@ -49,6 +61,7 @@ class ClassTypeServiceTest {
     private final StudioRoleRepository studioRoleRepository;
     private final StudioRolePermissionRepository studioRolePermissionRepository;
     private final EntityManager entityManager;
+    private final TransactionTemplate transactionTemplate;
 
     @Autowired
     ClassTypeServiceTest(
@@ -59,7 +72,8 @@ class ClassTypeServiceTest {
             PermissionRepository permissionRepository,
             StudioRoleRepository studioRoleRepository,
             StudioRolePermissionRepository studioRolePermissionRepository,
-            EntityManager entityManager
+            EntityManager entityManager,
+            TransactionTemplate transactionTemplate
     ) {
         this.classTypeService = classTypeService;
         this.studioService = studioService;
@@ -69,23 +83,25 @@ class ClassTypeServiceTest {
         this.studioRoleRepository = studioRoleRepository;
         this.studioRolePermissionRepository = studioRolePermissionRepository;
         this.entityManager = entityManager;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @Test
-    void 대표_강사가_수업_종류를_등록하면_저장하고_응답한다() {
+    void 대표_강사가_수업_종류를_등록하면_저장한다() {
         // given
         Member owner = 회원을_저장한다("class-type-owner");
         Studio studio = 시설을_만든다(owner);
 
         // when
-        ClassTypeResponse response = classTypeService.save(
-                owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
+        classTypeService.save(owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
 
         // then
-        ClassType saved = classTypeRepository.findById(response.id()).orElseThrow();
-        assertThat(response.name()).isEqualTo("일반 요가");
-        assertThat(saved.getStudio().getId()).isEqualTo(studio.getId());
-        assertThat(saved.getName()).isEqualTo(response.name());
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(studio.getId()))
+                .singleElement()
+                .satisfies(saved -> {
+                    assertThat(saved.getStudio().getId()).isEqualTo(studio.getId());
+                    assertThat(saved.getName()).isEqualTo("일반 요가");
+                });
 
         StudioRole ownerRole = 역할을_찾는다(studio, SystemRole.OWNER);
         assertThat(studioRolePermissionRepository.existsByStudioRoleIdAndPermissionCode(
@@ -172,8 +188,8 @@ class ClassTypeServiceTest {
         // when / then
         assertThatThrownBy(() -> classTypeService.save(
                 owner.getId(), studio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청()))
-                .isInstanceOf(ClassTypeException.class)
-                .hasMessage(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED.getMessage());
+                .isInstanceOf(ClassException.class)
+                .hasMessage(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED.getMessage());
     }
 
     @Test
@@ -185,12 +201,17 @@ class ClassTypeServiceTest {
         classTypeService.save(owner.getId(), firstStudio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
 
         // when
-        ClassTypeResponse response = classTypeService.save(
+        classTypeService.save(
                 owner.getId(), secondStudio.getId(), ClassTypeFixture.기본_수업_종류_생성_요청());
 
         // then
-        assertThat(response.id()).isNotNull();
         assertThat(classTypeRepository.count()).isEqualTo(2);
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(firstStudio.getId()))
+                .extracting(ClassType::getName)
+                .containsExactly("일반 요가");
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(secondStudio.getId()))
+                .extracting(ClassType::getName)
+                .containsExactly("일반 요가");
     }
 
     @Test
@@ -308,7 +329,7 @@ class ClassTypeServiceTest {
     }
 
     @Test
-    void 대표_강사가_수업_종류_이름을_수정하면_같은_아이디와_새_이름을_응답하고_저장한다() {
+    void 대표_강사가_수업_종류_이름을_수정하면_새_이름을_저장한다() {
         // given
         Member owner = 회원을_저장한다("update-owner");
         Studio studio = 시설을_만든다(owner);
@@ -316,14 +337,11 @@ class ClassTypeServiceTest {
         ClassTypeUpdateRequest request = ClassTypeFixture.기본_수업_종류_수정_요청();
 
         // when
-        ClassTypeResponse response = classTypeService.update(
-                owner.getId(), studio.getId(), classType.getId(), request);
+        classTypeService.update(owner.getId(), studio.getId(), classType.getId(), request);
         entityManager.clear();
 
         // then
         ClassType updated = classTypeRepository.findById(classType.getId()).orElseThrow();
-        assertThat(response.id()).isEqualTo(classType.getId());
-        assertThat(response.name()).isEqualTo("리포머 요가");
         assertThat(updated.getName()).isEqualTo("리포머 요가");
     }
 
@@ -335,13 +353,14 @@ class ClassTypeServiceTest {
         ClassType classType = classTypeRepository.saveAndFlush(ClassTypeFixture.기본_수업_종류(studio));
 
         // when
-        ClassTypeResponse response = classTypeService.update(
+        classTypeService.update(
                 owner.getId(), studio.getId(), classType.getId(),
                 ClassTypeFixture.이름이_다른_수업_종류_수정_요청(classType.getName()));
+        entityManager.clear();
 
         // then
-        assertThat(response.id()).isEqualTo(classType.getId());
-        assertThat(response.name()).isEqualTo("일반 요가");
+        assertThat(classTypeRepository.findById(classType.getId()).orElseThrow().getName())
+                .isEqualTo("일반 요가");
     }
 
     @Test
@@ -357,9 +376,9 @@ class ClassTypeServiceTest {
         assertThatThrownBy(() -> classTypeService.update(
                 owner.getId(), studio.getId(), target.getId(),
                 ClassTypeFixture.이름이_다른_수업_종류_수정_요청(duplicate.getName())))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
+                .isInstanceOfSatisfying(ClassException.class, exception ->
                         assertThat(exception.getErrorCode())
-                                .isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NAME_DUPLICATED));
+                                .isEqualTo(ClassErrorCode.CLASS_TYPE_NAME_DUPLICATED));
     }
 
     @Test
@@ -373,11 +392,11 @@ class ClassTypeServiceTest {
                 ClassTypeFixture.이름이_다른_수업_종류(otherStudio, "리포머 요가"));
 
         // when
-        ClassTypeResponse response = classTypeService.update(
+        classTypeService.update(
                 owner.getId(), studio.getId(), target.getId(), ClassTypeFixture.기본_수업_종류_수정_요청());
+        entityManager.clear();
 
         // then
-        assertThat(response.name()).isEqualTo("리포머 요가");
         assertThat(classTypeRepository.findById(target.getId()).orElseThrow().getName())
                 .isEqualTo("리포머 요가");
     }
@@ -442,8 +461,8 @@ class ClassTypeServiceTest {
         // when / then
         assertThatThrownBy(() -> classTypeService.update(
                 owner.getId(), studio.getId(), 999L, ClassTypeFixture.기본_수업_종류_수정_요청()))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
     }
 
     @Test
@@ -459,8 +478,8 @@ class ClassTypeServiceTest {
         assertThatThrownBy(() -> classTypeService.update(
                 owner.getId(), requestedStudio.getId(), classType.getId(),
                 ClassTypeFixture.기본_수업_종류_수정_요청()))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
         assertThat(classTypeRepository.findById(classType.getId()).orElseThrow().getName())
                 .isEqualTo("다른 시설 요가");
     }
@@ -479,13 +498,109 @@ class ClassTypeServiceTest {
         entityManager.clear();
         boolean deleted = classTypeRepository.findById(classType.getId()).isEmpty();
 
-        ClassTypeResponse recreated = classTypeService.save(
+        classTypeService.save(
                 owner.getId(), studio.getId(),
                 ClassTypeFixture.이름이_다른_수업_종류_생성_요청("삭제할 요가"));
 
         // then
         assertThat(deleted).isTrue();
-        assertThat(recreated.name()).isEqualTo("삭제할 요가");
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(studio.getId()))
+                .extracting(ClassType::getName)
+                .containsExactly("삭제할 요가");
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 템플릿에서_사용_중인_수업_종류를_삭제하면_CLASS_TYPE_004가_발생하고_데이터가_유지된다() {
+        // given
+        DeleteConflictScenario scenario = 삭제_충돌_상황을_저장한다(
+                "template-linked-delete-owner", true, false);
+
+        try {
+            // when / then
+            사용_중_삭제_충돌을_검증한다(scenario);
+            transactionTemplate.executeWithoutResult(status -> {
+                assertThat(행_수("class_type", "id", scenario.classTypeId())).isOne();
+                assertThat(행_수("class_template", "id", scenario.classTemplateId())).isOne();
+                assertThat(행_수("class_template_class_type", "class_type_id", scenario.classTypeId())).isOne();
+            });
+        } finally {
+            삭제_충돌_상황을_정리한다(scenario);
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 수업_회차에서_사용_중인_수업_종류를_삭제하면_CLASS_TYPE_004가_발생하고_데이터가_유지된다() {
+        // given
+        DeleteConflictScenario scenario = 삭제_충돌_상황을_저장한다(
+                "session-linked-delete-owner", false, true);
+
+        try {
+            // when / then
+            사용_중_삭제_충돌을_검증한다(scenario);
+            transactionTemplate.executeWithoutResult(status -> {
+                assertThat(행_수("class_type", "id", scenario.classTypeId())).isOne();
+                assertThat(행_수("class_session", "id", scenario.classSessionId())).isOne();
+                assertThat(행_수("class_session_class_type", "class_type_id", scenario.classTypeId())).isOne();
+            });
+        } finally {
+            삭제_충돌_상황을_정리한다(scenario);
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 템플릿_연결만_제거해도_회차에서_사용_중이면_수업_종류를_삭제할_수_없다() {
+        // given
+        DeleteConflictScenario scenario = 삭제_충돌_상황을_저장한다(
+                "partially-linked-delete-owner", true, true);
+
+        try {
+            transactionTemplate.executeWithoutResult(status -> {
+                entityManager.remove(entityManager.find(ClassTemplate.class, scenario.classTemplateId()));
+                entityManager.flush();
+            });
+
+            // when / then
+            사용_중_삭제_충돌을_검증한다(scenario);
+            transactionTemplate.executeWithoutResult(status -> {
+                assertThat(행_수("class_template", "id", scenario.classTemplateId())).isZero();
+                assertThat(행_수("class_template_class_type", "class_type_id", scenario.classTypeId())).isZero();
+                assertThat(행_수("class_type", "id", scenario.classTypeId())).isOne();
+                assertThat(행_수("class_session", "id", scenario.classSessionId())).isOne();
+                assertThat(행_수("class_session_class_type", "class_type_id", scenario.classTypeId())).isOne();
+            });
+        } finally {
+            삭제_충돌_상황을_정리한다(scenario);
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    void 템플릿과_회차가_삭제되어_모든_연결이_사라지면_수업_종류를_삭제할_수_있다() {
+        // given
+        DeleteConflictScenario scenario = 삭제_충돌_상황을_저장한다(
+                "unlinked-delete-owner", true, true);
+        transactionTemplate.executeWithoutResult(status -> {
+            entityManager.remove(entityManager.find(ClassTemplate.class, scenario.classTemplateId()));
+            entityManager.remove(entityManager.find(ClassSession.class, scenario.classSessionId()));
+            entityManager.flush();
+        });
+
+        try {
+            // when
+            classTypeService.delete(scenario.ownerId(), scenario.studioId(), scenario.classTypeId());
+
+            // then
+            transactionTemplate.executeWithoutResult(status -> {
+                assertThat(행_수("class_template_class_type", "class_type_id", scenario.classTypeId())).isZero();
+                assertThat(행_수("class_session_class_type", "class_type_id", scenario.classTypeId())).isZero();
+                assertThat(행_수("class_type", "id", scenario.classTypeId())).isZero();
+            });
+        } finally {
+            삭제_충돌_상황을_정리한다(scenario);
+        }
     }
 
     @Test
@@ -529,8 +644,8 @@ class ClassTypeServiceTest {
 
         // when / then
         assertThatThrownBy(() -> classTypeService.delete(owner.getId(), studio.getId(), 999L))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
     }
 
     @Test
@@ -545,8 +660,8 @@ class ClassTypeServiceTest {
         // when / then
         assertThatThrownBy(() -> classTypeService.delete(
                 owner.getId(), requestedStudio.getId(), classType.getId()))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
         assertThat(classTypeRepository.findById(classType.getId())).isPresent();
     }
 
@@ -564,8 +679,145 @@ class ClassTypeServiceTest {
 
         // when / then
         assertThatThrownBy(() -> classTypeService.delete(owner.getId(), studio.getId(), classTypeId))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
+    }
+
+    private DeleteConflictScenario 삭제_충돌_상황을_저장한다(
+            String ownerProviderId,
+            boolean templateLinked,
+            boolean sessionLinked
+    ) {
+        return transactionTemplate.execute(status -> {
+            Member owner = StudioFixture.아이디가_다른_소유자(ownerProviderId);
+            entityManager.persist(owner);
+            Studio studio = Studio.builder()
+                    .owner(owner)
+                    .name("수업 종류 삭제 충돌 시설")
+                    .openTime(LocalTime.of(9, 0))
+                    .closeTime(LocalTime.of(22, 0))
+                    .build();
+            entityManager.persist(studio);
+            ClassType classType = ClassTypeFixture.이름이_다른_수업_종류(studio, "사용 중인 요가");
+            entityManager.persist(classType);
+            entityManager.flush();
+
+            Long classTemplateId = null;
+            if (templateLinked) {
+                ClassTemplate template = ClassTemplate.builder()
+                        .studioId(studio.getId())
+                        .name("사용 중인 템플릿")
+                        .description("삭제 충돌 검증")
+                        .classForm(ClassForm.GROUP)
+                        .durationMinutes(60)
+                        .startTime(LocalTime.of(20, 0))
+                        .recurringDays(Set.of(DayOfWeek.MONDAY))
+                        .capacity(10)
+                        .build();
+                entityManager.persist(template);
+                entityManager.flush();
+                entityManager.persist(ClassTemplateClassType.builder()
+                        .classTemplateId(template.getId())
+                        .classTypeId(classType.getId())
+                        .build());
+                classTemplateId = template.getId();
+            }
+
+            Long instructorId = null;
+            Long classSessionId = null;
+            if (sessionLinked) {
+                Member instructor = StudioFixture.아이디가_다른_소유자(ownerProviderId + "-instructor");
+                entityManager.persist(instructor);
+                StudioRole instructorRole = SystemRole.INSTRUCTOR.toStudioRole(studio);
+                entityManager.persist(instructorRole);
+                StudioMembership instructorMembership = StudioMembership.builder()
+                        .studio(studio)
+                        .member(instructor)
+                        .studioRole(instructorRole)
+                        .status(MembershipStatus.ACTIVE)
+                        .joinedAt(LocalDateTime.now())
+                        .build();
+                entityManager.persist(instructorMembership);
+                ClassSession session = ClassSession.builder()
+                        .studioId(studio.getId())
+                        .instructorMembership(instructorMembership)
+                        .name("사용 중인 회차")
+                        .description("삭제 충돌 검증")
+                        .classForm(ClassForm.GROUP)
+                        .durationMinutes(60)
+                        .capacity(10)
+                        .startAt(LocalDateTime.of(2026, 8, 17, 20, 0))
+                        .status(ClassSessionStatus.OPENED)
+                        .build();
+                entityManager.persist(session);
+                entityManager.flush();
+                entityManager.persist(ClassSessionClassType.builder()
+                        .classSessionId(session.getId())
+                        .classTypeId(classType.getId())
+                        .build());
+                instructorId = instructor.getId();
+                classSessionId = session.getId();
+            }
+            entityManager.flush();
+
+            return new DeleteConflictScenario(
+                    owner.getId(), instructorId, studio.getId(), classType.getId(), classTemplateId, classSessionId);
+        });
+    }
+
+    private void 사용_중_삭제_충돌을_검증한다(DeleteConflictScenario scenario) {
+        assertThatThrownBy(() -> classTypeService.delete(
+                scenario.ownerId(), scenario.studioId(), scenario.classTypeId()))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_IN_USE));
+    }
+
+    private long 행_수(String tableName, String columnName, Long id) {
+        return ((Number) entityManager.createNativeQuery(
+                        "SELECT COUNT(*) FROM " + tableName + " WHERE " + columnName + " = :id")
+                .setParameter("id", id)
+                .getSingleResult()).longValue();
+    }
+
+    private void 삭제_충돌_상황을_정리한다(DeleteConflictScenario scenario) {
+        transactionTemplate.executeWithoutResult(status -> {
+            entityManager.createNativeQuery("DELETE FROM class_template_class_type WHERE class_type_id = :classTypeId")
+                    .setParameter("classTypeId", scenario.classTypeId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM class_session_class_type WHERE class_type_id = :classTypeId")
+                    .setParameter("classTypeId", scenario.classTypeId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM class_template WHERE studio_id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM class_session WHERE studio_id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM class_type WHERE id = :classTypeId")
+                    .setParameter("classTypeId", scenario.classTypeId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM studio_membership WHERE studio_id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM studio_role_permission WHERE studio_role_id IN "
+                            + "(SELECT id FROM studio_role WHERE studio_id = :studioId)")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM studio_role WHERE studio_id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            entityManager.createNativeQuery("DELETE FROM studio WHERE id = :studioId")
+                    .setParameter("studioId", scenario.studioId())
+                    .executeUpdate();
+            if (scenario.instructorId() != null) {
+                entityManager.createNativeQuery("DELETE FROM member WHERE id = :memberId")
+                        .setParameter("memberId", scenario.instructorId())
+                        .executeUpdate();
+            }
+            entityManager.createNativeQuery("DELETE FROM member WHERE id = :memberId")
+                    .setParameter("memberId", scenario.ownerId())
+                    .executeUpdate();
+        });
     }
 
     private Member 회원을_저장한다(String providerId) {
@@ -619,5 +871,15 @@ class ClassTypeServiceTest {
                 .build());
         entityManager.flush();
         return member;
+    }
+
+    private record DeleteConflictScenario(
+            Long ownerId,
+            Long instructorId,
+            Long studioId,
+            Long classTypeId,
+            Long classTemplateId,
+            Long classSessionId
+    ) {
     }
 }

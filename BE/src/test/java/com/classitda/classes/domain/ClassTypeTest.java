@@ -3,8 +3,8 @@ package com.classitda.classes.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classitda.classes.exception.ClassTypeErrorCode;
-import com.classitda.classes.exception.ClassTypeException;
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.domain.Studio;
@@ -33,8 +33,8 @@ class ClassTypeTest {
 
         // when / then
         assertThatThrownBy(() -> ClassTypeFixture.이름이_다른_수업_종류(studio, null))
-                .isInstanceOf(ClassTypeException.class)
-                .hasMessage(ClassTypeErrorCode.INVALID_NAME.getMessage());
+                .isInstanceOf(ClassException.class)
+                .hasMessage(ClassErrorCode.INVALID_NAME.getMessage());
     }
 
     @Test
@@ -44,8 +44,8 @@ class ClassTypeTest {
 
         // when / then
         assertThatThrownBy(() -> ClassTypeFixture.이름이_다른_수업_종류(studio, "   "))
-                .isInstanceOf(ClassTypeException.class)
-                .hasMessage(ClassTypeErrorCode.INVALID_NAME.getMessage());
+                .isInstanceOf(ClassException.class)
+                .hasMessage(ClassErrorCode.INVALID_NAME.getMessage());
     }
 
     @Test
@@ -56,8 +56,8 @@ class ClassTypeTest {
 
         // when / then
         assertThatThrownBy(() -> ClassTypeFixture.이름이_다른_수업_종류(studio, name))
-                .isInstanceOf(ClassTypeException.class)
-                .hasMessage(ClassTypeErrorCode.INVALID_NAME.getMessage());
+                .isInstanceOf(ClassException.class)
+                .hasMessage(ClassErrorCode.INVALID_NAME.getMessage());
     }
 
     @Test
@@ -104,8 +104,8 @@ class ClassTypeTest {
 
         // when / then
         assertThatThrownBy(() -> classType.updateName(null))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.INVALID_NAME));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.INVALID_NAME));
         assertThat(classType.getName()).isEqualTo("일반 요가");
     }
 
@@ -116,8 +116,8 @@ class ClassTypeTest {
 
         // when / then
         assertThatThrownBy(() -> classType.updateName("   "))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.INVALID_NAME));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.INVALID_NAME));
         assertThat(classType.getName()).isEqualTo("일반 요가");
     }
 
@@ -128,8 +128,8 @@ class ClassTypeTest {
 
         // when / then
         assertThatThrownBy(() -> classType.updateName("가".repeat(51)))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.INVALID_NAME));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.INVALID_NAME));
         assertThat(classType.getName()).isEqualTo("일반 요가");
     }
 

@@ -1,7 +1,7 @@
 package com.classitda.classes.domain;
 
-import com.classitda.classes.exception.ClassTypeErrorCode;
-import com.classitda.classes.exception.ClassTypeException;
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.studio.domain.Studio;
 import jakarta.persistence.Column;
@@ -51,7 +51,7 @@ public class ClassType extends BaseEntity {
 
     private void validateName(String name) {
         if (name == null || name.isBlank() || name.length() > MAX_NAME_LENGTH) {
-            throw new ClassTypeException(ClassTypeErrorCode.INVALID_NAME);
+            throw new ClassException(ClassErrorCode.INVALID_NAME);
         }
     }
 }

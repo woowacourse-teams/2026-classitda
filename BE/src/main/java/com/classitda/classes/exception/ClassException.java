@@ -2,9 +2,9 @@ package com.classitda.classes.exception;
 
 import com.classitda.common.exception.ClassitdaException;
 
-public class ClassTypeException extends ClassitdaException {
+public class ClassException extends ClassitdaException {
 
-    public ClassTypeException(ClassTypeErrorCode errorCode) {
+    public ClassException(ClassErrorCode errorCode) {
         super(errorCode);
     }
 }

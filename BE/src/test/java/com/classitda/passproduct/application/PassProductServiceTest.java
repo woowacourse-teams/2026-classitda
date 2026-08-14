@@ -8,8 +8,8 @@ import com.classitda.classes.application.ClassTypeService;
 import com.classitda.passproduct.domain.ClassKind;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
-import com.classitda.classes.exception.ClassTypeErrorCode;
-import com.classitda.classes.exception.ClassTypeException;
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.member.domain.Member;
 import com.classitda.passproduct.domain.PassProductPeriodUnit;
@@ -158,8 +158,8 @@ class PassProductServiceTest {
         assertThatThrownBy(() -> passProductService.save(
                 owner.getId(), studio.getId(),
                 PassProductFixture.수업_종류를_지정한_수강권_생성_요청(List.of(999L))))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
         assertThat(passProductRepository.count()).isZero();
     }
 
@@ -175,8 +175,8 @@ class PassProductServiceTest {
         assertThatThrownBy(() -> passProductService.save(
                 owner.getId(), studio.getId(),
                 PassProductFixture.수업_종류를_지정한_수강권_생성_요청(List.of(otherClassTypeId))))
-                .isInstanceOfSatisfying(ClassTypeException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(ClassTypeErrorCode.CLASS_TYPE_NOT_FOUND));
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
         assertThat(passProductRepository.count()).isZero();
     }
 
