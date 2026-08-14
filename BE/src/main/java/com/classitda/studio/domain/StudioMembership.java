@@ -2,6 +2,8 @@ package com.classitda.studio.domain;
 
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.member.domain.Member;
+import com.classitda.studio.exception.StudioErrorCode;
+import com.classitda.studio.exception.StudioException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -25,6 +27,8 @@ import lombok.NoArgsConstructor;
 @Entity
 public class StudioMembership extends BaseEntity {
 
+    private static final int MAX_NAME_LENGTH = 50;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,6 +45,9 @@ public class StudioMembership extends BaseEntity {
     @JoinColumn(name = "studio_role_id", nullable = false)
     private StudioRole studioRole;
 
+    @Column(nullable = false, length = MAX_NAME_LENGTH)
+    private String name;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private MembershipStatus status;
@@ -53,17 +60,26 @@ public class StudioMembership extends BaseEntity {
             Studio studio,
             Member member,
             StudioRole studioRole,
+            String name,
             MembershipStatus status,
             LocalDateTime joinedAt
     ) {
+        validateName(name);
         this.studio = studio;
         this.member = member;
         this.studioRole = studioRole;
+        this.name = name;
         this.status = status;
         this.joinedAt = joinedAt;
     }
 
     public boolean isInstructor() {
         return studioRole.isInstructor();
+    }
+
+    private void validateName(String name) {
+        if (name == null || name.isBlank() || name.length() > MAX_NAME_LENGTH) {
+            throw new StudioException(StudioErrorCode.INVALID_MEMBERSHIP_NAME);
+        }
     }
 }
