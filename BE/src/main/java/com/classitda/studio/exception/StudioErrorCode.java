@@ -22,6 +22,11 @@ public enum StudioErrorCode implements ErrorCode {
     // MEMBERSHIP
     NOT_MEMBERSHIP("MEMBERSHIP-001", "해당 시설의 소속이 아닙니다.", HttpStatus.FORBIDDEN),
     MEMBERSHIP_INACTIVE("MEMBERSHIP-002", "이용이 정지된 소속입니다.", HttpStatus.FORBIDDEN),
+    INVALID_MEMBERSHIP_NAME("MEMBERSHIP-003", "소속 이름은 1자 이상 50자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
+    MEMBERSHIP_ALREADY_EXISTS("MEMBERSHIP-004", "이미 시설에 등록된 회원입니다.", HttpStatus.CONFLICT),
+    MEMBERSHIP_NOT_FOUND("MEMBERSHIP-005", "시설 소속을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    STUDIO_ROLE_NOT_FOUND("ROLE-001", "시설 역할을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
     // PERMISSION
     PERMISSION_DENIED("PERMISSION-001", "이 작업을 수행할 권한이 없습니다.", HttpStatus.FORBIDDEN);

@@ -44,6 +44,11 @@ public class Member extends BaseEntity {
         this.profileImageUrl = profileImageUrl;
     }
 
+    public void updateName(String name) {
+        validateName(name);
+        this.name = name;
+    }
+
     private void validateName(String name) {
         if (name == null || name.isBlank()) {
             throw new MemberException(MemberErrorCode.MEMBER_NAME_REQUIRED);

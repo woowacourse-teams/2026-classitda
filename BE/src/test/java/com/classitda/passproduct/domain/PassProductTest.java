@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.member.domain.Member;
@@ -28,7 +29,7 @@ class PassProductTest {
         // then
         assertThat(passProduct.getStudio()).isSameAs(studio);
         assertThat(passProduct.getName()).isEqualTo(PassProductFixture.기본_이름);
-        assertThat(passProduct.getClassKind()).isEqualTo(ClassKind.GROUP);
+        assertThat(passProduct.getClassForm()).isEqualTo(ClassForm.GROUP);
         assertThat(passProduct.getTotalCount()).isEqualTo(PassProductFixture.기본_횟수);
         assertThat(passProduct.getValidPeriodUnit()).isEqualTo(PassProductPeriodUnit.MONTH);
         assertThat(passProduct.isActive()).isTrue();
@@ -134,7 +135,7 @@ class PassProductTest {
 
         // when / then
         assertThatThrownBy(() -> PassProductFixture.수강권(
-                studio, "이름", ClassKind.GROUP, 20, null, PassProductPeriodUnit.MONTH, 0))
+                studio, "이름", ClassForm.GROUP, 20, null, PassProductPeriodUnit.MONTH, 0))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(PassProductErrorCode.INVALID_VALID_PERIOD));
     }
@@ -146,7 +147,7 @@ class PassProductTest {
 
         // when / then
         assertThatThrownBy(() -> PassProductFixture.수강권(
-                studio, "이름", ClassKind.GROUP, 20, 3, null, 0))
+                studio, "이름", ClassForm.GROUP, 20, 3, null, 0))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(PassProductErrorCode.INVALID_VALID_PERIOD));
     }
@@ -158,7 +159,7 @@ class PassProductTest {
 
         // when / then
         assertThatThrownBy(() -> PassProductFixture.수강권(
-                studio, "이름", ClassKind.GROUP, 20, 0, PassProductPeriodUnit.MONTH, 0))
+                studio, "이름", ClassForm.GROUP, 20, 0, PassProductPeriodUnit.MONTH, 0))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(PassProductErrorCode.INVALID_VALID_PERIOD));
     }
@@ -170,7 +171,7 @@ class PassProductTest {
 
         // when / then
         assertThatThrownBy(() -> PassProductFixture.수강권(
-                studio, "이름", ClassKind.GROUP, 0, 3, PassProductPeriodUnit.MONTH, 0))
+                studio, "이름", ClassForm.GROUP, 0, 3, PassProductPeriodUnit.MONTH, 0))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(PassProductErrorCode.INVALID_TOTAL_COUNT));
     }
@@ -182,7 +183,7 @@ class PassProductTest {
 
         // when / then
         assertThatThrownBy(() -> PassProductFixture.수강권(
-                studio, "이름", ClassKind.GROUP, null, null, null, 0))
+                studio, "이름", ClassForm.GROUP, null, null, null, 0))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode())
                                 .isEqualTo(PassProductErrorCode.NO_EXPIRATION_CONDITION));
@@ -195,7 +196,7 @@ class PassProductTest {
 
         // when
         PassProduct passProduct = PassProductFixture.수강권(
-                studio, "3개월 무제한권", ClassKind.GROUP, null, 3, PassProductPeriodUnit.MONTH, 0);
+                studio, "3개월 무제한권", ClassForm.GROUP, null, 3, PassProductPeriodUnit.MONTH, 0);
 
         // then
         assertThat(passProduct.isUnlimitedCount()).isTrue();
@@ -209,7 +210,7 @@ class PassProductTest {
 
         // when
         PassProduct passProduct = PassProductFixture.수강권(
-                studio, "기한 없는 20회권", ClassKind.PERSONAL, 20, null, null, 0);
+                studio, "기한 없는 20회권", ClassForm.INDIVIDUAL, 20, null, null, 0);
 
         // then
         assertThat(passProduct.isUnlimitedPeriod()).isTrue();
@@ -223,7 +224,7 @@ class PassProductTest {
 
         // when / then
         assertThatThrownBy(() -> PassProductFixture.수강권(
-                studio, "이름", ClassKind.GROUP, 20, 3, PassProductPeriodUnit.MONTH, -1))
+                studio, "이름", ClassForm.GROUP, 20, 3, PassProductPeriodUnit.MONTH, -1))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(PassProductErrorCode.INVALID_HOLD_DAYS));
     }
@@ -235,7 +236,7 @@ class PassProductTest {
 
         // when / then
         assertThatThrownBy(() -> PassProductFixture.수강권(
-                studio, "이름", ClassKind.GROUP, 20, null, null, 1))
+                studio, "이름", ClassForm.GROUP, 20, null, null, 1))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(PassProductErrorCode.HOLD_DAYS_NOT_ALLOWED));
     }
@@ -247,7 +248,7 @@ class PassProductTest {
 
         // when / then
         assertThatCode(() -> PassProductFixture.수강권(
-                studio, "이름", ClassKind.GROUP, 20, null, null, 0))
+                studio, "이름", ClassForm.GROUP, 20, null, null, 0))
                 .doesNotThrowAnyException();
     }
 
@@ -257,11 +258,11 @@ class PassProductTest {
         PassProduct passProduct = PassProductFixture.기본_수강권(기본_시설());
 
         // when
-        passProduct.update("개인 10회권", ClassKind.PERSONAL, 10, 30, PassProductPeriodUnit.DAY, 3, false);
+        passProduct.update("개인 10회권", ClassForm.INDIVIDUAL, 10, 30, PassProductPeriodUnit.DAY, 3, false);
 
         // then
         assertThat(passProduct.getName()).isEqualTo("개인 10회권");
-        assertThat(passProduct.getClassKind()).isEqualTo(ClassKind.PERSONAL);
+        assertThat(passProduct.getClassForm()).isEqualTo(ClassForm.INDIVIDUAL);
         assertThat(passProduct.getTotalCount()).isEqualTo(10);
         assertThat(passProduct.getValidPeriodAmount()).isEqualTo(30);
         assertThat(passProduct.getValidPeriodUnit()).isEqualTo(PassProductPeriodUnit.DAY);
@@ -276,7 +277,7 @@ class PassProductTest {
 
         // when / then
         assertThatThrownBy(() -> passProduct.update(
-                "무제한권", ClassKind.GROUP, null, null, null, 0, true))
+                "무제한권", ClassForm.GROUP, null, null, null, 0, true))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode())
                                 .isEqualTo(PassProductErrorCode.NO_EXPIRATION_CONDITION));

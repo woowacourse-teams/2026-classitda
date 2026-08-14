@@ -1,9 +1,9 @@
 package com.classitda.passproduct.presentation.dto;
 
-import com.classitda.passproduct.domain.ClassKind;
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
-import com.classitda.passproduct.domain.PassProductPeriodUnit;
 import com.classitda.passproduct.domain.PassProduct;
+import com.classitda.passproduct.domain.PassProductPeriodUnit;
 import com.classitda.studio.domain.Studio;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,7 +18,7 @@ public record PassProductCreateRequest(
         String name,
 
         @NotNull(message = "수업 형태는 필수입니다.")
-        ClassKind classKind,
+        ClassForm classForm,
 
         @NotEmpty(message = "수업 종류를 하나 이상 지정해야 합니다.")
         List<Long> classTypeIds,
@@ -35,7 +35,7 @@ public record PassProductCreateRequest(
 ) {
     public static PassProductCreateRequest of(
             String name,
-            ClassKind classKind,
+            ClassForm classForm,
             List<Long> classTypeIds,
             Integer totalCount,
             Integer validPeriodAmount,
@@ -43,14 +43,14 @@ public record PassProductCreateRequest(
             Integer totalHoldDays
     ) {
         return new PassProductCreateRequest(
-                name, classKind, classTypeIds, totalCount, validPeriodAmount, validPeriodUnit, totalHoldDays);
+                name, classForm, classTypeIds, totalCount, validPeriodAmount, validPeriodUnit, totalHoldDays);
     }
 
     public PassProduct toEntity(Studio studio, List<ClassType> classTypes) {
         return PassProduct.builder()
                 .studio(studio)
                 .name(name)
-                .classKind(classKind)
+                .classForm(classForm)
                 .classTypes(classTypes)
                 .totalCount(totalCount)
                 .validPeriodAmount(validPeriodAmount)

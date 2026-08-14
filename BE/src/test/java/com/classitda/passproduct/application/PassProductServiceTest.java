@@ -5,15 +5,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
 import com.classitda.classes.application.ClassTypeService;
-import com.classitda.passproduct.domain.ClassKind;
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.member.domain.Member;
-import com.classitda.passproduct.domain.PassProductPeriodUnit;
 import com.classitda.passproduct.domain.PassProduct;
+import com.classitda.passproduct.domain.PassProductPeriodUnit;
 import com.classitda.passproduct.domain.repository.PassProductClassTypeRepository;
 import com.classitda.passproduct.domain.repository.PassProductRepository;
 import com.classitda.passproduct.exception.PassProductErrorCode;
@@ -89,7 +89,7 @@ class PassProductServiceTest {
         // then
         PassProduct saved = passProductRepository.findById(response.id()).orElseThrow();
         assertThat(response.name()).isEqualTo(PassProductFixture.기본_이름);
-        assertThat(response.classKind()).isEqualTo(ClassKind.GROUP);
+        assertThat(response.classForm()).isEqualTo(ClassForm.GROUP);
         assertThat(response.active()).isTrue();
         assertThat(saved.getStudio().getId()).isEqualTo(studio.getId());
         assertThat(saved.getTotalCount()).isEqualTo(PassProductFixture.기본_횟수);
@@ -269,7 +269,7 @@ class PassProductServiceTest {
         passProductService.update(
                 owner.getId(), studio.getId(), passProduct.getId(),
                 PassProductFixture.수강권_수정_요청(
-                        "중지된 수강권", ClassKind.GROUP,
+                        "중지된 수강권", ClassForm.GROUP,
                         시설의_수업_종류(studio).stream().map(ClassType::getId).toList(),
                         20, 3, PassProductPeriodUnit.MONTH, 0, false));
         entityManager.flush();
@@ -294,7 +294,7 @@ class PassProductServiceTest {
                 PassProductFixture.수업_종류를_지정한_수강권_생성_요청(List.of(classTypes.getFirst().getId())));
         passProductService.save(owner.getId(), studio.getId(),
                 PassProductFixture.수강권_생성_요청(
-                        "두 종류 수강권", ClassKind.GROUP,
+                        "두 종류 수강권", ClassForm.GROUP,
                         classTypes.stream().map(ClassType::getId).toList(),
                         10, 1, PassProductPeriodUnit.MONTH, 0));
         entityManager.flush();
@@ -376,7 +376,7 @@ class PassProductServiceTest {
         PassProductResponse response = passProductService.update(
                 owner.getId(), studio.getId(), passProduct.getId(),
                 PassProductFixture.수강권_수정_요청(
-                        "6개월 그룹 30회권", ClassKind.GROUP,
+                        "6개월 그룹 30회권", ClassForm.GROUP,
                         시설의_수업_종류(studio).stream().map(ClassType::getId).toList(),
                         30, 6, PassProductPeriodUnit.MONTH, 14, true));
         entityManager.flush();
@@ -406,7 +406,7 @@ class PassProductServiceTest {
         PassProductResponse response = passProductService.update(
                 owner.getId(), studio.getId(), created.id(),
                 PassProductFixture.수강권_수정_요청(
-                        "교체된 수강권", ClassKind.GROUP, List.of(classTypes.getLast().getId()),
+                        "교체된 수강권", ClassForm.GROUP, List.of(classTypes.getLast().getId()),
                         20, 3, PassProductPeriodUnit.MONTH, 0, true));
         entityManager.flush();
         entityManager.clear();
@@ -433,7 +433,7 @@ class PassProductServiceTest {
         assertThatThrownBy(() -> passProductService.update(
                 owner.getId(), studio.getId(), created.id(),
                 PassProductFixture.수강권_수정_요청(
-                        "전체 사용 수강권", ClassKind.GROUP, List.of(), 20, 3, PassProductPeriodUnit.MONTH, 0, true)))
+                        "전체 사용 수강권", ClassForm.GROUP, List.of(), 20, 3, PassProductPeriodUnit.MONTH, 0, true)))
                 .isInstanceOfSatisfying(PassProductException.class, exception ->
                         assertThat(exception.getErrorCode())
                                 .isEqualTo(PassProductErrorCode.CLASS_TYPE_REQUIRED));
@@ -456,7 +456,7 @@ class PassProductServiceTest {
         PassProductResponse response = passProductService.update(
                 owner.getId(), studio.getId(), created.id(),
                 PassProductFixture.수강권_수정_요청(
-                        "같은 수업 종류 수강권", ClassKind.GROUP, List.of(classTypeId),
+                        "같은 수업 종류 수강권", ClassForm.GROUP, List.of(classTypeId),
                         20, 3, PassProductPeriodUnit.MONTH, 0, true));
         entityManager.flush();
         entityManager.clear();
@@ -556,6 +556,7 @@ class PassProductServiceTest {
         entityManager.persist(StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .name(member.getName())
                 .studioRole(role)
                 .status(status)
                 .joinedAt(LocalDateTime.now())

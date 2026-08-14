@@ -57,7 +57,7 @@ public class PassProductService {
         List<ClassType> classTypes = getClassTypes(studioId, request.classTypeIdsOrEmpty());
         passProduct.update(
                 request.name(),
-                request.classKind(),
+                request.classForm(),
                 request.totalCount(),
                 request.validPeriodAmount(),
                 request.validPeriodUnit(),

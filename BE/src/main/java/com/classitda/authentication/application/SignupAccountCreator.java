@@ -35,7 +35,7 @@ public class SignupAccountCreator {
     public Long create(SignupRequest request, SignupSession signupSession, String verifiedPhoneNumber) {
         List<Term> agreedTerms = findAndValidateAgreedTerms(request.agreedTermIds());
 
-        Member member = saveMember(request.name(), verifiedPhoneNumber);
+        Member member = saveOrUpdateMember(request.name(), verifiedPhoneNumber);
         saveAuthAccount(member.getId(), signupSession);
         saveAgreements(member, agreedTerms);
         return member.getId();
@@ -104,6 +104,17 @@ public class SignupAccountCreator {
         if (requiredTermMissing) {
             throw new MemberException(MemberErrorCode.REQUIRED_TERM_AGREEMENT_MISSING);
         }
+    }
+
+    private Member saveOrUpdateMember(String name, String verifiedPhoneNumber) {
+        return memberRepository.findByPhoneNumber(verifiedPhoneNumber)
+                .map(member -> updateMemberName(member, name))
+                .orElseGet(() -> saveMember(name, verifiedPhoneNumber));
+    }
+
+    private Member updateMemberName(Member member, String name) {
+        member.updateName(name);
+        return memberRepository.saveAndFlush(member);
     }
 
     private Member saveMember(String name, String verifiedPhoneNumber) {

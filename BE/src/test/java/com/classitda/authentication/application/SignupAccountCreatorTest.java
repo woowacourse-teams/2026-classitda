@@ -123,6 +123,31 @@ class SignupAccountCreatorTest {
     }
 
     @Test
+    void 시설이_미리_등록해_둔_번호로_가입하면_기존_회원에_인증_계정을_붙이고_이름을_덮어쓴다() {
+        // given
+        Member preRegistered = memberRepository.saveAndFlush(Member.builder()
+                .name("시설이적어둔이름")
+                .phoneNumber(PHONE_NUMBER)
+                .build());
+        Long preRegisteredId = preRegistered.getId();
+        long memberCountBefore = memberRepository.count();
+
+        // when
+        Long memberId = signupAccountCreator.create(validRequest(), SESSION, PHONE_NUMBER);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(memberId).isEqualTo(preRegisteredId);
+        assertThat(memberRepository.count()).isEqualTo(memberCountBefore);
+
+        Member member = memberRepository.findById(memberId).orElseThrow();
+        assertThat(member.getName()).isEqualTo("가입회원");
+        assertThat(member.getPhoneNumber()).isEqualTo(PHONE_NUMBER);
+        assertThat(authAccountRepository.existsByMemberId(memberId)).isTrue();
+    }
+
+    @Test
     void 선택_약관에_동의하지_않으면_필수_약관_행만_저장한다() {
         // given
         List<Long> requiredTermIds = currentTerms().stream()

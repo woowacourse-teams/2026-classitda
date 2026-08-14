@@ -6,6 +6,7 @@ import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
 import com.classitda.studio.presentation.dto.StudioUpdateRequest;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,14 @@ public class StudioController implements StudioControllerApi {
         StudioResponse response = studioService.save(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    @Override
+    @GetMapping(path = "/me", version = "1")
+    public List<StudioResponse> findAllByMemberId(
+            @CurrentMemberId Long memberId
+    ) {
+        return studioService.findAllByMemberId(memberId);
     }
 
     @Override
