@@ -236,6 +236,42 @@ class ClassTemplateControllerTest {
     }
 
     @Test
+    void 수업_템플릿을_삭제하면_204와_빈_본문을_반환하고_정확한_ID를_위임한다() {
+        // when
+        RestTestClient.ResponseSpec result = 수업_템플릿을_삭제한다(7L, 11L, "1");
+
+        // then
+        result.expectStatus().isNoContent().expectBody().isEmpty();
+        verify(commandService).delete(1L, 7L, 11L);
+    }
+
+    @Test
+    void 삭제_버전이_없거나_지원되지_않으면_명령_서비스를_호출하지_않는다() {
+        // when / then
+        오류를_검증한다(client.delete()
+                .uri("/api/studios/7/class-templates/11")
+                .exchange(), 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        오류를_검증한다(수업_템플릿을_삭제한다(7L, 11L, "2"),
+                400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(commandService, never()).delete(anyLong(), anyLong(), anyLong());
+    }
+
+    @Test
+    void 삭제_서비스의_권한과_템플릿_없음_예외를_정확히_직렬화한다() {
+        // given
+        doThrow(
+                new StudioException(StudioErrorCode.PERMISSION_DENIED),
+                new ClassException(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND)
+        ).when(commandService).delete(1L, 7L, 11L);
+
+        // when / then
+        오류를_검증한다(수업_템플릿을_삭제한다(7L, 11L, "1"),
+                403, "PERMISSION-001", "이 작업을 수행할 권한이 없습니다.");
+        오류를_검증한다(수업_템플릿을_삭제한다(7L, 11L, "1"),
+                404, "CLASS_TEMPLATE-007", "수업 템플릿을 찾을 수 없습니다.");
+    }
+
+    @Test
     void 수업_템플릿_목록은_200과_순서가_유지된_최상위_배열을_반환한다() {
         // given
         when(queryService.findAll(1L, 7L)).thenReturn(List.of(new ClassTemplateResponse(
@@ -315,6 +351,17 @@ class ClassTemplateControllerTest {
                 .header("X-API-Version", version)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec 수업_템플릿을_삭제한다(
+            Long studioId,
+            Long classTemplateId,
+            String version
+    ) {
+        return client.delete()
+                .uri("/api/studios/{studioId}/class-templates/{classTemplateId}", studioId, classTemplateId)
+                .header("X-API-Version", version)
                 .exchange();
     }
 

@@ -7,6 +7,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 
 import com.classitda.classes.domain.ClassForm;
+import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.ClassSessionClassType;
+import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassTemplate;
 import com.classitda.classes.domain.ClassTemplateClassType;
 import com.classitda.classes.domain.ClassType;
@@ -468,6 +471,118 @@ class ClassTemplateCommandServiceTest {
         }
     }
 
+    @Test
+    void 같은_시설의_수업_템플릿을_물리_삭제하면_소유_행만_연쇄_삭제하고_수업_종류와_회차는_보존한다() {
+        // given
+        Member owner = 회원을_저장한다("template-delete-owner");
+        Studio studio = 시설을_저장한다(owner, "삭제 시설");
+        ClassType yoga = 수업_종류를_저장한다(studio, "삭제 검증 요가");
+        ClassType pilates = 수업_종류를_저장한다(studio, "삭제 검증 필라테스");
+        ClassTemplate template = 템플릿을_저장한다(studio, "삭제할 템플릿", "물리 삭제 검증",
+                Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY));
+        연결을_저장한다(template, yoga, pilates);
+
+        Member instructor = 회원을_저장한다("template-delete-instructor");
+        StudioMembership instructorMembership = 소속을_저장한다(studio, instructor, SystemRole.INSTRUCTOR);
+        ClassSession session = ClassSession.builder()
+                .studioId(studio.getId())
+                .instructorMembership(instructorMembership)
+                .name("독립 수업 회차")
+                .description("템플릿과 독립된 스냅샷")
+                .classForm(ClassForm.GROUP)
+                .durationMinutes(60)
+                .capacity(12)
+                .startAt(LocalDateTime.of(2026, 8, 17, 20, 0))
+                .status(ClassSessionStatus.OPENED)
+                .build();
+        entityManager.persist(session);
+        entityManager.flush();
+        entityManager.persist(ClassSessionClassType.builder()
+                .classSessionId(session.getId())
+                .classTypeId(yoga.getId())
+                .build());
+        entityManager.flush();
+        Long templateId = template.getId();
+        Long yogaId = yoga.getId();
+        Long pilatesId = pilates.getId();
+        Long sessionId = session.getId();
+
+        // when
+        commandService.delete(owner.getId(), studio.getId(), templateId);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(테이블_행_수를_조회한다("class_template", "id", templateId)).isZero();
+        assertThat(테이블_행_수를_조회한다("class_template_recurring_day", "class_template_id", templateId)).isZero();
+        assertThat(테이블_행_수를_조회한다("class_template_class_type", "class_template_id", templateId)).isZero();
+        assertThat(classTypeRepository.findAllById(List.of(yogaId, pilatesId)))
+                .extracting(ClassType::getId)
+                .containsExactlyInAnyOrder(yogaId, pilatesId);
+        ClassSession preservedSession = entityManager.find(ClassSession.class, sessionId);
+        assertThat(preservedSession).isNotNull();
+        assertThat(preservedSession.getName()).isEqualTo("독립 수업 회차");
+        assertThat(preservedSession.getStatus()).isEqualTo(ClassSessionStatus.OPENED);
+        assertThat(테이블_행_수를_조회한다("class_session_class_type", "class_session_id", sessionId)).isEqualTo(1);
+    }
+
+    @Test
+    void 관리_권한이_없으면_대상_존재_여부보다_권한_예외가_먼저_발생하고_데이터를_보존한다() {
+        // given
+        Member owner = 회원을_저장한다("template-delete-permission-owner");
+        Studio studio = 시설을_저장한다(owner, "삭제 권한 시설");
+        Member student = 회원을_저장한다("template-delete-student");
+        소속을_저장한다(studio, student, SystemRole.STUDENT);
+        ClassType classType = 수업_종류를_저장한다(studio, "삭제 권한 요가");
+        ClassTemplate template = 템플릿을_저장한다(studio, "보존할 템플릿", null,
+                Set.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY));
+        연결을_저장한다(template, classType);
+        Long templateId = template.getId();
+
+        // when / then
+        assertThatThrownBy(() -> commandService.delete(student.getId(), studio.getId(), templateId))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.PERMISSION_DENIED));
+        assertThatThrownBy(() -> commandService.delete(student.getId(), studio.getId(), Long.MAX_VALUE))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.PERMISSION_DENIED));
+        assertThat(테이블_행_수를_조회한다("class_template", "id", templateId)).isEqualTo(1);
+        assertThat(테이블_행_수를_조회한다("class_template_recurring_day", "class_template_id", templateId)).isEqualTo(2);
+        assertThat(테이블_행_수를_조회한다("class_template_class_type", "class_template_id", templateId)).isEqualTo(1);
+    }
+
+    @Test
+    void 없거나_다른_시설의_수업_템플릿을_삭제하면_CLASS_TEMPLATE_007이_발생하고_다른_데이터를_보존한다() {
+        // given
+        Member owner = 회원을_저장한다("template-delete-not-found-owner");
+        Studio requestedStudio = 시설을_저장한다(owner, "삭제 요청 시설");
+        Studio otherStudio = 시설을_저장한다(owner, "삭제 대상 외 시설");
+        ClassType requestedType = 수업_종류를_저장한다(requestedStudio, "요청 시설 요가");
+        ClassType otherType = 수업_종류를_저장한다(otherStudio, "다른 시설 필라테스");
+        ClassTemplate requestedTemplate = 템플릿을_저장한다(
+                requestedStudio, "요청 시설 보존 템플릿", null, Set.of(DayOfWeek.MONDAY));
+        ClassTemplate otherTemplate = 템플릿을_저장한다(
+                otherStudio, "다른 시설 보존 템플릿", null, Set.of(DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY));
+        연결을_저장한다(requestedTemplate, requestedType);
+        연결을_저장한다(otherTemplate, otherType);
+        Long requestedTemplateId = requestedTemplate.getId();
+        Long otherTemplateId = otherTemplate.getId();
+
+        // when / then
+        assertThatThrownBy(() -> commandService.delete(owner.getId(), requestedStudio.getId(), Long.MAX_VALUE))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND));
+        assertThatThrownBy(() -> commandService.delete(owner.getId(), requestedStudio.getId(), otherTemplateId))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND));
+        assertThat(테이블_행_수를_조회한다("class_template", "id", requestedTemplateId)).isEqualTo(1);
+        assertThat(테이블_행_수를_조회한다("class_template_recurring_day", "class_template_id", requestedTemplateId)).isEqualTo(1);
+        assertThat(테이블_행_수를_조회한다("class_template_class_type", "class_template_id", requestedTemplateId)).isEqualTo(1);
+        assertThat(테이블_행_수를_조회한다("class_template", "id", otherTemplateId)).isEqualTo(1);
+        assertThat(테이블_행_수를_조회한다("class_template_recurring_day", "class_template_id", otherTemplateId)).isEqualTo(2);
+        assertThat(테이블_행_수를_조회한다("class_template_class_type", "class_template_id", otherTemplateId)).isEqualTo(1);
+    }
+
     private Member 회원을_저장한다(String id) {
         Member member = StudioFixture.아이디가_다른_소유자(id);
         entityManager.persist(member);
@@ -552,16 +667,25 @@ class ClassTemplateCommandServiceTest {
                 .containsExactly(classType.getId());
     }
 
-    private void 소속을_저장한다(Studio studio, Member member, SystemRole systemRole) {
+    private StudioMembership 소속을_저장한다(Studio studio, Member member, SystemRole systemRole) {
         StudioRole role = systemRole.toStudioRole(studio);
         entityManager.persist(role);
-        entityManager.persist(StudioMembership.builder()
+        StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
                 .studioRole(role)
                 .status(MembershipStatus.ACTIVE)
                 .joinedAt(LocalDateTime.now())
-                .build());
+                .build();
+        entityManager.persist(membership);
         entityManager.flush();
+        return membership;
+    }
+
+    private long 테이블_행_수를_조회한다(String tableName, String columnName, Long id) {
+        return ((Number) entityManager.createNativeQuery(
+                        "SELECT COUNT(*) FROM " + tableName + " WHERE " + columnName + " = :id")
+                .setParameter("id", id)
+                .getSingleResult()).longValue();
     }
 }
