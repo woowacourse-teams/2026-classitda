@@ -179,6 +179,7 @@ class StudioPermissionServiceTest {
         entityManager.persist(StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .name(member.getName())
                 .studioRole(role)
                 .status(status)
                 .joinedAt(LocalDateTime.now())
