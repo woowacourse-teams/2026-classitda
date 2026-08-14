@@ -11,6 +11,7 @@ public enum ClassErrorCode implements ErrorCode {
     INVALID_NAME("CLASS_TYPE-001", "수업 종류 이름은 1자 이상 50자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_TYPE_NAME_DUPLICATED("CLASS_TYPE-002", "이미 존재하는 수업 종류 이름입니다.", HttpStatus.CONFLICT),
     CLASS_TYPE_NOT_FOUND("CLASS_TYPE-003", "수업 종류를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    CLASS_TYPE_IN_USE("CLASS_TYPE-004", "사용 중인 수업 종류는 삭제할 수 없습니다.", HttpStatus.CONFLICT),
 
     // CLASS TEMPLATE
     INVALID_CLASS_TEMPLATE_NAME("CLASS_TEMPLATE-001", "수업 템플릿 이름은 1자 이상 100자 이하여야 합니다.", HttpStatus.BAD_REQUEST),

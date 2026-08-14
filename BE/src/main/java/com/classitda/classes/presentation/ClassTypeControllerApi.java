@@ -246,7 +246,8 @@ public interface ClassTypeControllerApi {
 
     @Operation(
             summary = "수업 종류 삭제",
-            description = "시설에 속한 수업 종류를 삭제한다. 수업 종류 관리 권한이 필요하다."
+            description = "시설에 속한 수업 종류를 삭제한다. 수업 템플릿이나 수업 회차에서 사용 중인 수업 종류는 삭제할 수 없다. "
+                    + "수업 종류 관리 권한이 필요하다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "수업 종류 삭제 성공"),
@@ -300,6 +301,15 @@ public interface ClassTypeControllerApi {
                                     @ExampleObject(name = "수업 종류 없음", value = """
                                             {"code": "CLASS_TYPE-003", "message": "수업 종류를 찾을 수 없습니다."}""")
                             }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "수업 템플릿이나 수업 회차에서 사용 중인 수업 종류",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "사용 중인 수업 종류", value = """
+                                    {"code": "CLASS_TYPE-004", "message": "사용 중인 수업 종류는 삭제할 수 없습니다."}""")
                     )
             )
     })

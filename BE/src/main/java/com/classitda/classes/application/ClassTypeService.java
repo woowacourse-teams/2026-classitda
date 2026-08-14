@@ -78,7 +78,13 @@ public class ClassTypeService {
 
     public void delete(Long memberId, Long studioId, Long classTypeId) {
         ClassType classType = getManageableClassType(memberId, studioId, classTypeId);
-        classTypeRepository.delete(classType);
+
+        try {
+            classTypeRepository.delete(classType);
+            classTypeRepository.flush();
+        } catch (DataIntegrityViolationException exception) {
+            throw new ClassException(ClassErrorCode.CLASS_TYPE_IN_USE);
+        }
     }
 
     private ClassType getManageableClassType(Long memberId, Long studioId, Long classTypeId) {
