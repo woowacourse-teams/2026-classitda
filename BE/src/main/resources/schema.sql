@@ -273,7 +273,7 @@ CREATE TABLE class_session_class_type
     created_at       DATETIME(6) NOT NULL,
     updated_at       DATETIME(6) NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_session_class_type (class_session_id, class_type_id),
+    UNIQUE KEY uk_session_class_type_session (class_session_id),
     CONSTRAINT fk_session_class_type_session
         FOREIGN KEY (class_session_id) REFERENCES class_session (id) ON DELETE CASCADE,
     CONSTRAINT fk_session_class_type_type

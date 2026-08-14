@@ -81,12 +81,8 @@ public class ClassSession extends BaseEntity {
     ) {
         validateStudioId(studioId);
         validateInstructorMembership(instructorMembership);
-        validateName(name);
-        validateClassForm(classForm);
-        validateDurationMinutes(durationMinutes);
-        validateCapacity(capacity);
-        validateStartAt(startAt);
         validateStatus(status);
+        validateDetails(name, classForm, durationMinutes, capacity, startAt);
         this.studioId = studioId;
         this.instructorMembership = instructorMembership;
         this.name = name;
@@ -99,6 +95,26 @@ public class ClassSession extends BaseEntity {
         this.status = status;
     }
 
+    public void updateDetails(
+            String name,
+            String description,
+            ClassForm classForm,
+            int durationMinutes,
+            int capacity,
+            LocalDateTime startAt
+    ) {
+        validateUpdatable();
+        validateDetails(name, classForm, durationMinutes, capacity, startAt);
+        LocalDateTime calculatedEndAt = calculateEndAt(startAt, durationMinutes);
+        this.name = name;
+        this.description = description;
+        this.classForm = classForm;
+        this.durationMinutes = durationMinutes;
+        this.capacity = capacity;
+        this.startAt = startAt;
+        this.endAt = calculatedEndAt;
+    }
+
     private void validateStudioId(Long studioId) {
         if (studioId == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_STUDIO_REQUIRED);
@@ -108,6 +124,26 @@ public class ClassSession extends BaseEntity {
     private void validateInstructorMembership(StudioMembership instructorMembership) {
         if (instructorMembership == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_INSTRUCTOR_REQUIRED);
+        }
+    }
+
+    private void validateDetails(
+            String name,
+            ClassForm classForm,
+            int durationMinutes,
+            int capacity,
+            LocalDateTime startAt
+    ) {
+        validateName(name);
+        validateClassForm(classForm);
+        validateDurationMinutes(durationMinutes);
+        validateCapacity(capacity);
+        validateStartAt(startAt);
+    }
+
+    private void validateUpdatable() {
+        if (status == ClassSessionStatus.CANCELED) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_CANCELED);
         }
     }
 
