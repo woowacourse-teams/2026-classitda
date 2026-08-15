@@ -4,6 +4,7 @@ import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
 import com.classitda.classes.domain.ClassSessionStatus;
+import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.member.domain.Member;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.studio.domain.MembershipStatus;
@@ -11,7 +12,11 @@ import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.fixture.StudioFixture;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
 
 public final class ClassSessionFixture {
 
@@ -77,5 +82,73 @@ public final class ClassSessionFixture {
                 .classSessionId(classSessionId)
                 .classTypeId(classTypeId)
                 .build();
+    }
+
+    public static ClassSessionCreateRequest 기본_단일_수업_회차_생성_요청(Long classTypeId) {
+        return 수업_회차_생성_요청(
+                null,
+                ClassForm.GROUP,
+                classTypeId,
+                "저녁 요가",
+                12,
+                60,
+                false,
+                LocalTime.of(20, 0),
+                "퇴근 후 진행하는 수업",
+                LocalDate.of(2026, 8, 17),
+                null,
+                null,
+                null
+        );
+    }
+
+    public static ClassSessionCreateRequest 기본_반복_수업_회차_생성_요청(Long classTypeId) {
+        return 수업_회차_생성_요청(
+                null,
+                ClassForm.GROUP,
+                classTypeId,
+                "저녁 요가",
+                12,
+                60,
+                true,
+                LocalTime.of(20, 0),
+                "퇴근 후 진행하는 수업",
+                null,
+                List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
+                LocalDate.of(2026, 8, 17),
+                LocalDate.of(2026, 8, 24)
+        );
+    }
+
+    public static ClassSessionCreateRequest 수업_회차_생성_요청(
+            Long classTemplateId,
+            ClassForm classForm,
+            Long classTypeId,
+            String name,
+            Integer capacity,
+            Integer durationMinutes,
+            Boolean recurring,
+            LocalTime startTime,
+            String memo,
+            LocalDate classDate,
+            List<DayOfWeek> recurringDays,
+            LocalDate repeatStartDate,
+            LocalDate repeatEndDate
+    ) {
+        return ClassSessionCreateRequest.of(
+                classTemplateId,
+                classForm,
+                classTypeId,
+                name,
+                capacity,
+                durationMinutes,
+                recurring,
+                startTime,
+                memo,
+                classDate,
+                recurringDays,
+                repeatStartDate,
+                repeatEndDate
+        );
     }
 }

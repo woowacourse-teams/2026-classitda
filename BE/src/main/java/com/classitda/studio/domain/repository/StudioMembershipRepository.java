@@ -2,11 +2,13 @@ package com.classitda.studio.domain.repository;
 
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -43,5 +45,17 @@ public interface StudioMembershipRepository extends JpaRepository<StudioMembersh
     Optional<StudioMembership> findWithMemberByIdAndStudioId(
             @Param("membershipId") Long membershipId,
             @Param("studioId") Long studioId
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT membership
+            FROM StudioMembership membership
+            WHERE membership.studio.id = :studioId
+              AND membership.member.id = :memberId
+            """)
+    Optional<StudioMembership> findByStudioIdAndMemberIdForUpdate(
+            @Param("studioId") Long studioId,
+            @Param("memberId") Long memberId
     );
 }
