@@ -2,7 +2,7 @@ package com.classitda.feature.student.reservation.complete
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import com.classitda.feature.student.reservation.domain.repository.classreservation.ClassReservationRepository
+import com.classitda.domain.repository.classreservation.ClassReservationRepository
 import org.koin.compose.koinInject
 
 @Composable

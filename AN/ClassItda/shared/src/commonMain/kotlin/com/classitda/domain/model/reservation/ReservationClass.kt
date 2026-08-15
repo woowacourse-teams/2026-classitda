@@ -1,4 +1,4 @@
-package com.classitda.feature.student.reservation.domain.model.reservation
+package com.classitda.domain.model.reservation
 
 internal data class ReservationClass(
     val id: String,

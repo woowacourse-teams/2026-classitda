@@ -1,8 +1,8 @@
-package com.classitda.feature.student.reservation.data.repository.classreservation
+package com.classitda.data.repository.classreservation
 
-import com.classitda.feature.student.reservation.domain.model.classreservation.ClassPass
-import com.classitda.feature.student.reservation.domain.model.classreservation.ClassReservation
-import com.classitda.feature.student.reservation.domain.repository.classreservation.ClassReservationRepository
+import com.classitda.domain.model.classreservation.ClassPass
+import com.classitda.domain.model.classreservation.ClassReservation
+import com.classitda.domain.repository.classreservation.ClassReservationRepository
 
 internal class FakeClassReservationRepository : ClassReservationRepository {
     override fun getClassReservation(classId: String): ClassReservation =

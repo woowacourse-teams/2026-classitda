@@ -1,8 +1,8 @@
-package com.classitda.feature.student.reservation.data.repository.waitlist
+package com.classitda.data.repository.waitlist
 
-import com.classitda.feature.student.reservation.domain.model.waitlist.WaitlistClassPass
-import com.classitda.feature.student.reservation.domain.model.waitlist.WaitlistReservation
-import com.classitda.feature.student.reservation.domain.repository.waitlist.WaitlistReservationRepository
+import com.classitda.domain.model.waitlist.WaitlistClassPass
+import com.classitda.domain.model.waitlist.WaitlistReservation
+import com.classitda.domain.repository.waitlist.WaitlistReservationRepository
 
 internal class FakeWaitlistReservationRepository : WaitlistReservationRepository {
     override fun getWaitlistReservation(classId: String): WaitlistReservation =

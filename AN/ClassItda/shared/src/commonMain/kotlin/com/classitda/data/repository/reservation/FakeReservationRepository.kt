@@ -1,7 +1,7 @@
-package com.classitda.feature.student.reservation.data.repository.reservation
+package com.classitda.data.repository.reservation
 
-import com.classitda.feature.student.reservation.domain.model.reservation.ReservationClass
-import com.classitda.feature.student.reservation.domain.repository.reservation.ReservationRepository
+import com.classitda.domain.model.reservation.ReservationClass
+import com.classitda.domain.repository.reservation.ReservationRepository
 
 internal class FakeReservationRepository : ReservationRepository {
     override fun getClasses(): List<ReservationClass> =

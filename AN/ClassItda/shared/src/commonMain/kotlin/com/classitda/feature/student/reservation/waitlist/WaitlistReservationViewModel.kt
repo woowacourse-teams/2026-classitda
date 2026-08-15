@@ -1,7 +1,7 @@
 package com.classitda.feature.student.reservation.waitlist
 
 import androidx.lifecycle.ViewModel
-import com.classitda.feature.student.reservation.domain.repository.waitlist.WaitlistReservationRepository
+import com.classitda.domain.repository.waitlist.WaitlistReservationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

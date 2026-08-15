@@ -1,6 +1,6 @@
 package com.classitda.feature.student.reservation.classreservation
 
-import com.classitda.feature.student.reservation.data.repository.classreservation.FakeClassReservationRepository
+import com.classitda.data.repository.classreservation.FakeClassReservationRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

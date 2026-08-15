@@ -1,7 +1,7 @@
 package com.classitda.feature.student.reservation
 
 import androidx.lifecycle.ViewModel
-import com.classitda.feature.student.reservation.domain.repository.reservation.ReservationRepository
+import com.classitda.domain.repository.reservation.ReservationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

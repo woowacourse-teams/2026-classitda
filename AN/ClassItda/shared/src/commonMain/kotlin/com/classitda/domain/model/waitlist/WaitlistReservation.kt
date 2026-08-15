@@ -1,4 +1,4 @@
-package com.classitda.feature.student.reservation.domain.model.waitlist
+package com.classitda.domain.model.waitlist
 
 internal data class WaitlistReservation(
     val id: String,

@@ -1,4 +1,4 @@
-package com.classitda.feature.student.reservation
+package com.classitda.core.navigation.reservation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.classitda.feature.student.reservation.ReservationRoute
 import com.classitda.feature.student.reservation.classreservation.ClassReservationRoute
 import com.classitda.feature.student.reservation.complete.ReservationCompleteRoute
 import com.classitda.feature.student.reservation.complete.WaitlistCompleteRoute

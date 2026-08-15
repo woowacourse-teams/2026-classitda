@@ -1,6 +1,6 @@
 package com.classitda.feature.student.reservation.waitlist
 
-import com.classitda.feature.student.reservation.data.repository.waitlist.FakeWaitlistReservationRepository
+import com.classitda.data.repository.waitlist.FakeWaitlistReservationRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
