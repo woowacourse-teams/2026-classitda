@@ -1,0 +1,272 @@
+package com.classitda.feature.student.reservation.complete
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.classitda.core.designsystem.AppShape
+import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.StuColors
+import com.classitda.core.designsystem.component.PrimaryButton
+
+internal data class WaitlistCompleteUiModel(
+    val id: String,
+    val className: String,
+    val dateText: String,
+    val timeText: String,
+    val instructorName: String,
+    val roomName: String,
+    val expectedWaitingNumber: Int,
+)
+
+@Composable
+internal fun WaitlistCompleteScreen(
+    reservation: WaitlistCompleteUiModel,
+    onCloseClick: () -> Unit,
+    onScheduleClick: () -> Unit,
+    onHomeClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Scaffold(
+        modifier = modifier,
+        containerColor = StuColors.Background,
+        topBar = { WaitlistCompleteTopBar(onCloseClick = onCloseClick) },
+        bottomBar = {
+            WaitlistCompleteBottomBar(
+                onScheduleClick = onScheduleClick,
+                onHomeClick = onHomeClick,
+            )
+        },
+    ) { contentPadding ->
+        LazyColumn(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+                    .padding(horizontal = AppSpacing.screenPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+        ) {
+            item {
+                Column(
+                    modifier = Modifier.padding(top = AppSpacing.xxl),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(56.dp)
+                                .background(StuColors.TextPrimary, CircleShape),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "✓",
+                            color = StuColors.White,
+                            style = MaterialTheme.typography.headlineMedium,
+                        )
+                    }
+                    Text(
+                        text = "수업 대기 완료!",
+                        color = StuColors.TextPrimary,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    )
+                    Text(
+                        text = "이제는 진짜 수업 대기!\n성공적으로 완료되었습니다.",
+                        color = StuColors.TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
+
+            item {
+                WaitlistCompleteSummary(reservation = reservation)
+            }
+
+            item {
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(StuColors.White, AppShape.Card)
+                            .padding(AppSpacing.cardPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "예상 대기 번호",
+                        color = StuColors.TextSecondary,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = "${reservation.expectedWaitingNumber}번",
+                        color = StuColors.AccentOrange,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
+            }
+
+            item {
+                Text(
+                    text = "대기 내역은 내 수업에서 언제든지 확인 및 취소가 가능합니다.",
+                    color = StuColors.TextSecondary,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = AppSpacing.sectionGap),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WaitlistCompleteTopBar(
+    onCloseClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .background(StuColors.White)
+                .padding(horizontal = AppSpacing.screenPadding),
+    ) {
+        Text(
+            text = "대기 예약 완료",
+            color = StuColors.TextPrimary,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.align(Alignment.Center),
+        )
+        Box(
+            modifier =
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .clickable(onClick = onCloseClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = "×",
+                color = StuColors.TextPrimary,
+                style = MaterialTheme.typography.titleLarge,
+            )
+        }
+    }
+}
+
+@Composable
+private fun WaitlistCompleteSummary(
+    reservation: WaitlistCompleteUiModel,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = AppShape.Card,
+        colors = CardDefaults.cardColors(containerColor = StuColors.White),
+    ) {
+        Column(
+            modifier = Modifier.padding(AppSpacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+        ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = reservation.className,
+                    color = StuColors.TextPrimary,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = reservation.dateText,
+                    color = StuColors.TextSecondary,
+                    style = MaterialTheme.typography.bodySmall,
+                )
+            }
+            Text(
+                text = reservation.timeText,
+                color = StuColors.TextPrimary,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Text(
+                text = "${reservation.instructorName} / ${reservation.roomName}",
+                color = StuColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = "수업 ID ${reservation.id}",
+                color = StuColors.TextTertiary,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
+    }
+}
+
+@Composable
+private fun WaitlistCompleteBottomBar(
+    onScheduleClick: () -> Unit,
+    onHomeClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = StuColors.White,
+    ) {
+        Column(
+            modifier =
+                Modifier.padding(
+                    horizontal = AppSpacing.screenPadding,
+                    vertical = AppSpacing.md,
+                ),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+        ) {
+            PrimaryButton(
+                text = "내 수업 일정 확인하기",
+                onClick = onScheduleClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedButton(
+                onClick = onHomeClick,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                shape = AppShape.Button,
+                colors =
+                    ButtonDefaults.outlinedButtonColors(
+                        contentColor = StuColors.TextSecondary,
+                    ),
+            ) {
+                Text(
+                    text = "홈으로 이동",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+        }
+    }
+}

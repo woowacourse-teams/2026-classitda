@@ -24,7 +24,7 @@ import com.classitda.feature.student.reservation.component.WaitlistClassCard
 import kotlinx.datetime.LocalDate
 
 internal data class ReservationClassUiModel(
-    val id: Long,
+    val id: String,
     val classTime: String,
     val className: String,
     val instructorName: String,
@@ -54,7 +54,7 @@ internal fun ReservationScreen(
     onNextClick: () -> Unit,
     onMonthModeChange: (Boolean) -> Unit,
     onTodayClick: () -> Unit,
-    onClassButtonClick: (Long) -> Unit,
+    onClassButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     bottomBar: @Composable () -> Unit = {},
 ) {
@@ -110,7 +110,7 @@ private fun ReservationClassList(
     month: Int,
     selectedDayOfMonth: Int,
     classes: List<ReservationClassUiModel>,
-    onClassButtonClick: (Long) -> Unit,
+    onClassButtonClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val selectedDate = LocalDate(
@@ -200,7 +200,7 @@ private val kotlinx.datetime.DayOfWeek.koreanName: String
 
 private val previewClasses = listOf(
     ReservationClassUiModel(
-        id = 1L,
+        id = "1",
         classTime = "오전 10:00 - 10:50",
         className = "리포머 베이직",
         instructorName = "이지은 강사",
@@ -210,7 +210,7 @@ private val previewClasses = listOf(
     ),
 
     ReservationClassUiModel(
-        id = 2L,
+        id = "2",
         classTime = "오후 2:00 - 2:50",
         className = "체어 밸런스",
         instructorName = "박소연 강사",
@@ -220,7 +220,7 @@ private val previewClasses = listOf(
     ),
 
     ReservationClassUiModel(
-        id = 3L,
+        id = "3",
         classTime = "오후 7:30 - 8:20",
         className = "리포머 밸런스",
         instructorName = "이지은 강사",
@@ -230,7 +230,7 @@ private val previewClasses = listOf(
     ),
 
     ReservationClassUiModel(
-        id = 4L,
+        id = "4",
         classTime = "오후 9:30 - 10:20",
         className = "체어 베이직",
         instructorName = "박소연 강사",
