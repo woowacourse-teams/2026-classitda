@@ -28,9 +28,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.component.PrimaryButton
 
@@ -268,5 +270,27 @@ private fun WaitlistCompleteBottomBar(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "대기 예약 완료 화면")
+@Composable
+private fun WaitlistCompleteScreenPreview() {
+    AppTheme {
+        WaitlistCompleteScreen(
+            reservation =
+                WaitlistCompleteUiModel(
+                    id = "2",
+                    className = "리포머 베이직",
+                    dateText = "2026.08.08 (토)",
+                    timeText = "오전 10:00 - 10:50",
+                    instructorName = "이지은 강사",
+                    roomName = "리포머룸",
+                    expectedWaitingNumber = 3,
+                ),
+            onCloseClick = {},
+            onScheduleClick = {},
+            onHomeClick = {},
+        )
     }
 }

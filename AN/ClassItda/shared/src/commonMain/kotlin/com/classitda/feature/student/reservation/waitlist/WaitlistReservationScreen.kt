@@ -32,9 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.component.PrimaryButton
 
@@ -365,6 +367,45 @@ private fun WaitlistReservationBottomBar(
                         horizontal = AppSpacing.screenPadding,
                         vertical = AppSpacing.md,
                     ),
+        )
+    }
+}
+
+@Preview(name = "대기 예약 화면")
+@Composable
+private fun WaitlistReservationScreenPreview() {
+    AppTheme {
+        WaitlistReservationScreen(
+            selectedClass =
+                WaitlistClassUiModel(
+                    id = "2",
+                    className = "리포머 베이직",
+                    dateText = "2026.08.08 (토)",
+                    timeText = "오전 10:00 - 10:50",
+                    instructorName = "이지은 강사",
+                    roomName = "리포머룸",
+                    cancellationNotice = "예약 취소는 수업 2시간 전까지 가능합니다.",
+                ),
+            classPasses =
+                listOf(
+                    WaitlistClassPassUiModel(
+                        id = "pass-1",
+                        name = "[그룹] 8:1 리포머 10회권",
+                        usageText = "잔여 6회 / 예약 가능 2회 / 취소 가능 10회",
+                        expirationText = "2026.12.31까지",
+                    ),
+                    WaitlistClassPassUiModel(
+                        id = "pass-2",
+                        name = "[이벤트] 한정판 이용권",
+                        usageText = "잔여 1회 / 예약 가능 1회 / 취소 가능 10회",
+                        expirationText = "2026.11.30까지",
+                    ),
+                ),
+            selectedPassId = "pass-1",
+            expectedWaitingNumber = 3,
+            onBackClick = {},
+            onPassClick = {},
+            onApplyClick = {},
         )
     }
 }
