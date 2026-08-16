@@ -40,7 +40,7 @@ object StuColors {
     val TextSecondary = AppColor.Gray600
     val TextTertiary = AppColor.Gray400
 
-    val Background = AppColor.Gray900
+    val Background = AppColor.Gray100
     val Surface = AppColor.White
     val Divider = AppColor.Gray200
     val DividerStrong = AppColor.Gray300

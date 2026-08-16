@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -23,8 +22,6 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,6 +46,7 @@ internal data class SelectedClassUiModel(
     val timeText: String,
     val instructorName: String,
     val roomName: String,
+    val memoText: String,
     val cancellationNotice: String,
 )
 
@@ -187,23 +185,11 @@ private fun SelectedClassCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .background(
-                                color = StuColors.GreenLight,
-                                shape = AppShape.Pill,
-                            ).padding(
-                                horizontal = AppSpacing.chipHorizontalPadding,
-                                vertical = AppSpacing.xs,
-                            ),
-                ) {
-                    Text(
-                        text = selectedClass.className,
-                        color = StuColors.Green,
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-                }
+                Text(
+                    text = selectedClass.className,
+                    color = StuColors.TextPrimary,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                )
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -217,14 +203,17 @@ private fun SelectedClassCard(
             Text(
                 text = selectedClass.timeText,
                 color = StuColors.TextPrimary,
-                style =
-                    MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                    ),
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
             )
 
             Text(
-                text = "${selectedClass.instructorName}   |   ${selectedClass.roomName}",
+                text = selectedClass.instructorName,
+                color = StuColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+
+            Text(
+                text = selectedClass.memoText,
                 color = StuColors.TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -262,7 +251,7 @@ private fun ClassPassSection(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.selectableGroup(),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
     ) {
         Row(
@@ -279,7 +268,7 @@ private fun ClassPassSection(
 
             Text(
                 text = "사용 가능한 수강권 ${classPasses.size}개",
-                color = StuColors.Green,
+                color = StuColors.TextTertiary,
                 style = MaterialTheme.typography.labelMedium,
             )
         }
@@ -318,7 +307,7 @@ private fun ClassPassItem(
                 width = if (selected) 2.dp else 1.dp,
                 color =
                     if (selected) {
-                        StuColors.Green
+                        StuColors.TextPrimary
                     } else {
                         StuColors.Divider
                     },
@@ -328,17 +317,10 @@ private fun ClassPassItem(
                 containerColor = StuColors.White,
             ),
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(AppSpacing.cardPadding),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(AppSpacing.cardPadding),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
-            ) {
                 Text(
                     text = classPass.name,
                     color = StuColors.TextPrimary,
@@ -359,16 +341,6 @@ private fun ClassPassItem(
                     color = StuColors.TextTertiary,
                     style = MaterialTheme.typography.bodySmall,
                 )
-            }
-
-            RadioButton(
-                selected = selected,
-                onClick = null,
-                colors =
-                    RadioButtonDefaults.colors(
-                        selectedColor = StuColors.Green,
-                    ),
-            )
         }
     }
 }
@@ -393,7 +365,7 @@ private fun ReservationTermsSection(
                 onCheckedChange = onCheckedChange,
                 colors =
                     CheckboxDefaults.colors(
-                        checkedColor = StuColors.Green,
+                        checkedColor = StuColors.TextPrimary,
                     ),
             )
 
@@ -448,6 +420,7 @@ private val previewSelectedClass =
         timeText = "오전 10:00 - 10:50",
         instructorName = "이지은 강사",
         roomName = "A 스튜디오",
+        memoText = "오늘 꼭 수건 챙겨오세요~",
         cancellationNotice = "예약 취소 및 변경은 수업 시작 4시간 전까지 가능합니다.",
     )
 
@@ -455,8 +428,8 @@ private val previewClassPasses =
     listOf(
         ClassPassUiModel(
             id = "pass-1",
-            name = "[그룹] 8:1 리포머/체어",
-            usageText = "잔여 3회 / 총 10회",
+            name = "[그룹] 8:1 리포머/체어 10회권",
+            usageText = "잔여 6회 / 예약 가능 2회 / 취소 가능 10회",
             expirationText = "유효기간: 2026.12.31까지",
         ),
         ClassPassUiModel(

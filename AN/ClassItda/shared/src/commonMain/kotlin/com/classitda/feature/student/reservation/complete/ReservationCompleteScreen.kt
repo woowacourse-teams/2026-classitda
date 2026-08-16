@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -87,7 +88,7 @@ internal fun ReservationCompleteScreen(
                         modifier =
                             Modifier
                                 .size(56.dp)
-                                .background(StuColors.Green, CircleShape),
+                                .background(StuColors.TextPrimary, CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -180,36 +181,27 @@ private fun ReservationSummaryCard(
             modifier = Modifier.padding(AppSpacing.cardPadding),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
-            Box(
-                modifier =
-                    Modifier
-                        .background(StuColors.GreenLight, AppShape.Pill)
-                        .padding(
-                            horizontal = AppSpacing.chipHorizontalPadding,
-                            vertical = AppSpacing.xs,
-                        ),
-            ) {
+            Row(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = reservation.className,
-                    color = StuColors.Green,
-                    style = MaterialTheme.typography.labelSmall,
+                    color = StuColors.TextPrimary,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = reservation.dateText,
+                    color = StuColors.TextTertiary,
+                    style = MaterialTheme.typography.bodySmall,
                 )
             }
 
             Text(
-                text = reservation.dateText,
-                color = StuColors.TextPrimary,
-                style =
-                    MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                    ),
-            )
-
-            Text(
                 text = reservation.timeText,
                 color = StuColors.TextPrimary,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
             )
+
+            HorizontalDivider(color = StuColors.Divider)
 
             ReservationSummaryRow(
                 label = "수업 ID",
@@ -217,17 +209,16 @@ private fun ReservationSummaryCard(
             )
 
             ReservationSummaryRow(
-                label = "강사/장소",
-                value = "${reservation.instructorName} / ${reservation.roomName}",
+                label = "강사",
+                value = reservation.instructorName,
             )
             ReservationSummaryRow(
                 label = "사용 수강권",
                 value = reservation.classPassName,
             )
             ReservationSummaryRow(
-                label = "잔여 횟수",
+                label = "잔여 예약 가능",
                 value = reservation.remainingCountText,
-                valueColor = StuColors.Green,
             )
         }
     }
@@ -267,20 +258,20 @@ private fun ReservationNoticeCard(modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(StuColors.GreenLight, AppShape.Card)
+                .background(StuColors.SurfaceVariant, AppShape.Card)
                 .padding(AppSpacing.cardPadding),
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         Text(
             text = "▣",
-            color = StuColors.Green,
+            color = StuColors.TextSecondary,
             style = MaterialTheme.typography.bodyMedium,
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
             Text(
                 text = "예약 확인 안내",
-                color = StuColors.Green,
+                color = StuColors.TextPrimary,
                 style = MaterialTheme.typography.labelLarge,
             )
             Text(
@@ -351,7 +342,7 @@ private fun ReservationCompleteScreenPreview() {
                     instructorName = "이지은 강사",
                     roomName = "A 스튜디오",
                     classPassName = "[그룹] 8:1 리포머/체어",
-                    remainingCountText = "2회",
+                    remainingCountText = "1회",
                 ),
             onCloseClick = {},
             onScheduleClick = {},

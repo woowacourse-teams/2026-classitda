@@ -28,7 +28,7 @@ internal fun ReservationCompleteRoute(
                 instructorName = reservation.instructorName,
                 roomName = reservation.roomName,
                 classPassName = reservation.classPasses.first().name,
-                remainingCountText = "5회",
+                remainingCountText = "1회",
             ),
         onCloseClick = onCloseClick,
         onScheduleClick = onScheduleClick,
