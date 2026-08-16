@@ -240,7 +240,7 @@ public class ClassSessionCommandService {
                         .studioId(studioId)
                         .instructorMembership(instructorMembership)
                         .name(request.className())
-                        .description(request.memo())
+                        .description(request.description())
                         .classForm(request.classForm())
                         .durationMinutes(request.durationMinutes())
                         .capacity(request.capacity())

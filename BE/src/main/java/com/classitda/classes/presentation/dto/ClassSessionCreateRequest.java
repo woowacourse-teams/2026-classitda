@@ -56,7 +56,11 @@ public record ClassSessionCreateRequest(
         @NotNull(message = "수업 시작 시간은 필수입니다.")
         LocalTime startTime,
 
-        String memo,
+        @Schema(
+                description = "회원에게 표시되는 수업 안내",
+                example = "편한 복장과 개인 수건을 준비해 주세요."
+        )
+        String description,
 
         @Schema(
                 description = "반복하지 않는 수업의 날짜입니다. recurring이 false일 때 필수입니다. 이 경우 recurringDays, repeatStartDate, repeatEndDate는 생략하거나 null로 전달해야 합니다.",
@@ -93,7 +97,7 @@ public record ClassSessionCreateRequest(
             Integer durationMinutes,
             Boolean recurring,
             LocalTime startTime,
-            String memo,
+            String description,
             LocalDate classDate,
             List<DayOfWeek> recurringDays,
             LocalDate repeatStartDate,
@@ -109,7 +113,7 @@ public record ClassSessionCreateRequest(
                 durationMinutes,
                 recurring,
                 startTime,
-                memo,
+                description,
                 classDate,
                 recurringDays,
                 repeatStartDate,
