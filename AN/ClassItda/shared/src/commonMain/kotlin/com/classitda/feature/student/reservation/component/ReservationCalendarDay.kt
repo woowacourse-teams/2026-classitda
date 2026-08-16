@@ -44,13 +44,13 @@ internal fun ReservationCalendarDay(
     ) {
         val dateModifier = when {
             isSelected -> Modifier.background(
-                StuColors.PrimaryGreen,
+                StuColors.Green,
                 CircleShape,
             )
 
             isToday -> Modifier.border(
                 1.dp,
-                StuColors.PrimaryGreen,
+                StuColors.Green,
                 CircleShape,
             )
 
@@ -86,13 +86,13 @@ internal fun ReservationCalendarDay(
         ) {
             if (hasConfirmedReservation) {
                 ReservationCalendarEventDot(
-                    color = StuColors.PrimaryGreen,
+                    color = StuColors.Green,
                 )
             }
 
             if (hasWaitlistReservation) {
                 ReservationCalendarEventDot(
-                    color = StuColors.AccentOrange,
+                    color = StuColors.Orange,
                 )
             }
         }

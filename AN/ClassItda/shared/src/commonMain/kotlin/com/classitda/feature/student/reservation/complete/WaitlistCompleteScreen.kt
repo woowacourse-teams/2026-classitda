@@ -128,7 +128,7 @@ internal fun WaitlistCompleteScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         text = "${reservation.expectedWaitingNumber}번",
-                        color = StuColors.AccentOrange,
+                        color = StuColors.Orange,
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     )
                 }
@@ -258,7 +258,7 @@ private fun WaitlistCompleteBottomBar(
                     Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                shape = AppShape.Button,
+                shape = AppShape.Card,
                 colors =
                     ButtonDefaults.outlinedButtonColors(
                         contentColor = StuColors.TextSecondary,

@@ -38,12 +38,12 @@ internal fun ReservationCalendarFooter(
         ) {
             ReservationCalendarLegendItem(
                 text = "예약 확정",
-                color = StuColors.PrimaryGreen,
+                color = StuColors.Green,
             )
 
             ReservationCalendarLegendItem(
                 text = "대기 중",
-                color = StuColors.AccentOrange,
+                color = StuColors.Orange,
             )
         }
 

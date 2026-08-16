@@ -28,9 +28,9 @@ fun PrimaryButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.heightIn(min = 64.dp),
-        shape = AppShape.Button,
+        shape = AppShape.Card,
         colors = ButtonDefaults.buttonColors(
-            containerColor = StuColors.PrimaryGreen,
+            containerColor = StuColors.Green,
             contentColor = StuColors.White,
         ),
         contentPadding = PaddingValues(

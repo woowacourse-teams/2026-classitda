@@ -191,7 +191,7 @@ private fun SelectedClassCard(
                     modifier =
                         Modifier
                             .background(
-                                color = StuColors.SecondaryGreen,
+                                color = StuColors.GreenLight,
                                 shape = AppShape.Pill,
                             ).padding(
                                 horizontal = AppSpacing.chipHorizontalPadding,
@@ -200,7 +200,7 @@ private fun SelectedClassCard(
                 ) {
                     Text(
                         text = selectedClass.className,
-                        color = StuColors.PrimaryGreen,
+                        color = StuColors.Green,
                         style = MaterialTheme.typography.labelSmall,
                     )
                 }
@@ -279,7 +279,7 @@ private fun ClassPassSection(
 
             Text(
                 text = "사용 가능한 수강권 ${classPasses.size}개",
-                color = StuColors.PrimaryGreen,
+                color = StuColors.Green,
                 style = MaterialTheme.typography.labelMedium,
             )
         }
@@ -318,7 +318,7 @@ private fun ClassPassItem(
                 width = if (selected) 2.dp else 1.dp,
                 color =
                     if (selected) {
-                        StuColors.PrimaryGreen
+                        StuColors.Green
                     } else {
                         StuColors.Divider
                     },
@@ -366,7 +366,7 @@ private fun ClassPassItem(
                 onClick = null,
                 colors =
                     RadioButtonDefaults.colors(
-                        selectedColor = StuColors.PrimaryGreen,
+                        selectedColor = StuColors.Green,
                     ),
             )
         }
@@ -393,7 +393,7 @@ private fun ReservationTermsSection(
                 onCheckedChange = onCheckedChange,
                 colors =
                     CheckboxDefaults.colors(
-                        checkedColor = StuColors.PrimaryGreen,
+                        checkedColor = StuColors.Green,
                     ),
             )
 

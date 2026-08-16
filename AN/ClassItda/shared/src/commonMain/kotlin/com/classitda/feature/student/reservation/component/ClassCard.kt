@@ -81,7 +81,7 @@ internal fun ReservationClassCard(
         modifier = modifier,
         shape = AppShape.Card,
         colors = CardDefaults.cardColors(
-            containerColor = StuColors.SecondaryGreen,
+            containerColor = StuColors.GreenLight,
         ),
     ) {
         Row(
@@ -100,7 +100,7 @@ internal fun ReservationClassCard(
 
             Text(
                 text = "✓ 예약 완료",
-                color = StuColors.PrimaryGreen,
+                color = StuColors.Green,
                 style = MaterialTheme.typography.labelMedium,
             )
         }
@@ -119,11 +119,11 @@ internal fun WaitlistClassCard(
         modifier = modifier,
         shape = AppShape.Card,
         colors = CardDefaults.cardColors(
-            containerColor = StuColors.SecondaryOrange,
+            containerColor = StuColors.OrangeLight,
         ),
         border = BorderStroke(
             width = 1.dp,
-            color = StuColors.AccentOrange,
+            color = StuColors.Orange,
         ),
     ) {
         Row(
@@ -197,7 +197,7 @@ private fun ReservationInfo(
     ) {
         if (leftStudentCount != 0) Text(
             text = leftStudentCount.toString() + "자리 남음",
-            color = StuColors.PrimaryGreen,
+            color = StuColors.Green,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.align(Alignment.End),
         ) else Text(
@@ -220,7 +220,7 @@ private fun WaitlistStatus(
         modifier = modifier
             .border(
                 width = 1.dp,
-                color = StuColors.AccentOrange,
+                color = StuColors.Orange,
                 shape = AppShape.Pill,
             )
             .padding(
@@ -234,14 +234,14 @@ private fun WaitlistStatus(
             modifier = Modifier
                 .size(4.dp)
                 .background(
-                    color = StuColors.AccentOrange,
+                    color = StuColors.Orange,
                     shape = CircleShape,
                 ),
         )
 
         Text(
             text = "대기 중",
-            color = StuColors.DarkOrange,
+            color = StuColors.Orange,
             style = MaterialTheme.typography.labelSmall,
         )
     }

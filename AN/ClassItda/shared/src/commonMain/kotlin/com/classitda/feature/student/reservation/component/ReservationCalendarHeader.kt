@@ -122,7 +122,7 @@ private fun ReservationCalendarModeToggle(
             .selectableGroup()
             .background(
                 color = StuColors.Divider,
-                shape = AppShape.Button,
+                shape = AppShape.Card,
             )
             .padding(2.dp),
     ) {
@@ -173,7 +173,7 @@ private fun ReservationCalendarModeItem(
         Text(
             text = text,
             color = if (selected) {
-                StuColors.PrimaryGreen
+                StuColors.Green
             } else {
                 StuColors.TextSecondary
             },

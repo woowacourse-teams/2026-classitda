@@ -320,7 +320,7 @@ private fun ExpectedWaitingNumber(
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = "${number}번",
-            color = StuColors.AccentOrange,
+            color = StuColors.Orange,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             textAlign = TextAlign.End,
         )

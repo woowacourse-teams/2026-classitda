@@ -31,12 +31,12 @@ fun WaitlistButton(
         shape = RoundedCornerShape(6.dp),
         border = BorderStroke(
             width = 1.dp,
-            color = StuColors.PrimaryGreen,
+            color = StuColors.Green,
         ),
         contentPadding = PaddingValues(horizontal = AppSpacing.md),
         colors = ButtonDefaults.buttonColors(
             containerColor = StuColors.White,
-            contentColor = StuColors.PrimaryGreen,
+            contentColor = StuColors.Green,
         ),
     ) {
         Text(

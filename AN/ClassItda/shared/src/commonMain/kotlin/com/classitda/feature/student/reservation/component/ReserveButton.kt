@@ -30,7 +30,7 @@ fun ReserveButton(
         shape = RoundedCornerShape(6.dp),
         contentPadding = PaddingValues(horizontal = AppSpacing.md),
         colors = ButtonDefaults.buttonColors(
-            containerColor = StuColors.PrimaryGreen,
+            containerColor = StuColors.Green,
             contentColor = StuColors.White,
         ),
     ) {

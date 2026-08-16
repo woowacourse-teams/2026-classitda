@@ -87,7 +87,7 @@ internal fun ReservationCompleteScreen(
                         modifier =
                             Modifier
                                 .size(56.dp)
-                                .background(StuColors.PrimaryGreen, CircleShape),
+                                .background(StuColors.Green, CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -183,7 +183,7 @@ private fun ReservationSummaryCard(
             Box(
                 modifier =
                     Modifier
-                        .background(StuColors.SecondaryGreen, AppShape.Pill)
+                        .background(StuColors.GreenLight, AppShape.Pill)
                         .padding(
                             horizontal = AppSpacing.chipHorizontalPadding,
                             vertical = AppSpacing.xs,
@@ -191,7 +191,7 @@ private fun ReservationSummaryCard(
             ) {
                 Text(
                     text = reservation.className,
-                    color = StuColors.PrimaryGreen,
+                    color = StuColors.Green,
                     style = MaterialTheme.typography.labelSmall,
                 )
             }
@@ -227,7 +227,7 @@ private fun ReservationSummaryCard(
             ReservationSummaryRow(
                 label = "잔여 횟수",
                 value = reservation.remainingCountText,
-                valueColor = StuColors.PrimaryGreen,
+                valueColor = StuColors.Green,
             )
         }
     }
@@ -267,20 +267,20 @@ private fun ReservationNoticeCard(modifier: Modifier = Modifier) {
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(StuColors.SecondaryGreen, AppShape.Card)
+                .background(StuColors.GreenLight, AppShape.Card)
                 .padding(AppSpacing.cardPadding),
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         Text(
             text = "▣",
-            color = StuColors.PrimaryGreen,
+            color = StuColors.Green,
             style = MaterialTheme.typography.bodyMedium,
         )
 
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
             Text(
                 text = "예약 확인 안내",
-                color = StuColors.PrimaryGreen,
+                color = StuColors.Green,
                 style = MaterialTheme.typography.labelLarge,
             )
             Text(
@@ -322,7 +322,7 @@ private fun ReservationCompleteBottomBar(
                     Modifier
                         .fillMaxWidth()
                         .height(48.dp),
-                shape = AppShape.Button,
+                shape = AppShape.Card,
                 colors =
                     ButtonDefaults.outlinedButtonColors(
                         contentColor = StuColors.TextSecondary,
