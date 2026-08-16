@@ -10,6 +10,7 @@ class WaitlistReservationViewModelTest {
         val viewModel =
             WaitlistReservationViewModel(
                 classId = "2",
+                initialPassId = "pass-1",
                 repository = FakeWaitlistReservationRepository(),
             )
 

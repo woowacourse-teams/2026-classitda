@@ -26,4 +26,15 @@ class ReservationViewModelTest {
 
         assertTrue(viewModel.uiState.value.isMonthMode)
     }
+
+    @Test
+    fun `수강권을 선택하고 바텀시트를 닫으면 단일 UiState에 반영된다`() {
+        val viewModel = ReservationViewModel(FakeReservationRepository())
+
+        viewModel.onPassClick("pass-2")
+        viewModel.hidePassSelection()
+
+        assertEquals("pass-2", viewModel.uiState.value.selectedPassId)
+        assertTrue(!viewModel.uiState.value.isPassSelectionVisible)
+    }
 }

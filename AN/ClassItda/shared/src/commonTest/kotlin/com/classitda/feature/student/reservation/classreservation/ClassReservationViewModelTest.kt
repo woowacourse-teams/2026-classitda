@@ -11,6 +11,7 @@ class ClassReservationViewModelTest {
         val viewModel =
             ClassReservationViewModel(
                 classId = "1",
+                initialPassId = "pass-1",
                 repository = FakeClassReservationRepository(),
             )
 
@@ -23,6 +24,7 @@ class ClassReservationViewModelTest {
         val viewModel =
             ClassReservationViewModel(
                 classId = "1",
+                initialPassId = "pass-1",
                 repository = FakeClassReservationRepository(),
             )
 
