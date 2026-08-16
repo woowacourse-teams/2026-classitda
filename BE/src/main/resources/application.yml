@@ -17,6 +17,9 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+    default-model-rendering: model
+    default-model-expand-depth: 2
+    default-models-expand-depth: -1
 
 logging:
   level:
