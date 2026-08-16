@@ -41,7 +41,12 @@ public enum ClassErrorCode implements ErrorCode {
     INVALID_CLASS_SESSION_CLASS_TYPE_ID("CLASS_SESSION-013", "올바른 수업 종류가 필요합니다.", HttpStatus.BAD_REQUEST),
     CLASS_SESSION_NOT_FOUND("CLASS_SESSION-014", "수업 회차를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     CLASS_SESSION_TIME_CONFLICT("CLASS_SESSION-015", "담당 강사의 기존 수업과 시간이 겹칩니다.", HttpStatus.CONFLICT),
-    CLASS_SESSION_CANCELED("CLASS_SESSION-016", "취소된 수업은 수정할 수 없습니다.", HttpStatus.CONFLICT);
+    CLASS_SESSION_CANCELED("CLASS_SESSION-016", "취소된 수업은 수정할 수 없습니다.", HttpStatus.CONFLICT),
+    CLASS_SESSION_INSTRUCTOR_NOT_FOUND(
+            "CLASS_SESSION-017",
+            "담당 가능한 강사 소속을 찾을 수 없습니다.",
+            HttpStatus.NOT_FOUND
+    );
 
     private final String code;
     private final String message;

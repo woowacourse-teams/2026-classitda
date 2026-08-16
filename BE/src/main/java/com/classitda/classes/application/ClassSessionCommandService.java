@@ -44,7 +44,18 @@ public class ClassSessionCommandService {
     private final StudioRolePermissionRepository studioRolePermissionRepository;
 
     public void save(Long memberId, Long studioId, ClassSessionCreateRequest request) {
-        StudioMembership instructorMembership = getInstructorForCreate(memberId, studioId);
+        Studio studio = getStudio(studioId);
+        StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
+        validateCreatePermission(
+                studio,
+                requesterMembership,
+                request.instructorMembershipId(),
+                memberId
+        );
+        StudioMembership instructorMembership = getInstructorForCreate(
+                studioId,
+                request.instructorMembershipId()
+        );
 
         validateTemplate(studioId, request.classTemplateId());
         validateClassType(studioId, request.classTypeId());
@@ -62,40 +73,43 @@ public class ClassSessionCommandService {
         saveClassSessionClassTypes(savedClassSessions, request.classTypeId());
     }
 
-    private StudioMembership getInstructorForCreate(Long memberId, Long studioId) {
-        Studio studio = studioRepository.findById(studioId)
+    private Studio getStudio(Long studioId) {
+        return studioRepository.findById(studioId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
+    }
 
+    private StudioMembership getActiveMembership(Long memberId, Long studioId) {
         StudioMembership membership = studioMembershipRepository
                 .findByStudioIdAndMemberId(studioId, memberId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_MEMBERSHIP));
 
-        validateActiveInstructor(membership);
-        validateCreatePermission(studio, membership, memberId);
-
-        return membership;
-    }
-
-    private void validateActiveInstructor(StudioMembership membership) {
         if (membership.getStatus() != MembershipStatus.ACTIVE) {
             throw new StudioException(StudioErrorCode.MEMBERSHIP_INACTIVE);
         }
 
-        if (!membership.isInstructor()) {
-            throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
-        }
+        return membership;
+    }
+
+    private StudioMembership getInstructorForCreate(Long studioId, Long instructorMembershipId) {
+        return studioMembershipRepository.findByIdAndStudioId(instructorMembershipId, studioId)
+                .filter(membership -> membership.getStatus() == MembershipStatus.ACTIVE)
+                .filter(StudioMembership::isInstructor)
+                .orElseThrow(() -> new ClassException(
+                        ClassErrorCode.CLASS_SESSION_INSTRUCTOR_NOT_FOUND
+                ));
     }
 
     private void validateCreatePermission(
             Studio studio,
-            StudioMembership membership,
+            StudioMembership requesterMembership,
+            Long instructorMembershipId,
             Long memberId
     ) {
         if (studio.isOwner(memberId)) {
             return;
         }
 
-        Long studioRoleId = membership.getStudioRole().getId();
+        Long studioRoleId = requesterMembership.getStudioRole().getId();
         boolean hasAllPermission = studioRolePermissionRepository
                 .existsByStudioRoleIdAndPermissionCode(
                         studioRoleId,
@@ -111,9 +125,12 @@ public class ClassSessionCommandService {
                         PermissionCode.CLASS_SESSION_MANAGE_OWN
                 );
 
-        if (!hasOwnPermission) {
-            throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
+        if (hasOwnPermission
+                && requesterMembership.getId().equals(instructorMembershipId)) {
+            return;
         }
+
+        throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
     }
 
     private void validateTemplate(Long studioId, Long classTemplateId) {
@@ -222,7 +239,7 @@ public class ClassSessionCommandService {
                 .map(sessionDate -> ClassSession.builder()
                         .studioId(studioId)
                         .instructorMembership(instructorMembership)
-                        .name(request.name())
+                        .name(request.className())
                         .description(request.memo())
                         .classForm(request.classForm())
                         .durationMinutes(request.durationMinutes())

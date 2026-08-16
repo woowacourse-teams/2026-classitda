@@ -1,6 +1,7 @@
 package com.classitda.classes.presentation.dto;
 
 import com.classitda.classes.domain.ClassForm;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -14,6 +15,11 @@ public record ClassSessionCreateRequest(
         @Positive(message = "수업 템플릿 ID는 양수여야 합니다.")
         Long classTemplateId,
 
+        @Schema(description = "담당 강사의 시설 소속 ID", example = "12")
+        @NotNull(message = "담당 강사 소속은 필수입니다.")
+        @Positive(message = "담당 강사 소속 ID는 양수여야 합니다.")
+        Long instructorMembershipId,
+
         @NotNull(message = "수업 형태는 필수입니다.")
         ClassForm classForm,
 
@@ -21,9 +27,10 @@ public record ClassSessionCreateRequest(
         @Positive(message = "수업 종류 ID는 양수여야 합니다.")
         Long classTypeId,
 
+        @Schema(description = "수업명", example = "저녁 요가")
         @NotBlank(message = "수업 이름은 필수입니다.")
         @Size(max = 100, message = "수업 이름은 100자 이하여야 합니다.")
-        String name,
+        String className,
 
         @NotNull(message = "정원은 필수입니다.")
         @Positive(message = "정원은 1명 이상이어야 합니다.")
@@ -52,9 +59,10 @@ public record ClassSessionCreateRequest(
 
     public static ClassSessionCreateRequest of(
             Long classTemplateId,
+            Long instructorMembershipId,
             ClassForm classForm,
             Long classTypeId,
-            String name,
+            String className,
             Integer capacity,
             Integer durationMinutes,
             Boolean recurring,
@@ -67,9 +75,10 @@ public record ClassSessionCreateRequest(
     ) {
         return new ClassSessionCreateRequest(
                 classTemplateId,
+                instructorMembershipId,
                 classForm,
                 classTypeId,
-                name,
+                className,
                 capacity,
                 durationMinutes,
                 recurring,

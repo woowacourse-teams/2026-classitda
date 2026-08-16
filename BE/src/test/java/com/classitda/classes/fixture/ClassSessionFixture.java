@@ -84,9 +84,13 @@ public final class ClassSessionFixture {
                 .build();
     }
 
-    public static ClassSessionCreateRequest 기본_단일_수업_회차_생성_요청(Long classTypeId) {
+    public static ClassSessionCreateRequest 기본_단일_수업_회차_생성_요청(
+            Long instructorMembershipId,
+            Long classTypeId
+    ) {
         return 수업_회차_생성_요청(
                 null,
+                instructorMembershipId,
                 ClassForm.GROUP,
                 classTypeId,
                 "저녁 요가",
@@ -102,9 +106,13 @@ public final class ClassSessionFixture {
         );
     }
 
-    public static ClassSessionCreateRequest 기본_반복_수업_회차_생성_요청(Long classTypeId) {
+    public static ClassSessionCreateRequest 기본_반복_수업_회차_생성_요청(
+            Long instructorMembershipId,
+            Long classTypeId
+    ) {
         return 수업_회차_생성_요청(
                 null,
+                instructorMembershipId,
                 ClassForm.GROUP,
                 classTypeId,
                 "저녁 요가",
@@ -122,9 +130,10 @@ public final class ClassSessionFixture {
 
     public static ClassSessionCreateRequest 수업_회차_생성_요청(
             Long classTemplateId,
+            Long instructorMembershipId,
             ClassForm classForm,
             Long classTypeId,
-            String name,
+            String className,
             Integer capacity,
             Integer durationMinutes,
             Boolean recurring,
@@ -137,9 +146,10 @@ public final class ClassSessionFixture {
     ) {
         return ClassSessionCreateRequest.of(
                 classTemplateId,
+                instructorMembershipId,
                 classForm,
                 classTypeId,
-                name,
+                className,
                 capacity,
                 durationMinutes,
                 recurring,
