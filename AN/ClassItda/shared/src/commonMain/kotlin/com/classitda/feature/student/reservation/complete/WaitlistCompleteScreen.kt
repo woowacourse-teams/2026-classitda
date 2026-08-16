@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -43,7 +44,8 @@ internal data class WaitlistCompleteUiModel(
     val timeText: String,
     val instructorName: String,
     val roomName: String,
-    val expectedWaitingNumber: Int,
+    val classPassName: String,
+    val remainingCountText: String,
 )
 
 @Composable
@@ -112,33 +114,7 @@ internal fun WaitlistCompleteScreen(
             }
 
             item {
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .background(StuColors.White, AppShape.Card)
-                            .padding(AppSpacing.cardPadding),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "예상 대기 번호",
-                        color = StuColors.TextSecondary,
-                        style = MaterialTheme.typography.labelLarge,
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(
-                        text = "${reservation.expectedWaitingNumber}번",
-                        color = StuColors.Orange,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    )
-                }
-            }
-
-            item {
-                Text(
-                    text = "대기 내역은 내 수업에서 언제든지 확인 및 취소가 가능합니다.",
-                    color = StuColors.TextSecondary,
-                    style = MaterialTheme.typography.bodySmall,
+                WaitlistNoticeCard(
                     modifier = Modifier.padding(bottom = AppSpacing.sectionGap),
                 )
             }
@@ -213,17 +189,54 @@ private fun WaitlistCompleteSummary(
             Text(
                 text = reservation.timeText,
                 color = StuColors.TextPrimary,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+            )
+
+            HorizontalDivider(color = StuColors.Divider)
+
+            WaitlistSummaryRow(label = "수업 ID", value = reservation.id)
+            WaitlistSummaryRow(label = "강사", value = reservation.instructorName)
+            WaitlistSummaryRow(label = "사용 수강권", value = reservation.classPassName)
+            WaitlistSummaryRow(label = "잔여 예약 가능", value = reservation.remainingCountText)
+        }
+    }
+}
+
+@Composable
+private fun WaitlistSummaryRow(
+    label: String,
+    value: String,
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Text(text = label, color = StuColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            text = value,
+            color = StuColors.TextPrimary,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.End,
+        )
+    }
+}
+
+@Composable
+private fun WaitlistNoticeCard(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth().background(StuColors.SurfaceVariant, AppShape.Card)
+            .padding(AppSpacing.cardPadding),
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+    ) {
+        Text(text = "▣", color = StuColors.TextSecondary)
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+            Text(
+                text = "대기 확인 안내",
+                color = StuColors.TextPrimary,
+                style = MaterialTheme.typography.labelLarge,
             )
             Text(
-                text = "${reservation.instructorName} / ${reservation.roomName}",
+                text = "대기 내역은 내 수업에서 언제든지 확인 및 취소가 가능합니다.",
                 color = StuColors.TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
-            )
-            Text(
-                text = "수업 ID ${reservation.id}",
-                color = StuColors.TextTertiary,
-                style = MaterialTheme.typography.labelSmall,
             )
         }
     }
@@ -286,7 +299,8 @@ private fun WaitlistCompleteScreenPreview() {
                     timeText = "오전 10:00 - 10:50",
                     instructorName = "이지은 강사",
                     roomName = "리포머룸",
-                    expectedWaitingNumber = 3,
+                    classPassName = "[그룹] 8:1 리포머/체어 10회권",
+                    remainingCountText = "2회",
                 ),
             onCloseClick = {},
             onScheduleClick = {},

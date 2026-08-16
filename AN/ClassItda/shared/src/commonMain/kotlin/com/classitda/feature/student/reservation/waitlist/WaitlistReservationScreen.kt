@@ -15,13 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -47,6 +45,7 @@ internal data class WaitlistClassUiModel(
     val timeText: String,
     val instructorName: String,
     val roomName: String,
+    val memoText: String,
     val cancellationNotice: String,
 )
 
@@ -195,7 +194,12 @@ private fun SelectedWaitlistClassCard(
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
             )
             Text(
-                text = "${selectedClass.instructorName}   |   ${selectedClass.roomName}",
+                text = selectedClass.instructorName,
+                color = StuColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Text(
+                text = selectedClass.memoText,
                 color = StuColors.TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -229,7 +233,7 @@ private fun WaitlistPassSection(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.selectableGroup(),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -265,17 +269,10 @@ private fun WaitlistPassSection(
                     ),
                 colors = CardDefaults.cardColors(containerColor = StuColors.White),
             ) {
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(AppSpacing.cardPadding),
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(AppSpacing.cardPadding),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
                 ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
-                    ) {
                         Text(
                             text = classPass.name,
                             color = StuColors.TextPrimary,
@@ -291,12 +288,6 @@ private fun WaitlistPassSection(
                             color = StuColors.TextTertiary,
                             style = MaterialTheme.typography.bodySmall,
                         )
-                    }
-                    RadioButton(
-                        selected = selected,
-                        onClick = null,
-                        colors = RadioButtonDefaults.colors(selectedColor = StuColors.TextPrimary),
-                    )
                 }
             }
         }
@@ -308,8 +299,10 @@ private fun ExpectedWaitingNumber(
     number: Int,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
+    Column(modifier = modifier.fillMaxWidth()) {
+        HorizontalDivider(color = StuColors.Divider)
+        Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = AppSpacing.lg),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -325,6 +318,8 @@ private fun ExpectedWaitingNumber(
             textAlign = TextAlign.End,
         )
     }
+        HorizontalDivider(color = StuColors.Divider)
+    }
 }
 
 @Composable
@@ -334,12 +329,12 @@ private fun WaitlistGuide(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
     ) {
         Text(
-            text = "기존 예약자가 취소할 경우 대기 순번에 따라 자동으로 예약이 확정됩니다.",
+            text = "· 기존 예약자가 취소할 경우 대기 순번에 따라 자동으로 예약이 확정됩니다.",
             color = StuColors.TextSecondary,
             style = MaterialTheme.typography.bodySmall,
         )
         Text(
-            text = "수업 시작 2시간 전까지 자리가 나지 않을 경우 대기 예약은 자동으로 소멸됩니다.",
+            text = "· 수업 시작 2시간 전까지 자리가 나지 않을 경우 대기 예약은 자동으로 소멸됩니다.",
             color = StuColors.TextSecondary,
             style = MaterialTheme.typography.bodySmall,
         )
@@ -384,13 +379,14 @@ private fun WaitlistReservationScreenPreview() {
                     timeText = "오전 10:00 - 10:50",
                     instructorName = "이지은 강사",
                     roomName = "리포머룸",
-                    cancellationNotice = "예약 취소는 수업 2시간 전까지 가능합니다.",
+                    memoText = "오늘 꼭 수건 챙겨오세요~",
+                    cancellationNotice = "예약 취소 및 변경은 수업 시작 4시간 전까지 가능합니다.",
                 ),
             classPasses =
                 listOf(
                     WaitlistClassPassUiModel(
                         id = "pass-1",
-                        name = "[그룹] 8:1 리포머 10회권",
+                        name = "[그룹] 8:1 리포머/체어 10회권",
                         usageText = "잔여 6회 / 예약 가능 2회 / 취소 가능 10회",
                         expirationText = "2026.12.31까지",
                     ),

@@ -7,6 +7,7 @@ internal data class WaitlistReservation(
     val timeText: String,
     val instructorName: String,
     val roomName: String,
+    val memoText: String,
     val cancellationNotice: String,
     val classPasses: List<WaitlistClassPass>,
     val expectedWaitingNumber: Int,

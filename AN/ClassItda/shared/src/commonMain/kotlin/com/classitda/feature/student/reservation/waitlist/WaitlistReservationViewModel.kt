@@ -31,6 +31,7 @@ internal class WaitlistReservationViewModel(
                         timeText = reservation.timeText,
                         instructorName = reservation.instructorName,
                         roomName = reservation.roomName,
+                        memoText = reservation.memoText,
                         cancellationNotice = reservation.cancellationNotice,
                     ),
                 classPasses =
