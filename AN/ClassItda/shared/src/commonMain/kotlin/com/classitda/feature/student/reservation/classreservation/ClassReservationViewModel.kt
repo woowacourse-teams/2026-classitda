@@ -43,6 +43,7 @@ internal class ClassReservationViewModel(
                             expirationText = classPass.expirationText,
                         )
                     },
+                selectedPassId = reservation.classPasses.firstOrNull()?.id,
             ),
         )
     val uiState: StateFlow<ClassReservationUiState> = _uiState.asStateFlow()

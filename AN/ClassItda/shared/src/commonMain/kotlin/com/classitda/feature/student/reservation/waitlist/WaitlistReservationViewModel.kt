@@ -44,6 +44,7 @@ internal class WaitlistReservationViewModel(
                         )
                     },
                 expectedWaitingNumber = reservation.expectedWaitingNumber,
+                selectedPassId = reservation.classPasses.firstOrNull()?.id,
             ),
         )
     val uiState: StateFlow<WaitlistReservationUiState> = _uiState.asStateFlow()

@@ -28,8 +28,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.classitda.core.designsystem.AppShape
@@ -216,7 +219,7 @@ private fun SelectedWaitlistClassCard(
                         .padding(AppSpacing.md),
             ) {
                 Text(
-                    text = "●  ${selectedClass.cancellationNotice}",
+                    text = "ⓘ  ${selectedClass.cancellationNotice}",
                     color = StuColors.TextSecondary,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -273,24 +276,39 @@ private fun WaitlistPassSection(
                     modifier = Modifier.fillMaxWidth().padding(AppSpacing.cardPadding),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
                 ) {
-                        Text(
-                            text = classPass.name,
-                            color = StuColors.TextPrimary,
-                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                        )
-                        Text(
-                            text = classPass.usageText,
-                            color = StuColors.TextSecondary,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                        Text(
-                            text = classPass.expirationText,
-                            color = StuColors.TextTertiary,
-                            style = MaterialTheme.typography.bodySmall,
-                        )
+                    Text(
+                        text = classPass.name,
+                        color = StuColors.TextPrimary,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                    )
+                    Text(
+                        text = highlightedAvailabilityText(classPass.usageText),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        text = classPass.expirationText,
+                        color = StuColors.TextTertiary,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
             }
         }
+    }
+}
+
+private fun highlightedAvailabilityText(text: String) = buildAnnotatedString {
+    val start = text.indexOf("예약 가능")
+    if (start < 0) {
+        append(text)
+        return@buildAnnotatedString
+    }
+    val end = text.indexOf(" /", start).takeIf { it >= 0 } ?: text.length
+    withStyle(SpanStyle(color = StuColors.TextSecondary)) {
+        append(text.substring(0, start))
+        withStyle(SpanStyle(color = StuColors.Green, fontWeight = FontWeight.Medium)) {
+            append(text.substring(start, end))
+        }
+        append(text.substring(end))
     }
 }
 
@@ -302,22 +320,22 @@ private fun ExpectedWaitingNumber(
     Column(modifier = modifier.fillMaxWidth()) {
         HorizontalDivider(color = StuColors.Divider)
         Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = AppSpacing.lg),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = "예상 대기 번호",
-            color = StuColors.TextSecondary,
-            style = MaterialTheme.typography.labelLarge,
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = "${number}번",
-            color = StuColors.Orange,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            textAlign = TextAlign.End,
-        )
-    }
+            modifier = Modifier.fillMaxWidth().padding(vertical = AppSpacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "예상 대기 번호",
+                color = StuColors.TextSecondary,
+                style = MaterialTheme.typography.labelLarge,
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "${number}번",
+                color = StuColors.Orange,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                textAlign = TextAlign.End,
+            )
+        }
         HorizontalDivider(color = StuColors.Divider)
     }
 }
