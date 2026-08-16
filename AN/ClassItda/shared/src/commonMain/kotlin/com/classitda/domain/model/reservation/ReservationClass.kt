@@ -10,3 +10,10 @@ internal data class ReservationClass(
     val isReserved: Boolean = false,
     val isWaitlisted: Boolean = false,
 )
+
+internal data class ReservationPass(
+    val id: String,
+    val name: String,
+    val remainingText: String,
+    val expirationText: String,
+)

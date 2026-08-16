@@ -70,6 +70,9 @@ internal fun ClassReservationScreen(
     onPassClick: (String) -> Unit,
     onTermsAgreementChange: (Boolean) -> Unit,
     onReservationClick: () -> Unit,
+    timeConflict: ReservationTimeConflictUiModel? = null,
+    onTimeConflictDismiss: () -> Unit = {},
+    onScheduleClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -127,6 +130,14 @@ internal fun ClassReservationScreen(
                 )
             }
         }
+    }
+
+    if (timeConflict != null) {
+        ReservationTimeConflictDialog(
+            conflict = timeConflict,
+            onDismissRequest = onTimeConflictDismiss,
+            onScheduleClick = onScheduleClick,
+        )
     }
 }
 

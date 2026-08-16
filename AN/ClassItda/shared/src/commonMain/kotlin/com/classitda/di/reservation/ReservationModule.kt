@@ -1,6 +1,7 @@
 package com.classitda.di.reservation
 
 import com.classitda.data.repository.classreservation.FakeClassReservationRepository
+import com.classitda.data.local.reservation.FakeReservationStore
 import com.classitda.data.repository.reservation.FakeReservationRepository
 import com.classitda.data.repository.waitlist.FakeWaitlistReservationRepository
 import com.classitda.domain.repository.classreservation.ClassReservationRepository
@@ -14,11 +15,12 @@ import org.koin.dsl.module
 
 internal val reservationModule =
     module {
-        single<ReservationRepository> { FakeReservationRepository() }
-        single<ClassReservationRepository> { FakeClassReservationRepository() }
-        single<WaitlistReservationRepository> { FakeWaitlistReservationRepository() }
+        single { FakeReservationStore() }
+        single<ReservationRepository> { FakeReservationRepository(get()) }
+        single<ClassReservationRepository> { FakeClassReservationRepository(get()) }
+        single<WaitlistReservationRepository> { FakeWaitlistReservationRepository(get()) }
 
         viewModel { ReservationViewModel(get()) }
-        viewModel { parameters -> ClassReservationViewModel(parameters.get(), get()) }
-        viewModel { parameters -> WaitlistReservationViewModel(parameters.get(), get()) }
+        viewModel { parameters -> ClassReservationViewModel(parameters.get(), parameters.get(), get()) }
+        viewModel { parameters -> WaitlistReservationViewModel(parameters.get(), parameters.get(), get()) }
     }

@@ -18,3 +18,17 @@ internal data class ClassPass(
     val usageText: String,
     val expirationText: String,
 )
+
+internal sealed interface ReservationRequestResult {
+    data object Success : ReservationRequestResult
+
+    data class TimeConflict(
+        val className: String,
+        val dateTimeText: String,
+        val studioName: String,
+    ) : ReservationRequestResult
+
+    data class Failure(
+        val message: String,
+    ) : ReservationRequestResult
+}

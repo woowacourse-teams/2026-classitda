@@ -1,10 +1,13 @@
 package com.classitda.data.repository.waitlist
 
+import com.classitda.data.local.reservation.FakeReservationStore
 import com.classitda.domain.model.waitlist.WaitlistClassPass
 import com.classitda.domain.model.waitlist.WaitlistReservation
 import com.classitda.domain.repository.waitlist.WaitlistReservationRepository
 
-internal class FakeWaitlistReservationRepository : WaitlistReservationRepository {
+internal class FakeWaitlistReservationRepository(
+    private val store: FakeReservationStore = FakeReservationStore(),
+) : WaitlistReservationRepository {
     override fun getWaitlistReservation(classId: String): WaitlistReservation =
         WaitlistReservation(
             id = classId,
@@ -32,4 +35,13 @@ internal class FakeWaitlistReservationRepository : WaitlistReservationRepository
                 ),
             expectedWaitingNumber = 3,
         )
+
+    override fun applyWaitlist(
+        classId: String,
+        passId: String,
+    ): Boolean {
+        if (passId == "pass-2") return false
+        store.saveWaitlist(classId)
+        return true
+    }
 }

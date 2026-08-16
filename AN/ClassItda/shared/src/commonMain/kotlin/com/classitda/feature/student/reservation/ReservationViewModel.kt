@@ -15,6 +15,9 @@ internal data class ReservationUiState(
     val waitlistReservationDays: Set<Int> = setOf(9),
     val isMonthMode: Boolean = false,
     val classes: List<ReservationClassUiModel> = emptyList(),
+    val passes: List<ReservationPassUiModel> = emptyList(),
+    val selectedPassId: String? = null,
+    val isPassSelectionVisible: Boolean = true,
 )
 
 internal class ReservationViewModel(
@@ -40,6 +43,16 @@ internal class ReservationViewModel(
                                 },
                         )
                     },
+                passes =
+                    reservationRepository.getPasses().map { pass ->
+                        ReservationPassUiModel(
+                            id = pass.id,
+                            name = pass.name,
+                            remainingText = pass.remainingText,
+                            expirationText = pass.expirationText,
+                        )
+                    },
+                selectedPassId = reservationRepository.getPasses().firstOrNull()?.id,
             ),
         )
     val uiState: StateFlow<ReservationUiState> = _uiState.asStateFlow()
@@ -77,5 +90,17 @@ internal class ReservationViewModel(
             _uiState.value.copy(
                 selectedDayOfMonth = _uiState.value.todayDayOfMonth,
             )
+    }
+
+    fun onPassClick(passId: String) {
+        _uiState.value = _uiState.value.copy(selectedPassId = passId)
+    }
+
+    fun showPassSelection() {
+        _uiState.value = _uiState.value.copy(isPassSelectionVisible = true)
+    }
+
+    fun hidePassSelection() {
+        _uiState.value = _uiState.value.copy(isPassSelectionVisible = false)
     }
 }

@@ -1,44 +1,34 @@
 package com.classitda.data.repository.reservation
 
+import com.classitda.data.local.reservation.FakeReservationStore
 import com.classitda.domain.model.reservation.ReservationClass
+import com.classitda.domain.model.reservation.ReservationPass
 import com.classitda.domain.repository.reservation.ReservationRepository
 
-internal class FakeReservationRepository : ReservationRepository {
-    override fun getClasses(): List<ReservationClass> =
+internal class FakeReservationRepository(
+    private val store: FakeReservationStore = FakeReservationStore(),
+) : ReservationRepository {
+    override fun getClasses(): List<ReservationClass> = store.getClasses()
+
+    override fun getPasses(): List<ReservationPass> =
         listOf(
-            ReservationClass(
-                id = "1",
-                classTime = "오전 10:00 - 10:50",
-                className = "리포머 베이직",
-                instructorName = "이지은 강사",
-                roomName = "리포머룸",
-                leftStudentCount = 4,
+            ReservationPass(
+                id = "pass-1",
+                name = "요가 10회권",
+                remainingText = "잔여 7회 / 예약 가능 7회",
+                expirationText = "2026.10.31까지",
             ),
-            ReservationClass(
-                id = "2",
-                classTime = "오후 2:00 - 2:50",
-                className = "체어 밸런스",
-                instructorName = "박소연 강사",
-                roomName = "스튜디오 A",
-                leftStudentCount = 0,
+            ReservationPass(
+                id = "pass-2",
+                name = "필라테스 20회권",
+                remainingText = "잔여 12회 / 예약 가능 12회",
+                expirationText = "2026.11.30까지",
             ),
-            ReservationClass(
-                id = "3",
-                classTime = "오후 7:30 - 8:20",
-                className = "리포머 밸런스",
-                instructorName = "이지은 강사",
-                roomName = "스튜디오 B",
-                leftStudentCount = 0,
-                isReserved = true,
-            ),
-            ReservationClass(
-                id = "4",
-                classTime = "오후 9:30 - 10:20",
-                className = "체어 베이직",
-                instructorName = "박소연 강사",
-                roomName = "바렐룸",
-                leftStudentCount = 0,
-                isWaitlisted = true,
+            ReservationPass(
+                id = "pass-3",
+                name = "요가 / 필라테스 통합 1회권",
+                remainingText = "잔여 1회 / 예약 가능 1회",
+                expirationText = "2027.01.24까지",
             ),
         )
 }

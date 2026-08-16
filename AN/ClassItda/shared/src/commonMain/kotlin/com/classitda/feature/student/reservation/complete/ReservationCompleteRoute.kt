@@ -8,6 +8,7 @@ import org.koin.compose.koinInject
 @Composable
 internal fun ReservationCompleteRoute(
     classId: String,
+    passId: String,
     onCloseClick: () -> Unit,
     onScheduleClick: () -> Unit,
     onHomeClick: () -> Unit,
@@ -27,7 +28,8 @@ internal fun ReservationCompleteRoute(
                 timeText = reservation.timeText,
                 instructorName = reservation.instructorName,
                 roomName = reservation.roomName,
-                classPassName = reservation.classPasses.first().name,
+                classPassName = reservation.classPasses.firstOrNull { it.id == passId }?.name
+                    ?: reservation.classPasses.first().name,
                 remainingCountText = "1회",
             ),
         onCloseClick = onCloseClick,

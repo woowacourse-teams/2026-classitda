@@ -1,10 +1,14 @@
 package com.classitda.data.repository.classreservation
 
+import com.classitda.data.local.reservation.FakeReservationStore
 import com.classitda.domain.model.classreservation.ClassPass
 import com.classitda.domain.model.classreservation.ClassReservation
+import com.classitda.domain.model.classreservation.ReservationRequestResult
 import com.classitda.domain.repository.classreservation.ClassReservationRepository
 
-internal class FakeClassReservationRepository : ClassReservationRepository {
+internal class FakeClassReservationRepository(
+    private val store: FakeReservationStore = FakeReservationStore(),
+) : ClassReservationRepository {
     override fun getClassReservation(classId: String): ClassReservation =
         ClassReservation(
             id = classId,
@@ -37,4 +41,23 @@ internal class FakeClassReservationRepository : ClassReservationRepository {
                     ),
                 ),
         )
+
+    override fun reserve(
+        classId: String,
+        passId: String,
+    ): ReservationRequestResult =
+        when (passId) {
+            "pass-2" ->
+                ReservationRequestResult.TimeConflict(
+                    className = "리포머 밸런스",
+                    dateTimeText = "2026.08.08 (토) 오후 7:30 - 8:20",
+                    studioName = "클래스잇다 2호점",
+                )
+
+            "pass-3" -> ReservationRequestResult.Failure("예약 가능 시간이 종료되었습니다.")
+            else -> {
+                store.saveReservation(classId)
+                ReservationRequestResult.Success
+            }
+        }
 }

@@ -11,6 +11,7 @@ import com.classitda.feature.student.reservation.ReservationRoute
 import com.classitda.feature.student.reservation.classreservation.ClassReservationRoute
 import com.classitda.feature.student.reservation.complete.ReservationCompleteRoute
 import com.classitda.feature.student.reservation.complete.WaitlistCompleteRoute
+import com.classitda.feature.student.reservation.error.ReservationRequestErrorScreen
 import com.classitda.feature.student.reservation.waitlist.WaitlistReservationRoute
 import kotlinx.serialization.Serializable
 
@@ -20,21 +21,31 @@ private data object ReservationDestination
 @Serializable
 private data class ClassReservationDestination(
     val classId: String,
+    val passId: String,
 )
 
 @Serializable
 private data class WaitlistReservationDestination(
     val classId: String,
+    val passId: String,
 )
 
 @Serializable
 private data class ReservationCompleteDestination(
     val classId: String,
+    val passId: String,
 )
 
 @Serializable
 private data class WaitlistCompleteDestination(
     val classId: String,
+    val passId: String,
+)
+
+@Serializable
+private data class ReservationRequestErrorDestination(
+    val title: String,
+    val message: String,
 )
 
 @Composable
@@ -57,11 +68,11 @@ internal fun ReservationNavHost(
     ) {
         composable<ReservationDestination> {
             ReservationRoute(
-                onClassReservationClick = { classId ->
-                    navController.navigate(ClassReservationDestination(classId))
+                onClassReservationClick = { classId, passId ->
+                    navController.navigate(ClassReservationDestination(classId, passId))
                 },
-                onWaitlistReservationClick = { classId ->
-                    navController.navigate(WaitlistReservationDestination(classId))
+                onWaitlistReservationClick = { classId, passId ->
+                    navController.navigate(WaitlistReservationDestination(classId, passId))
                 },
             )
         }
@@ -70,10 +81,15 @@ internal fun ReservationNavHost(
             val destination = backStackEntry.toRoute<ClassReservationDestination>()
             ClassReservationRoute(
                 classId = destination.classId,
+                initialPassId = destination.passId,
                 onBackClick = navController::popBackStack,
-                onReservationComplete = { classId ->
-                    navController.navigate(ReservationCompleteDestination(classId))
+                onReservationComplete = { classId, passId ->
+                    navController.navigate(ReservationCompleteDestination(classId, passId))
                 },
+                onReservationFailure = { title, message ->
+                    navController.navigate(ReservationRequestErrorDestination(title, message))
+                },
+                onScheduleClick = ::navigateHome,
             )
         }
 
@@ -81,9 +97,13 @@ internal fun ReservationNavHost(
             val destination = backStackEntry.toRoute<WaitlistReservationDestination>()
             WaitlistReservationRoute(
                 classId = destination.classId,
+                initialPassId = destination.passId,
                 onBackClick = navController::popBackStack,
-                onWaitlistComplete = { classId ->
-                    navController.navigate(WaitlistCompleteDestination(classId))
+                onWaitlistComplete = { classId, passId ->
+                    navController.navigate(WaitlistCompleteDestination(classId, passId))
+                },
+                onWaitlistFailure = { title, message ->
+                    navController.navigate(ReservationRequestErrorDestination(title, message))
                 },
             )
         }
@@ -92,6 +112,7 @@ internal fun ReservationNavHost(
             val destination = backStackEntry.toRoute<ReservationCompleteDestination>()
             ReservationCompleteRoute(
                 classId = destination.classId,
+                passId = destination.passId,
                 onCloseClick = ::navigateHome,
                 onScheduleClick = ::navigateHome,
                 onHomeClick = ::navigateHome,
@@ -102,8 +123,19 @@ internal fun ReservationNavHost(
             val destination = backStackEntry.toRoute<WaitlistCompleteDestination>()
             WaitlistCompleteRoute(
                 classId = destination.classId,
+                passId = destination.passId,
                 onCloseClick = ::navigateHome,
                 onScheduleClick = ::navigateHome,
+                onHomeClick = ::navigateHome,
+            )
+        }
+
+        composable<ReservationRequestErrorDestination> { backStackEntry ->
+            val destination = backStackEntry.toRoute<ReservationRequestErrorDestination>()
+            ReservationRequestErrorScreen(
+                title = destination.title,
+                message = destination.message,
+                onReservationClick = ::navigateHome,
                 onHomeClick = ::navigateHome,
             )
         }

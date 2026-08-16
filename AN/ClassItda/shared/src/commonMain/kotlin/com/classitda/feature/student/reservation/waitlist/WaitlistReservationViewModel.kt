@@ -16,8 +16,10 @@ internal data class WaitlistReservationUiState(
 
 internal class WaitlistReservationViewModel(
     classId: String,
+    initialPassId: String,
     repository: WaitlistReservationRepository,
 ) : ViewModel() {
+    private val reservationRepository = repository
     private val reservation = repository.getWaitlistReservation(classId)
     private val _uiState =
         MutableStateFlow(
@@ -44,12 +46,19 @@ internal class WaitlistReservationViewModel(
                         )
                     },
                 expectedWaitingNumber = reservation.expectedWaitingNumber,
-                selectedPassId = reservation.classPasses.firstOrNull()?.id,
+                selectedPassId =
+                    initialPassId.takeIf { passId -> reservation.classPasses.any { it.id == passId } }
+                        ?: reservation.classPasses.firstOrNull()?.id,
             ),
         )
     val uiState: StateFlow<WaitlistReservationUiState> = _uiState.asStateFlow()
 
     fun onPassClick(passId: String) {
         _uiState.value = _uiState.value.copy(selectedPassId = passId)
+    }
+
+    fun submitWaitlist(): Boolean {
+        val passId = _uiState.value.selectedPassId ?: return false
+        return reservationRepository.applyWaitlist(_uiState.value.classId, passId)
     }
 }
