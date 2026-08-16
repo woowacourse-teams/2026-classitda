@@ -45,6 +45,7 @@ public class ClassSessionCommandService {
 
     public void save(Long memberId, Long studioId, ClassSessionCreateRequest request) {
         StudioMembership instructorMembership = getInstructorForCreate(memberId, studioId);
+
         validateTemplate(studioId, request.classTemplateId());
         validateClassType(studioId, request.classTypeId());
 
@@ -64,8 +65,9 @@ public class ClassSessionCommandService {
     private StudioMembership getInstructorForCreate(Long memberId, Long studioId) {
         Studio studio = studioRepository.findById(studioId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
+
         StudioMembership membership = studioMembershipRepository
-                .findByStudioIdAndMemberIdForUpdate(studioId, memberId)
+                .findByStudioIdAndMemberId(studioId, memberId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_MEMBERSHIP));
 
         validateActiveInstructor(membership);
@@ -78,6 +80,7 @@ public class ClassSessionCommandService {
         if (membership.getStatus() != MembershipStatus.ACTIVE) {
             throw new StudioException(StudioErrorCode.MEMBERSHIP_INACTIVE);
         }
+
         if (!membership.isInstructor()) {
             throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
         }
@@ -117,6 +120,7 @@ public class ClassSessionCommandService {
         if (classTemplateId == null) {
             return;
         }
+
         classTemplateRepository.findByIdAndStudioId(classTemplateId, studioId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND));
     }
@@ -130,9 +134,11 @@ public class ClassSessionCommandService {
         if (request.recurring() == null) {
             throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_RECURRENCE);
         }
+
         if (request.recurring()) {
             return resolveRecurringDates(request);
         }
+
         return resolveSingleDate(request);
     }
 
@@ -143,6 +149,7 @@ public class ClassSessionCommandService {
                 || request.repeatEndDate() != null) {
             throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_RECURRENCE);
         }
+
         return List.of(request.classDate());
     }
 
@@ -158,19 +165,23 @@ public class ClassSessionCommandService {
         Set<DayOfWeek> selectedDays = new HashSet<>(recurringDays);
         List<LocalDate> sessionDates = new ArrayList<>();
         LocalDate currentDate = request.repeatStartDate();
+
         while (true) {
             if (selectedDays.contains(currentDate.getDayOfWeek())) {
                 sessionDates.add(currentDate);
             }
+
             if (currentDate.equals(request.repeatEndDate())) {
                 break;
             }
+
             currentDate = currentDate.plusDays(1);
         }
 
         if (sessionDates.isEmpty()) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_DATES_EMPTY);
         }
+
         return sessionDates;
     }
 
@@ -226,25 +237,15 @@ public class ClassSessionCommandService {
             Long instructorMembershipId,
             List<ClassSession> classSessions
     ) {
-        ClassSession previousSession = null;
         for (ClassSession classSession : classSessions) {
-            if (!classSessionRepository.findActiveOverlaps(
+            if (classSessionRepository.existsActiveOverlap(
                     instructorMembershipId,
                     classSession.getStartAt(),
                     classSession.getEndAt()
-            ).isEmpty()) {
+            )) {
                 throw new ClassException(ClassErrorCode.CLASS_SESSION_TIME_CONFLICT);
             }
-            if (previousSession != null && isOverlapping(previousSession, classSession)) {
-                throw new ClassException(ClassErrorCode.CLASS_SESSION_TIME_CONFLICT);
-            }
-            previousSession = classSession;
         }
-    }
-
-    private boolean isOverlapping(ClassSession left, ClassSession right) {
-        return left.getStartAt().isBefore(right.getEndAt())
-                && left.getEndAt().isAfter(right.getStartAt());
     }
 
     private void saveClassSessionClassTypes(
@@ -257,6 +258,7 @@ public class ClassSessionCommandService {
                         .classTypeId(classTypeId)
                         .build())
                 .toList();
+
         classSessionClassTypeRepository.saveAll(classSessionClassTypes);
     }
 }
