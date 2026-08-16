@@ -16,7 +16,7 @@ public enum ClassErrorCode implements ErrorCode {
     // CLASS TEMPLATE
     INVALID_CLASS_TEMPLATE_NAME("CLASS_TEMPLATE-001", "수업 템플릿 이름은 1자 이상 100자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_CLASS_FORM("CLASS_TEMPLATE-002", "수업 형태는 필수입니다.", HttpStatus.BAD_REQUEST),
-    INVALID_DURATION_MINUTES("CLASS_TEMPLATE-003", "진행 시간은 1분 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_DURATION_MINUTES("CLASS_TEMPLATE-003", "진행 시간은 1분 이상 24시간 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_CAPACITY("CLASS_TEMPLATE-004", "정원은 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_TYPES_REQUIRED("CLASS_TEMPLATE-005", "수업 종류를 하나 이상 선택해야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_TYPES_DUPLICATED("CLASS_TEMPLATE-006", "중복된 수업 종류를 선택할 수 없습니다.", HttpStatus.BAD_REQUEST),
@@ -28,7 +28,7 @@ public enum ClassErrorCode implements ErrorCode {
     // CLASS SESSION
     INVALID_CLASS_SESSION_NAME("CLASS_SESSION-001", "수업 이름은 1자 이상 100자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_CLASS_SESSION_FORM("CLASS_SESSION-002", "수업 형태는 필수입니다.", HttpStatus.BAD_REQUEST),
-    INVALID_CLASS_SESSION_DURATION_MINUTES("CLASS_SESSION-003", "진행 시간은 1분 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_CLASS_SESSION_DURATION_MINUTES("CLASS_SESSION-003", "진행 시간은 1분 이상 24시간 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     INVALID_CLASS_SESSION_START_AT("CLASS_SESSION-004", "올바른 수업 시작 일시가 필요합니다.", HttpStatus.BAD_REQUEST),
     INVALID_CLASS_SESSION_CAPACITY("CLASS_SESSION-005", "정원은 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_SESSION_STUDIO_REQUIRED("CLASS_SESSION-006", "수업 시설은 필수입니다.", HttpStatus.BAD_REQUEST),

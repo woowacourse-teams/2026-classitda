@@ -460,20 +460,20 @@ class ClassSessionCommandServiceTest {
     }
 
     @Test
-    void 하나의_반복_요청에서_생성할_회차끼리_겹치면_모두_거절한다() {
+    void 반복_수업의_진행_시간이_1440분을_초과하면_모두_거절한다() {
         // given
         Member owner = 회원을_저장한다("self-overlap-owner");
-        StudioContext context = 시설과_대표_소속을_저장한다(owner, "자기 충돌 시설");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "장기 수업 시설");
         ClassType classType = 수업_종류를_저장한다(context.studio(), "장기 수업");
         ClassSessionCreateRequest request = ClassSessionFixture.수업_회차_생성_요청(
-                null, ClassForm.GROUP, classType.getId(), "주간보다 긴 수업", 10, 10_081,
+                null, ClassForm.GROUP, classType.getId(), "하루보다 긴 수업", 10, 1_441,
                 true, LocalTime.MIDNIGHT, null, null, List.of(DayOfWeek.MONDAY),
                 LocalDate.of(2026, 8, 17), LocalDate.of(2026, 8, 24));
 
         // when / then
         assertClassError(
                 () -> commandService.save(owner.getId(), context.studio().getId(), request),
-                ClassErrorCode.CLASS_SESSION_TIME_CONFLICT
+                ClassErrorCode.INVALID_CLASS_SESSION_DURATION_MINUTES
         );
         assertThat(classSessionRepository.count()).isZero();
         assertThat(classSessionClassTypeRepository.count()).isZero();

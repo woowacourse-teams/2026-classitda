@@ -84,6 +84,25 @@ class ClassSessionTest {
     }
 
     @Test
+    void 진행_시간이_1440분이면_수업_회차를_생성할_수_있다() {
+        // when
+        ClassSession classSession = 수업_회차(
+                1L,
+                기본_담당_강사_소속(),
+                "저녁 요가",
+                null,
+                ClassForm.GROUP,
+                1_440,
+                12,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                ClassSessionStatus.OPENED
+        );
+
+        // then
+        assertThat(classSession.getDurationMinutes()).isEqualTo(1_440);
+    }
+
+    @Test
     void 이름이_100자면_수업_회차를_생성할_수_있다() {
         // given
         String name = "가".repeat(100);
@@ -183,8 +202,8 @@ class ClassSessionTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, -1})
-    void 진행_시간이_1분_미만이면_수업_회차를_생성할_수_없다(int durationMinutes) {
+    @ValueSource(ints = {0, -1, 1_441})
+    void 진행_시간이_유효한_범위를_벗어나면_수업_회차를_생성할_수_없다(int durationMinutes) {
         // given
         StudioMembership instructorMembership = 기본_담당_강사_소속();
 
