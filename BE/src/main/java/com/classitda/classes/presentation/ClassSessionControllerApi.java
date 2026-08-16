@@ -1,6 +1,7 @@
 package com.classitda.classes.presentation;
 
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,7 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "수업 회차", description = "시설의 단일 또는 반복 수업 회차를 관리합니다.")
+@Tag(name = "수업 회차", description = "시설의 수업 회차를 등록하고 회원에게 공개되는 수업 정보를 조회합니다.")
 public interface ClassSessionControllerApi {
 
     @Operation(
@@ -116,5 +117,84 @@ public interface ClassSessionControllerApi {
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
             Long studioId,
             ClassSessionCreateRequest request
+    );
+
+    @Operation(
+            summary = "회원용 수업 회차 상세 조회",
+            description = """
+                    ### 조회 대상
+
+                    - 회원에게 공개되는 수업 정보를 조회합니다.
+                    - 시설 대표와 같은 시설의 활성 회원, 강사, 관리자가 조회할 수 있습니다.
+                    - 회원, 강사, 관리자에게 동일한 수업 회차 정보를 반환합니다.
+
+                    ### 응답 범위
+
+                    - 담당 강사, 수업 종류, 수업명, 수업 안내, 정원, 진행 시간, 시작·종료 일시와 상태를 반환합니다.
+                    - 예약 회원 목록과 예약·대기 인원은 포함하지 않습니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "회원에게 공개되는 수업 회차 상세 정보를 반환합니다.",
+                    content = @Content(schema = @Schema(implementation = ClassSessionDetailResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "API 버전 헤더가 없거나 지원하지 않는 버전입니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "버전 헤더 누락", value = """
+                                            {"code":"API-001","message":"X-API-Version 헤더는 필수입니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 버전", value = """
+                                            {"code":"API-002","message":"지원하지 않는 API 버전입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "인증 실패", value = """
+                                    {"code":"AUTH-001","message":"인증이 필요합니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "시설 소속이 아니거나 소속이 비활성 상태입니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code":"MEMBERSHIP-001","message":"해당 시설의 소속이 아닙니다."}"""),
+                                    @ExampleObject(name = "비활성 소속", value = """
+                                            {"code":"MEMBERSHIP-002","message":"이용이 정지된 소속입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설이나 수업 회차를 찾을 수 없습니다. 다른 시설의 수업 회차도 동일하게 처리합니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "시설 없음", value = """
+                                            {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "수업 회차 없음", value = """
+                                            {"code":"CLASS_SESSION-014","message":"수업 회차를 찾을 수 없습니다."}""")
+                            }
+                    )
+            )
+    })
+    ClassSessionDetailResponse findOne(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            @Parameter(description = "조회할 수업 회차 ID입니다.", required = true, example = "11")
+            Long classSessionId
     );
 }

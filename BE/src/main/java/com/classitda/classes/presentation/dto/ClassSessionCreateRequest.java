@@ -57,8 +57,8 @@ public record ClassSessionCreateRequest(
         LocalTime startTime,
 
         @Schema(
-                description = "회원에게 표시되는 수업 안내",
-                example = "편한 복장과 개인 수건을 준비해 주세요."
+                description = "회원에게 표시되는 자유 형식의 수업 안내. 준비물, 수업 장소, 입장 방법 등을 작성할 수 있습니다.",
+                example = "수업은 3층 A룸에서 진행합니다. 개인 수건을 준비해 주세요."
         )
         String description,
 
