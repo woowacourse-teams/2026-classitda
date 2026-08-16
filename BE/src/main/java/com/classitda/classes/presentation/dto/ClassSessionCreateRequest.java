@@ -12,6 +12,10 @@ import java.time.LocalTime;
 import java.util.List;
 
 public record ClassSessionCreateRequest(
+        @Schema(
+                description = "사용할 수업 템플릿 ID. 선택 값이며 같은 시설의 템플릿인지 검증하는 데만 사용됩니다.",
+                example = "5"
+        )
         @Positive(message = "수업 템플릿 ID는 양수여야 합니다.")
         Long classTemplateId,
 
@@ -36,6 +40,12 @@ public record ClassSessionCreateRequest(
         @Positive(message = "정원은 1명 이상이어야 합니다.")
         Integer capacity,
 
+        @Schema(
+                description = "수업 진행 시간(분). 1분 이상 1,440분 이하여야 합니다.",
+                minimum = "1",
+                maximum = "1440",
+                example = "60"
+        )
         @NotNull(message = "진행 시간은 필수입니다.")
         @Positive(message = "진행 시간은 1분 이상이어야 합니다.")
         Integer durationMinutes,
@@ -48,12 +58,28 @@ public record ClassSessionCreateRequest(
 
         String memo,
 
+        @Schema(
+                description = "반복하지 않는 수업의 날짜입니다. recurring이 false일 때 필수입니다. 이 경우 recurringDays, repeatStartDate, repeatEndDate는 생략하거나 null로 전달해야 합니다.",
+                example = "2026-08-17"
+        )
         LocalDate classDate,
 
+        @Schema(
+                description = "반복 수업의 요일 목록. recurring이 true일 때 하나 이상 필요하며 null이나 중복을 포함할 수 없습니다.",
+                example = "[\"MONDAY\", \"WEDNESDAY\"]"
+        )
         List<@NotNull(message = "반복 요일에는 null을 포함할 수 없습니다.") DayOfWeek> recurringDays,
 
+        @Schema(
+                description = "반복 기간의 시작일. recurring이 true일 때 필수이며 이 날짜를 포함합니다.",
+                example = "2026-08-17"
+        )
         LocalDate repeatStartDate,
 
+        @Schema(
+                description = "반복 기간의 종료일. recurring이 true일 때 필수이며 시작일보다 빠를 수 없고 이 날짜를 포함합니다.",
+                example = "2026-08-31"
+        )
         LocalDate repeatEndDate
 ) {
 
