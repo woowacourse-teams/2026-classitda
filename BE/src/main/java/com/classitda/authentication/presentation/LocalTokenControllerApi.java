@@ -15,8 +15,23 @@ public interface LocalTokenControllerApi {
 
     @Operation(
             summary = "로컬 테스트용 로그인 토큰 발급",
-            description = "일반 인증 절차를 생략하고 입력한 회원 ID로 Access Token과 Refresh Token을 발급합니다. "
-                    + "local 프로필에서만 사용할 수 있으며 기본 테스트 회원 ID는 1입니다."
+            description = """
+                    일반 인증 절차를 생략하고 입력한 회원 ID로 Access Token과 Refresh Token을 발급합니다.
+                    local 프로필에서만 사용할 수 있습니다.
+
+                    ### 회원용 수업 목록 테스트 순서
+
+                    1. 회원 ID 1로 이 API를 호출합니다.
+                    2. 응답의 accessToken을 Swagger 상단 Authorize에 Bearer 토큰으로 입력합니다.
+                    3. 시설 ID 1, 보유 수강권 ID 42로 회원용 일별 수업 목록을 호출합니다.
+                    4. date에는 로컬 애플리케이션을 시작한 날짜의 다음 날을 입력합니다.
+
+                    ### 로컬 테스트 계정
+
+                    - 1: 김회원 - 회원용 목록·상세 조회
+                    - 2: 박대표 - 시설 전체 ClassSession 관리
+                    - 3: 이강사 - 본인 ClassSession 관리
+                    """
     )
     @ApiResponse(
             responseCode = "200",
