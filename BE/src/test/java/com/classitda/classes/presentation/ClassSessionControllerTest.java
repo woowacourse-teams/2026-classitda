@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
+import com.classitda.classes.application.student.StudentSessionQueryService;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.exception.ClassErrorCode;
@@ -19,11 +20,17 @@ import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
+import com.classitda.classes.presentation.dto.MemberClassSessionBookingStatus;
+import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
+import com.classitda.passproduct.exception.PassProductErrorCode;
+import com.classitda.passproduct.exception.PassProductException;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +58,9 @@ class ClassSessionControllerTest {
 
     @MockitoBean
     private ClassSessionQueryService queryService;
+
+    @MockitoBean
+    private StudentSessionQueryService studentSessionQueryService;
 
     @MockitoBean
     private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
@@ -106,6 +116,104 @@ class ClassSessionControllerTest {
                 }
                 """, JsonCompareMode.STRICT);
         verify(queryService).findOne(1L, 7L, 11L);
+    }
+
+    @Test
+    void 회원용_일별_수업_목록을_조회하면_200과_목록을_반환하고_조회_서비스에_위임한다() {
+        // given
+        LocalDate date = LocalDate.of(2026, 8, 17);
+        when(studentSessionQueryService.findAll(1L, 7L, date, 42L))
+                .thenReturn(List.of(회원용_일별_수업_응답()));
+
+        // when
+        RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
+                7L,
+                "date=2026-08-17&memberPassProductId=42",
+                "1"
+        );
+
+        // then
+        result.expectStatus().isOk().expectBody().json("""
+                [
+                  {
+                    "id": 11,
+                    "instructorMembershipId": 12,
+                    "instructorName": "김강사",
+                    "classForm": "GROUP",
+                    "classType": {"id": 3, "name": "요가"},
+                    "className": "저녁 요가",
+                    "description": "3층 A룸에서 진행합니다.",
+                    "capacity": 12,
+                    "reservedCount": 8,
+                    "remainingCapacity": 4,
+                    "waitingCount": 2,
+                    "startAt": "2026-08-17T20:00:00",
+                    "endAt": "2026-08-17T21:00:00",
+                    "bookingStatus": "AVAILABLE"
+                  }
+                ]
+                """, JsonCompareMode.STRICT);
+        verify(studentSessionQueryService).findAll(1L, 7L, date, 42L);
+    }
+
+    @ParameterizedTest
+    @MethodSource("유효하지_않은_회원용_목록_쿼리")
+    void 회원용_목록의_날짜나_보유_수강권_요청값이_유효하지_않으면_COMMON_001을_반환한다(String query) {
+        // when
+        RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(7L, query, "1");
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(studentSessionQueryService, never()).findAll(any(), any(), any(), any());
+    }
+
+    @Test
+    void 회원용_목록에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri("/api/studios/7/class-sessions?date=2026-08-17&memberPassProductId=42")
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        verify(studentSessionQueryService, never()).findAll(any(), any(), any(), any());
+    }
+
+    @Test
+    void 회원용_목록에서_지원하지_않는_버전이면_API_002를_반환하고_조회_서비스를_호출하지_않는다() {
+        // when
+        RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
+                7L,
+                "date=2026-08-17&memberPassProductId=42",
+                "2"
+        );
+
+        // then
+        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(studentSessionQueryService, never()).findAll(any(), any(), any(), any());
+    }
+
+    @ParameterizedTest
+    @MethodSource("회원용_목록_수강권_예외")
+    void 회원용_목록의_수강권_예외를_정확한_HTTP_응답으로_직렬화한다(
+            RuntimeException exception,
+            int status,
+            String code,
+            String message
+    ) {
+        // given
+        LocalDate date = LocalDate.of(2026, 8, 17);
+        when(studentSessionQueryService.findAll(1L, 7L, date, 42L)).thenThrow(exception);
+
+        // when
+        RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
+                7L,
+                "date=2026-08-17&memberPassProductId=42",
+                "1"
+        );
+
+        // then
+        오류를_검증한다(result, status, code, message);
     }
 
     @Test
@@ -240,6 +348,17 @@ class ClassSessionControllerTest {
                 .exchange();
     }
 
+    private RestTestClient.ResponseSpec 회원용_일별_수업_목록을_조회한다(
+            Long studioId,
+            String query,
+            String version
+    ) {
+        return client.get()
+                .uri("/api/studios/%d/class-sessions?%s".formatted(studioId, query))
+                .header("X-API-Version", version)
+                .exchange();
+    }
+
     private void 오류를_검증한다(
             RestTestClient.ResponseSpec result,
             int status,
@@ -327,6 +446,32 @@ class ClassSessionControllerTest {
         );
     }
 
+    private static Stream<Arguments> 유효하지_않은_회원용_목록_쿼리() {
+        return Stream.of(
+                Arguments.of("memberPassProductId=42"),
+                Arguments.of("date=2026-08-17"),
+                Arguments.of("date=invalid&memberPassProductId=42"),
+                Arguments.of("date=2026-08-17&memberPassProductId=0")
+        );
+    }
+
+    private static Stream<Arguments> 회원용_목록_수강권_예외() {
+        return Stream.of(
+                Arguments.of(
+                        new PassProductException(PassProductErrorCode.MEMBER_PASS_PRODUCT_NOT_FOUND),
+                        404,
+                        "PASS_PRODUCT-010",
+                        "보유 수강권을 찾을 수 없습니다."
+                ),
+                Arguments.of(
+                        new PassProductException(PassProductErrorCode.MEMBER_PASS_PRODUCT_UNAVAILABLE),
+                        409,
+                        "PASS_PRODUCT-011",
+                        "현재 사용할 수 없는 수강권입니다."
+                )
+        );
+    }
+
     private static ClassSessionDetailResponse 수업_회차_상세_응답() {
         return new ClassSessionDetailResponse(
                 11L,
@@ -341,6 +486,25 @@ class ClassSessionControllerTest {
                 LocalDateTime.of(2026, 8, 17, 20, 0),
                 LocalDateTime.of(2026, 8, 17, 21, 0),
                 ClassSessionStatus.OPENED
+        );
+    }
+
+    private static MemberClassSessionResponse 회원용_일별_수업_응답() {
+        return new MemberClassSessionResponse(
+                11L,
+                12L,
+                "김강사",
+                ClassForm.GROUP,
+                ClassTypeResponse.of(3L, "요가"),
+                "저녁 요가",
+                "3층 A룸에서 진행합니다.",
+                12,
+                8,
+                4,
+                2,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                LocalDateTime.of(2026, 8, 17, 21, 0),
+                MemberClassSessionBookingStatus.AVAILABLE
         );
     }
 }
