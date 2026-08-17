@@ -12,6 +12,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppSpacing
@@ -26,6 +30,42 @@ fun HomeScreen(
     onRefresh: () -> Unit = {},
     onTabSelected: (StudentTab) -> Unit = {},
 ) {
+    var showApprovalDialog by remember { mutableStateOf(false) }
+    var showConfirmedDialog by remember { mutableStateOf(false) }
+
+    if (showApprovalDialog) {
+        ReservationApprovalDialog(
+            className = "리포머 밸런스",
+            date = "2026.08.05 (목)",
+            timeRange = "오후 7:30 ~ 오후 8:20",
+            instructorName = "이지은",
+            memo = "준비물 - 수건, 오늘 수업 조금...",
+            passName = "리포머 20회권",
+            totalRemainingCount = 8,
+            reservableCount = 5,
+            cancellableCount = 2,
+            onCancelClick = { showApprovalDialog = false },
+            onApproveClick = {
+                showApprovalDialog = false // TODO
+                showConfirmedDialog = true
+            },
+            onDismissRequest = { showApprovalDialog = false },
+        )
+    }
+
+    if (showConfirmedDialog) {
+        ReservationConfirmedDialog(
+            className = "리포머 밸런스",
+            date = "2026.08.05(목)",
+            timeRange = "오후 7:30 ~ 8:40",
+            onCheckScheduleClick = {
+                showConfirmedDialog = false
+                onTabSelected(StudentTab.MY_SCHEDULE)
+            },
+            onDismissRequest = { showConfirmedDialog = false },
+        )
+    }
+
     Scaffold(
         containerColor = StuColors.Background,
         topBar = {
@@ -45,16 +85,9 @@ fun HomeScreen(
         HomeScreenContent(
             isRefreshing = isRefreshing,
             onRefresh = onRefresh,
+            onPendingReservationApproveClick = { showApprovalDialog = true },
             modifier = Modifier.padding(innerPadding),
         )
-    }
-}
-
-@Composable
-@Preview
-private fun HomeScreenPreview() {
-    AppTheme {
-        HomeScreen()
     }
 }
 
@@ -63,6 +96,7 @@ private fun HomeScreenPreview() {
 private fun HomeScreenContent(
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    onPendingReservationApproveClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
@@ -86,7 +120,7 @@ private fun HomeScreenContent(
                 remainingMin = 18,
                 remainingProgress = 18 / 60f,
                 onLaterClick = { /*TODO*/ },
-                onApproveClick = { /*TODO*/ },
+                onApproveClick = onPendingReservationApproveClick,
             )
 
             UpcomingReservationsSection(
@@ -126,6 +160,15 @@ private fun HomeScreenContentPreview() {
         HomeScreenContent(
             isRefreshing = false,
             onRefresh = {},
+            onPendingReservationApproveClick = {},
         )
+    }
+}
+
+@Composable
+@Preview
+private fun HomeScreenPreview() {
+    AppTheme {
+        HomeScreen()
     }
 }
