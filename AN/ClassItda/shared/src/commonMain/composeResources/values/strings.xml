@@ -46,11 +46,17 @@
     <string name="my_schedule_refreshing">일정을 새로 불러오는 중입니다.</string>
     <string name="my_schedule_refresh_error">새로운 일정을 불러오지 못했습니다.</string>
     <string name="my_schedule_reservation_detail_title">예약 상세</string>
+    <string name="my_schedule_reserved_at">예약 일시</string>
+    <string name="my_schedule_attendance_time">출석 일시</string>
     <string name="my_schedule_reservation_confirmed">예약 확정</string>
     <string name="my_schedule_detail_date_label">%1$d년 %2$d월 %3$d일 %4$s</string>
     <string name="my_schedule_detail_date_time_label">%1$s  %2$s</string>
     <string name="my_schedule_inquiry">문의하기</string>
     <string name="my_schedule_used_ticket">사용 수강권</string>
+    <string name="my_schedule_memo">메모</string>
+    <string name="my_schedule_pass_total_remaining">전체 잔여 %1$d회</string>
+    <string name="my_schedule_pass_reservable">예약 가능 %1$d회</string>
+    <string name="my_schedule_pass_cancellable">취소 가능 %1$d회</string>
     <string name="my_schedule_ticket_valid_until">%1$d.%2$s.%3$s까지</string>
     <string name="my_schedule_reservation_available">예약 가능</string>
     <string name="my_schedule_remaining_count">%1$d회</string>
@@ -63,7 +69,7 @@
     <string name="my_schedule_reservation_cancellation_deadline">수업 시작 %1$d시간 전까지 예약을 취소할 수 있어요.</string>
     <string name="my_schedule_reservation_ticket_restoration_facility">취소 시 사용한 수강권 횟수는 시설 정책에 따라 복구됩니다.</string>
     <string name="my_schedule_reservation_ticket_no_deduction">취소 시 수강권 횟수가 차감되지 않습니다.</string>
-    <string name="my_schedule_cancel_reservation">예약 취소하기</string>
+    <string name="my_schedule_cancel_reservation">예약 취소</string>
     <string name="my_schedule_back">뒤로 가기</string>
     <string name="my_schedule_schedule_time">수업 시간</string>
     <string name="my_schedule_schedule_location">수업 장소</string>
@@ -128,4 +134,10 @@
     <string name="my_schedule_class_detail_notice">유의사항</string>
     <string name="my_schedule_class_detail_history_condition">출석 처리가 완료된 수업만 이용 내역에 표시됩니다.</string>
     <string name="my_schedule_class_detail_ticket_inquiry">수강권 사용 및 환불 문의는 센터로 연락 바랍니다.</string>
+    <string name="my_schedule_class_detail_instructor_information">강사 정보</string>
+    <string name="my_schedule_class_detail_reservation_cancellation_deadline">수업 시작 %1$d시간 전까지 취소 시 횟수가 차감되지 않습니다.</string>
+    <string name="my_schedule_class_detail_waitlist_confirmation_policy">대기 중인 상태에서 예약이 확정된 후 취소 시에도 동일한 규정이 적용됩니다.</string>
+    <string name="my_schedule_class_detail_center_cancellation_policy">수업 시작 전까지 센터의 취소 규정에 따라 예약을 취소할 수 있습니다.</string>
+    <string name="my_schedule_class_detail_attended_result">출석이 완료된 수업입니다.</string>
+    <string name="my_schedule_class_detail_absent_result">결석한 수업입니다.</string>
 </resources>

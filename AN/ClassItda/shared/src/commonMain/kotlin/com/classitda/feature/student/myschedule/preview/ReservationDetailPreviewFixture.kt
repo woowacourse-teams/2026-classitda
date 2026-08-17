@@ -1,42 +1,75 @@
 package com.classitda.feature.student.myschedule.preview
 
-import androidx.compose.runtime.Composable
+import com.classitda.domain.model.student.myschedule.ReservationId
+import com.classitda.feature.student.myschedule.contract.ReservationCancellationAvailabilityUiModel
+import com.classitda.feature.student.myschedule.contract.ReservationClassInfoUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
-import com.classitda.feature.student.myschedule.contract.ReservationTicketUiModel
-import com.classitda.feature.student.myschedule.contract.ScheduleCancellationAvailabilityUiModel
-import com.classitda.feature.student.myschedule.contract.ScheduleCancellationPolicyUiModel
-import com.classitda.feature.student.myschedule.contract.ScheduleItemId
-import com.classitda.feature.student.myschedule.contract.ScheduleTicketRestorationUiModel
-import com.classitda.feature.student.myschedule.utils.previewReservationDetailDateTime
-import com.classitda.feature.student.myschedule.utils.previewTicketValidUntilLabel
-import kotlinx.datetime.LocalDate
-import kotlin.time.Instant
+import com.classitda.feature.student.myschedule.contract.ReservationPassAvailabilityUiModel
+import com.classitda.feature.student.myschedule.contract.ReservationUsedPassUiModel
 
-@Composable
-internal fun reservationDetailPreviewModel(): ReservationDetailUiModel =
-    ReservationDetailUiModel(
-        id = ScheduleItemId("preview-reservation-detail"),
-        title = "리포머 밸런스",
-        instructorName = "이지은",
-        dateTime =
-            previewReservationDetailDateTime(
-                startAt = Instant.parse("2026-08-06T10:30:00Z"),
-                endAt = Instant.parse("2026-08-06T11:20:00Z"),
-            ),
-        locationLabel = "밸런스 필라테스 성수점 · 리포머룸",
-        ticket =
-            ReservationTicketUiModel(
-                name = "리포머 20회권",
-                validUntilLabel = previewTicketValidUntilLabel(LocalDate(2026, 9, 30)),
-                remainingReservationCount = 5,
-            ),
-        attendeeCount = 1,
-        cancellation =
-            ScheduleCancellationAvailabilityUiModel.Available(
-                policy =
-                    ScheduleCancellationPolicyUiModel.Reservation(
-                        deadlineHoursBeforeStart = 6,
-                        ticketRestoration = ScheduleTicketRestorationUiModel.AccordingToFacilityPolicy,
-                    ),
-            ),
-    )
+internal object ReservationDetailPreviewFixture {
+    private val confirmedClassInfo =
+        ReservationClassInfoUiModel(
+            dateLabel = "2026.08.04 (화)",
+            timeRangeLabel = "오후 6:30 ~ 7:20",
+            memo = "오늘 평소보다 난이도가 조금 있는 수업입니다. 따라서 초보",
+            instructorName = "박소연 강사",
+            facilityName = "클래스잇다 금토동지점",
+        )
+
+    private val historyClassInfo = confirmedClassInfo.copy(memo = null)
+
+    private val usedPass =
+        ReservationUsedPassUiModel(
+            name = "[8:1] 그룹 레슨 20회권",
+            validityLabel = "2026.06.30 ~ 2026.08.20",
+        )
+
+    val confirmed =
+        ReservationDetailUiModel.Confirmed(
+            reservationId = ReservationId("preview-reservation-confirmed"),
+            title = "체어 밸런스",
+            classInfo = confirmedClassInfo,
+            reservedAtLabel = "2026.08.01 (토) 오후 3:20",
+            pass =
+                ReservationPassAvailabilityUiModel(
+                    name = "[8:1] 그룹 레슨 20회권",
+                    validityLabel = "2026.06.30 ~ 2026.08.20",
+                    remainingUses = 14,
+                    reservableUses = 5,
+                    cancellableUses = 2,
+                ),
+            cancellationDeadlineHoursBeforeStart = 4,
+            cancellation =
+                ReservationCancellationAvailabilityUiModel.Available(
+                    hoursUntilStart = 22,
+                    restoredPassUses = 1,
+                ),
+        )
+
+    val cancelled =
+        ReservationDetailUiModel.Cancelled(
+            reservationId = ReservationId("preview-reservation-cancelled"),
+            title = "체어 밸런스",
+            classInfo = confirmedClassInfo,
+            cancelledAtLabel = "2026.08.01 (토) 오후 3:25",
+        )
+
+    val attended =
+        ReservationDetailUiModel.Attended(
+            reservationId = ReservationId("preview-reservation-attended"),
+            title = "체어 밸런스",
+            classInfo = historyClassInfo,
+            checkedInAtLabel = "2026.08.04 (화) 오후 6:20",
+            usedPass = usedPass,
+        )
+
+    val absent =
+        ReservationDetailUiModel.Absent(
+            reservationId = ReservationId("preview-reservation-absent"),
+            title = "체어 밸런스",
+            classInfo = historyClassInfo,
+            attendanceTimePlaceholder = "--:--:--",
+            usedPass = usedPass,
+        )
+}
