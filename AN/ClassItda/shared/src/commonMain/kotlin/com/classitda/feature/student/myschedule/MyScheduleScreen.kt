@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +21,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.student.myschedule.ReservationId
 import com.classitda.domain.model.student.myschedule.WaitlistId
 import com.classitda.feature.student.myschedule.component.common.MyScheduleTopBar
@@ -57,7 +58,7 @@ fun MyScheduleScreen(
         modifier =
             modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+                .background(StuColors.Background),
     ) {
         MyScheduleTopBar()
         MyScheduleTabSelector(
@@ -103,7 +104,7 @@ private fun UpcomingTabContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+                .background(StuColors.Background),
     ) {
         when (state) {
             UpcomingScheduleTabState.NotLoaded -> {
@@ -165,7 +166,7 @@ private fun UsageHistoryTabContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
+                .background(StuColors.Background),
     ) {
         when (state) {
             UsageHistoryTabState.NotLoaded -> {
@@ -473,13 +474,13 @@ private fun MyScheduleInteractionHarness(initialState: MyScheduleUiState) {
         }
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            color = StuColors.SurfaceVariant,
         ) {
             Text(
                 text = "마지막 이벤트: $lastEvent",
                 modifier = Modifier.padding(AppSpacing.md),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = appTypography().bodyMedium,
+                color = StuColors.TextSecondary,
             )
         }
     }

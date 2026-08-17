@@ -6,9 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -63,7 +63,7 @@ internal fun MyScheduleLoadingContent(modifier: Modifier = Modifier) {
             text = loadingDescription,
             modifier = Modifier.padding(top = AppSpacing.lg),
             style = appTypography().bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = StuColors.TextSecondary,
         )
     }
 }
@@ -91,14 +91,14 @@ internal fun MyScheduleEmptyContent(
             text = stringResource(content.title),
             modifier = Modifier.semantics { heading() },
             style = appTypography().titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onBackground,
+            color = StuColors.TextPrimary,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(content.description),
             modifier = Modifier.padding(top = AppSpacing.sm),
             style = appTypography().bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = StuColors.TextSecondary,
             textAlign = TextAlign.Center,
         )
         MyScheduleSecondaryButton(
@@ -130,14 +130,14 @@ internal fun MyScheduleInitialErrorContent(
             text = stringResource(Res.string.my_schedule_load_error_title),
             modifier = Modifier.semantics { heading() },
             style = appTypography().titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onBackground,
+            color = StuColors.TextPrimary,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(error.descriptionResource()),
             modifier = Modifier.padding(top = AppSpacing.sm),
             style = appTypography().bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = StuColors.TextSecondary,
             textAlign = TextAlign.Center,
         )
         MySchedulePrimaryButton(
@@ -176,8 +176,8 @@ internal fun MyScheduleRefreshStatus(
                     modifier
                         .fillMaxWidth()
                         .semantics { liveRegion = LiveRegionMode.Polite },
-                color = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                color = StuColors.RedLight,
+                contentColor = StuColors.Red,
             ) {
                 Row(
                     modifier =
@@ -191,7 +191,10 @@ internal fun MyScheduleRefreshStatus(
                         modifier = Modifier.weight(1f),
                         style = appTypography().bodyMedium,
                     )
-                    TextButton(onClick = onRetry) {
+                    TextButton(
+                        onClick = onRetry,
+                        colors = ButtonDefaults.textButtonColors(contentColor = StuColors.Red),
+                    ) {
                         Text(
                             text = stringResource(Res.string.my_schedule_retry),
                             style = appTypography().labelLarge.copy(fontWeight = FontWeight.SemiBold),

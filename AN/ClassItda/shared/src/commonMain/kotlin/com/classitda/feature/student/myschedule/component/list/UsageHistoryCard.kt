@@ -1,7 +1,6 @@
 package com.classitda.feature.student.myschedule.component.list
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -13,6 +12,7 @@ import classitda.shared.generated.resources.my_schedule_status_reservation_cance
 import classitda.shared.generated.resources.my_schedule_status_reservation_canceled_mark
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.student.myschedule.contract.UsageHistoryCardUiModel
 import com.classitda.feature.student.myschedule.contract.UsageHistoryStatusUiModel
@@ -41,7 +41,7 @@ private fun UsageHistoryStatus(status: UsageHistoryStatusUiModel) {
         UsageHistoryStatusUiModel.ATTENDED -> {
             ScheduleStatusLabel(
                 label = Res.string.my_schedule_status_attended,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                contentColor = StuColors.TextSecondary,
                 mark = Res.string.my_schedule_status_completed_mark,
             )
         }
@@ -49,7 +49,7 @@ private fun UsageHistoryStatus(status: UsageHistoryStatusUiModel) {
         UsageHistoryStatusUiModel.ABSENT -> {
             ScheduleStatusLabel(
                 label = Res.string.my_schedule_status_absent,
-                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                contentColor = StuColors.TextSecondary,
                 mark = Res.string.my_schedule_status_reservation_canceled_mark,
             )
         }
@@ -57,7 +57,7 @@ private fun UsageHistoryStatus(status: UsageHistoryStatusUiModel) {
         UsageHistoryStatusUiModel.RESERVATION_CANCELLED -> {
             ScheduleStatusLabel(
                 label = Res.string.my_schedule_status_reservation_canceled,
-                contentColor = MaterialTheme.colorScheme.error,
+                contentColor = StuColors.Red,
                 mark = Res.string.my_schedule_status_reservation_canceled_mark,
             )
         }

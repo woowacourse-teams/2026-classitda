@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +18,7 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_separator
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.appTypography
 import org.jetbrains.compose.resources.stringResource
 
@@ -41,7 +41,7 @@ internal fun ScheduleSummaryCard(
                 .fillMaxWidth()
                 .semantics(mergeDescendants = true) {},
         shape = AppShape.Card,
-        colors = CardDefaults.outlinedCardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.outlinedCardColors(containerColor = StuColors.Surface),
     ) {
         Column(
             modifier = Modifier.padding(AppSpacing.cardPadding),
@@ -52,7 +52,7 @@ internal fun ScheduleSummaryCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = StuColors.TextPrimary,
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -64,7 +64,7 @@ internal fun ScheduleSummaryCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = StuColors.TextPrimary,
                 )
                 statusContent()
             }
@@ -94,13 +94,13 @@ private fun ScheduleSummaryCardDetails(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = StuColors.TextSecondary,
         )
         memo?.let {
             Text(
                 text = stringResource(Res.string.my_schedule_separator),
                 style = typography.bodySmall,
-                color = MaterialTheme.colorScheme.outlineVariant,
+                color = StuColors.Divider,
             )
             Text(
                 text = it,
@@ -108,7 +108,7 @@ private fun ScheduleSummaryCardDetails(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = StuColors.TextSecondary,
             )
         }
     }
