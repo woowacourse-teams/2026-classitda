@@ -58,10 +58,17 @@ internal object ReservationDetailPreviewFixture {
 
     val cancellationCompleted =
         ReservationCancellationResultUiModel(
-            reservationId = confirmed.reservationId,
-            title = confirmed.title,
-            classInfo = confirmed.classInfo,
-            cancelledAtLabel = "2026.08.01 (토) 오후 3:25",
+            reservationId = ReservationId("preview-reservation-cancellation-result"),
+            title = "리포머 밸런스",
+            classInfo =
+                ReservationClassInfoUiModel(
+                    dateLabel = "2026.08.06 (목)",
+                    timeRangeLabel = "오후 7:30 ~ 8:20",
+                    memo = null,
+                    instructorName = "이지은 강사",
+                    facilityName = "클래스잇다 금토동지점",
+                ),
+            cancelledAtLabel = "2026.08.04 (화) 오후 2:32",
             restoredPassUses = 1,
         )
 

@@ -23,8 +23,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_load_error_description
 import classitda.shared.generated.resources.my_schedule_load_error_title
-import classitda.shared.generated.resources.my_schedule_reservation_cancelled_description
-import classitda.shared.generated.resources.my_schedule_reservation_cancelled_title
 import classitda.shared.generated.resources.my_schedule_retry
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -52,8 +50,21 @@ fun ReservationDetailScreen(
     state: ReservationDetailUiState,
     onAction: (ReservationDetailAction) -> Unit,
     onBack: () -> Unit,
+    onBookAnotherClass: () -> Unit,
+    onReturnToList: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (state is ReservationDetailUiState.CancellationCompleted) {
+        ReservationCancellationCompletedScreen(
+            result = state.result,
+            onBack = onBack,
+            onBookAnotherClass = onBookAnotherClass,
+            onReturnToList = onReturnToList,
+            modifier = modifier,
+        )
+        return
+    }
+
     Box(
         modifier =
             modifier
@@ -80,11 +91,7 @@ fun ReservationDetailScreen(
                     )
                 }
 
-                is ReservationDetailUiState.CancellationCompleted -> {
-                    ReservationCancellationCompletedHandoffContent(
-                        modifier = Modifier.weight(1f),
-                    )
-                }
+                is ReservationDetailUiState.CancellationCompleted -> {}
 
                 is ReservationDetailUiState.Error -> {
                     ReservationDetailErrorContent(
@@ -111,33 +118,6 @@ fun ReservationDetailScreen(
                 onDismiss = { onAction(ReservationDetailAction.DismissCancellation) },
             )
         }
-    }
-}
-
-@Composable
-private fun ReservationCancellationCompletedHandoffContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .padding(AppSpacing.screenPadding),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = stringResource(Res.string.my_schedule_reservation_cancelled_title),
-            modifier = Modifier.semantics { heading() },
-            style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
-            textAlign = TextAlign.Center,
-        )
-        Text(
-            text = stringResource(Res.string.my_schedule_reservation_cancelled_description),
-            modifier = Modifier.padding(top = AppSpacing.sm),
-            style = appTypography().bodyMedium,
-            color = StuColors.TextSecondary,
-            textAlign = TextAlign.Center,
-        )
     }
 }
 
@@ -246,7 +226,7 @@ private fun ReservationDetailScreenPreview_CancellationFailed_Student_Default() 
 }
 
 @Preview(
-    name = "Cancellation completed handoff · Student",
+    name = "F05 cancellation completed · Student",
     group = "Screen/MySchedule/ReservationCancellation",
     showBackground = true,
     locale = "ko",
@@ -263,6 +243,8 @@ private fun ReservationDetailScreenPreview_CancellationCompleted_Student_Default
                 ),
             onAction = {},
             onBack = {},
+            onBookAnotherClass = {},
+            onReturnToList = {},
         )
     }
 }
@@ -327,6 +309,8 @@ private fun ReservationDetailScreenPreview_Loading_Student_Default() {
             state = ReservationDetailUiState.Loading,
             onAction = {},
             onBack = {},
+            onBookAnotherClass = {},
+            onReturnToList = {},
         )
     }
 }
@@ -349,6 +333,8 @@ private fun ReservationDetailScreenPreview_Error_Student_Default() {
                 ),
             onAction = {},
             onBack = {},
+            onBookAnotherClass = {},
+            onReturnToList = {},
         )
     }
 }
@@ -424,6 +410,8 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
                         }
                 },
                 onBack = { lastEvent = "마지막 Action/ID: Back" },
+                onBookAnotherClass = {},
+                onReturnToList = {},
                 modifier = Modifier.weight(1f),
             )
             if ((screenState as? ReservationDetailUiState.Content)?.cancellationDialog == null) {
@@ -473,6 +461,8 @@ private fun ReservationDetailPreview(model: ReservationDetailUiModel) {
         state = ReservationDetailUiState.Content(detail = model),
         onAction = {},
         onBack = {},
+        onBookAnotherClass = {},
+        onReturnToList = {},
     )
 }
 
@@ -486,5 +476,7 @@ private fun ReservationCancellationDialogPreview(dialogState: ReservationCancell
             ),
         onAction = {},
         onBack = {},
+        onBookAnotherClass = {},
+        onReturnToList = {},
     )
 }
