@@ -32,6 +32,7 @@ import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.feature.student.home.component.PrimaryTextButton
+import com.classitda.feature.student.home.component.SectionTitle
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -51,14 +52,8 @@ fun UpcomingReservationsSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
-                text = "다가오는 일정",
-                style =
-                    MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                    ),
-                color = StuColors.TextSecondary,
-            )
+            SectionTitle("다가오는 일정")
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(vertical = AppSpacing.xs).clickable(onClick = onSeeAllClick),

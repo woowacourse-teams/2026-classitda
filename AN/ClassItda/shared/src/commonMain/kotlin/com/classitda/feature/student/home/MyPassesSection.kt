@@ -31,6 +31,7 @@ import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
+import com.classitda.feature.student.home.component.SectionTitle
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -56,14 +57,7 @@ fun MyPassesSection(
                 modifier = Modifier.clickable(onClick = onInfoClick),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = "내 수강권",
-                    style =
-                        MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.SemiBold,
-                        ),
-                    color = StuColors.TextSecondary,
-                )
+                SectionTitle("내 수강권")
                 Spacer(modifier = Modifier.width(AppSpacing.xs))
                 Icon(
                     painter = painterResource(Res.drawable.ic_info),

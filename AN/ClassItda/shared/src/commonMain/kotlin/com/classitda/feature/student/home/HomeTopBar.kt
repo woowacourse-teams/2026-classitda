@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
@@ -91,7 +92,11 @@ private fun StudioSection(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
-        Text(text = studioName, style = MaterialTheme.typography.titleMedium, color = StuColors.TextPrimary)
+        Text(
+            text = studioName,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = StuColors.TextPrimary,
+        )
         Icon(
             painter = painterResource(Res.drawable.ic_arrow_down),
             contentDescription = "센터 선택",
