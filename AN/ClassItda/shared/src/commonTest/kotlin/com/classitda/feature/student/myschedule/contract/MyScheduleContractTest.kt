@@ -99,7 +99,6 @@ class MyScheduleContractTest {
                         timeRangeLabel = "오후 7:30 ~ 8:20",
                         title = "리포머 밸런스",
                         instructorName = "이지은 강사",
-                        memo = "오늘은 하타룸으로 오세요~",
                     ),
                 ),
         )
@@ -114,7 +113,6 @@ class MyScheduleContractTest {
                         dateTimeLabel = "2026.08.04 (화) 오후 6:30 ~ 7:20",
                         title = "체어 밸런스",
                         instructorName = "이지은 강사",
-                        memo = null,
                         status = UsageHistoryStatusUiModel.ATTENDED,
                     ),
                 ),

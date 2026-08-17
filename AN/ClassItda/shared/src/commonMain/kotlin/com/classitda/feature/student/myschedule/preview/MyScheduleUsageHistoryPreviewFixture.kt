@@ -22,7 +22,6 @@ internal object MyScheduleUsageHistoryPreviewFixture {
                 ),
             title = "체어 밸런스",
             instructorName = "이지은 강사",
-            memo = null,
             status = UsageHistoryStatusUiModel.ATTENDED,
         )
 
@@ -36,7 +35,6 @@ internal object MyScheduleUsageHistoryPreviewFixture {
                 ),
             title = "리포머 베이직",
             instructorName = "박소연 대표 강사",
-            memo = "오늘은 하타룸으로 오세요~",
             status = UsageHistoryStatusUiModel.ABSENT,
         )
 
@@ -50,7 +48,6 @@ internal object MyScheduleUsageHistoryPreviewFixture {
                 ),
             title = "캐딜락 스트레칭",
             instructorName = "김민지 강사",
-            memo = "캐딜락룸에서 진행합니다.",
             status = UsageHistoryStatusUiModel.RESERVATION_CANCELLED,
         )
 

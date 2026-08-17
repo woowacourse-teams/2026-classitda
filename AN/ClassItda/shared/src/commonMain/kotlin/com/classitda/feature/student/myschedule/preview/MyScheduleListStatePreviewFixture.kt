@@ -98,9 +98,6 @@ internal object MyScheduleListStatePreviewFixture {
                                                     "리포머 코어 밸런스 수업",
                                             instructorName =
                                                 "아주 긴 이름을 가진 이지은 시니어 필라테스 강사",
-                                            memo =
-                                                "오늘은 건물 안쪽의 하타룸으로 오신 뒤 안내 데스크에 " +
-                                                    "예약자 성함을 말씀해 주세요.",
                                         ),
                                     ),
                             ),

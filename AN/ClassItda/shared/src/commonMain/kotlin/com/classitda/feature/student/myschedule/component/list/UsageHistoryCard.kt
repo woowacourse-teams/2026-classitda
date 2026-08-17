@@ -28,7 +28,6 @@ internal fun UsageHistoryCard(
         scheduleLabel = item.dateTimeLabel,
         title = item.title,
         instructorName = item.instructorName,
-        memo = item.memo,
         onClick = onClick,
         modifier = modifier,
         statusContent = { UsageHistoryStatus(status = item.status) },

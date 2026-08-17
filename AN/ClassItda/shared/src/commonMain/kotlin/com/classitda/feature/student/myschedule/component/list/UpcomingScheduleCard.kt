@@ -25,7 +25,6 @@ internal fun UpcomingScheduleCard(
         scheduleLabel = item.timeRangeLabel,
         title = item.title,
         instructorName = item.instructorName,
-        memo = item.memo,
         onClick = onClick,
         modifier = modifier,
         statusContent = { UpcomingScheduleStatus(item = item) },

@@ -14,7 +14,6 @@ internal object MyScheduleUpcomingPreviewFixture {
             timeRangeLabel = "오후 7:30 ~ 8:20",
             title = "리포머 밸런스",
             instructorName = "이지은 강사",
-            memo = "오늘은 하타룸으로 오세요~",
         )
 
     val waitlisted =
@@ -23,7 +22,6 @@ internal object MyScheduleUpcomingPreviewFixture {
             timeRangeLabel = "오전 11:00 ~ 오후 12:50",
             title = "엄청나게 어마어마하게 긴 글자의 수업을 가진 필라테스",
             instructorName = "박소연 대표 강사",
-            memo = "오늘은 하타룸으로 오세요~",
         )
 
     val sections =

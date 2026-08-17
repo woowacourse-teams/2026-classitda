@@ -7,14 +7,12 @@ sealed interface UpcomingScheduleCardUiModel {
     val timeRangeLabel: String
     val title: String
     val instructorName: String
-    val memo: String?
 
     data class ConfirmedReservation(
         val reservationId: ReservationId,
         override val timeRangeLabel: String,
         override val title: String,
         override val instructorName: String,
-        override val memo: String?,
     ) : UpcomingScheduleCardUiModel
 
     data class Waitlisted(
@@ -22,7 +20,6 @@ sealed interface UpcomingScheduleCardUiModel {
         override val timeRangeLabel: String,
         override val title: String,
         override val instructorName: String,
-        override val memo: String?,
     ) : UpcomingScheduleCardUiModel
 }
 
@@ -41,7 +38,6 @@ data class UsageHistoryCardUiModel(
     val dateTimeLabel: String,
     val title: String,
     val instructorName: String,
-    val memo: String?,
     val status: UsageHistoryStatusUiModel,
 )
 

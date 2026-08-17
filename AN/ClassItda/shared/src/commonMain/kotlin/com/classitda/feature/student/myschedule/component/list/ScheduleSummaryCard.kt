@@ -14,20 +14,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import classitda.shared.generated.resources.Res
-import classitda.shared.generated.resources.my_schedule_separator
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.appTypography
-import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun ScheduleSummaryCard(
     scheduleLabel: String,
     title: String,
     instructorName: String,
-    memo: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     statusContent: @Composable () -> Unit,
@@ -68,43 +64,8 @@ internal fun ScheduleSummaryCard(
                 )
                 statusContent()
             }
-            ScheduleSummaryCardDetails(
-                instructorName = instructorName,
-                memo = memo,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ScheduleSummaryCardDetails(
-    instructorName: String,
-    memo: String?,
-    modifier: Modifier = Modifier,
-) {
-    val typography = appTypography()
-
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.cardItemHorizontalGap),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            text = instructorName,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = typography.bodySmall,
-            color = StuColors.TextSecondary,
-        )
-        memo?.let {
             Text(
-                text = stringResource(Res.string.my_schedule_separator),
-                style = typography.bodySmall,
-                color = StuColors.Divider,
-            )
-            Text(
-                text = it,
-                modifier = Modifier.weight(1f),
+                text = instructorName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = typography.bodySmall,

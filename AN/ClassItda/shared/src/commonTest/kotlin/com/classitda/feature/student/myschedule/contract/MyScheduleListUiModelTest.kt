@@ -73,7 +73,6 @@ class MyScheduleListUiModelTest {
             timeRangeLabel = "오후 7:30 ~ 8:20",
             title = "리포머 밸런스",
             instructorName = "이지은 강사",
-            memo = "오늘은 하타룸으로 오세요~",
         )
 
     private fun createWaitlisted(waitlistId: WaitlistId): UpcomingScheduleCardUiModel.Waitlisted =
@@ -82,6 +81,5 @@ class MyScheduleListUiModelTest {
             timeRangeLabel = "오전 11:00 ~ 오후 12:50",
             title = "엄청나게 긴 글자의 수업",
             instructorName = "이지은 강사",
-            memo = null,
         )
 }
