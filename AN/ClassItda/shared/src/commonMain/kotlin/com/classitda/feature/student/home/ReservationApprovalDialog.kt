@@ -82,7 +82,7 @@ private fun ReservationApprovalDialogContent(
                 .clip(AppShape.Card)
                 .background(StuColors.Surface),
     ) {
-        Column(modifier = Modifier.padding(AppSpacing.cardPadding)) {
+        Column(modifier = Modifier.padding(horizontal = AppSpacing.xl, vertical = AppSpacing.xxl)) {
             Text(
                 text = "예약을 승인하시겠습니까?",
                 modifier = Modifier.fillMaxWidth(),
