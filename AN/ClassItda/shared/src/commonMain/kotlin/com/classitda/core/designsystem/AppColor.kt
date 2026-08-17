@@ -12,6 +12,8 @@ object AppColor {
     val Gray200 = Color(0xffE5E5E5)
     val Gray100 = Color(0xffF0F0F0)
 
+    val Gray50 = Color(0xffFAFAFA)
+
     val White = Color(0xffffffff)
 
     val Dim = Color(0x66000000)
@@ -25,7 +27,7 @@ object AppColor {
     val Blue = Color(0xff007AFF)
     val BlueLight = Color(0xffB8E2FF)
 
-    val Green = Color(0xff00C853)
+    val Green = Color(0xff0B8F6F)
     val GreenLight = Color(0xffD3F9D3)
 
     val Purple = Color(0xff6C55D9)
@@ -34,13 +36,22 @@ object AppColor {
 
 object StuColors {
     val Black = AppColor.Black
+
+    val Gray900 = AppColor.Gray900
+    val Gray600 = AppColor.Gray600
+    val Gray400 = AppColor.Gray400
+    val Gray300 = AppColor.Gray300
+    val Gray200 = AppColor.Gray200
+    val Gray100 = AppColor.Gray100
+    val Gray50 = AppColor.Gray50
+
     val White = AppColor.White
 
     val TextPrimary = AppColor.Gray900
     val TextSecondary = AppColor.Gray600
     val TextTertiary = AppColor.Gray400
 
-    val Background = AppColor.Gray900
+    val Background = AppColor.Gray50
     val Surface = AppColor.White
     val Divider = AppColor.Gray200
     val DividerStrong = AppColor.Gray300
@@ -48,38 +59,63 @@ object StuColors {
 
     val Dim = AppColor.Dim // 모달 뒷 배경
 
-    val Green = Color(0xff0B8F6F)
-    val GreenLight = Color(0xffF1FAF7)
+    val PrimaryBlack = AppColor.Gray900
+
+    val Green = AppColor.Green
+    val GreenLight = AppColor.GreenLight
+
+    val Purple = AppColor.Purple
+    val PurpleLight = AppColor.PurpleLight
 
     val Orange = AppColor.Orange
     val OrangeLight = AppColor.OrangeLight
 
     val Red = AppColor.Red
     val RedLight = AppColor.RedLight
+
+    val Blue = AppColor.Blue
+    val BlueLight = AppColor.BlueLight
 }
 
 object InsColors {
     val Black = AppColor.Black
+
+    val Gray900 = AppColor.Gray900
+    val Gray600 = AppColor.Gray600
+    val Gray400 = AppColor.Gray400
+    val Gray300 = AppColor.Gray300
+    val Gray200 = AppColor.Gray200
+    val Gray100 = AppColor.Gray100
+    val Gray50 = AppColor.Gray50
+
     val White = AppColor.White
 
     val TextPrimary = AppColor.Gray900
-    val TextSecondary = Color(0xff70727A)
-    val TextTertiary = Color(0xffB8B4C2)
+    val TextSecondary = AppColor.Gray600
+    val TextTertiary = AppColor.Gray400
 
-    val Background = Color(0xffF5F4F7)
-    val Surface = Color(0xFFFFFFFF) // 카드 배경
-    val Divider = Color(0xffE7E7E7)
+    val Background = AppColor.Gray50
+    val Surface = AppColor.White
+    val Divider = AppColor.Gray200
     val DividerStrong = AppColor.Gray300
-    val SurfaceVariant = Color(0xffF8F9FA) // 카드 위에 올라가는 연한 회색 배경
+    val SurfaceVariant = AppColor.Gray100 // 카드 위에 올라가는 연한 회색 배경
 
     val Dim = AppColor.Dim // 모달 뒷 배경
 
-    val Purple = Color(0xff6C55D9)
-    val PurpleLight = Color(0xffEEEAFE)
+    val PrimaryBlack = AppColor.Gray900
+
+    val Green = AppColor.Green
+    val GreenLight = AppColor.GreenLight
+
+    val Purple = AppColor.Purple
+    val PurpleLight = AppColor.PurpleLight
 
     val Orange = AppColor.Orange
     val OrangeLight = AppColor.OrangeLight
 
     val Red = AppColor.Red
     val RedLight = AppColor.RedLight
+
+    val Blue = AppColor.Blue
+    val BlueLight = AppColor.BlueLight
 }
