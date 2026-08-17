@@ -17,5 +17,5 @@ internal data class WaitlistClassPass(
     val id: String,
     val name: String,
     val usageText: String,
-    val expirationText: String,
+    val validityPeriodText: String,
 )

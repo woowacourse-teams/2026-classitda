@@ -20,6 +20,20 @@ class ClassReservationViewModelTest {
     }
 
     @Test
+    fun `Route에서 받은 수업 ID에 해당하는 상세 정보가 표시된다`() {
+        val viewModel =
+            ClassReservationViewModel(
+                classId = "13",
+                initialPassId = "pass-1",
+                repository = FakeClassReservationRepository(),
+            )
+
+        assertEquals("리포머 베이직", viewModel.uiState.value.selectedClass.className)
+        assertEquals("2026.09.02 (수)", viewModel.uiState.value.selectedClass.dateText)
+        assertEquals("오전 10:00 - 10:50", viewModel.uiState.value.selectedClass.timeText)
+    }
+
+    @Test
     fun `수강권과 약관을 선택하면 상태가 갱신된다`() {
         val viewModel =
             ClassReservationViewModel(

@@ -18,8 +18,9 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,11 +36,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_arrow_back
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.component.PrimaryButton
+import org.jetbrains.compose.resources.painterResource
 
 internal data class WaitlistClassUiModel(
     val id: String,
@@ -47,7 +51,6 @@ internal data class WaitlistClassUiModel(
     val dateText: String,
     val timeText: String,
     val instructorName: String,
-    val roomName: String,
     val memoText: String,
     val cancellationNotice: String,
 )
@@ -56,7 +59,7 @@ internal data class WaitlistClassPassUiModel(
     val id: String,
     val name: String,
     val usageText: String,
-    val expirationText: String,
+    val validityPeriodText: String,
 )
 
 @Composable
@@ -97,6 +100,7 @@ internal fun WaitlistReservationScreen(
                         text = "선택한 수업",
                         color = StuColors.TextSecondary,
                         style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(top = AppSpacing.md),
                     )
                     SelectedWaitlistClassCard(selectedClass = selectedClass)
                 }
@@ -145,10 +149,11 @@ private fun WaitlistReservationTopBar(
                     .clickable(onClick = onBackClick),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "‹",
-                color = StuColors.TextPrimary,
-                style = MaterialTheme.typography.titleLarge,
+            Icon(
+                painter = painterResource(Res.drawable.ic_arrow_back),
+                contentDescription = "뒤로가기",
+                modifier = Modifier.size(24.dp),
+                tint = StuColors.TextPrimary,
             )
         }
 
@@ -206,11 +211,6 @@ private fun SelectedWaitlistClassCard(
                 color = StuColors.TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
             )
-            Text(
-                text = "수업 ID ${selectedClass.id}",
-                color = StuColors.TextTertiary,
-                style = MaterialTheme.typography.labelSmall,
-            )
             Box(
                 modifier =
                     Modifier
@@ -239,7 +239,10 @@ private fun WaitlistPassSection(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
                 text = "사용할 수강권 선택",
                 color = StuColors.TextSecondary,
@@ -267,7 +270,7 @@ private fun WaitlistPassSection(
                 shape = AppShape.Card,
                 border =
                     BorderStroke(
-                        width = if (selected) 2.dp else 1.dp,
+                        width = 1.dp,
                         color = if (selected) StuColors.TextPrimary else StuColors.Divider,
                     ),
                 colors = CardDefaults.cardColors(containerColor = StuColors.White),
@@ -286,7 +289,7 @@ private fun WaitlistPassSection(
                         style = MaterialTheme.typography.bodySmall,
                     )
                     Text(
-                        text = classPass.expirationText,
+                        text = classPass.validityPeriodText,
                         color = StuColors.TextTertiary,
                         style = MaterialTheme.typography.bodySmall,
                     )
@@ -302,7 +305,7 @@ private fun highlightedAvailabilityText(text: String) = buildAnnotatedString {
         append(text)
         return@buildAnnotatedString
     }
-    val end = text.indexOf(" /", start).takeIf { it >= 0 } ?: text.length
+    val end = text.indexOf(" |", start).takeIf { it >= 0 } ?: text.length
     withStyle(SpanStyle(color = StuColors.TextSecondary)) {
         append(text.substring(0, start))
         withStyle(SpanStyle(color = StuColors.Green, fontWeight = FontWeight.Medium)) {
@@ -396,7 +399,6 @@ private fun WaitlistReservationScreenPreview() {
                     dateText = "2026.08.08 (토)",
                     timeText = "오전 10:00 - 10:50",
                     instructorName = "이지은 강사",
-                    roomName = "리포머룸",
                     memoText = "오늘 꼭 수건 챙겨오세요~",
                     cancellationNotice = "예약 취소 및 변경은 수업 시작 4시간 전까지 가능합니다.",
                 ),
@@ -405,14 +407,14 @@ private fun WaitlistReservationScreenPreview() {
                     WaitlistClassPassUiModel(
                         id = "pass-1",
                         name = "[그룹] 8:1 리포머/체어 10회권",
-                        usageText = "잔여 6회 / 예약 가능 2회 / 취소 가능 10회",
-                        expirationText = "2026.12.31까지",
+                        usageText = "잔여 6회 | 예약 가능 2회 | 취소 가능 10회",
+                        validityPeriodText = "유효기간: 2026.08.01 ~ 2026.12.31",
                     ),
                     WaitlistClassPassUiModel(
                         id = "pass-2",
                         name = "[이벤트] 한정판 이용권",
-                        usageText = "잔여 1회 / 예약 가능 1회 / 취소 가능 10회",
-                        expirationText = "2026.11.30까지",
+                        usageText = "잔여 1회 | 예약 가능 1회 | 취소 가능 10회",
+                        validityPeriodText = "유효기간: 없음",
                     ),
                 ),
             selectedPassId = "pass-1",

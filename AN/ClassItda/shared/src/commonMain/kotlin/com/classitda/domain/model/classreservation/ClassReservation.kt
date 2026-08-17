@@ -16,7 +16,7 @@ internal data class ClassPass(
     val id: String,
     val name: String,
     val usageText: String,
-    val expirationText: String,
+    val validityPeriodText: String,
 )
 
 internal sealed interface ReservationRequestResult {

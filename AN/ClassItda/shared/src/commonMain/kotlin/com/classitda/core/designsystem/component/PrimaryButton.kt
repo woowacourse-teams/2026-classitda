@@ -30,7 +30,7 @@ fun PrimaryButton(
         modifier = modifier.heightIn(min = 52.dp),
         shape = AppShape.Card,
         colors = ButtonDefaults.buttonColors(
-            containerColor = StuColors.TextPrimary,
+            containerColor = StuColors.PrimaryColor,
             contentColor = StuColors.White,
         ),
         contentPadding = PaddingValues(

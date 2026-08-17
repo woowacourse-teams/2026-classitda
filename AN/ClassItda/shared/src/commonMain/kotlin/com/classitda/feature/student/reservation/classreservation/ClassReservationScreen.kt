@@ -48,7 +48,6 @@ internal data class SelectedClassUiModel(
     val dateText: String,
     val timeText: String,
     val instructorName: String,
-    val roomName: String,
     val memoText: String,
     val cancellationNotice: String,
 )
@@ -57,7 +56,7 @@ internal data class ClassPassUiModel(
     val id: String,
     val name: String,
     val usageText: String,
-    val expirationText: String,
+    val validityPeriodText: String,
 )
 
 @Composable
@@ -106,6 +105,7 @@ internal fun ClassReservationScreen(
                         text = "선택한 수업",
                         color = StuColors.TextSecondary,
                         style = MaterialTheme.typography.labelLarge,
+                        modifier = Modifier.padding(top = AppSpacing.md)
                     )
 
                     SelectedClassCard(
@@ -232,12 +232,6 @@ private fun SelectedClassCard(
                 style = MaterialTheme.typography.bodySmall,
             )
 
-            Text(
-                text = "수업 ID ${selectedClass.id}",
-                color = StuColors.TextTertiary,
-                style = MaterialTheme.typography.labelSmall,
-            )
-
             Box(
                 modifier =
                     Modifier
@@ -350,7 +344,7 @@ private fun ClassPassItem(
             )
 
             Text(
-                text = classPass.expirationText,
+                text = classPass.validityPeriodText,
                 color = StuColors.TextTertiary,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -364,7 +358,7 @@ private fun highlightedAvailabilityText(text: String) = buildAnnotatedString {
         append(text)
         return@buildAnnotatedString
     }
-    val end = text.indexOf(" /", start).takeIf { it >= 0 } ?: text.length
+    val end = text.indexOf(" |", start).takeIf { it >= 0 } ?: text.length
     withStyle(SpanStyle(color = StuColors.TextSecondary)) {
         append(text.substring(0, start))
         withStyle(SpanStyle(color = StuColors.Green, fontWeight = FontWeight.Medium)) {
@@ -394,7 +388,7 @@ private fun ReservationTermsSection(
                 onCheckedChange = onCheckedChange,
                 colors =
                     CheckboxDefaults.colors(
-                        checkedColor = StuColors.TextPrimary,
+                        checkedColor = StuColors.PrimaryColor,
                     ),
             )
 
@@ -448,7 +442,6 @@ private val previewSelectedClass =
         dateText = "2026.08.08 (토)",
         timeText = "오전 10:00 - 10:50",
         instructorName = "이지은 강사",
-        roomName = "A 스튜디오",
         memoText = "오늘 꼭 수건 챙겨오세요~",
         cancellationNotice = "예약 취소 및 변경은 수업 시작 4시간 전까지 가능합니다.",
     )
@@ -458,14 +451,14 @@ private val previewClassPasses =
         ClassPassUiModel(
             id = "pass-1",
             name = "[그룹] 8:1 리포머/체어 10회권",
-            usageText = "잔여 6회 / 예약 가능 2회 / 취소 가능 10회",
-            expirationText = "유효기간: 2026.12.31까지",
+            usageText = "잔여 6회 | 예약 가능 2회 | 취소 가능 10회",
+            validityPeriodText = "유효기간: 2026.08.01 ~ 2026.12.31",
         ),
         ClassPassUiModel(
             id = "pass-2",
             name = "[이벤트] 전종목 이용권",
             usageText = "무제한 이용 가능",
-            expirationText = "유효기간: 2026.09.15까지",
+            validityPeriodText = "유효기간: 없음",
         ),
     )
 

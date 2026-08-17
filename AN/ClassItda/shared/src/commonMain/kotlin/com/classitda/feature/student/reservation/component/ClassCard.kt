@@ -1,42 +1,78 @@
 package com.classitda.feature.student.reservation.component
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_calendar_today
+import classitda.shared.generated.resources.ic_check
+import classitda.shared.generated.resources.ic_group
+import classitda.shared.generated.resources.ic_schedule
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
 
 // sealed interface 없이 우선 안에 ClassCard 형태랑 ReservationCard 형태로 분리
 @Composable
 internal fun ClassCard(
-    classTime: String,
     className: String,
     instructorName: String,
-    roomName: String?,
+    memo: String?,
     leftStudentCount: Int,
     onButtonClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.clickable(onClick = onButtonClick),
+        shape = AppShape.Card,
+        colors = CardDefaults.cardColors(
+            containerColor = StuColors.White,
+        ),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.md),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.cardItemHorizontalGap),
+        ) {
+            ClassInfo(
+                className = className,
+                instructorName = instructorName,
+                memo = memo,
+                modifier = Modifier.weight(1f),
+            )
+
+            ReservationInfo(
+                leftStudentCount = leftStudentCount,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun ReservationClassCard(
+    className: String,
+    instructorName: String,
+    memo: String?,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -47,61 +83,21 @@ internal fun ClassCard(
         ),
     ) {
         Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(AppSpacing.cardPadding),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.cardItemHorizontalGap),
         ) {
             ClassInfo(
-                classTime = classTime,
                 className = className,
                 instructorName = instructorName,
-                roomName = roomName,
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            ReservationInfo(
-                leftStudentCount = leftStudentCount,
-                onButtonClick = onButtonClick,
-            )
-        }
-    }
-}
-
-@Composable
-internal fun ReservationClassCard(
-    classTime: String,
-    className: String,
-    instructorName: String,
-    roomName: String?,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier,
-        shape = AppShape.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = StuColors.GreenLight,
-        ),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(AppSpacing.cardPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            ClassInfo(
-                classTime = classTime,
-                className = className,
-                instructorName = instructorName,
-                roomName = roomName,
+                memo = memo,
                 modifier = Modifier.weight(1f),
             )
 
-            Text(
-                text = "✓ 예약 완료",
+            ClassStatusLabel(
+                icon = Res.drawable.ic_check,
+                text = "예약 완료",
                 color = StuColors.Green,
-                style = MaterialTheme.typography.labelMedium,
             )
         }
     }
@@ -109,34 +105,27 @@ internal fun ReservationClassCard(
 
 @Composable
 internal fun WaitlistClassCard(
-    classTime: String,
     className: String,
     instructorName: String,
-    roomName: String?,
+    memo: String?,
     modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier,
         shape = AppShape.Card,
         colors = CardDefaults.cardColors(
-            containerColor = StuColors.OrangeLight,
-        ),
-        border = BorderStroke(
-            width = 1.dp,
-            color = StuColors.Orange,
+            containerColor = StuColors.White,
         ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(AppSpacing.cardPadding),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.cardItemHorizontalGap),
         ) {
             ClassInfo(
-                classTime = classTime,
                 className = className,
                 instructorName = instructorName,
-                roomName = roomName,
+                memo = memo,
                 modifier = Modifier.weight(1f),
             )
 
@@ -147,68 +136,68 @@ internal fun WaitlistClassCard(
 
 @Composable
 private fun ClassInfo(
-    classTime: String,
     className: String,
     instructorName: String,
-    roomName: String?,
+    memo: String?,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.cardItemVerticalGap),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
         modifier = modifier,
     ) {
-        Text(
-            text = classTime,
-            color = StuColors.TextSecondary,
-            style = MaterialTheme.typography.bodyMedium,
-        )
         Row(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.cardItemHorizontalGap),
         ) {
             Text(
                 text = className,
                 color = StuColors.TextPrimary,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
-            )
-            Text(
-                text = instructorName,
-                color = StuColors.TextSecondary,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.sp),
-                modifier = Modifier.align(Alignment.Bottom),
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
             )
         }
-        if (roomName != null) Text(
-            text = roomName,
-            color = StuColors.TextSecondary,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+            Text(
+                text = instructorName,
+                color = StuColors.TextTertiary,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            memo?.let {
+                Text(
+                    text = it,
+                    color = StuColors.TextTertiary,
+                    style = MaterialTheme.typography.bodySmall,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun ReservationInfo(
     leftStudentCount: Int,
-    onButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.cardItemVerticalGap),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
-        if (leftStudentCount != 0) Text(
-            text = leftStudentCount.toString() + "자리 남음",
-            color = StuColors.Green,
-            style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.align(Alignment.End),
-        ) else Text(
-            text = "마감",
-            color = StuColors.TextSecondary,
-            style = MaterialTheme.typography.bodySmall,
+        ClassStatusLabel(
+            icon = if (leftStudentCount > 0) {
+                Res.drawable.ic_calendar_today
+            } else {
+                Res.drawable.ic_group
+            },
+            text = if (leftStudentCount > 0) "예약 가능" else "대기 가능",
+            color = StuColors.TextPrimary,
             modifier = Modifier.align(Alignment.End),
         )
-
-        if (leftStudentCount != 0) ReserveButton(onClick = onButtonClick)
-        else WaitlistButton(onClick = onButtonClick)
+        Text(
+            text = if (leftStudentCount > 0) "${leftStudentCount}자리 남음" else "정원 마감",
+            color = StuColors.TextSecondary,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.align(Alignment.End),
+        )
     }
 }
 
@@ -216,32 +205,35 @@ private fun ReservationInfo(
 private fun WaitlistStatus(
     modifier: Modifier = Modifier,
 ) {
+    ClassStatusLabel(
+        icon = Res.drawable.ic_schedule,
+        text = "대기 중",
+        color = StuColors.Orange,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun ClassStatusLabel(
+    icon: DrawableResource,
+    text: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
     Row(
-        modifier = modifier
-            .border(
-                width = 1.dp,
-                color = StuColors.Orange,
-                shape = AppShape.Pill,
-            )
-            .padding(
-                horizontal = AppSpacing.chipHorizontalPadding,
-                vertical = AppSpacing.chipVerticalPadding,
-            ),
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.chipIconGap),
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(4.dp)
-                .background(
-                    color = StuColors.Orange,
-                    shape = CircleShape,
-                ),
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            modifier = Modifier.size(12.dp),
+            tint = color,
         )
-
         Text(
-            text = "대기 중",
-            color = StuColors.Orange,
+            text = text,
+            color = color,
             style = MaterialTheme.typography.labelSmall,
         )
     }
@@ -252,10 +244,9 @@ private fun WaitlistStatus(
 private fun ClassCardPreview1() {
     AppTheme {
         ClassCard(
-            classTime = "오전 10:00 - 10:50",
             className = "리포머 베이직",
             instructorName = "이지은 강사",
-            roomName = "리포머룸",
+            memo = "정말정말정말정말정말정말정말정말정말정말정말정말정말정말정말정말정말정말 긴 메모의 글",
             leftStudentCount = 4,
             onButtonClick = {},
         )
@@ -267,10 +258,9 @@ private fun ClassCardPreview1() {
 private fun ClassCardPreview2() {
     AppTheme {
         ClassCard(
-            classTime = "오전 10:00 - 10:50",
             className = "리포머 베이직",
             instructorName = "이지은 강사",
-            roomName = "리포머룸",
+            memo = "준비물 - 수건, 오늘 숙련자 대상이에요",
             leftStudentCount = 0,
             onButtonClick = {},
         )
@@ -282,10 +272,9 @@ private fun ClassCardPreview2() {
 private fun ReservationClassCardPreview() {
     AppTheme {
         ReservationClassCard(
-            classTime = "오전 10:00 - 10:50",
             className = "리포머 베이직",
             instructorName = "이지은 강사",
-            roomName = "리포머룸",
+            memo = null,
         )
     }
 }
@@ -295,10 +284,9 @@ private fun ReservationClassCardPreview() {
 private fun WaitlistClassCardPreview() {
     AppTheme {
         WaitlistClassCard(
-            classTime = "오후 9:30 - 10:20",
             className = "체어 베이직",
             instructorName = "박소연 강사",
-            roomName = "바렐룸",
+            memo = "정말정말정말정말정말정말정말정말정말정말정말정말정말정말정말정말정말정말 긴 메모의 글",
         )
     }
 }

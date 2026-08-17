@@ -34,7 +34,6 @@ internal class ClassReservationViewModel(
                         dateText = reservation.dateText,
                         timeText = reservation.timeText,
                         instructorName = reservation.instructorName,
-                        roomName = reservation.roomName,
                         memoText = reservation.memoText,
                         cancellationNotice = reservation.cancellationNotice,
                     ),
@@ -44,7 +43,7 @@ internal class ClassReservationViewModel(
                             id = classPass.id,
                             name = classPass.name,
                             usageText = classPass.usageText,
-                            expirationText = classPass.expirationText,
+                            validityPeriodText = classPass.validityPeriodText,
                         )
                     },
                 selectedPassId =

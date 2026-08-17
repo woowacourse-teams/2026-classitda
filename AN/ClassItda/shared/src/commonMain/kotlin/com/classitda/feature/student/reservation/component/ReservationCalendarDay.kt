@@ -28,6 +28,7 @@ import com.classitda.core.designsystem.StuColors
 internal fun ReservationCalendarDay(
     dayOfMonth: Int,
     isCurrentMonth: Boolean,
+    isPast: Boolean,
     isSelected: Boolean,
     isToday: Boolean,
     hasConfirmedReservation: Boolean,
@@ -43,7 +44,7 @@ internal fun ReservationCalendarDay(
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         val dateModifier = when {
-            isSelected -> Modifier.background(
+            isSelected && !isPast -> Modifier.background(
                 StuColors.Green,
                 CircleShape,
             )
@@ -63,7 +64,7 @@ internal fun ReservationCalendarDay(
                 .then(dateModifier)
                 .clip(CircleShape)
                 .clickable(
-                    enabled = isCurrentMonth,
+                    enabled = isCurrentMonth && !isPast,
                     onClick = onClick,
                 ),
             contentAlignment = Alignment.Center,
@@ -71,6 +72,7 @@ internal fun ReservationCalendarDay(
             Text(
                 text = dayOfMonth.toString(),
                 color = when {
+                    isPast -> StuColors.TextTertiary
                     isSelected -> StuColors.White
                     isCurrentMonth -> StuColors.TextPrimary
                     else -> StuColors.TextTertiary
@@ -84,13 +86,13 @@ internal fun ReservationCalendarDay(
             horizontalArrangement = Arrangement.spacedBy(2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (hasConfirmedReservation) {
+            if (!isPast && hasConfirmedReservation) {
                 ReservationCalendarEventDot(
                     color = StuColors.Green,
                 )
             }
 
-            if (hasWaitlistReservation) {
+            if (!isPast && hasWaitlistReservation) {
                 ReservationCalendarEventDot(
                     color = StuColors.Orange,
                 )
@@ -118,6 +120,7 @@ private fun ReservationCalendarDayPreview1() {
         ReservationCalendarDay(
             dayOfMonth = 8,
             isCurrentMonth = true,
+            isPast = false,
             isSelected = true,
             isToday = false,
             hasConfirmedReservation = false,
@@ -134,6 +137,7 @@ private fun ReservationCalendarDayPreview2() {
         ReservationCalendarDay(
             dayOfMonth = 8,
             isCurrentMonth = true,
+            isPast = false,
             isSelected = true,
             isToday = false,
             hasConfirmedReservation = true,
@@ -150,10 +154,28 @@ private fun ReservationCalendarDayPreview3() {
         ReservationCalendarDay(
             dayOfMonth = 5,
             isCurrentMonth = true,
+            isPast = false,
             isSelected = false,
             isToday = true,
             hasConfirmedReservation = false,
             hasWaitlistReservation = true,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "선택할 수 없는 과거 날짜", showBackground = true)
+@Composable
+private fun ReservationCalendarDayPastPreview() {
+    AppTheme {
+        ReservationCalendarDay(
+            dayOfMonth = 4,
+            isCurrentMonth = true,
+            isPast = true,
+            isSelected = false,
+            isToday = false,
+            hasConfirmedReservation = false,
+            hasWaitlistReservation = false,
             onClick = {},
         )
     }

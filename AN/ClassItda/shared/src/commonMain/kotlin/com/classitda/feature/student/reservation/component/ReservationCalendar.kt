@@ -27,7 +27,7 @@ internal fun ReservationCalendar(
     year: Int,
     month: Int,
     selectedDayOfMonth: Int,
-    todayDayOfMonth: Int?,
+    today: LocalDate,
     confirmedReservationDays: Set<Int>,
     waitlistReservationDays: Set<Int>,
     isMonthMode: Boolean,
@@ -42,20 +42,25 @@ internal fun ReservationCalendar(
         year = year,
         month = month,
     )
+    val isPreviousEnabled = year > today.year ||
+        (year == today.year && month > today.month.number)
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(StuColors.White)
             .padding(
-                horizontal = AppSpacing.screenPadding,
-                vertical = AppSpacing.cardPadding,
+                start = AppSpacing.screenPadding,
+                top = AppSpacing.sm,
+                end = AppSpacing.screenPadding,
+                bottom = AppSpacing.cardPadding,
             ),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
     ) {
         ReservationCalendarHeader(
             year = year,
             month = month,
+            isPreviousEnabled = isPreviousEnabled,
             isMonthMode = isMonthMode,
             onPreviousClick = onPreviousClick,
             onNextClick = onNextClick,
@@ -83,8 +88,9 @@ internal fun ReservationCalendar(
                     ReservationCalendarDay(
                         dayOfMonth = dayOfMonth,
                         isCurrentMonth = isCurrentMonth,
+                        isPast = day.date < today,
                         isSelected = isCurrentMonth && dayOfMonth == selectedDayOfMonth,
-                        isToday = isCurrentMonth && dayOfMonth == todayDayOfMonth,
+                        isToday = day.date == today,
                         hasConfirmedReservation = isCurrentMonth &&
                             dayOfMonth in confirmedReservationDays,
                         hasWaitlistReservation = isCurrentMonth &&
@@ -119,8 +125,9 @@ internal fun ReservationCalendar(
                     ReservationCalendarDay(
                         dayOfMonth = dayOfMonth,
                         isCurrentMonth = isCurrentMonth,
+                        isPast = day.date < today,
                         isSelected = isCurrentMonth && dayOfMonth == selectedDayOfMonth,
-                        isToday = isCurrentMonth && dayOfMonth == todayDayOfMonth,
+                        isToday = day.date == today,
                         hasConfirmedReservation = isCurrentMonth &&
                             dayOfMonth in confirmedReservationDays,
                         hasWaitlistReservation = isCurrentMonth &&
@@ -147,9 +154,9 @@ private fun ReservationCalendarMonthPreview() {
             year = 2026,
             month = 8,
             selectedDayOfMonth = 8,
-            todayDayOfMonth = 5,
-            confirmedReservationDays = setOf(7, 8, 12, 15),
-            waitlistReservationDays = setOf(9, 12),
+            today = LocalDate(2026, 8, 5),
+            confirmedReservationDays = setOf(7),
+            waitlistReservationDays = setOf(9),
             isMonthMode = true,
             onDayClick = {},
             onPreviousClick = {},
@@ -168,8 +175,8 @@ private fun ReservationCalendarWeekPreview() {
             year = 2026,
             month = 8,
             selectedDayOfMonth = 8,
-            todayDayOfMonth = 5,
-            confirmedReservationDays = setOf(7, 8),
+            today = LocalDate(2026, 8, 5),
+            confirmedReservationDays = setOf(7),
             waitlistReservationDays = setOf(9),
             isMonthMode = false,
             onDayClick = {},

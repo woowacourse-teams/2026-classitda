@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -24,12 +25,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_event_busy
 import androidx.compose.ui.window.Dialog
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.component.PrimaryButton
+import org.jetbrains.compose.resources.painterResource
 
 internal data class ReservationTimeConflictUiModel(
     val className: String,
@@ -67,7 +71,12 @@ internal fun ReservationTimeConflictDialog(
                     modifier = Modifier.size(48.dp).background(StuColors.SurfaceVariant, CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(text = "▣", color = StuColors.TextTertiary)
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_event_busy),
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp),
+                        tint = StuColors.TextTertiary,
+                    )
                 }
 
                 Text(

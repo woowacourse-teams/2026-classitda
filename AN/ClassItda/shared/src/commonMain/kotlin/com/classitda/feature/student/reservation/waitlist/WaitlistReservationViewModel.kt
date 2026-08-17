@@ -32,7 +32,6 @@ internal class WaitlistReservationViewModel(
                         dateText = reservation.dateText,
                         timeText = reservation.timeText,
                         instructorName = reservation.instructorName,
-                        roomName = reservation.roomName,
                         memoText = reservation.memoText,
                         cancellationNotice = reservation.cancellationNotice,
                     ),
@@ -42,7 +41,7 @@ internal class WaitlistReservationViewModel(
                             id = classPass.id,
                             name = classPass.name,
                             usageText = classPass.usageText,
-                            expirationText = classPass.expirationText,
+                            validityPeriodText = classPass.validityPeriodText,
                         )
                     },
                 expectedWaitingNumber = reservation.expectedWaitingNumber,

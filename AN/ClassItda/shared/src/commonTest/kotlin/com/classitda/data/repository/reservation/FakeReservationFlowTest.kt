@@ -4,6 +4,8 @@ import com.classitda.data.local.reservation.FakeReservationStore
 import com.classitda.data.repository.classreservation.FakeClassReservationRepository
 import com.classitda.data.repository.waitlist.FakeWaitlistReservationRepository
 import com.classitda.domain.model.classreservation.ReservationRequestResult
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -11,6 +13,24 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class FakeReservationFlowTest {
+    @Test
+    fun `8월부터 9월까지 모든 평일에 수업이 있다`() {
+        val classDates = FakeReservationRepository().getClasses().map { it.date }.toSet()
+
+        for (month in 8..9) {
+            val lastDayOfMonth = if (month == 8) 31 else 30
+            for (dayOfMonth in 1..lastDayOfMonth) {
+                val date = LocalDate(2026, month, dayOfMonth)
+                val isWeekday = date.dayOfWeek != DayOfWeek.SATURDAY &&
+                    date.dayOfWeek != DayOfWeek.SUNDAY
+
+                if (isWeekday) {
+                    assertTrue(date in classDates, "$date 평일 수업이 없습니다.")
+                }
+            }
+        }
+    }
+
     @Test
     fun `예약 성공 결과는 공용 저장소의 수업 상태에 반영된다`() {
         val store = FakeReservationStore()

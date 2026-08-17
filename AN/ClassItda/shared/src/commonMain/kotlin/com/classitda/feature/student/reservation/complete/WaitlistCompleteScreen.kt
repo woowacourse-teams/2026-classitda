@@ -12,12 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -31,11 +31,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_check
+import classitda.shared.generated.resources.ic_close
+import classitda.shared.generated.resources.ic_info
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.component.PrimaryButton
+import org.jetbrains.compose.resources.painterResource
 
 internal data class WaitlistCompleteUiModel(
     val id: String,
@@ -67,7 +73,7 @@ internal fun WaitlistCompleteScreen(
             )
         },
     ) { contentPadding ->
-        LazyColumn(
+        Column(
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -76,48 +82,43 @@ internal fun WaitlistCompleteScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
         ) {
-            item {
-                Column(
-                    modifier = Modifier.padding(top = AppSpacing.xxl),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+            Column(
+                modifier = Modifier.padding(vertical = AppSpacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size(56.dp)
+                            .background(StuColors.PrimaryColor, CircleShape),
+                    contentAlignment = Alignment.Center,
                 ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(56.dp)
-                                .background(StuColors.TextPrimary, CircleShape),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "✓",
-                            color = StuColors.White,
-                            style = MaterialTheme.typography.headlineMedium,
-                        )
-                    }
-                    Text(
-                        text = "수업 대기 완료!",
-                        color = StuColors.TextPrimary,
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    )
-                    Text(
-                        text = "이제는 진짜 수업 대기!\n성공적으로 완료되었습니다.",
-                        color = StuColors.TextSecondary,
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center,
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_check),
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp),
+                        tint = StuColors.White,
                     )
                 }
-            }
-
-            item {
-                WaitlistCompleteSummary(reservation = reservation)
-            }
-
-            item {
-                WaitlistNoticeCard(
-                    modifier = Modifier.padding(bottom = AppSpacing.sectionGap),
+                Text(
+                    text = "수업 대기 완료!",
+                    color = StuColors.TextPrimary,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                )
+                Text(
+                    text = "${reservation.instructorName}님의 수업 대기가\n성공적으로 완료되었습니다.",
+                    color = StuColors.TextSecondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
                 )
             }
+
+            WaitlistCompleteSummary(reservation = reservation)
+
+            WaitlistNoticeCard(
+                modifier = Modifier.padding(vertical = AppSpacing.sectionGap),
+            )
         }
     }
 }
@@ -150,10 +151,11 @@ private fun WaitlistCompleteTopBar(
                     .clickable(onClick = onCloseClick),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "×",
-                color = StuColors.TextPrimary,
-                style = MaterialTheme.typography.titleLarge,
+            Icon(
+                painter = painterResource(Res.drawable.ic_close),
+                contentDescription = "닫기",
+                modifier = Modifier.size(18.dp),
+                tint = StuColors.TextPrimary,
             )
         }
     }
@@ -177,24 +179,23 @@ private fun WaitlistCompleteSummary(
                 Text(
                     text = reservation.className,
                     color = StuColors.TextPrimary,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold, fontSize = 18.sp),
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
                     text = reservation.dateText,
                     color = StuColors.TextSecondary,
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
             Text(
                 text = reservation.timeText,
                 color = StuColors.TextPrimary,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
             )
 
-            HorizontalDivider(color = StuColors.Divider)
+            HorizontalDivider(color = StuColors.Divider, modifier = Modifier.padding(vertical = AppSpacing.cardItemVerticalGap))
 
-            WaitlistSummaryRow(label = "수업 ID", value = reservation.id)
             WaitlistSummaryRow(label = "강사", value = reservation.instructorName)
             WaitlistSummaryRow(label = "사용 수강권", value = reservation.classPassName)
             WaitlistSummaryRow(label = "잔여 예약 가능", value = reservation.remainingCountText)
@@ -208,12 +209,12 @@ private fun WaitlistSummaryRow(
     value: String,
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
-        Text(text = label, color = StuColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+        Text(text = label, color = StuColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
         Spacer(modifier = Modifier.weight(1f))
         Text(
             text = value,
             color = StuColors.TextPrimary,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.End,
         )
     }
@@ -226,7 +227,12 @@ private fun WaitlistNoticeCard(modifier: Modifier = Modifier) {
             .padding(AppSpacing.cardPadding),
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
-        Text(text = "▣", color = StuColors.TextSecondary)
+        Icon(
+            painter = painterResource(Res.drawable.ic_info),
+            contentDescription = null,
+            modifier = Modifier.size(20.dp),
+            tint = StuColors.TextSecondary,
+        )
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
             Text(
                 text = "대기 확인 안내",

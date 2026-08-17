@@ -36,6 +36,7 @@ import com.classitda.core.designsystem.StuColors
 internal fun ReservationCalendarHeader(
     year: Int,
     month: Int,
+    isPreviousEnabled: Boolean,
     isMonthMode: Boolean,
     onPreviousClick: () -> Unit,
     onNextClick: () -> Unit,
@@ -48,6 +49,7 @@ internal fun ReservationCalendarHeader(
     ) {
         ReservationCalendarMoveButton(
             text = "‹",
+            enabled = isPreviousEnabled,
             onClick = onPreviousClick,
         )
 
@@ -59,6 +61,7 @@ internal fun ReservationCalendarHeader(
 
         ReservationCalendarMoveButton(
             text = "›",
+            enabled = true,
             onClick = onNextClick,
         )
 
@@ -93,6 +96,7 @@ internal fun ReservationCalendarWeekdayHeader(
 @Composable
 private fun ReservationCalendarMoveButton(
     text: String,
+    enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -100,12 +104,15 @@ private fun ReservationCalendarMoveButton(
         modifier = modifier
             .size(32.dp)
             .clip(CircleShape)
-            .clickable(onClick = onClick),
+            .clickable(
+                enabled = enabled,
+                onClick = onClick,
+            ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
-            color = StuColors.TextSecondary,
+            color = if (enabled) StuColors.TextSecondary else StuColors.TextTertiary,
             style = MaterialTheme.typography.titleLarge,
         )
     }
@@ -173,7 +180,7 @@ private fun ReservationCalendarModeItem(
         Text(
             text = text,
             color = if (selected) {
-                StuColors.Green
+                StuColors.TextPrimary
             } else {
                 StuColors.TextSecondary
             },
@@ -194,6 +201,7 @@ private fun ReservationCalendarHeaderPreview1() {
             ReservationCalendarHeader(
                 year = 2026,
                 month = 8,
+                isPreviousEnabled = false,
                 isMonthMode = true,
                 onPreviousClick = {},
                 onNextClick = {},
@@ -219,6 +227,7 @@ private fun ReservationCalendarHeaderPreview2() {
             ReservationCalendarHeader(
                 year = 2026,
                 month = 8,
+                isPreviousEnabled = false,
                 isMonthMode = false,
                 onPreviousClick = {},
                 onNextClick = {},
