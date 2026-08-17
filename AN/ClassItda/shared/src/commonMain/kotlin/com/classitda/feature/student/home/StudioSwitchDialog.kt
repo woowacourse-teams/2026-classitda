@@ -188,7 +188,7 @@ private fun MemberStudioCard(
                 .background(Color.Transparent)
                 .border(
                     width = 1.dp,
-                    color = if (isSelected) StuColors.PrimaryBlack else StuColors.Divider,
+                    color = if (isSelected) StuColors.Primary else StuColors.Divider,
                     shape = AppShape.Card,
                 ).clickable(onClick = onClick)
                 .padding(AppSpacing.cardPadding),
@@ -198,7 +198,7 @@ private fun MemberStudioCard(
         Icon(
             painter = painterResource(Res.drawable.ic_person),
             contentDescription = "회원 아이콘",
-            tint = if (isSelected) StuColors.PrimaryBlack else StuColors.TextSecondary,
+            tint = if (isSelected) StuColors.Primary else StuColors.TextSecondary,
             modifier = Modifier.size(24.dp),
         )
 
@@ -206,7 +206,7 @@ private fun MemberStudioCard(
             text = studioName,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = if (isSelected) StuColors.PrimaryBlack else StuColors.TextSecondary,
+            color = if (isSelected) StuColors.Primary else StuColors.TextSecondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -229,7 +229,7 @@ private fun InstructorStudioCard(
                 .background(Color.Transparent)
                 .border(
                     width = 1.dp,
-                    color = if (isSelected) StuColors.PrimaryBlack else StuColors.Divider,
+                    color = if (isSelected) StuColors.Primary else StuColors.Divider,
                     shape = AppShape.Card,
                 ).clickable(onClick = onClick)
                 .padding(AppSpacing.cardPadding),
@@ -239,7 +239,7 @@ private fun InstructorStudioCard(
         Icon(
             painter = painterResource(Res.drawable.ic_instructor),
             contentDescription = "강사 아이콘",
-            tint = if (isSelected) StuColors.PrimaryBlack else StuColors.TextSecondary,
+            tint = if (isSelected) StuColors.Primary else StuColors.TextSecondary,
             modifier = Modifier.size(24.dp),
         )
 
@@ -247,7 +247,7 @@ private fun InstructorStudioCard(
             text = studioName,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = if (isSelected) StuColors.PrimaryBlack else StuColors.TextSecondary,
+            color = if (isSelected) StuColors.Primary else StuColors.TextSecondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
@@ -256,7 +256,7 @@ private fun InstructorStudioCard(
             modifier =
                 Modifier
                     .clip(AppShape.Pill)
-                    .background(if (isLead) StuColors.PrimaryBlack else StuColors.SurfaceVariant)
+                    .background(if (isLead) StuColors.Primary else StuColors.SurfaceVariant)
                     .padding(vertical = AppSpacing.xs, horizontal = AppSpacing.sm),
         ) {
             Text(

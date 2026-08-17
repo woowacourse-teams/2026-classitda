@@ -28,7 +28,7 @@ fun PrimaryTextButton(
         shape = AppShape.Card,
         colors =
             ButtonDefaults.buttonColors(
-                containerColor = StuColors.PrimaryBlack,
+                containerColor = StuColors.Primary,
                 contentColor = StuColors.White,
                 disabledContainerColor = StuColors.Gray400,
                 disabledContentColor = StuColors.White,

@@ -35,7 +35,6 @@ object AppColor {
 }
 
 object StuColors {
-
     val Black = AppColor.Black
 
     val Gray900 = AppColor.Gray900
@@ -60,7 +59,7 @@ object StuColors {
 
     val Dim = AppColor.Dim // 모달 뒷 배경
 
-    val PrimaryBlack = AppColor.Gray900
+    val Primary = AppColor.Gray900
 
     val Green = AppColor.Green
     val GreenLight = AppColor.GreenLight
@@ -103,11 +102,10 @@ object InsColors {
 
     val Dim = AppColor.Dim // 모달 뒷 배경
 
-    val PrimaryBlack = AppColor.Gray900
+    val Primary = AppColor.Gray900
 
     val Green = AppColor.Green
     val GreenLight = AppColor.GreenLight
-
 
     val Purple = AppColor.Purple
     val PurpleLight = AppColor.PurpleLight

@@ -154,7 +154,7 @@ private fun RemainingProgressIndicator(
         CircularProgressIndicator(
             progress = { remainingProgress },
             modifier = Modifier.size(64.dp),
-            color = StuColors.PrimaryBlack,
+            color = StuColors.Primary,
             strokeWidth = 4.dp,
             trackColor = StuColors.SurfaceVariant,
             strokeCap = ProgressIndicatorDefaults.CircularDeterminateStrokeCap,
@@ -162,7 +162,7 @@ private fun RemainingProgressIndicator(
         Text(
             text = "${remainingMin}분",
             style = MaterialTheme.typography.labelLarge,
-            color = StuColors.PrimaryBlack,
+            color = StuColors.Primary,
             modifier = Modifier.align(Alignment.Center),
         )
     }

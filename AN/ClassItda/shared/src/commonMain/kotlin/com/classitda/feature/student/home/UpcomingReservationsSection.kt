@@ -111,7 +111,7 @@ fun UpComingCard(
             text = classDateTime,
             modifier = Modifier.align(Alignment.End),
             style = MaterialTheme.typography.labelLarge,
-            color = StuColors.PrimaryBlack,
+            color = StuColors.Primary,
         )
 
         Text(
@@ -176,13 +176,13 @@ fun UpComingCard(
                 Icon(
                     painter = painterResource(Res.drawable.ic_clock),
                     contentDescription = "clockIcon",
-                    tint = StuColors.PrimaryBlack,
+                    tint = StuColors.Primary,
                     modifier = Modifier.size(16.dp),
                 )
                 Text(
                     text = remainingTime,
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = StuColors.PrimaryBlack,
+                    color = StuColors.Primary,
                     modifier = Modifier.padding(start = AppSpacing.xs),
                 )
             }
