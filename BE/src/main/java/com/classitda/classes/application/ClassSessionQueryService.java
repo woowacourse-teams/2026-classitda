@@ -56,13 +56,19 @@ public class ClassSessionQueryService {
         if (studio.isOwner(memberId)) {
             return;
         }
+        getActiveMembership(studio.getId(), memberId);
+    }
 
+    private StudioMembership getActiveMembership(Long studioId, Long memberId) {
         StudioMembership membership = studioMembershipRepository
-                .findByStudioIdAndMemberId(studio.getId(), memberId)
+                .findByStudioIdAndMemberId(studioId, memberId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_MEMBERSHIP));
+
         if (membership.getStatus() != MembershipStatus.ACTIVE) {
             throw new StudioException(StudioErrorCode.MEMBERSHIP_INACTIVE);
         }
+
+        return membership;
     }
 
     private ClassType getClassType(Long classSessionId, Long studioId) {

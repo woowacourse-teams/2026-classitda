@@ -259,6 +259,7 @@ CREATE TABLE class_session
     updated_at               DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_session_instructor_active (instructor_membership_id, start_at, active_flag),
+    KEY idx_session_studio_start (studio_id, start_at, id),
     CONSTRAINT fk_session_studio FOREIGN KEY (studio_id) REFERENCES studio (id),
     CONSTRAINT fk_session_instructor FOREIGN KEY (instructor_membership_id) REFERENCES studio_membership (id)
 ) ENGINE = InnoDB
