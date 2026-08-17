@@ -173,3 +173,29 @@ private fun ReservationClassInfoSectionPreview_Confirmed_Student() {
         ReservationClassInfoSection(model = ReservationDetailPreviewFixture.confirmed)
     }
 }
+
+@Preview(
+    name = "Reservation class info / F09 attended / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationClassInfoSectionPreview_F09Attended_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationClassInfoSection(model = ReservationDetailPreviewFixture.attended)
+    }
+}
+
+@Preview(
+    name = "Reservation class info / F10 absent / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationClassInfoSectionPreview_F10Absent_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationClassInfoSection(model = ReservationDetailPreviewFixture.absent)
+    }
+}

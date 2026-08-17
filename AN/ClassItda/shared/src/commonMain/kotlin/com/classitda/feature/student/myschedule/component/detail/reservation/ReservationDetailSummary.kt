@@ -164,3 +164,29 @@ private fun ReservationDetailSummaryPreview_Confirmed_Student() {
         ReservationDetailSummary(model = ReservationDetailPreviewFixture.confirmed)
     }
 }
+
+@Preview(
+    name = "Reservation detail summary / F09 attended / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationDetailSummaryPreview_F09Attended_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationDetailSummary(model = ReservationDetailPreviewFixture.attended)
+    }
+}
+
+@Preview(
+    name = "Reservation detail summary / F10 absent / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationDetailSummaryPreview_F10Absent_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationDetailSummary(model = ReservationDetailPreviewFixture.absent)
+    }
+}

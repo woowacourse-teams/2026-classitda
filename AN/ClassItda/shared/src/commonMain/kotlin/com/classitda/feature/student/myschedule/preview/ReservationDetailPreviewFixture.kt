@@ -18,7 +18,17 @@ internal object ReservationDetailPreviewFixture {
             facilityName = "클래스잇다 금토동지점",
         )
 
-    private val historyClassInfo = confirmedClassInfo.copy(memo = null)
+    private val attendedClassInfo =
+        confirmedClassInfo.copy(
+            dateLabel = "2026년 8월 4일 화요일",
+            memo = null,
+        )
+
+    private val absentClassInfo =
+        confirmedClassInfo.copy(
+            dateLabel = "2026.08.04 (화)",
+            memo = null,
+        )
 
     private val usedPass =
         ReservationUsedPassUiModel(
@@ -76,8 +86,8 @@ internal object ReservationDetailPreviewFixture {
         ReservationDetailUiModel.Attended(
             reservationId = ReservationId("preview-reservation-attended"),
             title = "체어 밸런스",
-            classInfo = historyClassInfo,
-            checkedInAtLabel = "2026.08.04 (화) 오후 6:20",
+            classInfo = attendedClassInfo,
+            checkedInAtLabel = "2026.08.04(화) 오후 6:20",
             usedPass = usedPass,
         )
 
@@ -85,7 +95,7 @@ internal object ReservationDetailPreviewFixture {
         ReservationDetailUiModel.Absent(
             reservationId = ReservationId("preview-reservation-absent"),
             title = "체어 밸런스",
-            classInfo = historyClassInfo,
+            classInfo = absentClassInfo,
             attendanceTimePlaceholder = "--:--:--",
             usedPass = usedPass,
         )

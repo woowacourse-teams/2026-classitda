@@ -265,7 +265,7 @@ private fun ReservationDetailScreenPreview_Cancelled_Student_Default() {
 }
 
 @Preview(
-    name = "Attended · Student · Default",
+    name = "F09 attended · Student · Default",
     group = "Screen/MySchedule/ReservationDetail",
     showBackground = true,
     locale = "ko",
@@ -273,14 +273,14 @@ private fun ReservationDetailScreenPreview_Cancelled_Student_Default() {
     heightDp = 907,
 )
 @Composable
-private fun ReservationDetailScreenPreview_Attended_Student_Default() {
+private fun ReservationDetailScreenPreview_F09Attended_Student_Default() {
     AppTheme(theme = ThemeType.STUDENT) {
         ReservationDetailPreview(model = ReservationDetailPreviewFixture.attended)
     }
 }
 
 @Preview(
-    name = "Absent · Student · Default",
+    name = "F10 absent · Student · Default",
     group = "Screen/MySchedule/ReservationDetail",
     showBackground = true,
     locale = "ko",
@@ -288,7 +288,7 @@ private fun ReservationDetailScreenPreview_Attended_Student_Default() {
     heightDp = 942,
 )
 @Composable
-private fun ReservationDetailScreenPreview_Absent_Student_Default() {
+private fun ReservationDetailScreenPreview_F10Absent_Student_Default() {
     AppTheme(theme = ThemeType.STUDENT) {
         ReservationDetailPreview(model = ReservationDetailPreviewFixture.absent)
     }
