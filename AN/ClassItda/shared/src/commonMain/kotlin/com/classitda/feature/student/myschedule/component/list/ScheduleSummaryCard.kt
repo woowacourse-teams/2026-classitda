@@ -91,6 +91,8 @@ private fun ScheduleSummaryCardDetails(
     ) {
         Text(
             text = instructorName,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             style = typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

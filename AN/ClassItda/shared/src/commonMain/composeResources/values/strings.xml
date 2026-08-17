@@ -36,6 +36,15 @@
     <string name="my_schedule_retry">다시 시도</string>
     <string name="my_schedule_go_home">홈으로 이동</string>
     <string name="my_schedule_load_error_mark">!</string>
+    <string name="my_schedule_loading">일정을 불러오는 중입니다.</string>
+    <string name="my_schedule_empty_upcoming_title">예정된 일정이 없습니다</string>
+    <string name="my_schedule_empty_upcoming_description">예약한 수업과 대기 중인 수업이 여기에 표시됩니다.</string>
+    <string name="my_schedule_empty_upcoming_action">이용 내역 보기</string>
+    <string name="my_schedule_empty_history_title">이용 내역이 없습니다</string>
+    <string name="my_schedule_empty_history_description">이용이 끝난 수업의 기록이 여기에 표시됩니다.</string>
+    <string name="my_schedule_empty_history_action">예정 일정 보기</string>
+    <string name="my_schedule_refreshing">일정을 새로 불러오는 중입니다.</string>
+    <string name="my_schedule_refresh_error">새로운 일정을 불러오지 못했습니다.</string>
     <string name="my_schedule_reservation_detail_title">예약 상세</string>
     <string name="my_schedule_reservation_confirmed">예약 확정</string>
     <string name="my_schedule_detail_date_label">%1$d년 %2$d월 %3$d일 %4$s</string>
