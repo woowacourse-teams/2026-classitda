@@ -27,11 +27,14 @@ import com.classitda.domain.model.student.myschedule.WaitlistId
 import com.classitda.feature.student.myschedule.component.common.MyScheduleTopBar
 import com.classitda.feature.student.myschedule.component.list.MyScheduleTabSelector
 import com.classitda.feature.student.myschedule.component.list.UpcomingScheduleSectionList
+import com.classitda.feature.student.myschedule.component.list.UsageHistorySectionList
 import com.classitda.feature.student.myschedule.contract.MyScheduleAction
 import com.classitda.feature.student.myschedule.contract.MyScheduleTab
 import com.classitda.feature.student.myschedule.contract.MyScheduleUiState
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleTabState
+import com.classitda.feature.student.myschedule.contract.UsageHistoryTabState
 import com.classitda.feature.student.myschedule.preview.MyScheduleUpcomingPreviewFixture
+import com.classitda.feature.student.myschedule.preview.MyScheduleUsageHistoryPreviewFixture
 
 @Composable
 fun MyScheduleScreen(
@@ -42,6 +45,7 @@ fun MyScheduleScreen(
     modifier: Modifier = Modifier,
 ) {
     val upcomingListState = rememberLazyListState()
+    val usageHistoryListState = rememberLazyListState()
 
     Column(
         modifier =
@@ -89,7 +93,24 @@ fun MyScheduleScreen(
                         Modifier
                             .weight(1f)
                             .background(MaterialTheme.colorScheme.background),
-                )
+                ) {
+                    when (val usageHistory = state.usageHistory) {
+                        is UsageHistoryTabState.Content -> {
+                            UsageHistorySectionList(
+                                sections = usageHistory.sections,
+                                onOpenReservation = onOpenReservation,
+                                state = usageHistoryListState,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+
+                        UsageHistoryTabState.NotLoaded,
+                        UsageHistoryTabState.Loading,
+                        UsageHistoryTabState.Empty,
+                        is UsageHistoryTabState.Error,
+                        -> {}
+                    }
+                }
             }
         }
     }
@@ -130,6 +151,65 @@ private fun MyScheduleScreenPreview_F01Interaction_Student() {
             Box(modifier = Modifier.height(840.dp)) {
                 MyScheduleScreen(
                     state = MyScheduleUpcomingPreviewFixture.state,
+                    onAction = { action -> lastEvent = action.toPreviewDescription() },
+                    onOpenReservation = { id ->
+                        lastEvent = "OpenReservation(id=${id.value})"
+                    },
+                    onOpenWaitlist = { id ->
+                        lastEvent = "OpenWaitlist(id=${id.value})"
+                    },
+                )
+            }
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+            ) {
+                Text(
+                    text = "마지막 이벤트: $lastEvent",
+                    modifier = Modifier.padding(AppSpacing.md),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Preview(
+    name = "F02 Content · Student · Default",
+    group = "Screen/MySchedule/Visual",
+    showBackground = true,
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun MyScheduleScreenPreview_F02Content_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        MyScheduleScreen(
+            state = MyScheduleUsageHistoryPreviewFixture.state,
+            onAction = {},
+            onOpenReservation = {},
+            onOpenWaitlist = {},
+        )
+    }
+}
+
+@Preview(
+    name = "F02 Interaction · Student",
+    group = "Harness/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+    heightDp = 920,
+)
+@Composable
+private fun MyScheduleScreenPreview_F02Interaction_Student() {
+    var lastEvent by remember { mutableStateOf("없음") }
+
+    AppTheme(theme = ThemeType.STUDENT) {
+        Column {
+            Box(modifier = Modifier.height(840.dp)) {
+                MyScheduleScreen(
+                    state = MyScheduleUsageHistoryPreviewFixture.state,
                     onAction = { action -> lastEvent = action.toPreviewDescription() },
                     onOpenReservation = { id ->
                         lastEvent = "OpenReservation(id=${id.value})"

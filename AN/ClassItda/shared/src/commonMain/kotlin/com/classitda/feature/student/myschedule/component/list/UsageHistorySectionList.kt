@@ -14,22 +14,18 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.student.myschedule.ReservationId
-import com.classitda.domain.model.student.myschedule.WaitlistId
-import com.classitda.feature.student.myschedule.contract.UpcomingDateSectionUiModel
-import com.classitda.feature.student.myschedule.contract.UpcomingScheduleCardUiModel
-import com.classitda.feature.student.myschedule.preview.MyScheduleUpcomingPreviewFixture
+import com.classitda.feature.student.myschedule.contract.UsageHistoryMonthSectionUiModel
+import com.classitda.feature.student.myschedule.preview.MyScheduleUsageHistoryPreviewFixture
 
 @Composable
-internal fun UpcomingScheduleSectionList(
-    sections: List<UpcomingDateSectionUiModel>,
+internal fun UsageHistorySectionList(
+    sections: List<UsageHistoryMonthSectionUiModel>,
     onOpenReservation: (ReservationId) -> Unit,
-    onOpenWaitlist: (WaitlistId) -> Unit,
     state: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
 ) {
@@ -45,23 +41,20 @@ internal fun UpcomingScheduleSectionList(
             ),
     ) {
         sections.forEachIndexed { sectionIndex, section ->
-            item(key = "upcoming-date-${section.dateLabel}") {
+            item(key = "usage-history-month-${section.monthLabel}") {
                 Text(
-                    text = section.dateLabel,
+                    text = section.monthLabel,
                     modifier =
                         Modifier
                             .padding(bottom = AppSpacing.cardGap)
                             .semantics { heading() },
-                    style =
-                        typography.titleSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                        ),
+                    style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onBackground,
                 )
             }
             itemsIndexed(
                 items = section.items,
-                key = { _, item -> item.stableKey() },
+                key = { _, item -> "usage-history:${item.reservationId.value}" },
             ) { itemIndex, item ->
                 val isLastItemOfSection = itemIndex == section.items.lastIndex
                 val isLastSection = sectionIndex == sections.lastIndex
@@ -80,19 +73,9 @@ internal fun UpcomingScheduleSectionList(
                         }
                     }
 
-                UpcomingScheduleCard(
+                UsageHistoryCard(
                     item = item,
-                    onClick = {
-                        when (item) {
-                            is UpcomingScheduleCardUiModel.ConfirmedReservation -> {
-                                onOpenReservation(item.reservationId)
-                            }
-
-                            is UpcomingScheduleCardUiModel.Waitlisted -> {
-                                onOpenWaitlist(item.waitlistId)
-                            }
-                        }
-                    },
+                    onClick = { onOpenReservation(item.reservationId) },
                     modifier = itemModifier,
                 )
             }
@@ -100,26 +83,19 @@ internal fun UpcomingScheduleSectionList(
     }
 }
 
-private fun UpcomingScheduleCardUiModel.stableKey(): String =
-    when (this) {
-        is UpcomingScheduleCardUiModel.ConfirmedReservation -> "reservation:${reservationId.value}"
-        is UpcomingScheduleCardUiModel.Waitlisted -> "waitlist:${waitlistId.value}"
-    }
-
 @Preview(
     name = "Content · Student · Default",
-    group = "Component/MySchedule/UpcomingList",
+    group = "Component/MySchedule/UsageHistoryList",
     showBackground = true,
     widthDp = 390,
-    heightDp = 652,
+    heightDp = 772,
 )
 @Composable
-private fun UpcomingScheduleSectionListPreview_Content_Student_Default() {
+private fun UsageHistorySectionListPreview_Content_Student_Default() {
     AppTheme(theme = ThemeType.STUDENT) {
-        UpcomingScheduleSectionList(
-            sections = MyScheduleUpcomingPreviewFixture.sections,
+        UsageHistorySectionList(
+            sections = MyScheduleUsageHistoryPreviewFixture.sections,
             onOpenReservation = {},
-            onOpenWaitlist = {},
         )
     }
 }
