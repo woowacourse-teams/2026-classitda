@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_schedule
 import classitda.shared.generated.resources.my_schedule_attendance_time
@@ -27,9 +28,12 @@ import classitda.shared.generated.resources.my_schedule_status_confirmed_mark
 import classitda.shared.generated.resources.my_schedule_status_reservation_canceled
 import classitda.shared.generated.resources.my_schedule_status_reservation_canceled_mark
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
+import com.classitda.feature.student.myschedule.preview.ReservationDetailPreviewFixture
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -147,3 +151,16 @@ private fun ReservationDetailUiModel.primaryTimeValue(): String =
         is ReservationDetailUiModel.Attended -> checkedInAtLabel
         is ReservationDetailUiModel.Absent -> attendanceTimePlaceholder
     }
+
+@Preview(
+    name = "Reservation detail summary / Confirmed / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationDetailSummaryPreview_Confirmed_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationDetailSummary(model = ReservationDetailPreviewFixture.confirmed)
+    }
+}

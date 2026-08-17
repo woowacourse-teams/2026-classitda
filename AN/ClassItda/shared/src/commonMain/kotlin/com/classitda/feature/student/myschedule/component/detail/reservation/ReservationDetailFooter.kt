@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_bullet
 import classitda.shared.generated.resources.my_schedule_cancel_reservation
@@ -25,10 +26,13 @@ import classitda.shared.generated.resources.my_schedule_class_detail_ticket_inqu
 import classitda.shared.generated.resources.my_schedule_class_detail_waitlist_confirmation_policy
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.component.common.MyScheduleDestructiveButton
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
+import com.classitda.feature.student.myschedule.preview.ReservationDetailPreviewFixture
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -153,6 +157,22 @@ private fun ReservationResultBanner(text: String) {
             text = text,
             style = appTypography().bodyMedium,
             color = StuColors.TextSecondary,
+        )
+    }
+}
+
+@Preview(
+    name = "Reservation detail footer / Confirmed / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationDetailFooterPreview_Confirmed_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationDetailFooter(
+            model = ReservationDetailPreviewFixture.confirmed,
+            onCancelReservation = {},
         )
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import classitda.shared.generated.resources.Res
@@ -42,14 +43,18 @@ import classitda.shared.generated.resources.my_schedule_cancel_confirm_title
 import classitda.shared.generated.resources.my_schedule_retry
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.component.common.MyScheduleDestructiveButton
 import com.classitda.feature.student.myschedule.component.common.MyScheduleTextButton
 import com.classitda.feature.student.myschedule.contract.ReservationCancellationAvailabilityUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationCancellationDialogUiState
+import com.classitda.feature.student.myschedule.contract.ReservationCancellationErrorUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
 import com.classitda.feature.student.myschedule.contract.canDismiss
+import com.classitda.feature.student.myschedule.preview.ReservationDetailPreviewFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -255,5 +260,70 @@ private fun ReservationCancellationActions(
             onClick = onDismiss,
             enabled = state.canDismiss,
         )
+    }
+}
+
+@Preview(
+    name = "Reservation cancellation dialog / Waiting / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+    heightDp = 760,
+)
+@Composable
+private fun ReservationCancellationConfirmDialogPreview_Waiting_Student() {
+    ReservationCancellationConfirmDialogPreview(
+        state = ReservationCancellationDialogUiState.Waiting,
+    )
+}
+
+@Preview(
+    name = "Reservation cancellation dialog / Submitting / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+    heightDp = 760,
+)
+@Composable
+private fun ReservationCancellationConfirmDialogPreview_Submitting_Student() {
+    ReservationCancellationConfirmDialogPreview(
+        state = ReservationCancellationDialogUiState.Submitting,
+    )
+}
+
+@Preview(
+    name = "Reservation cancellation dialog / Failed / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+    heightDp = 760,
+)
+@Composable
+private fun ReservationCancellationConfirmDialogPreview_Failed_Student() {
+    ReservationCancellationConfirmDialogPreview(
+        state =
+            ReservationCancellationDialogUiState.Failed(
+                error = ReservationCancellationErrorUiModel.NETWORK,
+            ),
+    )
+}
+
+@Composable
+private fun ReservationCancellationConfirmDialogPreview(state: ReservationCancellationDialogUiState) {
+    AppTheme(theme = ThemeType.STUDENT) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(StuColors.Background),
+        ) {
+            ReservationCancellationConfirmDialog(
+                reservation = ReservationDetailPreviewFixture.confirmed,
+                state = state,
+                onConfirm = {},
+                onRetry = {},
+                onDismiss = {},
+            )
+        }
     }
 }

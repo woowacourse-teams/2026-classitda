@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_calendar_today
 import classitda.shared.generated.resources.ic_chat_bubble_outline
@@ -24,11 +25,14 @@ import classitda.shared.generated.resources.my_schedule_pass_total_remaining
 import classitda.shared.generated.resources.my_schedule_separator
 import classitda.shared.generated.resources.my_schedule_used_ticket
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationPassAvailabilityUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationUsedPassUiModel
+import com.classitda.feature.student.myschedule.preview.ReservationDetailPreviewFixture
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -155,4 +159,17 @@ private fun ReservationPassCountSeparator() {
         style = appTypography().bodySmall,
         color = StuColors.DividerStrong,
     )
+}
+
+@Preview(
+    name = "Reservation class info / Confirmed / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationClassInfoSectionPreview_Confirmed_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationClassInfoSection(model = ReservationDetailPreviewFixture.confirmed)
+    }
 }
