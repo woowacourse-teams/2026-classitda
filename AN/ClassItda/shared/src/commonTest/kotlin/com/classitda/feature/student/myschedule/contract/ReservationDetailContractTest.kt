@@ -4,8 +4,10 @@ import com.classitda.domain.model.student.myschedule.ReservationId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ReservationDetailContractTest {
     @Test
@@ -27,12 +29,14 @@ class ReservationDetailContractTest {
             listOf(
                 ReservationDetailUiState.Loading,
                 ReservationDetailUiState.Content(createAttended()),
+                ReservationDetailUiState.CancellationCompleted(createCancellationResult()),
                 ReservationDetailUiState.Error(ReservationDetailErrorUiModel.NETWORK),
             )
 
         assertIs<ReservationDetailUiState.Loading>(states[0])
         assertIs<ReservationDetailUiState.Content>(states[1])
-        assertIs<ReservationDetailUiState.Error>(states[2])
+        assertIs<ReservationDetailUiState.CancellationCompleted>(states[2])
+        assertIs<ReservationDetailUiState.Error>(states[3])
     }
 
     @Test
@@ -70,6 +74,66 @@ class ReservationDetailContractTest {
         assertFailsWith<IllegalArgumentException> {
             createConfirmed().copy(cancellationDeadlineHoursBeforeStart = -1)
         }
+    }
+
+    @Test
+    fun `취소 확인 창은 취소 가능한 예약 완료 상세에만 결합할 수 있다`() {
+        val waiting = ReservationCancellationDialogUiState.Waiting
+
+        ReservationDetailUiState.Content(
+            detail = createConfirmed(),
+            cancellationDialog = waiting,
+        )
+
+        assertFailsWith<IllegalArgumentException> {
+            ReservationDetailUiState.Content(
+                detail = createCancelled(),
+                cancellationDialog = waiting,
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            ReservationDetailUiState.Content(
+                detail =
+                    createConfirmed().copy(
+                        cancellation =
+                            ReservationCancellationAvailabilityUiModel.Unavailable(
+                                ReservationCancellationUnavailableReasonUiModel.DEADLINE_PASSED,
+                            ),
+                    ),
+                cancellationDialog = waiting,
+            )
+        }
+    }
+
+    @Test
+    fun `대기와 실패는 닫을 수 있고 제출 중에는 모든 dismiss를 차단한다`() {
+        val failed =
+            ReservationCancellationDialogUiState.Failed(
+                ReservationCancellationErrorUiModel.NETWORK,
+            )
+
+        assertTrue(ReservationCancellationDialogUiState.Waiting.canDismiss)
+        assertTrue(failed.canDismiss)
+        assertFalse(ReservationCancellationDialogUiState.Submitting.canDismiss)
+    }
+
+    @Test
+    fun `확인과 재시도 Action은 취소 대상 ReservationId를 유지한다`() {
+        val reservationId = ReservationId("reservation-to-cancel")
+
+        val confirm = ReservationDetailAction.ConfirmCancellation(reservationId)
+        val retry = ReservationDetailAction.RetryCancellation(reservationId)
+
+        assertEquals(reservationId, confirm.reservationId)
+        assertEquals(reservationId, retry.reservationId)
+    }
+
+    @Test
+    fun `취소 완료는 modal을 가질 수 없는 별도 결과 상태다`() {
+        val state = ReservationDetailUiState.CancellationCompleted(createCancellationResult())
+
+        assertEquals(ReservationId("reservation-confirmed"), state.result.reservationId)
+        assertEquals(1, state.result.restoredPassUses)
     }
 
     private fun createConfirmed(): ReservationDetailUiModel.Confirmed =
@@ -133,5 +197,14 @@ class ReservationDetailContractTest {
         ReservationUsedPassUiModel(
             name = "리포머 20회권",
             validityLabel = "2026.07.01 ~ 2026.09.30",
+        )
+
+    private fun createCancellationResult(): ReservationCancellationResultUiModel =
+        ReservationCancellationResultUiModel(
+            reservationId = ReservationId("reservation-confirmed"),
+            title = "체어 밸런스",
+            classInfo = createClassInfo(),
+            cancelledAtLabel = "2026.08.01 (토) 오후 3:25",
+            restoredPassUses = 1,
         )
 }

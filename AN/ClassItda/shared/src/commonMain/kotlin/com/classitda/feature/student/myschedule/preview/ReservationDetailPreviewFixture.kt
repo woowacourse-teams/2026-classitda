@@ -2,6 +2,7 @@ package com.classitda.feature.student.myschedule.preview
 
 import com.classitda.domain.model.student.myschedule.ReservationId
 import com.classitda.feature.student.myschedule.contract.ReservationCancellationAvailabilityUiModel
+import com.classitda.feature.student.myschedule.contract.ReservationCancellationResultUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationClassInfoUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationPassAvailabilityUiModel
@@ -53,6 +54,15 @@ internal object ReservationDetailPreviewFixture {
             title = "체어 밸런스",
             classInfo = confirmedClassInfo,
             cancelledAtLabel = "2026.08.01 (토) 오후 3:25",
+        )
+
+    val cancellationCompleted =
+        ReservationCancellationResultUiModel(
+            reservationId = confirmed.reservationId,
+            title = confirmed.title,
+            classInfo = confirmed.classInfo,
+            cancelledAtLabel = "2026.08.01 (토) 오후 3:25",
+            restoredPassUses = 1,
         )
 
     val attended =

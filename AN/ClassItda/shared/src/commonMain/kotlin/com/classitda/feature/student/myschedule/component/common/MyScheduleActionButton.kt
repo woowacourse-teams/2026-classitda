@@ -151,11 +151,17 @@ internal fun MyScheduleTextButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     TextButton(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
-        colors = ButtonDefaults.textButtonColors(contentColor = StuColors.TextSecondary),
+        enabled = enabled,
+        colors =
+            ButtonDefaults.textButtonColors(
+                contentColor = StuColors.TextSecondary,
+                disabledContentColor = StuColors.TextTertiary,
+            ),
     ) {
         Text(
             text = text,

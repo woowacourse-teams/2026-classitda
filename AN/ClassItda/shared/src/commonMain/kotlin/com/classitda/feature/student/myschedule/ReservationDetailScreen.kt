@@ -2,6 +2,7 @@ package com.classitda.feature.student.myschedule
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +23,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_load_error_description
 import classitda.shared.generated.resources.my_schedule_load_error_title
+import classitda.shared.generated.resources.my_schedule_reservation_cancelled_description
+import classitda.shared.generated.resources.my_schedule_reservation_cancelled_title
 import classitda.shared.generated.resources.my_schedule_retry
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -29,9 +32,13 @@ import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.component.common.MySchedulePrimaryButton
+import com.classitda.feature.student.myschedule.component.common.MyScheduleSecondaryButton
+import com.classitda.feature.student.myschedule.component.detail.reservation.ReservationCancellationConfirmDialog
 import com.classitda.feature.student.myschedule.component.detail.reservation.ReservationDetailContent
 import com.classitda.feature.student.myschedule.component.detail.reservation.ReservationDetailTopBar
 import com.classitda.feature.student.myschedule.component.list.MyScheduleLoadingContent
+import com.classitda.feature.student.myschedule.contract.ReservationCancellationDialogUiState
+import com.classitda.feature.student.myschedule.contract.ReservationCancellationErrorUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationDetailAction
 import com.classitda.feature.student.myschedule.contract.ReservationDetailErrorUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
@@ -47,38 +54,90 @@ fun ReservationDetailScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    Box(
         modifier =
             modifier
                 .fillMaxSize()
                 .background(StuColors.Background),
     ) {
-        ReservationDetailTopBar(onBack = onBack)
-        when (state) {
-            ReservationDetailUiState.Loading -> {
-                MyScheduleLoadingContent(modifier = Modifier.weight(1f))
-            }
+        Column(modifier = Modifier.fillMaxSize()) {
+            ReservationDetailTopBar(onBack = onBack)
+            when (state) {
+                ReservationDetailUiState.Loading -> {
+                    MyScheduleLoadingContent(modifier = Modifier.weight(1f))
+                }
 
-            is ReservationDetailUiState.Content -> {
-                val cancellationAction = state.detail.cancellationActionOrNull()
+                is ReservationDetailUiState.Content -> {
+                    val cancellationAction = state.detail.cancellationActionOrNull()
 
-                ReservationDetailContent(
-                    model = state.detail,
-                    onCancelReservation =
-                        cancellationAction?.let { action ->
-                            { onAction(action) }
-                        },
-                    modifier = Modifier.weight(1f),
-                )
-            }
+                    ReservationDetailContent(
+                        model = state.detail,
+                        onCancelReservation =
+                            cancellationAction?.let { action ->
+                                { onAction(action) }
+                            },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
 
-            is ReservationDetailUiState.Error -> {
-                ReservationDetailErrorContent(
-                    onRetry = { onAction(ReservationDetailAction.Retry) },
-                    modifier = Modifier.weight(1f),
-                )
+                is ReservationDetailUiState.CancellationCompleted -> {
+                    ReservationCancellationCompletedHandoffContent(
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+
+                is ReservationDetailUiState.Error -> {
+                    ReservationDetailErrorContent(
+                        onRetry = { onAction(ReservationDetailAction.Retry) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
+
+        val contentState = state as? ReservationDetailUiState.Content
+        val confirmed = contentState?.detail as? ReservationDetailUiModel.Confirmed
+        val dialogState = contentState?.cancellationDialog
+        if (confirmed != null && dialogState != null) {
+            ReservationCancellationConfirmDialog(
+                reservation = confirmed,
+                state = dialogState,
+                onConfirm = {
+                    onAction(ReservationDetailAction.ConfirmCancellation(confirmed.reservationId))
+                },
+                onRetry = {
+                    onAction(ReservationDetailAction.RetryCancellation(confirmed.reservationId))
+                },
+                onDismiss = { onAction(ReservationDetailAction.DismissCancellation) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReservationCancellationCompletedHandoffContent(modifier: Modifier = Modifier) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(AppSpacing.screenPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = stringResource(Res.string.my_schedule_reservation_cancelled_title),
+            modifier = Modifier.semantics { heading() },
+            style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = StuColors.TextPrimary,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = stringResource(Res.string.my_schedule_reservation_cancelled_description),
+            modifier = Modifier.padding(top = AppSpacing.sm),
+            style = appTypography().bodyMedium,
+            color = StuColors.TextSecondary,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -129,6 +188,82 @@ private fun ReservationDetailErrorContent(
 private fun ReservationDetailScreenPreview_Confirmed_Student_Default() {
     AppTheme(theme = ThemeType.STUDENT) {
         ReservationDetailPreview(model = ReservationDetailPreviewFixture.confirmed)
+    }
+}
+
+@Preview(
+    name = "F04 waiting · Student · Default",
+    group = "Screen/MySchedule/ReservationCancellation",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 1031,
+)
+@Composable
+private fun ReservationDetailScreenPreview_CancellationWaiting_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationCancellationDialogPreview(
+            dialogState = ReservationCancellationDialogUiState.Waiting,
+        )
+    }
+}
+
+@Preview(
+    name = "F04 submitting · Student · Default",
+    group = "Screen/MySchedule/ReservationCancellation",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 1031,
+)
+@Composable
+private fun ReservationDetailScreenPreview_CancellationSubmitting_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationCancellationDialogPreview(
+            dialogState = ReservationCancellationDialogUiState.Submitting,
+        )
+    }
+}
+
+@Preview(
+    name = "F04 failed · Student · Default",
+    group = "Screen/MySchedule/ReservationCancellation",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 1031,
+)
+@Composable
+private fun ReservationDetailScreenPreview_CancellationFailed_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationCancellationDialogPreview(
+            dialogState =
+                ReservationCancellationDialogUiState.Failed(
+                    error = ReservationCancellationErrorUiModel.NETWORK,
+                ),
+        )
+    }
+}
+
+@Preview(
+    name = "Cancellation completed handoff · Student",
+    group = "Screen/MySchedule/ReservationCancellation",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun ReservationDetailScreenPreview_CancellationCompleted_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationDetailScreen(
+            state =
+                ReservationDetailUiState.CancellationCompleted(
+                    result = ReservationDetailPreviewFixture.cancellationCompleted,
+                ),
+            onAction = {},
+            onBack = {},
+        )
     }
 }
 
@@ -230,13 +365,18 @@ private fun ReservationDetailScreenPreview_Error_Student_Default() {
 private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         var lastEvent by remember { mutableStateOf("마지막 Action/ID: 없음") }
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            ReservationDetailScreen(
-                state =
+        var screenState by
+            remember {
+                mutableStateOf<ReservationDetailUiState>(
                     ReservationDetailUiState.Content(
                         detail = ReservationDetailPreviewFixture.confirmed,
                     ),
+                )
+            }
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            ReservationDetailScreen(
+                state = screenState,
                 onAction = { action ->
                     lastEvent =
                         when (action) {
@@ -245,13 +385,74 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
                             }
 
                             is ReservationDetailAction.CancelReservation -> {
+                                screenState =
+                                    ReservationDetailUiState.Content(
+                                        detail = ReservationDetailPreviewFixture.confirmed,
+                                        cancellationDialog =
+                                            ReservationCancellationDialogUiState.Waiting,
+                                    )
                                 "마지막 Action/ID: CancelReservation/${action.reservationId.value}"
+                            }
+
+                            ReservationDetailAction.DismissCancellation -> {
+                                screenState =
+                                    ReservationDetailUiState.Content(
+                                        detail = ReservationDetailPreviewFixture.confirmed,
+                                    )
+                                "마지막 Action/ID: DismissCancellation"
+                            }
+
+                            is ReservationDetailAction.ConfirmCancellation -> {
+                                screenState =
+                                    ReservationDetailUiState.Content(
+                                        detail = ReservationDetailPreviewFixture.confirmed,
+                                        cancellationDialog =
+                                            ReservationCancellationDialogUiState.Submitting,
+                                    )
+                                "마지막 Action/ID: ConfirmCancellation/${action.reservationId.value}"
+                            }
+
+                            is ReservationDetailAction.RetryCancellation -> {
+                                screenState =
+                                    ReservationDetailUiState.Content(
+                                        detail = ReservationDetailPreviewFixture.confirmed,
+                                        cancellationDialog =
+                                            ReservationCancellationDialogUiState.Submitting,
+                                    )
+                                "마지막 Action/ID: RetryCancellation/${action.reservationId.value}"
                             }
                         }
                 },
                 onBack = { lastEvent = "마지막 Action/ID: Back" },
                 modifier = Modifier.weight(1f),
             )
+            if ((screenState as? ReservationDetailUiState.Content)?.cancellationDialog == null) {
+                MyScheduleSecondaryButton(
+                    text = "실패 상태 열기",
+                    onClick = {
+                        screenState =
+                            ReservationDetailUiState.Content(
+                                detail = ReservationDetailPreviewFixture.confirmed,
+                                cancellationDialog =
+                                    ReservationCancellationDialogUiState.Failed(
+                                        error = ReservationCancellationErrorUiModel.NETWORK,
+                                    ),
+                            )
+                    },
+                    modifier = Modifier.padding(horizontal = AppSpacing.md),
+                )
+                MyScheduleSecondaryButton(
+                    text = "성공 결과 fixture 열기",
+                    onClick = {
+                        screenState =
+                            ReservationDetailUiState.CancellationCompleted(
+                                result = ReservationDetailPreviewFixture.cancellationCompleted,
+                            )
+                        lastEvent = "상태: CancellationCompleted / modal: 미노출"
+                    },
+                    modifier = Modifier.padding(horizontal = AppSpacing.md),
+                )
+            }
             Text(
                 text = lastEvent,
                 modifier =
@@ -270,6 +471,19 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
 private fun ReservationDetailPreview(model: ReservationDetailUiModel) {
     ReservationDetailScreen(
         state = ReservationDetailUiState.Content(detail = model),
+        onAction = {},
+        onBack = {},
+    )
+}
+
+@Composable
+private fun ReservationCancellationDialogPreview(dialogState: ReservationCancellationDialogUiState) {
+    ReservationDetailScreen(
+        state =
+            ReservationDetailUiState.Content(
+                detail = ReservationDetailPreviewFixture.confirmed,
+                cancellationDialog = dialogState,
+            ),
         onAction = {},
         onBack = {},
     )

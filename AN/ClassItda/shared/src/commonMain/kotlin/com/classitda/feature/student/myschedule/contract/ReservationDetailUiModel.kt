@@ -132,6 +132,23 @@ sealed interface ReservationDetailUiState {
 
     data class Content(
         val detail: ReservationDetailUiModel,
+        val cancellationDialog: ReservationCancellationDialogUiState? = null,
+    ) : ReservationDetailUiState {
+        init {
+            require(
+                cancellationDialog == null ||
+                    (
+                        detail is ReservationDetailUiModel.Confirmed &&
+                            detail.cancellation is ReservationCancellationAvailabilityUiModel.Available
+                    ),
+            ) {
+                "예약 취소 확인 창은 취소 가능한 예약 완료 상세에서만 표시할 수 있습니다."
+            }
+        }
+    }
+
+    data class CancellationCompleted(
+        val result: ReservationCancellationResultUiModel,
     ) : ReservationDetailUiState
 
     data class Error(
@@ -151,7 +168,51 @@ sealed interface ReservationDetailAction {
     data class CancelReservation(
         val reservationId: ReservationId,
     ) : ReservationDetailAction
+
+    data object DismissCancellation : ReservationDetailAction
+
+    data class ConfirmCancellation(
+        val reservationId: ReservationId,
+    ) : ReservationDetailAction
+
+    data class RetryCancellation(
+        val reservationId: ReservationId,
+    ) : ReservationDetailAction
 }
+
+sealed interface ReservationCancellationDialogUiState {
+    data object Waiting : ReservationCancellationDialogUiState
+
+    data object Submitting : ReservationCancellationDialogUiState
+
+    data class Failed(
+        val error: ReservationCancellationErrorUiModel,
+    ) : ReservationCancellationDialogUiState
+}
+
+enum class ReservationCancellationErrorUiModel {
+    NETWORK,
+    CONFLICT,
+    CANCELLATION_NOT_ALLOWED,
+    UNKNOWN,
+}
+
+data class ReservationCancellationResultUiModel(
+    val reservationId: ReservationId,
+    val title: String,
+    val classInfo: ReservationClassInfoUiModel,
+    val cancelledAtLabel: String,
+    val restoredPassUses: Int,
+) {
+    init {
+        require(title.isNotBlank()) { "취소 결과 수업명은 비어 있을 수 없습니다." }
+        require(cancelledAtLabel.isNotBlank()) { "취소 결과 일시 표시는 비어 있을 수 없습니다." }
+        require(restoredPassUses >= 0) { "취소 결과 복구 횟수는 0 이상이어야 합니다." }
+    }
+}
+
+internal val ReservationCancellationDialogUiState.canDismiss: Boolean
+    get() = this !is ReservationCancellationDialogUiState.Submitting
 
 internal fun ReservationDetailUiModel.cancellationActionOrNull(): ReservationDetailAction.CancelReservation? =
     when (this) {
