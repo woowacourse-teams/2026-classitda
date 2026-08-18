@@ -8,6 +8,8 @@ import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
 import com.classitda.classes.presentation.dto.MemberClassSessionListRequest;
 import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
+import com.classitda.classes.presentation.dto.StudentCalendarListRequest;
+import com.classitda.classes.presentation.dto.StudentCalendarResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -238,6 +240,118 @@ public interface ClassSessionControllerApi {
             Long studioId,
             @ParameterObject
             MemberClassSessionListRequest request
+    );
+
+    @Operation(
+            summary = "학생용 수업 달력 조회",
+            description = """
+                    ### 조회 기준
+
+                    - from과 to를 포함한 기간의 수업 상태를 날짜 오름차순으로 요약합니다.
+                    - 월간 화면은 앞뒤 표시 날짜를 포함해 최대 42일, 주간 화면은 같은 API로 7일을 조회합니다.
+                    - 표시할 상태가 없는 날짜는 응답에서 생략하며 페이지네이션을 적용하지 않습니다.
+                    - 날짜와 현재 시각은 한국 시간(Asia/Seoul)을 기준으로 합니다.
+                    - 선택한 날짜의 회차 상세 목록은 학생용 일별 수업 목록 API에서 조회합니다.
+
+                    ### 수강권 및 권한 기준
+
+                    - 같은 시설의 활성 학생 역할(STUDENT)만 조회할 수 있습니다.
+                    - memberPassProductId는 로그인 회원이 같은 시설에서 보유한 활성 수강권이어야 합니다.
+                    - 선택한 수강권의 현재 그룹·개인 형태와 수업 종류에 맞는 회차만 집계합니다.
+                    - 수강권 이용 기간과 조회 기간이 겹치는 날짜만 조회하며, 겹치지 않으면 빈 배열을 반환합니다.
+
+                    ### 상태 요약
+
+                    - attended는 본인의 ATTENDED 예약이 있고 종료된 수업이 하나 이상 있으면 true입니다.
+                    - reserved는 본인의 RESERVED 예약이 있고 종료되지 않은 수업이 하나 이상 있으면 true입니다.
+                    - waiting은 본인의 WAITING 대기가 있고 종료되지 않은 수업이 하나 이상 있으면 true입니다.
+                    - 한 날짜에 여러 상태가 있으면 여러 필드가 동시에 true일 수 있습니다.
+                    - 취소된 수업과 그 밖의 예약·대기 상태는 응답에서 제외합니다.
+
+                    ### local Swagger 테스트 데이터
+
+                    - 회원 ID: 1
+                    - 시설 ID: 1
+                    - 보유 수강권 ID: 42
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "출석 완료, 예약 확정 또는 대기 중 수업이 있는 날짜별 상태를 반환합니다.",
+                    content = @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = StudentCalendarResponse.class)
+                    ))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "조회 기간이나 보유 수강권 ID가 올바르지 않거나 API 버전 헤더가 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "요청 값 오류", value = """
+                                            {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}"""),
+                                    @ExampleObject(name = "버전 헤더 누락", value = """
+                                            {"code":"API-001","message":"X-API-Version 헤더는 필수입니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 버전", value = """
+                                            {"code":"API-002","message":"지원하지 않는 API 버전입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "인증 실패", value = """
+                                    {"code":"AUTH-001","message":"인증이 필요합니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "시설 소속이 아니거나 소속이 비활성 상태이거나 학생 역할이 아닙니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code":"MEMBERSHIP-001","message":"해당 시설의 소속이 아닙니다."}"""),
+                                    @ExampleObject(name = "비활성 소속", value = """
+                                            {"code":"MEMBERSHIP-002","message":"이용이 정지된 소속입니다."}"""),
+                                    @ExampleObject(name = "학생 역할 아님", value = """
+                                            {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설 또는 로그인 회원의 해당 보유 수강권을 찾을 수 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "시설 없음", value = """
+                                            {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "보유 수강권 없음", value = """
+                                            {"code":"PASS_PRODUCT-010","message":"보유 수강권을 찾을 수 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "선택한 보유 수강권이 홀딩·만료·소진 등으로 현재 사용할 수 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "사용할 수 없는 수강권", value = """
+                                    {"code":"PASS_PRODUCT-011","message":"현재 사용할 수 없는 수강권입니다."}""")
+                    )
+            )
+    })
+    List<StudentCalendarResponse> findAllCalendarForStudent(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            @ParameterObject
+            StudentCalendarListRequest request
     );
 
     @Operation(

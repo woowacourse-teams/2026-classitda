@@ -5,6 +5,7 @@ import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
+import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
@@ -14,6 +15,8 @@ import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
 import com.classitda.classes.presentation.dto.MemberClassSessionListRequest;
 import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
+import com.classitda.classes.presentation.dto.StudentCalendarListRequest;
+import com.classitda.classes.presentation.dto.StudentCalendarResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +38,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
     private final ClassSessionCommandService classSessionCommandService;
     private final ClassSessionQueryService classSessionQueryService;
     private final StudentDailyQueryService studentDailyQueryService;
+    private final StudentCalendarQueryService studentCalendarQueryService;
     private final InstructorDailyQueryService instructorDailyQueryService;
     private final InstructorCalendarQueryService instructorCalendarQueryService;
 
@@ -63,6 +67,24 @@ public class ClassSessionController implements ClassSessionControllerApi {
                         request.memberPassProductId()
                 ).stream()
                 .map(MemberClassSessionResponse::from)
+                .toList();
+    }
+
+    @Override
+    @GetMapping(path = "/student/calendar", version = "1")
+    public List<StudentCalendarResponse> findAllCalendarForStudent(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @Valid @ModelAttribute StudentCalendarListRequest request
+    ) {
+        return studentCalendarQueryService.findAll(
+                        memberId,
+                        studioId,
+                        request.from(),
+                        request.to(),
+                        request.memberPassProductId()
+                ).stream()
+                .map(StudentCalendarResponse::from)
                 .toList();
     }
 
