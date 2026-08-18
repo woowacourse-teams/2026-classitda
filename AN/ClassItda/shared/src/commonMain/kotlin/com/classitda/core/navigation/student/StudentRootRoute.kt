@@ -55,7 +55,11 @@ fun StudentRootRoute(modifier: Modifier = Modifier) {
             }
         }
 
-        StudentTab.MESSAGE, StudentTab.MYPage -> {
+//        StudentTab.MESSAGE, StudentTab.MYPage -> {
+//            StudentPlaceholderRoute(bottomBar = bottomBar)
+//        }
+
+        StudentTab.MYPage -> {
             StudentPlaceholderRoute(bottomBar = bottomBar)
         }
     }
