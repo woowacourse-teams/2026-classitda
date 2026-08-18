@@ -12,6 +12,8 @@ import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumen
 import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
+import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
+import com.classitda.classes.application.instructor.calendar.InstructorCalendarSummary;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
 import com.classitda.classes.application.student.StudentSessionQueryService;
@@ -26,6 +28,8 @@ import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.classes.presentation.dto.MemberClassSessionBookingStatus;
 import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
 import com.classitda.common.config.ApiVersionConfig;
+import com.classitda.common.exception.ClassitdaException;
+import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import com.classitda.passproduct.exception.PassProductErrorCode;
 import com.classitda.passproduct.exception.PassProductException;
@@ -67,6 +71,9 @@ class ClassSessionControllerTest {
 
     @MockitoBean
     private InstructorDailyQueryService instructorDailyQueryService;
+
+    @MockitoBean
+    private InstructorCalendarQueryService instructorCalendarQueryService;
 
     @MockitoBean
     private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
@@ -321,6 +328,99 @@ class ClassSessionControllerTest {
     }
 
     @Test
+    void 강사용_수업_달력을_조회하면_200과_날짜별_집계를_반환하고_조회_서비스에_위임한다() {
+        // given
+        LocalDate from = LocalDate.of(2026, 8, 15);
+        LocalDate to = LocalDate.of(2026, 8, 19);
+        when(instructorCalendarQueryService.findAll(1L, 7L, from, to))
+                .thenReturn(강사용_수업_달력_응답());
+
+        // when
+        RestTestClient.ResponseSpec result = 강사용_수업_달력을_조회한다(
+                7L,
+                "from=2026-08-15&to=2026-08-19",
+                "1"
+        );
+
+        // then
+        result.expectStatus().isOk().expectBody().json("""
+                [
+                  {
+                    "date": "2026-08-16",
+                    "scheduledCount": 0,
+                    "completedCount": 2,
+                    "mineScheduledCount": 0,
+                    "mineCompletedCount": 1
+                  },
+                  {
+                    "date": "2026-08-18",
+                    "scheduledCount": 6,
+                    "completedCount": 0,
+                    "mineScheduledCount": 5,
+                    "mineCompletedCount": 0
+                  }
+                ]
+                """, JsonCompareMode.STRICT);
+        verify(instructorCalendarQueryService).findAll(1L, 7L, from, to);
+    }
+
+    @ParameterizedTest
+    @MethodSource("유효하지_않은_강사용_달력_쿼리")
+    void 강사용_달력의_필수_날짜가_없거나_형식이_유효하지_않으면_COMMON_001을_반환한다(String query) {
+        // when
+        RestTestClient.ResponseSpec result = 강사용_수업_달력을_조회한다(7L, query, "1");
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(instructorCalendarQueryService, never()).findAll(any(), any(), any(), any());
+    }
+
+    @Test
+    void 강사용_달력의_조회_기간_정책_예외를_COMMON_001로_직렬화한다() {
+        // given
+        LocalDate from = LocalDate.of(2026, 8, 19);
+        LocalDate to = LocalDate.of(2026, 8, 15);
+        when(instructorCalendarQueryService.findAll(1L, 7L, from, to))
+                .thenThrow(new ClassitdaException(CommonErrorCode.INVALID_INPUT));
+
+        // when
+        RestTestClient.ResponseSpec result = 강사용_수업_달력을_조회한다(
+                7L,
+                "from=2026-08-19&to=2026-08-15",
+                "1"
+        );
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+    }
+
+    @Test
+    void 강사용_달력에서_버전_헤더가_없으면_API_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri("/api/studios/7/class-sessions/instructor/calendar?from=2026-08-15&to=2026-08-19")
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        verify(instructorCalendarQueryService, never()).findAll(any(), any(), any(), any());
+    }
+
+    @Test
+    void 강사용_달력에서_지원하지_않는_버전이면_API_002를_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = 강사용_수업_달력을_조회한다(
+                7L,
+                "from=2026-08-15&to=2026-08-19",
+                "2"
+        );
+
+        // then
+        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(instructorCalendarQueryService, never()).findAll(any(), any(), any(), any());
+    }
+
+    @Test
     void 상세_조회에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
@@ -474,6 +574,17 @@ class ClassSessionControllerTest {
                 .exchange();
     }
 
+    private RestTestClient.ResponseSpec 강사용_수업_달력을_조회한다(
+            Long studioId,
+            String query,
+            String version
+    ) {
+        return client.get()
+                .uri("/api/studios/%d/class-sessions/instructor/calendar?%s".formatted(studioId, query))
+                .header("X-API-Version", version)
+                .exchange();
+    }
+
     private void 오류를_검증한다(
             RestTestClient.ResponseSpec result,
             int status,
@@ -574,6 +685,15 @@ class ClassSessionControllerTest {
         return Stream.of(
                 Arguments.of(""),
                 Arguments.of("date=invalid")
+        );
+    }
+
+    private static Stream<Arguments> 유효하지_않은_강사용_달력_쿼리() {
+        return Stream.of(
+                Arguments.of("to=2026-08-19"),
+                Arguments.of("from=2026-08-15"),
+                Arguments.of("from=invalid&to=2026-08-19"),
+                Arguments.of("from=2026-08-15&to=invalid")
         );
     }
 
@@ -682,6 +802,25 @@ class ClassSessionControllerTest {
                 LocalDateTime.of(2026, 8, 17, 21, 0),
                 InstructorSessionStatus.SCHEDULED_OPEN,
                 true
+        );
+    }
+
+    private static List<InstructorCalendarSummary> 강사용_수업_달력_응답() {
+        return List.of(
+                new InstructorCalendarSummary(
+                        LocalDate.of(2026, 8, 16),
+                        0,
+                        2,
+                        0,
+                        1
+                ),
+                new InstructorCalendarSummary(
+                        LocalDate.of(2026, 8, 18),
+                        6,
+                        0,
+                        5,
+                        0
+                )
         );
     }
 }

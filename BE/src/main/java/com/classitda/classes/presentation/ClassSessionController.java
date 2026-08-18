@@ -3,10 +3,13 @@ package com.classitda.classes.presentation;
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
 import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
+import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.student.StudentSessionQueryService;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
+import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
+import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
 import com.classitda.classes.presentation.dto.MemberClassSessionListRequest;
@@ -33,6 +36,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
     private final ClassSessionQueryService classSessionQueryService;
     private final StudentSessionQueryService studentSessionQueryService;
     private final InstructorDailyQueryService instructorDailyQueryService;
+    private final InstructorCalendarQueryService instructorCalendarQueryService;
 
     @Override
     @PostMapping(version = "1")
@@ -69,6 +73,23 @@ public class ClassSessionController implements ClassSessionControllerApi {
     ) {
         return instructorDailyQueryService.findAll(memberId, studioId, request.date()).stream()
                 .map(InstructorDailySessionResponse::from)
+                .toList();
+    }
+
+    @Override
+    @GetMapping(path = "/instructor/calendar", version = "1")
+    public List<InstructorCalendarResponse> findAllCalendarForInstructor(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @Valid @ModelAttribute InstructorCalendarListRequest request
+    ) {
+        return instructorCalendarQueryService.findAll(
+                        memberId,
+                        studioId,
+                        request.from(),
+                        request.to()
+                ).stream()
+                .map(InstructorCalendarResponse::from)
                 .toList();
     }
 

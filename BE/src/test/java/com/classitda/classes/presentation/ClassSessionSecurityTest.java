@@ -12,6 +12,7 @@ import com.classitda.authentication.presentation.config.AuthenticationWebMvcConf
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
+import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.student.StudentSessionQueryService;
 import com.classitda.common.config.ApiVersionConfig;
@@ -49,6 +50,8 @@ class ClassSessionSecurityTest {
             "/api/studios/7/class-sessions/student/daily?date=2026-08-17&memberPassProductId=42";
     private static final String INSTRUCTOR_DAILY_URI =
             "/api/studios/7/class-sessions/instructor/daily?date=2026-08-17";
+    private static final String INSTRUCTOR_CALENDAR_URI =
+            "/api/studios/7/class-sessions/instructor/calendar?from=2026-08-15&to=2026-08-19";
 
     private final RestTestClient client;
 
@@ -63,6 +66,9 @@ class ClassSessionSecurityTest {
 
     @MockitoBean
     private InstructorDailyQueryService instructorDailyQueryService;
+
+    @MockitoBean
+    private InstructorCalendarQueryService instructorCalendarQueryService;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;
@@ -172,6 +178,58 @@ class ClassSessionSecurityTest {
                 1L,
                 7L,
                 LocalDate.of(2026, 8, 17)
+        );
+    }
+
+    @Test
+    void 인증이_없으면_강사용_수업_달력을_조회할_수_없다() {
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri(INSTRUCTOR_CALENDAR_URI)
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        assertError(result, 401, "AUTH-001", "인증이 필요합니다.");
+        verifyNoInteractions(instructorCalendarQueryService);
+    }
+
+    @Test
+    void 가입_토큰으로는_강사용_수업_달력을_조회할_수_없다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri(INSTRUCTOR_CALENDAR_URI)
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer signup-token")
+                .exchange();
+
+        // then
+        assertError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
+        verifyNoInteractions(instructorCalendarQueryService);
+    }
+
+    @Test
+    void 액세스_토큰으로_강사용_수업_달력을_조회할_수_있다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("1", TokenUse.ACCESS));
+
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri(INSTRUCTOR_CALENDAR_URI)
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer access-token")
+                .exchange();
+
+        // then
+        result.expectStatus().isOk().expectBody().json("[]", JsonCompareMode.STRICT);
+        verify(instructorCalendarQueryService).findAll(
+                1L,
+                7L,
+                LocalDate.of(2026, 8, 15),
+                LocalDate.of(2026, 8, 19)
         );
     }
 
