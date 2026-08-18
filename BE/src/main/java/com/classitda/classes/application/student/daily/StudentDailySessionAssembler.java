@@ -1,21 +1,22 @@
-package com.classitda.classes.application.student;
+package com.classitda.classes.application.student.daily;
 
+import com.classitda.classes.application.student.StudentBookingContext;
+import com.classitda.classes.application.student.StudentBookingStatus;
+import com.classitda.classes.application.student.StudentBookingStatusResolver;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
 import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
-import com.classitda.classes.presentation.dto.MemberClassSessionBookingStatus;
-import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class StudentSessionAssembler {
+public class StudentDailySessionAssembler {
 
     private final StudentBookingStatusResolver bookingStatusResolver;
 
-    public MemberClassSessionResponse assemble(
+    StudentDailySessionView assemble(
             ClassSessionDailyProjection classSession,
             ReservationSummaryProjection reservationSummary,
             WaitingSummaryProjection waitingSummary,
@@ -37,9 +38,9 @@ public class StudentSessionAssembler {
                 remainingCapacity,
                 now
         );
-        MemberClassSessionBookingStatus bookingStatus = bookingStatusResolver.resolve(bookingContext);
+        StudentBookingStatus bookingStatus = bookingStatusResolver.resolve(bookingContext);
 
-        return MemberClassSessionResponse.of(
+        return StudentDailySessionView.of(
                 classSession,
                 reservedCount,
                 remainingCapacity,

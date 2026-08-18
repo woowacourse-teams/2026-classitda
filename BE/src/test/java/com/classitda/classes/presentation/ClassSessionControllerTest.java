@@ -16,7 +16,9 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarQ
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarSummary;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
-import com.classitda.classes.application.student.StudentSessionQueryService;
+import com.classitda.classes.application.student.StudentBookingStatus;
+import com.classitda.classes.application.student.daily.StudentDailyQueryService;
+import com.classitda.classes.application.student.daily.StudentDailySessionView;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.exception.ClassErrorCode;
@@ -25,8 +27,6 @@ import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
-import com.classitda.classes.presentation.dto.MemberClassSessionBookingStatus;
-import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
@@ -67,7 +67,7 @@ class ClassSessionControllerTest {
     private ClassSessionQueryService queryService;
 
     @MockitoBean
-    private StudentSessionQueryService studentSessionQueryService;
+    private StudentDailyQueryService studentDailyQueryService;
 
     @MockitoBean
     private InstructorDailyQueryService instructorDailyQueryService;
@@ -135,8 +135,8 @@ class ClassSessionControllerTest {
     void 회원용_일별_수업_목록을_조회하면_200과_목록을_반환하고_조회_서비스에_위임한다() {
         // given
         LocalDate date = LocalDate.of(2026, 8, 17);
-        when(studentSessionQueryService.findAll(1L, 7L, date, 42L))
-                .thenReturn(List.of(회원용_일별_수업_응답()));
+        when(studentDailyQueryService.findAll(1L, 7L, date, 42L))
+                .thenReturn(List.of(회원용_일별_수업_뷰()));
 
         // when
         RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
@@ -166,7 +166,7 @@ class ClassSessionControllerTest {
                   }
                 ]
                 """, JsonCompareMode.STRICT);
-        verify(studentSessionQueryService).findAll(1L, 7L, date, 42L);
+        verify(studentDailyQueryService).findAll(1L, 7L, date, 42L);
     }
 
     @ParameterizedTest
@@ -177,7 +177,7 @@ class ClassSessionControllerTest {
 
         // then
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
-        verify(studentSessionQueryService, never()).findAll(any(), any(), any(), any());
+        verify(studentDailyQueryService, never()).findAll(any(), any(), any(), any());
     }
 
     @Test
@@ -189,7 +189,7 @@ class ClassSessionControllerTest {
 
         // then
         오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(studentSessionQueryService, never()).findAll(any(), any(), any(), any());
+        verify(studentDailyQueryService, never()).findAll(any(), any(), any(), any());
     }
 
     @Test
@@ -203,7 +203,7 @@ class ClassSessionControllerTest {
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(studentSessionQueryService, never()).findAll(any(), any(), any(), any());
+        verify(studentDailyQueryService, never()).findAll(any(), any(), any(), any());
     }
 
     @ParameterizedTest
@@ -216,7 +216,7 @@ class ClassSessionControllerTest {
     ) {
         // given
         LocalDate date = LocalDate.of(2026, 8, 17);
-        when(studentSessionQueryService.findAll(1L, 7L, date, 42L)).thenThrow(exception);
+        when(studentDailyQueryService.findAll(1L, 7L, date, 42L)).thenThrow(exception);
 
         // when
         RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
@@ -766,13 +766,14 @@ class ClassSessionControllerTest {
         );
     }
 
-    private static MemberClassSessionResponse 회원용_일별_수업_응답() {
-        return new MemberClassSessionResponse(
+    private static StudentDailySessionView 회원용_일별_수업_뷰() {
+        return new StudentDailySessionView(
                 11L,
                 12L,
                 "김강사",
                 ClassForm.GROUP,
-                ClassTypeResponse.of(3L, "요가"),
+                3L,
+                "요가",
                 "저녁 요가",
                 "3층 A룸에서 진행합니다.",
                 12,
@@ -781,7 +782,7 @@ class ClassSessionControllerTest {
                 2,
                 LocalDateTime.of(2026, 8, 17, 20, 0),
                 LocalDateTime.of(2026, 8, 17, 21, 0),
-                MemberClassSessionBookingStatus.AVAILABLE
+                StudentBookingStatus.AVAILABLE
         );
     }
 

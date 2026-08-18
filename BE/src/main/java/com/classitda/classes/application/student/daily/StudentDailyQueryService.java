@@ -1,6 +1,7 @@
-package com.classitda.classes.application.student;
+package com.classitda.classes.application.student.daily;
 
-import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
+import com.classitda.classes.application.student.StudentSessionAccess;
+import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import java.time.Clock;
@@ -14,14 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
-public class StudentSessionQueryService {
+public class StudentDailyQueryService {
 
     private final StudentSessionAccessReader accessReader;
-    private final StudentSessionScheduleReader scheduleReader;
-    private final StudentSessionAssembler assembler;
+    private final StudentDailyScheduleReader scheduleReader;
+    private final StudentDailySessionAssembler assembler;
     private final Clock clock;
 
-    public List<MemberClassSessionResponse> findAll(
+    public List<StudentDailySessionView> findAll(
             Long memberId,
             Long studioId,
             LocalDate date,
@@ -34,7 +35,7 @@ public class StudentSessionQueryService {
             return List.of();
         }
 
-        StudentSessionSchedule schedule = scheduleReader.read(
+        StudentDailySchedule schedule = scheduleReader.read(
                 studioId,
                 access.membershipId(),
                 date,
@@ -53,8 +54,8 @@ public class StudentSessionQueryService {
         }
     }
 
-    private List<MemberClassSessionResponse> assemble(
-            StudentSessionSchedule schedule,
+    private List<StudentDailySessionView> assemble(
+            StudentDailySchedule schedule,
             LocalDateTime now
     ) {
         return schedule.classSessions().stream()

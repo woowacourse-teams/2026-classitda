@@ -1,13 +1,12 @@
 package com.classitda.classes.application.student;
 
 import com.classitda.classes.domain.ClassSessionStatus;
-import com.classitda.classes.presentation.dto.MemberClassSessionBookingStatus;
 import org.springframework.stereotype.Component;
 
 @Component
 public class StudentBookingStatusResolver {
 
-    public MemberClassSessionBookingStatus resolve(StudentBookingContext context) {
+    public StudentBookingStatus resolve(StudentBookingContext context) {
         for (BookingStatusRule rule : BookingStatusRule.values()) {
             if (rule.matches(context)) {
                 return rule.status;
@@ -17,37 +16,37 @@ public class StudentBookingStatusResolver {
     }
 
     private enum BookingStatusRule {
-        CANCELED(MemberClassSessionBookingStatus.CANCELED) {
+        CANCELED(StudentBookingStatus.CANCELED) {
             @Override
             boolean matches(StudentBookingContext context) {
                 return context.sessionStatus() == ClassSessionStatus.CANCELED;
             }
         },
-        COMPLETED(MemberClassSessionBookingStatus.COMPLETED) {
+        COMPLETED(StudentBookingStatus.COMPLETED) {
             @Override
             boolean matches(StudentBookingContext context) {
                 return !context.now().isBefore(context.endAt());
             }
         },
-        RESERVED(MemberClassSessionBookingStatus.RESERVED) {
+        RESERVED(StudentBookingStatus.RESERVED) {
             @Override
             boolean matches(StudentBookingContext context) {
                 return context.ownReservedCount() > 0;
             }
         },
-        OFFERED(MemberClassSessionBookingStatus.OFFERED) {
+        OFFERED(StudentBookingStatus.OFFERED) {
             @Override
             boolean matches(StudentBookingContext context) {
                 return context.ownOfferedCount() > 0;
             }
         },
-        WAITING(MemberClassSessionBookingStatus.WAITING) {
+        WAITING(StudentBookingStatus.WAITING) {
             @Override
             boolean matches(StudentBookingContext context) {
                 return context.ownWaitingCount() > 0;
             }
         },
-        CLOSED(MemberClassSessionBookingStatus.CLOSED) {
+        CLOSED(StudentBookingStatus.CLOSED) {
             @Override
             boolean matches(StudentBookingContext context) {
                 return context.sessionStatus() == ClassSessionStatus.CLOSED
@@ -56,22 +55,22 @@ public class StudentBookingStatusResolver {
                         );
             }
         },
-        AVAILABLE(MemberClassSessionBookingStatus.AVAILABLE) {
+        AVAILABLE(StudentBookingStatus.AVAILABLE) {
             @Override
             boolean matches(StudentBookingContext context) {
                 return context.remainingCapacity() > 0;
             }
         },
-        WAITING_AVAILABLE(MemberClassSessionBookingStatus.WAITING_AVAILABLE) {
+        WAITING_AVAILABLE(StudentBookingStatus.WAITING_AVAILABLE) {
             @Override
             boolean matches(StudentBookingContext context) {
                 return true;
             }
         };
 
-        private final MemberClassSessionBookingStatus status;
+        private final StudentBookingStatus status;
 
-        BookingStatusRule(MemberClassSessionBookingStatus status) {
+        BookingStatusRule(StudentBookingStatus status) {
             this.status = status;
         }
 

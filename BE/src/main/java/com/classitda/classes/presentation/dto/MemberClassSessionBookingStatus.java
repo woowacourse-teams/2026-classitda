@@ -1,5 +1,6 @@
 package com.classitda.classes.presentation.dto;
 
+import com.classitda.classes.application.student.StudentBookingStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(
@@ -16,5 +17,9 @@ public enum MemberClassSessionBookingStatus {
     OFFERED,
     CLOSED,
     COMPLETED,
-    CANCELED
+    CANCELED;
+
+    public static MemberClassSessionBookingStatus from(StudentBookingStatus status) {
+        return valueOf(status.name());
+    }
 }

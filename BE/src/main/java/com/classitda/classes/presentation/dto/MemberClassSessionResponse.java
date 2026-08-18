@@ -1,7 +1,7 @@
 package com.classitda.classes.presentation.dto;
 
+import com.classitda.classes.application.student.daily.StudentDailySessionView;
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
@@ -48,28 +48,22 @@ public record MemberClassSessionResponse(
         MemberClassSessionBookingStatus bookingStatus
 ) {
 
-    public static MemberClassSessionResponse of(
-            ClassSessionDailyProjection classSession,
-            long reservedCount,
-            long remainingCapacity,
-            long waitingCount,
-            MemberClassSessionBookingStatus bookingStatus
-    ) {
+    public static MemberClassSessionResponse from(StudentDailySessionView session) {
         return new MemberClassSessionResponse(
-                classSession.getClassSessionId(),
-                classSession.getInstructorMembershipId(),
-                classSession.getInstructorName(),
-                classSession.getClassForm(),
-                ClassTypeResponse.of(classSession.getClassTypeId(), classSession.getClassTypeName()),
-                classSession.getClassName(),
-                classSession.getDescription(),
-                classSession.getCapacity(),
-                reservedCount,
-                remainingCapacity,
-                waitingCount,
-                classSession.getStartAt(),
-                classSession.getEndAt(),
-                bookingStatus
+                session.id(),
+                session.instructorMembershipId(),
+                session.instructorName(),
+                session.classForm(),
+                ClassTypeResponse.of(session.classTypeId(), session.classTypeName()),
+                session.className(),
+                session.description(),
+                session.capacity(),
+                session.reservedCount(),
+                session.remainingCapacity(),
+                session.waitingCount(),
+                session.startAt(),
+                session.endAt(),
+                MemberClassSessionBookingStatus.from(session.bookingStatus())
         );
     }
 }

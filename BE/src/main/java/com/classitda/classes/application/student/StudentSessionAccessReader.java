@@ -22,7 +22,7 @@ public class StudentSessionAccessReader {
     private final StudioMembershipRepository studioMembershipRepository;
     private final StudioRepository studioRepository;
 
-    StudentSessionAccess read(Long memberId, Long studioId, Long memberPassProductId) {
+    public StudentSessionAccess read(Long memberId, Long studioId, Long memberPassProductId) {
         Studio studio = getStudio(studioId);
         StudioMembership membership = getActiveMembership(studio.getId(), memberId);
         validateStudent(membership);

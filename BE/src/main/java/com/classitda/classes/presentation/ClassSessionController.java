@@ -5,7 +5,7 @@ import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
-import com.classitda.classes.application.student.StudentSessionQueryService;
+import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
@@ -34,7 +34,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
 
     private final ClassSessionCommandService classSessionCommandService;
     private final ClassSessionQueryService classSessionQueryService;
-    private final StudentSessionQueryService studentSessionQueryService;
+    private final StudentDailyQueryService studentDailyQueryService;
     private final InstructorDailyQueryService instructorDailyQueryService;
     private final InstructorCalendarQueryService instructorCalendarQueryService;
 
@@ -56,12 +56,14 @@ public class ClassSessionController implements ClassSessionControllerApi {
             @PathVariable Long studioId,
             @Valid @ModelAttribute MemberClassSessionListRequest request
     ) {
-        return studentSessionQueryService.findAll(
-                memberId,
-                studioId,
-                request.date(),
-                request.memberPassProductId()
-        );
+        return studentDailyQueryService.findAll(
+                        memberId,
+                        studioId,
+                        request.date(),
+                        request.memberPassProductId()
+                ).stream()
+                .map(MemberClassSessionResponse::from)
+                .toList();
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.classitda.classes.application.student;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classitda.classes.domain.ClassSessionStatus;
-import com.classitda.classes.presentation.dto.MemberClassSessionBookingStatus;
 import java.time.LocalDateTime;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,7 +18,7 @@ class StudentBookingStatusResolverTest {
     @ParameterizedTest(name = "{0} 상태를 가장 높은 우선순위 규칙으로 결정한다")
     @MethodSource("bookingStatusContexts")
     void 예약_상태를_규칙_우선순위에_따라_결정한다(
-            MemberClassSessionBookingStatus expected,
+            StudentBookingStatus expected,
             StudentBookingContext context
     ) {
         assertThat(resolver.resolve(context)).isEqualTo(expected);
@@ -28,42 +27,42 @@ class StudentBookingStatusResolverTest {
     private static Stream<Arguments> bookingStatusContexts() {
         return Stream.of(
                 Arguments.of(
-                        MemberClassSessionBookingStatus.CANCELED,
+                        StudentBookingStatus.CANCELED,
                         context(ClassSessionStatus.CANCELED, NOW.minusHours(2), NOW.minusHours(1),
                                 1, 1, 1, 1)
                 ),
                 Arguments.of(
-                        MemberClassSessionBookingStatus.COMPLETED,
+                        StudentBookingStatus.COMPLETED,
                         context(ClassSessionStatus.OPENED, NOW.minusHours(2), NOW,
                                 1, 1, 1, 1)
                 ),
                 Arguments.of(
-                        MemberClassSessionBookingStatus.RESERVED,
+                        StudentBookingStatus.RESERVED,
                         context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
                                 1, 1, 1, 1)
                 ),
                 Arguments.of(
-                        MemberClassSessionBookingStatus.OFFERED,
+                        StudentBookingStatus.OFFERED,
                         context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
                                 0, 1, 1, 1)
                 ),
                 Arguments.of(
-                        MemberClassSessionBookingStatus.WAITING,
+                        StudentBookingStatus.WAITING,
                         context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
                                 0, 0, 1, 1)
                 ),
                 Arguments.of(
-                        MemberClassSessionBookingStatus.CLOSED,
+                        StudentBookingStatus.CLOSED,
                         context(ClassSessionStatus.OPENED, NOW.plusMinutes(30), NOW.plusHours(1),
                                 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        MemberClassSessionBookingStatus.AVAILABLE,
+                        StudentBookingStatus.AVAILABLE,
                         context(ClassSessionStatus.OPENED, NOW.plusHours(1), NOW.plusHours(2),
                                 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        MemberClassSessionBookingStatus.WAITING_AVAILABLE,
+                        StudentBookingStatus.WAITING_AVAILABLE,
                         context(ClassSessionStatus.OPENED, NOW.plusHours(1), NOW.plusHours(2),
                                 0, 0, 0, 0)
                 )

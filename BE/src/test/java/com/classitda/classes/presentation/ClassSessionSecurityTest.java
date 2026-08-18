@@ -14,7 +14,7 @@ import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
-import com.classitda.classes.application.student.StudentSessionQueryService;
+import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import java.time.Instant;
@@ -62,7 +62,7 @@ class ClassSessionSecurityTest {
     private ClassSessionQueryService queryService;
 
     @MockitoBean
-    private StudentSessionQueryService studentSessionQueryService;
+    private StudentDailyQueryService studentDailyQueryService;
 
     @MockitoBean
     private InstructorDailyQueryService instructorDailyQueryService;
@@ -88,7 +88,7 @@ class ClassSessionSecurityTest {
 
         // then
         assertError(result, 401, "AUTH-001", "인증이 필요합니다.");
-        verifyNoInteractions(studentSessionQueryService);
+        verifyNoInteractions(studentDailyQueryService);
     }
 
     @Test
@@ -105,7 +105,7 @@ class ClassSessionSecurityTest {
 
         // then
         assertError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
-        verifyNoInteractions(studentSessionQueryService);
+        verifyNoInteractions(studentDailyQueryService);
     }
 
     @Test
@@ -122,7 +122,7 @@ class ClassSessionSecurityTest {
 
         // then
         result.expectStatus().isOk().expectBody().json("[]", JsonCompareMode.STRICT);
-        verify(studentSessionQueryService).findAll(
+        verify(studentDailyQueryService).findAll(
                 1L,
                 7L,
                 LocalDate.of(2026, 8, 17),

@@ -1,4 +1,4 @@
-package com.classitda.classes.application.student;
+package com.classitda.classes.application.student.daily;
 
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
@@ -26,14 +26,14 @@ import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class StudentSessionScheduleReader {
+public class StudentDailyScheduleReader {
 
     private final ClassSessionRepository classSessionRepository;
     private final ReservationRepository reservationRepository;
     private final WaitingRepository waitingRepository;
     private final StudioPolicyRepository studioPolicyRepository;
 
-    StudentSessionSchedule read(
+    StudentDailySchedule read(
             Long studioId,
             Long membershipId,
             LocalDate date,
@@ -44,7 +44,7 @@ public class StudentSessionScheduleReader {
                 .toList();
 
         if (classTypeIds.isEmpty()) {
-            return StudentSessionSchedule.empty();
+            return StudentDailySchedule.empty();
         }
 
         List<ClassSessionDailyProjection> classSessions = classSessionRepository.findDailyForMemberPass(
@@ -56,7 +56,7 @@ public class StudentSessionScheduleReader {
         );
 
         if (classSessions.isEmpty()) {
-            return StudentSessionSchedule.empty();
+            return StudentDailySchedule.empty();
         }
 
         return createSchedule(studioId, membershipId, classSessions);
@@ -70,7 +70,7 @@ public class StudentSessionScheduleReader {
         }
     }
 
-    private StudentSessionSchedule createSchedule(
+    private StudentDailySchedule createSchedule(
             Long studioId,
             Long membershipId,
             List<ClassSessionDailyProjection> classSessions
@@ -95,7 +95,7 @@ public class StudentSessionScheduleReader {
                         Function.identity()
                 ));
 
-        return new StudentSessionSchedule(
+        return new StudentDailySchedule(
                 classSessions,
                 reservationSummaries,
                 waitingSummaries,
