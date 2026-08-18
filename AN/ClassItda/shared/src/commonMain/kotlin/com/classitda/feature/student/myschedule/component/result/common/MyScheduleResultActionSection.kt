@@ -17,6 +17,7 @@ import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.student.myschedule.component.common.MySchedulePrimaryButton
 import com.classitda.feature.student.myschedule.component.common.MyScheduleSecondaryButton
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -24,6 +25,7 @@ internal fun MyScheduleResultActionSection(
     onBookAnotherClass: () -> Unit,
     onReturnToList: () -> Unit,
     modifier: Modifier = Modifier,
+    returnToListText: StringResource = Res.string.my_schedule_return_to_list,
 ) {
     Column(
         modifier =
@@ -41,7 +43,7 @@ internal fun MyScheduleResultActionSection(
             onClick = onBookAnotherClass,
         )
         MyScheduleSecondaryButton(
-            text = stringResource(Res.string.my_schedule_return_to_list),
+            text = stringResource(returnToListText),
             onClick = onReturnToList,
         )
     }
