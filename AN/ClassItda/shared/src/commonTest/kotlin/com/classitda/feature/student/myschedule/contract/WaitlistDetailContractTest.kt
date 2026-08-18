@@ -4,8 +4,10 @@ import com.classitda.domain.model.student.myschedule.WaitlistId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class WaitlistDetailContractTest {
     @Test
@@ -14,12 +16,14 @@ class WaitlistDetailContractTest {
             listOf(
                 WaitlistDetailUiState.Loading,
                 WaitlistDetailUiState.Content(createDetail()),
+                WaitlistDetailUiState.CancellationCompleted(createCancellationResult()),
                 WaitlistDetailUiState.Error(WaitlistDetailErrorUiModel.NETWORK),
             )
 
         assertIs<WaitlistDetailUiState.Loading>(states[0])
         assertIs<WaitlistDetailUiState.Content>(states[1])
-        assertIs<WaitlistDetailUiState.Error>(states[2])
+        assertIs<WaitlistDetailUiState.CancellationCompleted>(states[2])
+        assertIs<WaitlistDetailUiState.Error>(states[3])
     }
 
     @Test
@@ -57,6 +61,58 @@ class WaitlistDetailContractTest {
             )
 
         assertNull(detail.cancellationActionOrNull())
+    }
+
+    @Test
+    fun `취소 확인 창은 취소 가능한 대기 상세에만 결합할 수 있다`() {
+        WaitlistDetailUiState.Content(
+            detail = createDetail(),
+            cancellationDialog = WaitlistCancellationDialogUiState.Waiting,
+        )
+
+        assertFailsWith<IllegalArgumentException> {
+            WaitlistDetailUiState.Content(
+                detail =
+                    createDetail().copy(
+                        cancellation =
+                            WaitlistCancellationAvailabilityUiModel.Unavailable(
+                                WaitlistCancellationUnavailableReasonUiModel.DEADLINE_PASSED,
+                            ),
+                    ),
+                cancellationDialog = WaitlistCancellationDialogUiState.Waiting,
+            )
+        }
+    }
+
+    @Test
+    fun `대기와 실패는 닫을 수 있고 제출 중에는 dismiss를 차단한다`() {
+        val failed =
+            WaitlistCancellationDialogUiState.Failed(
+                WaitlistCancellationErrorUiModel.NETWORK,
+            )
+
+        assertTrue(WaitlistCancellationDialogUiState.Waiting.canDismiss)
+        assertTrue(failed.canDismiss)
+        assertFalse(WaitlistCancellationDialogUiState.Submitting.canDismiss)
+    }
+
+    @Test
+    fun `확인과 재시도 Action은 취소 대상 WaitlistId를 유지한다`() {
+        val waitlistId = WaitlistId("waitlist-to-cancel")
+
+        val confirm = WaitlistDetailAction.ConfirmCancellation(waitlistId)
+        val retry = WaitlistDetailAction.RetryCancellation(waitlistId)
+
+        assertEquals(waitlistId, confirm.waitlistId)
+        assertEquals(waitlistId, retry.waitlistId)
+    }
+
+    @Test
+    fun `취소 완료는 modal을 가질 수 없는 별도 결과 상태다`() {
+        val state = WaitlistDetailUiState.CancellationCompleted(createCancellationResult())
+
+        assertEquals(WaitlistId("waitlist-detail"), state.result.waitlistId)
+        assertEquals(2, state.result.positionAtCancellation)
     }
 
     @Test
@@ -103,5 +159,16 @@ class WaitlistDetailContractTest {
             remainingUses = 14,
             reservableUses = 5,
             cancellableUses = 2,
+        )
+
+    private fun createCancellationResult(): WaitlistCancellationResultUiModel =
+        WaitlistCancellationResultUiModel(
+            waitlistId = WaitlistId("waitlist-detail"),
+            title = "리포머 밸런스",
+            instructorName = "이지은 강사",
+            dateLabel = "2026.08.06 (목)",
+            timeRangeLabel = "오후 7:30 ~ 8:20",
+            cancelledAtLabel = "2026.08.04 오후 2:32",
+            positionAtCancellation = 2,
         )
 }

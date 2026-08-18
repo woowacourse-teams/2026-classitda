@@ -70,6 +70,20 @@ sealed interface WaitlistDetailUiState {
 
     data class Content(
         val detail: WaitlistDetailUiModel,
+        val cancellationDialog: WaitlistCancellationDialogUiState? = null,
+    ) : WaitlistDetailUiState {
+        init {
+            require(
+                cancellationDialog == null ||
+                    detail.cancellation is WaitlistCancellationAvailabilityUiModel.Available,
+            ) {
+                "대기 취소 확인 창은 취소 가능한 대기 상세에서만 표시할 수 있습니다."
+            }
+        }
+    }
+
+    data class CancellationCompleted(
+        val result: WaitlistCancellationResultUiModel,
     ) : WaitlistDetailUiState
 
     data class Error(
@@ -89,7 +103,56 @@ sealed interface WaitlistDetailAction {
     data class CancelWaitlist(
         val waitlistId: WaitlistId,
     ) : WaitlistDetailAction
+
+    data object DismissCancellation : WaitlistDetailAction
+
+    data class ConfirmCancellation(
+        val waitlistId: WaitlistId,
+    ) : WaitlistDetailAction
+
+    data class RetryCancellation(
+        val waitlistId: WaitlistId,
+    ) : WaitlistDetailAction
 }
+
+sealed interface WaitlistCancellationDialogUiState {
+    data object Waiting : WaitlistCancellationDialogUiState
+
+    data object Submitting : WaitlistCancellationDialogUiState
+
+    data class Failed(
+        val error: WaitlistCancellationErrorUiModel,
+    ) : WaitlistCancellationDialogUiState
+}
+
+enum class WaitlistCancellationErrorUiModel {
+    NETWORK,
+    CONFLICT,
+    CANCELLATION_NOT_ALLOWED,
+    UNKNOWN,
+}
+
+data class WaitlistCancellationResultUiModel(
+    val waitlistId: WaitlistId,
+    val title: String,
+    val instructorName: String,
+    val dateLabel: String,
+    val timeRangeLabel: String,
+    val cancelledAtLabel: String,
+    val positionAtCancellation: Int,
+) {
+    init {
+        require(title.isNotBlank()) { "취소 결과 수업명은 비어 있을 수 없습니다." }
+        require(instructorName.isNotBlank()) { "취소 결과 강사 이름은 비어 있을 수 없습니다." }
+        require(dateLabel.isNotBlank()) { "취소 결과 수업 날짜 표시는 비어 있을 수 없습니다." }
+        require(timeRangeLabel.isNotBlank()) { "취소 결과 수업 시간 표시는 비어 있을 수 없습니다." }
+        require(cancelledAtLabel.isNotBlank()) { "취소 결과 일시는 비어 있을 수 없습니다." }
+        require(positionAtCancellation >= 1) { "취소 당시 대기 순번은 1 이상이어야 합니다." }
+    }
+}
+
+internal val WaitlistCancellationDialogUiState.canDismiss: Boolean
+    get() = this !is WaitlistCancellationDialogUiState.Submitting
 
 internal fun WaitlistDetailUiModel.cancellationActionOrNull(): WaitlistDetailAction.CancelWaitlist? =
     if (cancellation is WaitlistCancellationAvailabilityUiModel.Available) {
