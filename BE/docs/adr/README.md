@@ -112,7 +112,7 @@ Accepted (YYYY-MM-DD)
 | [0003](0003-use-testcontainers-for-mysql-tests.md) | Testcontainers 기반 MySQL 검증 | Repository와 스키마 검증 테스트를 MySQL 8.4에서 실행해요 |
 | [0004](0004-keep-external-io-outside-db-transaction.md) | 외부 I/O와 DB 트랜잭션 경계 | Redis·외부 API 호출은 DB 트랜잭션 밖에서 수행하고 DB 쓰기만 짧게 묶어요 |
 | [0005](0005-authentication-token-and-session-boundary.md) | Access·Refresh 상태 경계 | Access Token은 stateless로 검증하고 Refresh Session은 Redis에서 관리해요 |
-| [0010](0010-defer-class-session-concurrency-lock.md) | 수업 시간 충돌 잠금 유예 | 현재 생성에는 비관적 잠금을 적용하지 않고 일정 변경 경로가 늘어날 때 다시 결정해요 |
+| [0006](0006-defer-class-session-concurrency-lock.md) | 비관적 락 적용 유예 | 현재 수업 생성에는 비관적 락을 적용하지 않고 일정 변경 경로가 늘어날 때 다시 결정해요 |
 
 ## 다른 문서와의 관계
 
