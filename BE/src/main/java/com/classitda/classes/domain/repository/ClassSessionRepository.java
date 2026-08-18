@@ -4,6 +4,7 @@ import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionCalendarSummaryProjection;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
+import com.classitda.classes.domain.repository.projection.StudentCalendarSummaryProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -129,6 +130,73 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("requesterMembershipId") Long requesterMembershipId,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
+            @Param("now") LocalDateTime now
+    );
+
+    @Query(value = """
+            SELECT DATE(class_session.start_at) AS date,
+                   MAX(CASE
+                           WHEN class_session.end_at <= :now
+                               AND EXISTS (
+                                   SELECT 1
+                                   FROM reservation
+                                   WHERE reservation.class_session_id = class_session.id
+                                     AND reservation.membership_id = :membershipId
+                                     AND reservation.status = 'ATTENDED'
+                               )
+                               THEN 1
+                           ELSE 0
+                       END) AS attended,
+                   MAX(CASE
+                           WHEN class_session.end_at > :now
+                               AND EXISTS (
+                                   SELECT 1
+                                   FROM reservation
+                                   WHERE reservation.class_session_id = class_session.id
+                                     AND reservation.membership_id = :membershipId
+                                     AND reservation.status = 'RESERVED'
+                               )
+                               THEN 1
+                           ELSE 0
+                       END) AS reserved,
+                   MAX(CASE
+                           WHEN class_session.end_at > :now
+                               AND EXISTS (
+                                   SELECT 1
+                                   FROM waiting
+                                   WHERE waiting.class_session_id = class_session.id
+                                     AND waiting.membership_id = :membershipId
+                                     AND waiting.status = 'WAITING'
+                               )
+                               THEN 1
+                           ELSE 0
+                       END) AS waiting
+            FROM class_session
+            WHERE class_session.studio_id = :studioId
+              AND class_session.start_at >= :rangeStart
+              AND class_session.start_at < :rangeEnd
+              AND class_session.class_form = :classForm
+              AND class_session.status <> 'CANCELED'
+              AND EXISTS (
+                  SELECT 1
+                  FROM class_session_class_type
+                  JOIN class_type
+                    ON class_type.id = class_session_class_type.class_type_id
+                  WHERE class_session_class_type.class_session_id = class_session.id
+                    AND class_type.studio_id = :studioId
+                    AND class_type.id IN (:classTypeIds)
+              )
+            GROUP BY DATE(class_session.start_at)
+            HAVING attended = 1 OR reserved = 1 OR waiting = 1
+            ORDER BY date ASC
+            """, nativeQuery = true)
+    List<StudentCalendarSummaryProjection> findCalendarSummaryForStudent(
+            @Param("studioId") Long studioId,
+            @Param("membershipId") Long membershipId,
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd,
+            @Param("classForm") String classForm,
+            @Param("classTypeIds") List<Long> classTypeIds,
             @Param("now") LocalDateTime now
     );
 }
