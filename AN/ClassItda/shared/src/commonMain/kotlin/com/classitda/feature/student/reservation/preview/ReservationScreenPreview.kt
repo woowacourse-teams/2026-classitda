@@ -14,44 +14,45 @@ import com.classitda.feature.student.reservation.contract.ReservationClassUiMode
 import com.classitda.feature.student.reservation.contract.ReservationPassUiModel
 import kotlinx.datetime.LocalDate
 
-private val previewClasses = listOf(
-    ReservationClassUiModel(
-        id = "1",
-        classTime = "오전 10:00 - 10:50",
-        className = "리포머 베이직",
-        instructorName = "이지은 강사",
-        memo = "정말정말정말정말정말정말정말정말정말 긴 메모의 글",
-        leftStudentCount = 4,
-        cardType = ReservationClassCardType.DEFAULT,
-    ),
-    ReservationClassUiModel(
-        id = "2",
-        classTime = "오후 2:00 - 2:50",
-        className = "체어 밸런스",
-        instructorName = "박소연 강사",
-        memo = "준비물 - 수건, 오늘 숙련자 대상이에요",
-        leftStudentCount = 0,
-        cardType = ReservationClassCardType.DEFAULT,
-    ),
-    ReservationClassUiModel(
-        id = "3",
-        classTime = "오후 7:30 - 8:20",
-        className = "리포머 밸런스",
-        instructorName = "이지은 강사",
-        memo = "준비물 - 수건, 오늘 숙련자 대상이에요",
-        leftStudentCount = 0,
-        cardType = ReservationClassCardType.RESERVED,
-    ),
-    ReservationClassUiModel(
-        id = "4",
-        classTime = "오후 9:30 - 10:20",
-        className = "체어 베이직",
-        instructorName = "박소연 강사",
-        memo = null,
-        leftStudentCount = 0,
-        cardType = ReservationClassCardType.WAITLISTED,
-    ),
-)
+private val previewClasses =
+    listOf(
+        ReservationClassUiModel(
+            id = "1",
+            classTime = "오전 10:00 - 10:50",
+            className = "리포머 베이직",
+            instructorName = "이지은 강사",
+            memo = "정말정말정말정말정말정말정말정말정말 긴 메모의 글",
+            leftStudentCount = 4,
+            cardType = ReservationClassCardType.DEFAULT,
+        ),
+        ReservationClassUiModel(
+            id = "2",
+            classTime = "오후 2:00 - 2:50",
+            className = "체어 밸런스",
+            instructorName = "박소연 강사",
+            memo = "준비물 - 수건, 오늘 숙련자 대상이에요",
+            leftStudentCount = 0,
+            cardType = ReservationClassCardType.DEFAULT,
+        ),
+        ReservationClassUiModel(
+            id = "3",
+            classTime = "오후 7:30 - 8:20",
+            className = "리포머 밸런스",
+            instructorName = "이지은 강사",
+            memo = "준비물 - 수건, 오늘 숙련자 대상이에요",
+            leftStudentCount = 0,
+            cardType = ReservationClassCardType.RESERVED,
+        ),
+        ReservationClassUiModel(
+            id = "4",
+            classTime = "오후 9:30 - 10:20",
+            className = "체어 베이직",
+            instructorName = "박소연 강사",
+            memo = null,
+            leftStudentCount = 0,
+            cardType = ReservationClassCardType.WAITLISTED,
+        ),
+    )
 
 private val previewClassesByDay =
     mapOf(

@@ -29,14 +29,16 @@ fun PrimaryButton(
         enabled = enabled,
         modifier = modifier.heightIn(min = 52.dp),
         shape = AppShape.Card,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = StuColors.PrimaryColor,
-            contentColor = StuColors.White,
-        ),
-        contentPadding = PaddingValues(
-            horizontal = AppSpacing.lg,
-            vertical = AppSpacing.sm,
-        ),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = StuColors.PrimaryColor,
+                contentColor = StuColors.White,
+            ),
+        contentPadding =
+            PaddingValues(
+                horizontal = AppSpacing.lg,
+                vertical = AppSpacing.sm,
+            ),
     ) {
         Text(
             text = text,

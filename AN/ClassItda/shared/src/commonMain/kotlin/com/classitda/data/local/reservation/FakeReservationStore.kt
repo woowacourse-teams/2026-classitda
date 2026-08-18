@@ -241,8 +241,7 @@ internal class FakeReservationStore {
 
     fun getClasses(): List<ReservationClass> = classes.toList()
 
-    fun getClassById(classId: String): ReservationClass? =
-        classes.firstOrNull { it.id == classId }
+    fun getClassById(classId: String): ReservationClass? = classes.firstOrNull { it.id == classId }
 
     fun saveReservation(classId: String) {
         updateClass(classId) { it.copy(isReserved = true, isWaitlisted = false) }
@@ -267,8 +266,9 @@ private fun createWeekdayClasses(existingDates: Set<LocalDate>): List<Reservatio
             val lastDayOfMonth = if (month == 8) 31 else 30
             for (dayOfMonth in 1..lastDayOfMonth) {
                 val date = LocalDate(2026, month, dayOfMonth)
-                val isWeekday = date.dayOfWeek != DayOfWeek.SATURDAY &&
-                    date.dayOfWeek != DayOfWeek.SUNDAY
+                val isWeekday =
+                    date.dayOfWeek != DayOfWeek.SATURDAY &&
+                        date.dayOfWeek != DayOfWeek.SUNDAY
                 if (!isWeekday || date in existingDates) continue
 
                 val variant = (month + dayOfMonth) % 3
@@ -276,26 +276,30 @@ private fun createWeekdayClasses(existingDates: Set<LocalDate>): List<Reservatio
                     ReservationClass(
                         id = "weekday-$month-$dayOfMonth",
                         date = date,
-                        classTime = when (variant) {
-                            0 -> "오전 10:00 - 10:50"
-                            1 -> "오후 2:00 - 2:50"
-                            else -> "오후 7:30 - 8:20"
-                        },
-                        className = when (variant) {
-                            0 -> "리포머 베이직"
-                            1 -> "체어 밸런스"
-                            else -> "릴렉스 요가"
-                        },
-                        instructorName = when (variant) {
-                            0 -> "이지은 강사"
-                            1 -> "박소연 강사"
-                            else -> "최유진 강사"
-                        },
-                        roomName = when (variant) {
-                            0 -> "준비물 - 수건"
-                            1 -> "코어 집중 수업"
-                            else -> "개인 매트 지참 가능"
-                        },
+                        classTime =
+                            when (variant) {
+                                0 -> "오전 10:00 - 10:50"
+                                1 -> "오후 2:00 - 2:50"
+                                else -> "오후 7:30 - 8:20"
+                            },
+                        className =
+                            when (variant) {
+                                0 -> "리포머 베이직"
+                                1 -> "체어 밸런스"
+                                else -> "릴렉스 요가"
+                            },
+                        instructorName =
+                            when (variant) {
+                                0 -> "이지은 강사"
+                                1 -> "박소연 강사"
+                                else -> "최유진 강사"
+                            },
+                        roomName =
+                            when (variant) {
+                                0 -> "준비물 - 수건"
+                                1 -> "코어 집중 수업"
+                                else -> "개인 매트 지참 가능"
+                            },
                         leftStudentCount = 2 + dayOfMonth % 5,
                     ),
                 )
@@ -307,12 +311,13 @@ internal fun LocalDate.toReservationDateText(): String =
     "${toString().replace('-', '.')} (${dayOfWeek.koreanShortName})"
 
 private val DayOfWeek.koreanShortName: String
-    get() = when (this) {
-        DayOfWeek.MONDAY -> "월"
-        DayOfWeek.TUESDAY -> "화"
-        DayOfWeek.WEDNESDAY -> "수"
-        DayOfWeek.THURSDAY -> "목"
-        DayOfWeek.FRIDAY -> "금"
-        DayOfWeek.SATURDAY -> "토"
-        DayOfWeek.SUNDAY -> "일"
-    }
+    get() =
+        when (this) {
+            DayOfWeek.MONDAY -> "월"
+            DayOfWeek.TUESDAY -> "화"
+            DayOfWeek.WEDNESDAY -> "수"
+            DayOfWeek.THURSDAY -> "목"
+            DayOfWeek.FRIDAY -> "금"
+            DayOfWeek.SATURDAY -> "토"
+            DayOfWeek.SUNDAY -> "일"
+        }

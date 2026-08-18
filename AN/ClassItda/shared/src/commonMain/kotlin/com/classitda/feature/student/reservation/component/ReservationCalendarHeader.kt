@@ -75,9 +75,7 @@ internal fun ReservationCalendarHeader(
 }
 
 @Composable
-internal fun ReservationCalendarWeekdayHeader(
-    modifier: Modifier = Modifier,
-) {
+internal fun ReservationCalendarWeekdayHeader(modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
     ) {
@@ -101,13 +99,14 @@ private fun ReservationCalendarMoveButton(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .size(32.dp)
-            .clip(CircleShape)
-            .clickable(
-                enabled = enabled,
-                onClick = onClick,
-            ),
+        modifier =
+            modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .clickable(
+                    enabled = enabled,
+                    onClick = onClick,
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -125,13 +124,13 @@ private fun ReservationCalendarModeToggle(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
-            .selectableGroup()
-            .background(
-                color = StuColors.Divider,
-                shape = AppShape.Card,
-            )
-            .padding(2.dp),
+        modifier =
+            modifier
+                .selectableGroup()
+                .background(
+                    color = StuColors.Divider,
+                    shape = AppShape.Card,
+                ).padding(2.dp),
     ) {
         ReservationCalendarModeItem(
             text = "월",
@@ -159,31 +158,33 @@ private fun ReservationCalendarModeItem(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .width(32.dp)
-            .height(24.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(
-                color = if (selected) {
-                    StuColors.White
-                } else {
-                    Color.Transparent
-                },
-            )
-            .selectable(
-                selected = selected,
-                role = Role.RadioButton,
-                onClick = onClick,
-            ),
+        modifier =
+            modifier
+                .width(32.dp)
+                .height(24.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(
+                    color =
+                        if (selected) {
+                            StuColors.White
+                        } else {
+                            Color.Transparent
+                        },
+                ).selectable(
+                    selected = selected,
+                    role = Role.RadioButton,
+                    onClick = onClick,
+                ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = text,
-            color = if (selected) {
-                StuColors.TextPrimary
-            } else {
-                StuColors.TextSecondary
-            },
+            color =
+                if (selected) {
+                    StuColors.TextPrimary
+                } else {
+                    StuColors.TextSecondary
+                },
             style = MaterialTheme.typography.labelSmall,
         )
     }
@@ -194,9 +195,10 @@ private fun ReservationCalendarModeItem(
 private fun ReservationCalendarHeaderPreview1() {
     AppTheme {
         Column(
-            modifier = Modifier
-                .background(StuColors.White)
-                .padding(AppSpacing.screenPadding),
+            modifier =
+                Modifier
+                    .background(StuColors.White)
+                    .padding(AppSpacing.screenPadding),
         ) {
             ReservationCalendarHeader(
                 year = 2026,
@@ -220,9 +222,10 @@ private fun ReservationCalendarHeaderPreview1() {
 private fun ReservationCalendarHeaderPreview2() {
     AppTheme {
         Column(
-            modifier = Modifier
-                .background(StuColors.White)
-                .padding(AppSpacing.screenPadding),
+            modifier =
+                Modifier
+                    .background(StuColors.White)
+                    .padding(AppSpacing.screenPadding),
         ) {
             ReservationCalendarHeader(
                 year = 2026,

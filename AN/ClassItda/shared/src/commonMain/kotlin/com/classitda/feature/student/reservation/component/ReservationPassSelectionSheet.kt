@@ -55,14 +55,15 @@ internal fun ReservationPassSelectionContent(
     onPassClick: (String) -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(StuColors.White)
-            .padding(
-                start = AppSpacing.screenPadding,
-                end = AppSpacing.screenPadding,
-                bottom = AppSpacing.xxl,
-            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(StuColors.White)
+                .padding(
+                    start = AppSpacing.screenPadding,
+                    end = AppSpacing.screenPadding,
+                    bottom = AppSpacing.xxl,
+                ),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         Text(
@@ -85,9 +86,10 @@ internal fun ReservationPassSelectionContent(
                 colors = CardDefaults.cardColors(containerColor = StuColors.White),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = AppSpacing.cardPadding, vertical = 10.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = AppSpacing.cardPadding, vertical = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                 ) {
                     Text(
@@ -111,8 +113,7 @@ internal fun ReservationPassSelectionContent(
     }
 }
 
-private fun String.toReservableCountText(): String =
-    substringAfter("/ ", missingDelimiterValue = this)
+private fun String.toReservableCountText(): String = substringAfter("/ ", missingDelimiterValue = this)
 
 private val previewPasses =
     listOf(

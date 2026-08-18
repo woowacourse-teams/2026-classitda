@@ -7,9 +7,9 @@ import com.classitda.domain.model.classreservation.ReservationRequestResult
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
-import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class FakeReservationFlowTest {
@@ -21,8 +21,9 @@ class FakeReservationFlowTest {
             val lastDayOfMonth = if (month == 8) 31 else 30
             for (dayOfMonth in 1..lastDayOfMonth) {
                 val date = LocalDate(2026, month, dayOfMonth)
-                val isWeekday = date.dayOfWeek != DayOfWeek.SATURDAY &&
-                    date.dayOfWeek != DayOfWeek.SUNDAY
+                val isWeekday =
+                    date.dayOfWeek != DayOfWeek.SATURDAY &&
+                        date.dayOfWeek != DayOfWeek.SUNDAY
 
                 if (isWeekday) {
                     assertTrue(date in classDates, "$date 평일 수업이 없습니다.")

@@ -77,8 +77,9 @@ internal class ReservationViewModel(
 
     fun onPreviousMonthClick() {
         val current = _uiState.value
-        val isCurrentMonth = current.year == current.today.year &&
-            current.month == current.today.month.number
+        val isCurrentMonth =
+            current.year == current.today.year &&
+                current.month == current.today.month.number
         if (isCurrentMonth) return
 
         val updated =
@@ -119,14 +120,16 @@ internal class ReservationViewModel(
                 month = current.today.month.number,
                 selectedDayOfMonth = current.today.day,
                 classes = classesForDate(current.today.year, current.today.month.number, current.today.day),
-                confirmedReservationDays = confirmedReservationDaysForMonth(
-                    current.today.year,
-                    current.today.month.number,
-                ),
-                waitlistReservationDays = waitlistReservationDaysForMonth(
-                    current.today.year,
-                    current.today.month.number,
-                ),
+                confirmedReservationDays =
+                    confirmedReservationDaysForMonth(
+                        current.today.year,
+                        current.today.month.number,
+                    ),
+                waitlistReservationDays =
+                    waitlistReservationDaysForMonth(
+                        current.today.year,
+                        current.today.month.number,
+                    ),
             )
     }
 
@@ -162,8 +165,7 @@ internal class ReservationViewModel(
                 reservationClass.date.year == year &&
                     reservationClass.date.month.number == month &&
                     reservationClass.isReserved
-            }
-            .map { it.date.day }
+            }.map { it.date.day }
             .toSet()
 
     private fun waitlistReservationDaysForMonth(
@@ -175,8 +177,7 @@ internal class ReservationViewModel(
                 reservationClass.date.year == year &&
                     reservationClass.date.month.number == month &&
                     reservationClass.isWaitlisted
-            }
-            .map { it.date.day }
+            }.map { it.date.day }
             .toSet()
 
     private fun ReservationClass.toUiModel(): ReservationClassUiModel =

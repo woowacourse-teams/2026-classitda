@@ -40,13 +40,14 @@ internal fun ReservationClassList(
     val selectedDate = LocalDate(year, month, selectedDayOfMonth)
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(StuColors.Background)
-            .padding(
-                horizontal = AppSpacing.screenPadding,
-                vertical = AppSpacing.cardPadding,
-            ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(StuColors.Background)
+                .padding(
+                    horizontal = AppSpacing.screenPadding,
+                    vertical = AppSpacing.cardPadding,
+                ),
     ) {
         Text(
             text = "${month}월 ${selectedDayOfMonth}일 ${selectedDate.dayOfWeek.koreanName}",
@@ -76,17 +77,19 @@ private fun ReservationTimelineItem(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                modifier = Modifier
-                    .padding(top = (1.5).dp)
-                    .size(12.dp)
-                    .border(2.dp, StuColors.PrimaryColor, CircleShape),
+                modifier =
+                    Modifier
+                        .padding(top = (1.5).dp)
+                        .size(12.dp)
+                        .border(2.dp, StuColors.PrimaryColor, CircleShape),
             )
             Box(
-                modifier = Modifier
-                    .padding(top = AppSpacing.xs)
-                    .width(1.dp)
-                    .height(78.dp)
-                    .background(StuColors.Divider),
+                modifier =
+                    Modifier
+                        .padding(top = AppSpacing.xs)
+                        .width(1.dp)
+                        .height(78.dp)
+                        .background(StuColors.Divider),
             )
         }
 
@@ -101,43 +104,50 @@ private fun ReservationTimelineItem(
             )
 
             when (item.cardType) {
-                ReservationClassCardType.DEFAULT -> ClassCard(
-                    className = item.className,
-                    instructorName = item.instructorName,
-                    memo = item.memo,
-                    leftStudentCount = item.leftStudentCount,
-                    onButtonClick = onButtonClick,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                ReservationClassCardType.DEFAULT -> {
+                    ClassCard(
+                        className = item.className,
+                        instructorName = item.instructorName,
+                        memo = item.memo,
+                        leftStudentCount = item.leftStudentCount,
+                        onButtonClick = onButtonClick,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
 
-                ReservationClassCardType.RESERVED -> ReservationClassCard(
-                    className = item.className,
-                    instructorName = item.instructorName,
-                    memo = item.memo,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                ReservationClassCardType.RESERVED -> {
+                    ReservationClassCard(
+                        className = item.className,
+                        instructorName = item.instructorName,
+                        memo = item.memo,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
 
-                ReservationClassCardType.WAITLISTED -> WaitlistClassCard(
-                    className = item.className,
-                    instructorName = item.instructorName,
-                    memo = item.memo,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                ReservationClassCardType.WAITLISTED -> {
+                    WaitlistClassCard(
+                        className = item.className,
+                        instructorName = item.instructorName,
+                        memo = item.memo,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
         }
     }
 }
 
 private val DayOfWeek.koreanName: String
-    get() = when (this) {
-        DayOfWeek.MONDAY -> "월요일"
-        DayOfWeek.TUESDAY -> "화요일"
-        DayOfWeek.WEDNESDAY -> "수요일"
-        DayOfWeek.THURSDAY -> "목요일"
-        DayOfWeek.FRIDAY -> "금요일"
-        DayOfWeek.SATURDAY -> "토요일"
-        DayOfWeek.SUNDAY -> "일요일"
-    }
+    get() =
+        when (this) {
+            DayOfWeek.MONDAY -> "월요일"
+            DayOfWeek.TUESDAY -> "화요일"
+            DayOfWeek.WEDNESDAY -> "수요일"
+            DayOfWeek.THURSDAY -> "목요일"
+            DayOfWeek.FRIDAY -> "금요일"
+            DayOfWeek.SATURDAY -> "토요일"
+            DayOfWeek.SUNDAY -> "일요일"
+        }
 
 @Preview(name = "예약 수업 목록", showBackground = true)
 @Composable

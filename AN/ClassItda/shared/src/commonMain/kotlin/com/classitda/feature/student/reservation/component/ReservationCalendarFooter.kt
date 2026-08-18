@@ -82,16 +82,16 @@ private fun ReservationCalendarTodayButton(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .width(44.dp)
-            .height(28.dp)
-            .border(
-                width = 1.dp,
-                color = StuColors.Divider,
-                shape = AppShape.Pill,
-            )
-            .clip(AppShape.Pill)
-            .clickable(onClick = onClick),
+        modifier =
+            modifier
+                .width(44.dp)
+                .height(28.dp)
+                .border(
+                    width = 1.dp,
+                    color = StuColors.Divider,
+                    shape = AppShape.Pill,
+                ).clip(AppShape.Pill)
+                .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         Text(

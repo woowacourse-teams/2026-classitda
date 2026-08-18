@@ -87,12 +87,13 @@ private fun ReservationPassSelectorEmptyPreview() {
 private fun ReservationPassSelectorSelectedPreview() {
     AppTheme {
         ReservationPassSelector(
-            selectedPass = ReservationPassUiModel(
-                id = "pass-1",
-                name = "요가 10회권",
-                remainingText = "잔여 7회 / 예약 가능 7회",
-                validityPeriodText = "유효기간: 2026.08.01 ~ 2026.10.31",
-            ),
+            selectedPass =
+                ReservationPassUiModel(
+                    id = "pass-1",
+                    name = "요가 10회권",
+                    remainingText = "잔여 7회 / 예약 가능 7회",
+                    validityPeriodText = "유효기간: 2026.08.01 ~ 2026.10.31",
+                ),
             onClick = {},
         )
     }

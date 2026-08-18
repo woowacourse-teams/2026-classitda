@@ -62,8 +62,9 @@ internal class ClassReservationViewModel(
     }
 
     fun submitReservation(): ReservationRequestResult {
-        val passId = _uiState.value.selectedPassId
-            ?: return ReservationRequestResult.Failure("사용할 수강권을 선택해 주세요.")
+        val passId =
+            _uiState.value.selectedPassId
+                ?: return ReservationRequestResult.Failure("사용할 수강권을 선택해 주세요.")
         val result = reservationRepository.reserve(_uiState.value.classId, passId)
         if (result is ReservationRequestResult.TimeConflict) {
             _uiState.value =

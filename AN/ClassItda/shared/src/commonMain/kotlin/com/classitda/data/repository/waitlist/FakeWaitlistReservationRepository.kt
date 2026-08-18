@@ -10,9 +10,10 @@ internal class FakeWaitlistReservationRepository(
     private val store: FakeReservationStore = FakeReservationStore(),
 ) : WaitlistReservationRepository {
     override fun getWaitlistReservation(classId: String): WaitlistReservation {
-        val selectedClass = requireNotNull(store.getClassById(classId)) {
-            "수업 정보를 찾을 수 없습니다."
-        }
+        val selectedClass =
+            requireNotNull(store.getClassById(classId)) {
+                "수업 정보를 찾을 수 없습니다."
+            }
         return WaitlistReservation(
             id = selectedClass.id,
             className = selectedClass.className,

@@ -46,11 +46,19 @@ class ReservationViewModelTest {
 
         viewModel.onDayClick(7)
 
-        assertEquals(listOf("3"), viewModel.uiState.value.classes.map { it.id })
+        assertEquals(
+            listOf("3"),
+            viewModel.uiState.value.classes
+                .map { it.id },
+        )
 
         viewModel.onDayClick(9)
 
-        assertEquals(listOf("4"), viewModel.uiState.value.classes.map { it.id })
+        assertEquals(
+            listOf("4"),
+            viewModel.uiState.value.classes
+                .map { it.id },
+        )
     }
 
     @Test
@@ -82,7 +90,11 @@ class ReservationViewModelTest {
         viewModel.onNextMonthClick()
         viewModel.onDayClick(2)
 
-        assertEquals(listOf("13", "14"), viewModel.uiState.value.classes.map { it.id })
+        assertEquals(
+            listOf("13", "14"),
+            viewModel.uiState.value.classes
+                .map { it.id },
+        )
     }
 
     @Test
@@ -92,7 +104,11 @@ class ReservationViewModelTest {
         viewModel.onDayClick(4)
 
         assertEquals(5, viewModel.uiState.value.selectedDayOfMonth)
-        assertEquals(listOf("weekday-8-5"), viewModel.uiState.value.classes.map { it.id })
+        assertEquals(
+            listOf("weekday-8-5"),
+            viewModel.uiState.value.classes
+                .map { it.id },
+        )
     }
 
     @Test
