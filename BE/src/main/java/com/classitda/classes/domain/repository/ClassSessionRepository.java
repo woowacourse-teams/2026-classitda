@@ -61,4 +61,39 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("classForm") ClassForm classForm,
             @Param("classTypeIds") List<Long> classTypeIds
     );
+
+    @Query("""
+            SELECT classSession.id AS classSessionId,
+                   classSession.instructorMembership.id AS instructorMembershipId,
+                   classSession.instructorMembership.member.name AS instructorName,
+                   classSession.classForm AS classForm,
+                   classType.id AS classTypeId,
+                   classType.name AS classTypeName,
+                   classSession.name AS className,
+                   classSession.description AS description,
+                   classSession.capacity AS capacity,
+                   classSession.startAt AS startAt,
+                   classSession.endAt AS endAt,
+                   classSession.status AS sessionStatus
+            FROM ClassSession classSession,
+                 ClassSessionClassType classSessionClassType,
+                 ClassType classType
+            WHERE classSessionClassType.classSessionId = classSession.id
+              AND classType.id = classSessionClassType.classTypeId
+              AND classSession.studioId = :studioId
+              AND classType.studio.id = :studioId
+              AND classSession.startAt >= :rangeStart
+              AND classSession.startAt < :rangeEnd
+              AND (
+                  :instructorMembershipId IS NULL
+                  OR classSession.instructorMembership.id = :instructorMembershipId
+              )
+            ORDER BY classSession.startAt ASC, classSession.id ASC
+            """)
+    List<ClassSessionDailyProjection> findDailyForInstructor(
+            @Param("studioId") Long studioId,
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd,
+            @Param("instructorMembershipId") Long instructorMembershipId
+    );
 }
