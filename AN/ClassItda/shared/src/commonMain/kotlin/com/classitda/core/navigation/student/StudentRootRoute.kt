@@ -1,5 +1,6 @@
 package com.classitda.core.navigation.student
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -46,10 +47,12 @@ fun StudentRootRoute(modifier: Modifier = Modifier) {
         }
 
         StudentTab.MY_SCHEDULE -> {
-            MyScheduleFlowRoute(
-                modifier = modifier,
-                bottomBar = bottomBar,
-            )
+            Box(modifier = Modifier.fillMaxSize().background(StuColors.Surface)) {
+                MyScheduleFlowRoute(
+                    modifier = modifier,
+                    bottomBar = bottomBar,
+                )
+            }
         }
 
         StudentTab.MESSAGE, StudentTab.MYPage -> {
