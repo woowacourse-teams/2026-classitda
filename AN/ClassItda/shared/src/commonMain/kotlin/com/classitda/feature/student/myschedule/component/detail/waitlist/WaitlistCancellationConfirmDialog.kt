@@ -36,7 +36,7 @@ import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.component.common.MyScheduleWarningButton
-import com.classitda.feature.student.myschedule.preview.waitlistDetailPreviewFixture
+import com.classitda.feature.student.myschedule.preview.WaitlistDetailPreviewFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -151,7 +151,7 @@ private fun WaitlistCancellationDismissButton(
 )
 @Composable
 private fun WaitlistCancellationConfirmDialogPreview_Confirming_Student_Default() {
-    val fixture = waitlistDetailPreviewFixture()
+    val fixture = WaitlistDetailPreviewFixture.pending
 
     AppTheme(theme = ThemeType.STUDENT) {
         Box(
@@ -163,17 +163,13 @@ private fun WaitlistCancellationConfirmDialogPreview_Confirming_Student_Default(
             Column(modifier = Modifier.fillMaxSize()) {
                 WaitlistDetailTopBar(onBack = {})
                 WaitlistDetailContent(
-                    item = fixture.item,
-                    detailDateLabel = fixture.dateLabel,
-                    detailTimeRangeLabel = fixture.timeRangeLabel,
-                    durationMinutes = fixture.durationMinutes,
-                    confirmedReservationCancellationDeadlineHours = fixture.deadlineHours,
+                    model = fixture,
                     onCancelWaitlist = {},
                     modifier = Modifier.weight(1f),
                 )
             }
             WaitlistCancellationConfirmDialog(
-                position = fixture.item.position,
+                position = fixture.currentPosition,
                 onConfirm = {},
                 onDismiss = {},
             )

@@ -102,6 +102,8 @@
     <string name="my_schedule_book_another_class">다른 수업 예약하기</string>
     <string name="my_schedule_return_to_list">목록으로 이동</string>
     <string name="my_schedule_detail_title">일정 상세</string>
+    <string name="my_schedule_waitlist_detail_title">대기 상세</string>
+    <string name="my_schedule_waitlist_applied_at">대기 일시</string>
     <string name="my_schedule_waitlist_date">날짜</string>
     <string name="my_schedule_waitlist_time">시간</string>
     <string name="my_schedule_waitlist_location">장소</string>
@@ -112,7 +114,7 @@
     <string name="my_schedule_waitlist_cancellation_guide">예약 및 취소 안내</string>
     <string name="my_schedule_waitlist_confirmation_cancellation_deadline">수업 시작 %1$d시간 전까지 취소 시 횟수가 차감되지 않습니다.</string>
     <string name="my_schedule_waitlist_confirmation_cancellation_policy">대기 중인 상태에서 예약이 확정된 후 취소 시에도 동일한 규정이 적용됩니다.</string>
-    <string name="my_schedule_cancel_waitlist">대기 취소하기</string>
+    <string name="my_schedule_cancel_waitlist">대기 취소</string>
     <string name="my_schedule_waitlist_cancel_confirm_title">대기 예약을 취소하시겠습니까?</string>
     <string name="my_schedule_waitlist_cancel_confirm_description">취소 시 대기 순번(%1$d번)이 사라지며,\n다시 신청할 경우 마지막 순번으로 배정됩니다.</string>
     <string name="my_schedule_waitlist_cancel_confirm_dismiss">아니요</string>

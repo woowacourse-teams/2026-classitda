@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.my_schedule_back
-import classitda.shared.generated.resources.my_schedule_detail_title
+import classitda.shared.generated.resources.my_schedule_waitlist_detail_title
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
@@ -52,7 +52,7 @@ internal fun WaitlistDetailTopBar(
                 )
             }
             Text(
-                text = stringResource(Res.string.my_schedule_detail_title),
+                text = stringResource(Res.string.my_schedule_waitlist_detail_title),
                 style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
                 color = StuColors.TextPrimary,
             )
