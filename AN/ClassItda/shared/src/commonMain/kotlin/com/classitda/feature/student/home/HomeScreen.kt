@@ -26,32 +26,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
-import com.classitda.data.repository.home.FakeNoticeRepository
-import com.classitda.data.repository.home.FakePassRepository
-import com.classitda.data.repository.home.FakeReservationRepository
-import com.classitda.feature.student.StudentBottomTab
 import com.classitda.feature.student.StudentTab
 import com.classitda.feature.student.home.component.PrimaryTextButton
 import com.classitda.feature.student.home.model.FacilityNoticeUiModel
 import com.classitda.feature.student.home.model.MyPassUiModel
 import com.classitda.feature.student.home.model.PendingReservationUiModel
 import com.classitda.feature.student.home.model.UpcomingReservationUiModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun HomeScreen(
     onTabSelected: (StudentTab) -> Unit = {},
-    viewModel: HomeViewModel =
-        viewModel {
-            HomeViewModel(
-                reservationRepository = FakeReservationRepository(),
-                passRepository = FakePassRepository(),
-                noticeRepository = FakeNoticeRepository(),
-            )
-        },
+    bottomBar: @Composable () -> Unit = {},
+    viewModel: HomeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -64,6 +54,7 @@ fun HomeScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onTabSelected = onTabSelected,
+        bottomBar = bottomBar,
         onRefresh = viewModel::onRefresh,
         onRetry = viewModel::onRetry,
         onPendingReservationApproveClick = viewModel::onPendingReservationApproveClick,
@@ -84,6 +75,7 @@ private fun HomeScreenStateless(
     onApproveReservation: () -> Unit,
     onConfirmedDialogDismiss: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    bottomBar: @Composable () -> Unit = {},
 ) {
     val content =
         when (uiState) {
@@ -132,12 +124,7 @@ private fun HomeScreenStateless(
                 onNotificationClick = { /*TODO*/ },
             )
         },
-        bottomBar = {
-            StudentBottomTab(
-                selectedTab = StudentTab.HOME,
-                onTabSelected = onTabSelected,
-            )
-        },
+        bottomBar = bottomBar,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         when {

@@ -15,7 +15,7 @@ import com.classitda.feature.student.myschedule.mapper.MyScheduleUiMapper
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
-internal val myScheduleDemoModule =
+internal val myScheduleModule =
     module {
         single { createDefaultMyScheduleFakeRepository() }
         single<MyScheduleRepository> {

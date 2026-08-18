@@ -1,7 +1,9 @@
 package com.classitda.feature.student.myschedule
 
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -17,7 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.di.myschedule.myScheduleDemoModule
+import com.classitda.di.myschedule.myScheduleModule
 import com.classitda.domain.model.student.myschedule.ReservationId
 import com.classitda.domain.model.student.myschedule.WaitlistId
 import kotlinx.serialization.Serializable
@@ -44,6 +46,7 @@ internal fun MyScheduleFlowRoute(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     onBookAnotherClass: (() -> Unit)? = null,
+    bottomBar: @Composable () -> Unit = {},
 ) {
     var listVersion by remember { mutableIntStateOf(0) }
 
@@ -69,19 +72,22 @@ internal fun MyScheduleFlowRoute(
     ) {
         composable<MyScheduleListDestination> { backStackEntry ->
             val destination = backStackEntry.toRoute<MyScheduleListDestination>()
-            MyScheduleRoute(
-                viewModelKey = "my-schedule-list-${destination.version}",
-                onOpenReservation = { reservationId ->
-                    navController.navigate(
-                        ReservationDetailDestination(reservationId = reservationId.value),
-                    )
-                },
-                onOpenWaitlist = { waitlistId ->
-                    navController.navigate(
-                        WaitlistDetailDestination(waitlistId = waitlistId.value),
-                    )
-                },
-            )
+            Scaffold(bottomBar = bottomBar) { innerPadding ->
+                MyScheduleRoute(
+                    viewModelKey = "my-schedule-list-${destination.version}",
+                    modifier = Modifier.padding(innerPadding),
+                    onOpenReservation = { reservationId ->
+                        navController.navigate(
+                            ReservationDetailDestination(reservationId = reservationId.value),
+                        )
+                    },
+                    onOpenWaitlist = { waitlistId ->
+                        navController.navigate(
+                            WaitlistDetailDestination(waitlistId = waitlistId.value),
+                        )
+                    },
+                )
+            }
         }
 
         composable<ReservationDetailDestination> { backStackEntry ->
@@ -119,7 +125,7 @@ private fun MyScheduleFlowRoutePreview() {
     KoinApplication(
         configuration =
             koinConfiguration {
-                modules(myScheduleDemoModule)
+                modules(myScheduleModule)
             },
     ) {
         AppTheme(theme = ThemeType.STUDENT) {
