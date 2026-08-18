@@ -84,16 +84,11 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
               AND classType.studio.id = :studioId
               AND classSession.startAt >= :rangeStart
               AND classSession.startAt < :rangeEnd
-              AND (
-                  :instructorMembershipId IS NULL
-                  OR classSession.instructorMembership.id = :instructorMembershipId
-              )
             ORDER BY classSession.startAt ASC, classSession.id ASC
             """)
     List<ClassSessionDailyProjection> findDailyForInstructor(
             @Param("studioId") Long studioId,
             @Param("rangeStart") LocalDateTime rangeStart,
-            @Param("rangeEnd") LocalDateTime rangeEnd,
-            @Param("instructorMembershipId") Long instructorMembershipId
+            @Param("rangeEnd") LocalDateTime rangeEnd
     );
 }

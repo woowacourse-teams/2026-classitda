@@ -11,15 +11,16 @@ import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class InstructorSessionAssembler {
+public class InstructorDailySessionAssembler {
 
     private final InstructorSessionStatusResolver statusResolver;
 
-    InstructorSessionView assemble(
+    InstructorDailySessionView assemble(
             ClassSessionDailyProjection classSession,
             ReservationSummaryProjection reservationSummary,
             WaitingSummaryProjection waitingSummary,
             int reservationCloseMinutesBefore,
+            Long requesterMembershipId,
             LocalDateTime now
     ) {
         long reservedCount = reservationSummary == null ? 0 : reservationSummary.getReservedCount();
@@ -33,11 +34,12 @@ public class InstructorSessionAssembler {
                 now
         );
 
-        return InstructorSessionView.of(
+        return InstructorDailySessionView.of(
                 classSession,
                 reservedCount,
                 waitingCount,
-                status
+                status,
+                requesterMembershipId.equals(classSession.getInstructorMembershipId())
         );
     }
 }

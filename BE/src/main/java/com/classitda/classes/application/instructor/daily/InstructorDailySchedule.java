@@ -6,15 +6,15 @@ import com.classitda.classes.domain.repository.projection.WaitingSummaryProjecti
 import java.util.List;
 import java.util.Map;
 
-record InstructorSessionSchedule(
+record InstructorDailySchedule(
         List<ClassSessionDailyProjection> classSessions,
         Map<Long, ReservationSummaryProjection> reservationSummaries,
         Map<Long, WaitingSummaryProjection> waitingSummaries,
         int reservationCloseMinutesBefore
 ) {
 
-    static InstructorSessionSchedule empty() {
-        return new InstructorSessionSchedule(List.of(), Map.of(), Map.of(), 0);
+    static InstructorDailySchedule empty() {
+        return new InstructorDailySchedule(List.of(), Map.of(), Map.of(), 0);
     }
 
     boolean isEmpty() {

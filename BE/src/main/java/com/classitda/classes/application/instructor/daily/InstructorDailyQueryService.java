@@ -1,7 +1,6 @@
 package com.classitda.classes.application.instructor.daily;
 
 import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
-import com.classitda.classes.application.instructor.InstructorSessionScope;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import java.time.Clock;
@@ -15,28 +14,35 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
-public class InstructorSessionQueryService {
+public class InstructorDailyQueryService {
 
     private final InstructorSessionAccessReader accessReader;
-    private final InstructorSessionScheduleReader scheduleReader;
-    private final InstructorSessionAssembler assembler;
+    private final InstructorDailyScheduleReader scheduleReader;
+    private final InstructorDailySessionAssembler assembler;
     private final Clock clock;
 
-    public List<InstructorSessionView> findAll(
+    public List<InstructorDailySessionView> findAll(
             Long memberId,
             Long studioId,
-            LocalDate date,
-            boolean mineOnly
+            LocalDate date
     ) {
         validateDate(date);
 
-        InstructorSessionScope scope = accessReader.read(memberId, studioId, mineOnly);
-        InstructorSessionSchedule schedule = scheduleReader.read(studioId, scope, date);
+        Long requesterMembershipId = accessReader.readRequesterMembershipId(memberId, studioId);
+        InstructorDailySchedule schedule = scheduleReader.read(
+                studioId,
+                requesterMembershipId,
+                date
+        );
         if (schedule.isEmpty()) {
             return List.of();
         }
 
-        return assemble(schedule, LocalDateTime.now(clock));
+        return assemble(
+                schedule,
+                requesterMembershipId,
+                LocalDateTime.now(clock)
+        );
     }
 
     private void validateDate(LocalDate date) {
@@ -45,8 +51,9 @@ public class InstructorSessionQueryService {
         }
     }
 
-    private List<InstructorSessionView> assemble(
-            InstructorSessionSchedule schedule,
+    private List<InstructorDailySessionView> assemble(
+            InstructorDailySchedule schedule,
+            Long requesterMembershipId,
             LocalDateTime now
     ) {
         return schedule.classSessions().stream()
@@ -55,6 +62,7 @@ public class InstructorSessionQueryService {
                         schedule.reservationSummary(classSession.getClassSessionId()),
                         schedule.waitingSummary(classSession.getClassSessionId()),
                         schedule.reservationCloseMinutesBefore(),
+                        requesterMembershipId,
                         now
                 ))
                 .toList();

@@ -1,6 +1,5 @@
 package com.classitda.classes.application.instructor.daily;
 
-import com.classitda.classes.application.instructor.InstructorSessionScope;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ReservationRepository;
 import com.classitda.classes.domain.repository.WaitingRepository;
@@ -25,31 +24,30 @@ import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
 @Component
-public class InstructorSessionScheduleReader {
+public class InstructorDailyScheduleReader {
 
     private final ClassSessionRepository classSessionRepository;
     private final ReservationRepository reservationRepository;
     private final WaitingRepository waitingRepository;
     private final StudioPolicyRepository studioPolicyRepository;
 
-    InstructorSessionSchedule read(
+    InstructorDailySchedule read(
             Long studioId,
-            InstructorSessionScope scope,
+            Long requesterMembershipId,
             LocalDate date
     ) {
         List<ClassSessionDailyProjection> classSessions = classSessionRepository
                 .findDailyForInstructor(
                         studioId,
                         date.atStartOfDay(),
-                        getRangeEnd(date),
-                        scope.instructorMembershipId()
+                        getRangeEnd(date)
                 );
 
         if (classSessions.isEmpty()) {
-            return InstructorSessionSchedule.empty();
+            return InstructorDailySchedule.empty();
         }
 
-        return createSchedule(studioId, scope.requesterMembershipId(), classSessions);
+        return createSchedule(studioId, requesterMembershipId, classSessions);
     }
 
     private LocalDateTime getRangeEnd(LocalDate date) {
@@ -60,7 +58,7 @@ public class InstructorSessionScheduleReader {
         }
     }
 
-    private InstructorSessionSchedule createSchedule(
+    private InstructorDailySchedule createSchedule(
             Long studioId,
             Long requesterMembershipId,
             List<ClassSessionDailyProjection> classSessions
@@ -85,7 +83,7 @@ public class InstructorSessionScheduleReader {
                         Function.identity()
                 ));
 
-        return new InstructorSessionSchedule(
+        return new InstructorDailySchedule(
                 classSessions,
                 reservationSummaries,
                 waitingSummaries,

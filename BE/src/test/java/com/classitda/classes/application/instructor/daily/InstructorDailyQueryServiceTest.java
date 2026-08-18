@@ -56,21 +56,21 @@ import org.springframework.test.context.TestPropertySource;
 
 @TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @Import({
-        InstructorSessionQueryService.class,
+        InstructorDailyQueryService.class,
         InstructorSessionAccessReader.class,
-        InstructorSessionScheduleReader.class,
-        InstructorSessionAssembler.class,
+        InstructorDailyScheduleReader.class,
+        InstructorDailySessionAssembler.class,
         InstructorSessionStatusResolver.class,
-        InstructorSessionQueryServiceTest.FixedClockConfig.class
+        InstructorDailyQueryServiceTest.FixedClockConfig.class
 })
 @MySqlRepositoryTest
-class InstructorSessionQueryServiceTest {
+class InstructorDailyQueryServiceTest {
 
     private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 10, 0);
     private static final LocalDate QUERY_DATE = LocalDate.of(2026, 8, 17);
 
-    private final InstructorSessionQueryService queryService;
+    private final InstructorDailyQueryService queryService;
     private final ClassSessionClassTypeRepository classSessionClassTypeRepository;
     private final ClassSessionRepository classSessionRepository;
     private final ClassTypeRepository classTypeRepository;
@@ -80,8 +80,8 @@ class InstructorSessionQueryServiceTest {
     private final Statistics statistics;
 
     @Autowired
-    InstructorSessionQueryServiceTest(
-            InstructorSessionQueryService queryService,
+    InstructorDailyQueryServiceTest(
+            InstructorDailyQueryService queryService,
             ClassSessionClassTypeRepository classSessionClassTypeRepository,
             ClassSessionRepository classSessionRepository,
             ClassTypeRepository classTypeRepository,
@@ -187,23 +187,22 @@ class InstructorSessionQueryServiceTest {
         statistics.clear();
 
         // when
-        List<InstructorSessionView> responses = queryService.findAll(
+        List<InstructorDailySessionView> responses = queryService.findAll(
                 owner.getId(),
                 studio.getId(),
-                QUERY_DATE,
-                false
+                QUERY_DATE
         );
         long queryCount = statistics.getPrepareStatementCount();
 
         // then
         assertThat(responses)
-                .extracting(InstructorSessionView::id)
+                .extracting(InstructorDailySessionView::id)
                 .containsExactly(
                         earlySession.getId(),
                         firstAtSameTime.getId(),
                         secondAtSameTime.getId()
                 );
-        assertThat(responses.getFirst()).isEqualTo(new InstructorSessionView(
+        assertThat(responses.getFirst()).isEqualTo(new InstructorDailySessionView(
                 earlySession.getId(),
                 firstInstructor.getId(),
                 firstInstructor.getMember().getName(),
@@ -217,13 +216,17 @@ class InstructorSessionQueryServiceTest {
                 1,
                 QUERY_DATE.atTime(11, 0),
                 QUERY_DATE.atTime(12, 0),
-                InstructorSessionStatus.SCHEDULED_OPEN
+                InstructorSessionStatus.SCHEDULED_OPEN,
+                false
         ));
+        assertThat(responses)
+                .extracting(InstructorDailySessionView::mine)
+                .containsExactly(false, true, false);
         assertThat(queryCount).isEqualTo(7L);
     }
 
     @Test
-    void 일반_강사는_전체_조회를_요청해도_자신의_담당_수업만_조회한다() {
+    void 일반_강사는_시설_전체_수업과_본인_담당_여부를_함께_조회한다() {
         // given
         Member owner = 회원을_저장한다("own-schedule-owner");
         Studio studio = 시설을_저장한다(owner, "일반 강사 일정 시설");
@@ -252,7 +255,7 @@ class InstructorSessionQueryServiceTest {
                 QUERY_DATE.atTime(13, 0),
                 ClassSessionStatus.OPENED
         );
-        수업을_저장한다(
+        ClassSession otherSession = 수업을_저장한다(
                 studio,
                 otherInstructor,
                 classType,
@@ -264,17 +267,19 @@ class InstructorSessionQueryServiceTest {
         entityManager.clear();
 
         // when
-        List<InstructorSessionView> responses = queryService.findAll(
+        List<InstructorDailySessionView> responses = queryService.findAll(
                 instructor.getId(),
                 studio.getId(),
-                QUERY_DATE,
-                false
+                QUERY_DATE
         );
 
         // then
         assertThat(responses)
-                .extracting(InstructorSessionView::id)
-                .containsExactly(ownSession.getId());
+                .extracting(InstructorDailySessionView::id)
+                .containsExactly(ownSession.getId(), otherSession.getId());
+        assertThat(responses)
+                .extracting(InstructorDailySessionView::mine)
+                .containsExactly(true, false);
     }
 
     @Test
@@ -306,21 +311,21 @@ class InstructorSessionQueryServiceTest {
         entityManager.clear();
 
         // when
-        List<InstructorSessionView> responses = queryService.findAll(
+        List<InstructorDailySessionView> responses = queryService.findAll(
                 manager.getId(),
                 studio.getId(),
-                QUERY_DATE,
-                false
+                QUERY_DATE
         );
 
         // then
         assertThat(responses)
-                .extracting(InstructorSessionView::id)
+                .extracting(InstructorDailySessionView::id)
                 .containsExactly(classSession.getId());
+        assertThat(responses.getFirst().mine()).isFalse();
     }
 
     @Test
-    void 전체_관리_권한자가_내_수업만_요청하면_자신의_담당_수업만_조회한다() {
+    void 전체_관리_권한자도_시설_전체_수업과_본인_담당_여부를_함께_조회한다() {
         // given
         Member owner = 회원을_저장한다("all-mine-owner");
         Studio studio = 시설을_저장한다(owner, "전체 권한 내 일정 시설");
@@ -349,7 +354,7 @@ class InstructorSessionQueryServiceTest {
                 QUERY_DATE.atTime(16, 0),
                 ClassSessionStatus.OPENED
         );
-        수업을_저장한다(
+        ClassSession otherSession = 수업을_저장한다(
                 studio,
                 otherInstructor,
                 classType,
@@ -361,17 +366,19 @@ class InstructorSessionQueryServiceTest {
         entityManager.clear();
 
         // when
-        List<InstructorSessionView> responses = queryService.findAll(
+        List<InstructorDailySessionView> responses = queryService.findAll(
                 manager.getId(),
                 studio.getId(),
-                QUERY_DATE,
-                true
+                QUERY_DATE
         );
 
         // then
         assertThat(responses)
-                .extracting(InstructorSessionView::id)
-                .containsExactly(ownSession.getId());
+                .extracting(InstructorDailySessionView::id)
+                .containsExactly(ownSession.getId(), otherSession.getId());
+        assertThat(responses)
+                .extracting(InstructorDailySessionView::mine)
+                .containsExactly(true, false);
     }
 
     @Test
@@ -384,7 +391,7 @@ class InstructorSessionQueryServiceTest {
 
         // when / then
         assertStudioError(
-                () -> queryService.findAll(student.getId(), studio.getId(), QUERY_DATE, false),
+                () -> queryService.findAll(student.getId(), studio.getId(), QUERY_DATE),
                 StudioErrorCode.PERMISSION_DENIED
         );
     }
@@ -400,7 +407,7 @@ class InstructorSessionQueryServiceTest {
 
         // when / then
         assertStudioError(
-                () -> queryService.findAll(staff.getId(), studio.getId(), QUERY_DATE, false),
+                () -> queryService.findAll(staff.getId(), studio.getId(), QUERY_DATE),
                 StudioErrorCode.PERMISSION_DENIED
         );
     }
@@ -420,7 +427,7 @@ class InstructorSessionQueryServiceTest {
 
         // when / then
         assertStudioError(
-                () -> queryService.findAll(instructor.getId(), studio.getId(), QUERY_DATE, false),
+                () -> queryService.findAll(instructor.getId(), studio.getId(), QUERY_DATE),
                 StudioErrorCode.MEMBERSHIP_INACTIVE
         );
     }
@@ -435,11 +442,10 @@ class InstructorSessionQueryServiceTest {
         entityManager.clear();
 
         // when
-        List<InstructorSessionView> responses = queryService.findAll(
+        List<InstructorDailySessionView> responses = queryService.findAll(
                 owner.getId(),
                 studio.getId(),
-                QUERY_DATE,
-                false
+                QUERY_DATE
         );
 
         // then
@@ -457,11 +463,11 @@ class InstructorSessionQueryServiceTest {
 
         // when / then
         assertCommonError(
-                () -> queryService.findAll(owner.getId(), studio.getId(), null, false),
+                () -> queryService.findAll(owner.getId(), studio.getId(), null),
                 CommonErrorCode.INVALID_INPUT
         );
         assertCommonError(
-                () -> queryService.findAll(owner.getId(), studio.getId(), LocalDate.MAX, false),
+                () -> queryService.findAll(owner.getId(), studio.getId(), LocalDate.MAX),
                 CommonErrorCode.INVALID_INPUT
         );
     }

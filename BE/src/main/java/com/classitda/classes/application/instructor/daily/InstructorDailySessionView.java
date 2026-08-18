@@ -5,7 +5,7 @@ import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import java.time.LocalDateTime;
 
-public record InstructorSessionView(
+public record InstructorDailySessionView(
         Long id,
         Long instructorMembershipId,
         String instructorName,
@@ -19,16 +19,18 @@ public record InstructorSessionView(
         long waitingCount,
         LocalDateTime startAt,
         LocalDateTime endAt,
-        InstructorSessionStatus status
+        InstructorSessionStatus status,
+        boolean mine
 ) {
 
-    static InstructorSessionView of(
+    static InstructorDailySessionView of(
             ClassSessionDailyProjection classSession,
             long reservedCount,
             long waitingCount,
-            InstructorSessionStatus status
+            InstructorSessionStatus status,
+            boolean mine
     ) {
-        return new InstructorSessionView(
+        return new InstructorDailySessionView(
                 classSession.getClassSessionId(),
                 classSession.getInstructorMembershipId(),
                 classSession.getInstructorName(),
@@ -42,7 +44,8 @@ public record InstructorSessionView(
                 waitingCount,
                 classSession.getStartAt(),
                 classSession.getEndAt(),
-                status
+                status,
+                mine
         );
     }
 }
