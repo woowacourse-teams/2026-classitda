@@ -2,6 +2,7 @@ package com.classitda.feature.student.myschedule.component.result.reservation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,20 +19,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
-import classitda.shared.generated.resources.ic_error
+import classitda.shared.generated.resources.ic_event_busy
 import classitda.shared.generated.resources.my_schedule_cancellation_history
 import classitda.shared.generated.resources.my_schedule_cancelled_at
-import classitda.shared.generated.resources.my_schedule_cancelled_at_label
 import classitda.shared.generated.resources.my_schedule_class_information
 import classitda.shared.generated.resources.my_schedule_class_name
 import classitda.shared.generated.resources.my_schedule_date_time
 import classitda.shared.generated.resources.my_schedule_instructor
-import classitda.shared.generated.resources.my_schedule_instructor_name
-import classitda.shared.generated.resources.my_schedule_location
 import classitda.shared.generated.resources.my_schedule_refund_restoration_status
 import classitda.shared.generated.resources.my_schedule_reservation_cancelled_description
 import classitda.shared.generated.resources.my_schedule_reservation_cancelled_title
 import classitda.shared.generated.resources.my_schedule_ticket_restoration_completed
+import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
@@ -39,16 +38,14 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.component.result.common.MyScheduleResultInformationRow
 import com.classitda.feature.student.myschedule.component.result.common.MyScheduleResultSectionTitle
-import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
-import com.classitda.feature.student.myschedule.preview.reservationDetailPreviewModel
+import com.classitda.feature.student.myschedule.contract.ReservationCancellationResultUiModel
+import com.classitda.feature.student.myschedule.preview.ReservationDetailPreviewFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun ReservationCancelledContent(
-    reservation: ReservationDetailUiModel,
-    cancelledAtLabel: String,
-    restoredTicketCount: Int,
+internal fun ReservationCancellationCompletedContent(
+    result: ReservationCancellationResultUiModel,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -58,25 +55,14 @@ internal fun ReservationCancelledContent(
                 .background(StuColors.Background),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
     ) {
-        item {
-            ReservationCancelledHero()
-        }
-        item {
-            ReservationCancelledClassInformation(reservation = reservation)
-        }
-        item {
-            ReservationCancellationHistory(
-                cancelledAtLabel = cancelledAtLabel,
-                restoredTicketCount = restoredTicketCount,
-            )
-        }
+        item { ReservationCancellationCompletedHero() }
+        item { ReservationCancellationCompletedClassInformation(result = result) }
+        item { ReservationCancellationCompletedHistory(result = result) }
     }
 }
 
 @Composable
-private fun ReservationCancelledHero() {
-    val typography = appTypography()
-
+private fun ReservationCancellationCompletedHero() {
     Column(
         modifier =
             Modifier
@@ -89,21 +75,31 @@ private fun ReservationCancelledHero() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
     ) {
-        Icon(
-            painter = painterResource(Res.drawable.ic_error),
-            contentDescription = null,
-            tint = StuColors.Green,
-        )
+        Box(
+            modifier =
+                Modifier
+                    .background(
+                        color = StuColors.SurfaceVariant,
+                        shape = AppShape.Pill,
+                    ).padding(AppSpacing.lg),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_event_busy),
+                contentDescription = null,
+                tint = StuColors.TextSecondary,
+            )
+        }
         Text(
             text = stringResource(Res.string.my_schedule_reservation_cancelled_title),
             modifier = Modifier.semantics { heading() },
-            style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
             color = StuColors.TextPrimary,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(Res.string.my_schedule_reservation_cancelled_description),
-            style = typography.bodyMedium,
+            style = appTypography().bodyMedium,
             color = StuColors.TextSecondary,
             textAlign = TextAlign.Center,
         )
@@ -111,7 +107,7 @@ private fun ReservationCancelledHero() {
 }
 
 @Composable
-private fun ReservationCancelledClassInformation(reservation: ReservationDetailUiModel) {
+private fun ReservationCancellationCompletedClassInformation(result: ReservationCancellationResultUiModel) {
     Column(
         modifier =
             Modifier
@@ -125,29 +121,22 @@ private fun ReservationCancelledClassInformation(reservation: ReservationDetailU
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_class_name),
-            value = reservation.title,
+            value = result.title,
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_instructor),
-            value = stringResource(Res.string.my_schedule_instructor_name, reservation.instructorName),
+            value = result.classInfo.instructorName,
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_date_time),
-            value = reservation.dateTime.dateLabel,
-            supportingValue = reservation.dateTime.timeRangeLabel,
-        )
-        MyScheduleResultInformationRow(
-            label = stringResource(Res.string.my_schedule_location),
-            value = reservation.locationLabel,
+            value = result.classInfo.dateLabel,
+            supportingValue = result.classInfo.timeRangeLabel,
         )
     }
 }
 
 @Composable
-private fun ReservationCancellationHistory(
-    cancelledAtLabel: String,
-    restoredTicketCount: Int,
-) {
+private fun ReservationCancellationCompletedHistory(result: ReservationCancellationResultUiModel) {
     Column(
         modifier =
             Modifier
@@ -161,14 +150,14 @@ private fun ReservationCancellationHistory(
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_cancelled_at),
-            value = cancelledAtLabel,
+            value = result.cancelledAtLabel,
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_refund_restoration_status),
             value =
                 stringResource(
                     Res.string.my_schedule_ticket_restoration_completed,
-                    restoredTicketCount,
+                    result.restoredPassUses,
                 ),
             valueColor = StuColors.Green,
         )
@@ -176,7 +165,7 @@ private fun ReservationCancellationHistory(
 }
 
 @Preview(
-    name = "Reservation cancelled content · Student · Default",
+    name = "F05 reservation cancellation completed content / Student",
     group = "Component/MySchedule",
     showBackground = true,
     locale = "ko",
@@ -184,19 +173,10 @@ private fun ReservationCancellationHistory(
     heightDp = 660,
 )
 @Composable
-private fun ReservationCancelledContentPreview_Success_Student_Default() {
+private fun ReservationCancellationCompletedContentPreview_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
-        ReservationCancelledContent(
-            reservation = reservationDetailPreviewModel().copy(locationLabel = "리포머룸"),
-            cancelledAtLabel =
-                stringResource(
-                    Res.string.my_schedule_cancelled_at_label,
-                    2026,
-                    "08",
-                    "04",
-                    "14:32",
-                ),
-            restoredTicketCount = 1,
+        ReservationCancellationCompletedContent(
+            result = ReservationDetailPreviewFixture.cancellationCompleted,
         )
     }
 }

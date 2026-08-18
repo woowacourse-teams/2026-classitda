@@ -9,3 +9,8 @@ data class HistoryScheduleDateTimeUiModel(
     val monthLabel: String,
     val dateTimeLabel: String,
 )
+
+data class ReservationDetailDateTimeUiModel(
+    val dateLabel: String,
+    val timeRangeLabel: String,
+)
