@@ -10,6 +10,7 @@ class MyPageIdTest {
         listOf(
             ::MemberId,
             ::FacilityId,
+            ::PhoneVerificationId,
         )
 
     @Test
