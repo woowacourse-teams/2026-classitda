@@ -21,7 +21,9 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,6 +66,35 @@ fun HomeScreen(
     )
 }
 
+private data class StudioSwitchOptionsUiModel(
+    val instructorModeOptions: List<InstructorStudioOptionUiModel>,
+    val memberModeOptions: List<MemberStudioOptionUiModel>,
+) {
+    fun selectedId(): String = instructorModeOptions.first().id
+
+    fun studioNameOf(id: String): String =
+        instructorModeOptions.firstOrNull { it.id == id }?.studioName
+            ?: memberModeOptions.first { it.id == id }.studioName
+}
+
+private val studioSwitchOptions =
+    StudioSwitchOptionsUiModel(
+        instructorModeOptions =
+            listOf(
+                InstructorStudioOptionUiModel(
+                    id = "coco-yeongdeung",
+                    studioName = "코코필라테스&필라테스 영등점",
+                    isLead = true,
+                ),
+            ),
+        memberModeOptions =
+            listOf(
+                MemberStudioOptionUiModel(id = "coco-seongsu", studioName = "코코 필라테스 성수점"),
+                MemberStudioOptionUiModel(id = "movement-wangsimni", studioName = "필라테스 무브먼트 왕십리"),
+            ),
+    )
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreenStateless(
     uiState: HomeUiState,
@@ -115,12 +146,39 @@ private fun HomeScreenStateless(
         )
     }
 
+    var showStudioSwitchDialog by remember { mutableStateOf(false) }
+    var currentStudioId by remember { mutableStateOf(studioSwitchOptions.selectedId()) }
+    var selectedStudioOptionId by remember { mutableStateOf(currentStudioId) }
+
+    if (showStudioSwitchDialog) {
+        StudioSwitchDialog(
+            instructorModeOptions =
+                studioSwitchOptions.instructorModeOptions.map {
+                    it.copy(isSelected = it.id == selectedStudioOptionId)
+                },
+            memberModeOptions =
+                studioSwitchOptions.memberModeOptions.map {
+                    it.copy(isSelected = it.id == selectedStudioOptionId)
+                },
+            onOptionClick = { optionId -> selectedStudioOptionId = optionId },
+            onDismissRequest = { showStudioSwitchDialog = false },
+            onConfirmClick = {
+                currentStudioId = selectedStudioOptionId
+                showStudioSwitchDialog = false
+            },
+            isConfirmEnabled = selectedStudioOptionId != currentStudioId,
+        )
+    }
+
     Scaffold(
         containerColor = StuColors.Background,
         topBar = {
             HomeTopBar(
-                studioName = "코코필라테스&필라테스 영등점",
-                onStudioClick = { /*TODO*/ },
+                studioName = studioSwitchOptions.studioNameOf(currentStudioId),
+                onStudioClick = {
+                    selectedStudioOptionId = currentStudioId
+                    showStudioSwitchDialog = true
+                },
                 onNotificationClick = { /*TODO*/ },
             )
         },
