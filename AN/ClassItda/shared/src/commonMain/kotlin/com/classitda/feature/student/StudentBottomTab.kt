@@ -26,7 +26,8 @@ enum class StudentTab {
     HOME,
     RESERVATION,
     MY_SCHEDULE,
-    MESSAGE,
+
+//    MESSAGE,
     MYPage,
 }
 
@@ -34,9 +35,12 @@ private val StudentTab.label: String
     get() =
         when (this) {
             StudentTab.HOME -> "홈"
+
             StudentTab.RESERVATION -> "예약"
+
             StudentTab.MY_SCHEDULE -> "내일정"
-            StudentTab.MESSAGE -> "메시지"
+
+            //            StudentTab.MESSAGE -> "메시지"
             StudentTab.MYPage -> "마이"
         }
 
@@ -44,9 +48,12 @@ private val StudentTab.icon: DrawableResource
     get() =
         when (this) {
             StudentTab.HOME -> Res.drawable.ic_home
+
             StudentTab.RESERVATION -> Res.drawable.ic_schedule_calendar
+
             StudentTab.MY_SCHEDULE -> Res.drawable.ic_calendar
-            StudentTab.MESSAGE -> Res.drawable.ic_chat
+
+            //            StudentTab.MESSAGE -> Res.drawable.ic_chat
             StudentTab.MYPage -> Res.drawable.ic_person
         }
 

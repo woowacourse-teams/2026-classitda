@@ -29,19 +29,19 @@ internal class FakeClassReservationRepository(
                     ClassPass(
                         id = "pass-1",
                         name = "[그룹] 8:1 리포머/체어 10회권",
-                        usageText = "잔여 6회 / 예약 가능 2회 / 취소 가능 10회",
+                        usageText = "잔여 6회 | 예약 가능 2회 | 취소 가능 10회",
                         validityPeriodText = "유효기간: 2026.08.01 ~ 2026.12.31",
                     ),
                     ClassPass(
                         id = "pass-2",
                         name = "[이벤트] 한정판 이용권",
-                        usageText = "잔여 1회 / 예약 가능 1회 / 취소 가능 10회",
+                        usageText = "잔여 1회 | 예약 가능 1회 | 취소 가능 10회",
                         validityPeriodText = "유효기간: 없음",
                     ),
                     ClassPass(
                         id = "pass-3",
                         name = "요가&필라테스 정규권",
-                        usageText = "잔여 4회 / 예약 가능 3회 / 취소 가능 10회",
+                        usageText = "잔여 4회 | 예약 가능 3회 | 취소 가능 10회",
                         validityPeriodText = "유효기간: 2026.08.01 ~ 2027.01.24",
                     ),
                 ),

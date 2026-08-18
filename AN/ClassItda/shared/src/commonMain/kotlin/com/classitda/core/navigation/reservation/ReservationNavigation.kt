@@ -52,6 +52,7 @@ private data class ReservationRequestErrorDestination(
 internal fun ReservationNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    bottomBar: @Composable () -> Unit = {},
 ) {
     fun navigateHome() {
         navController.navigate(ReservationDestination) {
@@ -74,6 +75,7 @@ internal fun ReservationNavHost(
                 onWaitlistReservationClick = { classId, passId ->
                     navController.navigate(WaitlistReservationDestination(classId, passId))
                 },
+                bottomBar = bottomBar,
             )
         }
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -150,8 +151,9 @@ private fun ClassReservationTopBar(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(52.dp)
                 .background(StuColors.White)
+                .statusBarsPadding()
+                .height(52.dp)
                 .padding(horizontal = AppSpacing.screenPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {

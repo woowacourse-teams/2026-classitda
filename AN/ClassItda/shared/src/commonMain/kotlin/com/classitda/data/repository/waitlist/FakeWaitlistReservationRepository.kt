@@ -28,13 +28,13 @@ internal class FakeWaitlistReservationRepository(
                     WaitlistClassPass(
                         id = "pass-1",
                         name = "[그룹] 8:1 리포머/체어 10회권",
-                        usageText = "잔여 6회 / 예약 가능 2회 / 취소 가능 10회",
+                        usageText = "잔여 6회 | 예약 가능 2회 | 취소 가능 10회",
                         validityPeriodText = "유효기간: 2026.08.01 ~ 2026.12.31",
                     ),
                     WaitlistClassPass(
                         id = "pass-2",
                         name = "[이벤트] 한정판 이용권",
-                        usageText = "잔여 1회 / 예약 가능 1회 / 취소 가능 10회",
+                        usageText = "잔여 1회 | 예약 가능 1회 | 취소 가능 10회",
                         validityPeriodText = "유효기간: 없음",
                     ),
                 ),
