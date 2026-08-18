@@ -27,7 +27,7 @@ object AppColor {
     val Blue = Color(0xff007AFF)
     val BlueLight = Color(0xffB8E2FF)
 
-    val Green = Color(0xff00C853)
+    val Green = Color(0xff0B8F6F)
     val GreenLight = Color(0xffD3F9D3)
 
     val Purple = Color(0xff6C55D9)
@@ -35,6 +35,7 @@ object AppColor {
 }
 
 object StuColors {
+
     val Black = AppColor.Black
 
     val Gray900 = AppColor.Gray900
@@ -60,6 +61,7 @@ object StuColors {
     val Dim = AppColor.Dim // 모달 뒷 배경
 
     val Primary = AppColor.Gray900
+    val PrimaryColor = AppColor.Gray900
 
     val Green = AppColor.Green
     val GreenLight = AppColor.GreenLight
@@ -103,6 +105,7 @@ object InsColors {
     val Dim = AppColor.Dim // 모달 뒷 배경
 
     val Primary = AppColor.Gray900
+    val PrimaryColor = AppColor.Gray900
 
     val Green = AppColor.Green
     val GreenLight = AppColor.GreenLight
