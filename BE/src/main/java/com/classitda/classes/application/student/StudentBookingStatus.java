@@ -7,6 +7,8 @@ public enum StudentBookingStatus {
     WAITING,
     OFFERED,
     CLOSED,
-    COMPLETED,
+    ATTENDANCE_PENDING,
+    ATTENDED,
+    NO_SHOW,
     CANCELED
 }

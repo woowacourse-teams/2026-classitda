@@ -1,6 +1,5 @@
 package com.classitda.classes.application.student.daily;
 
-import com.classitda.classes.application.student.StudentSessionAccess;
 import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
@@ -25,31 +24,28 @@ public class StudentDailyQueryService {
     public List<StudentDailySessionView> findAll(
             Long memberId,
             Long studioId,
-            LocalDate date,
-            Long memberPassProductId
+            LocalDate date
     ) {
-        validateCriteria(date, memberPassProductId);
+        validateCriteria(date);
+        LocalDateTime now = LocalDateTime.now(clock);
 
-        StudentSessionAccess access = accessReader.read(memberId, studioId, memberPassProductId);
-        if (!access.memberPassProduct().isValidOn(date)) {
-            return List.of();
-        }
+        Long membershipId = accessReader.readMembershipId(memberId, studioId);
 
         StudentDailySchedule schedule = scheduleReader.read(
                 studioId,
-                access.membershipId(),
+                membershipId,
                 date,
-                access.memberPassProduct().getPassProduct()
+                date.isBefore(now.toLocalDate())
         );
         if (schedule.isEmpty()) {
             return List.of();
         }
 
-        return assemble(schedule, LocalDateTime.now(clock));
+        return assemble(schedule, now);
     }
 
-    private void validateCriteria(LocalDate date, Long memberPassProductId) {
-        if (date == null || memberPassProductId == null || memberPassProductId < 1) {
+    private void validateCriteria(LocalDate date) {
+        if (date == null) {
             throw new ClassitdaException(CommonErrorCode.INVALID_INPUT);
         }
     }

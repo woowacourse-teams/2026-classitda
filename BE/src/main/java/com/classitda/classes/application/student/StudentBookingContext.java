@@ -8,6 +8,8 @@ public record StudentBookingContext(
         LocalDateTime startAt,
         LocalDateTime endAt,
         long ownReservedCount,
+        long ownAttendedCount,
+        long ownNoShowCount,
         long ownOfferedCount,
         long ownWaitingCount,
         int reservationCloseMinutesBefore,

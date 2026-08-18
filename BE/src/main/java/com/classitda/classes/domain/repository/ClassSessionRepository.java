@@ -1,6 +1,5 @@
 package com.classitda.classes.domain.repository;
 
-import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionCalendarSummaryProjection;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
@@ -31,7 +30,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     );
 
     @Query("""
-            SELECT classSession.id AS classSessionId,
+            SELECT DISTINCT classSession.id AS classSessionId,
                    classSession.instructorMembership.id AS instructorMembershipId,
                    classSession.instructorMembership.member.name AS instructorName,
                    classSession.classForm AS classForm,
@@ -52,16 +51,48 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
               AND classType.studio.id = :studioId
               AND classSession.startAt >= :rangeStart
               AND classSession.startAt < :rangeEnd
-              AND classSession.classForm = :classForm
-              AND classType.id IN :classTypeIds
+              AND EXISTS (
+                  SELECT memberPassProduct.id
+                  FROM MemberPassProduct memberPassProduct
+                  JOIN memberPassProduct.passProduct.passProductClassTypes passProductClassType
+                  WHERE memberPassProduct.membership.id = :membershipId
+                    AND memberPassProduct.passProduct.studio.id = :studioId
+                    AND passProductClassType.classType.id = classType.id
+                    AND memberPassProduct.startedAt <= :date
+                    AND memberPassProduct.expiresAt >= :date
+                    AND (
+                        :attendedOnly = true
+                        OR (
+                            memberPassProduct.status = com.classitda.passproduct.domain.MemberPassProductStatus.ACTIVE
+                            AND (
+                                memberPassProduct.remainingCount IS NULL
+                                OR memberPassProduct.remainingCount > 0
+                            )
+                        )
+                    )
+              )
+              AND (
+                  :attendedOnly = false
+                  OR (
+                      classSession.status <> com.classitda.classes.domain.ClassSessionStatus.CANCELED
+                      AND EXISTS (
+                          SELECT reservation.id
+                          FROM Reservation reservation
+                          WHERE reservation.classSession.id = classSession.id
+                            AND reservation.membership.id = :membershipId
+                            AND reservation.status = com.classitda.classes.domain.ReservationStatus.ATTENDED
+                      )
+                  )
+              )
             ORDER BY classSession.startAt ASC, classSession.id ASC
             """)
-    List<ClassSessionDailyProjection> findDailyForMemberPass(
+    List<ClassSessionDailyProjection> findDailyForStudent(
             @Param("studioId") Long studioId,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
-            @Param("classForm") ClassForm classForm,
-            @Param("classTypeIds") List<Long> classTypeIds
+            @Param("membershipId") Long membershipId,
+            @Param("date") java.time.LocalDate date,
+            @Param("attendedOnly") boolean attendedOnly
     );
 
     @Query("""
@@ -148,7 +179,8 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
                            ELSE 0
                        END) AS attended,
                    MAX(CASE
-                           WHEN class_session.end_at > :now
+                           WHEN DATE(class_session.start_at) >= :today
+                               AND class_session.end_at > :now
                                AND EXISTS (
                                    SELECT 1
                                    FROM reservation
@@ -160,7 +192,8 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
                            ELSE 0
                        END) AS reserved,
                    MAX(CASE
-                           WHEN class_session.end_at > :now
+                           WHEN DATE(class_session.start_at) >= :today
+                               AND class_session.end_at > :now
                                AND EXISTS (
                                    SELECT 1
                                    FROM waiting
@@ -175,16 +208,31 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             WHERE class_session.studio_id = :studioId
               AND class_session.start_at >= :rangeStart
               AND class_session.start_at < :rangeEnd
-              AND class_session.class_form = :classForm
               AND class_session.status <> 'CANCELED'
               AND EXISTS (
                   SELECT 1
                   FROM class_session_class_type
-                  JOIN class_type
-                    ON class_type.id = class_session_class_type.class_type_id
+                  JOIN pass_product_class_type
+                    ON pass_product_class_type.class_type_id = class_session_class_type.class_type_id
+                  JOIN pass_product
+                    ON pass_product.id = pass_product_class_type.pass_product_id
+                  JOIN member_pass_product
+                    ON member_pass_product.pass_product_id = pass_product.id
                   WHERE class_session_class_type.class_session_id = class_session.id
-                    AND class_type.studio_id = :studioId
-                    AND class_type.id IN (:classTypeIds)
+                    AND pass_product.studio_id = :studioId
+                    AND member_pass_product.membership_id = :membershipId
+                    AND member_pass_product.started_at <= DATE(class_session.start_at)
+                    AND member_pass_product.expires_at >= DATE(class_session.start_at)
+                    AND (
+                        DATE(class_session.start_at) < :today
+                        OR (
+                            member_pass_product.status = 'ACTIVE'
+                            AND (
+                                member_pass_product.remaining_count IS NULL
+                                OR member_pass_product.remaining_count > 0
+                            )
+                        )
+                    )
               )
             GROUP BY DATE(class_session.start_at)
             HAVING attended = 1 OR reserved = 1 OR waiting = 1
@@ -195,8 +243,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("membershipId") Long membershipId,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd,
-            @Param("classForm") String classForm,
-            @Param("classTypeIds") List<Long> classTypeIds,
-            @Param("now") LocalDateTime now
+            @Param("now") LocalDateTime now,
+            @Param("today") java.time.LocalDate today
     );
 }

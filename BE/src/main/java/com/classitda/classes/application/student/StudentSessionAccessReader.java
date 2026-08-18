@@ -1,9 +1,5 @@
 package com.classitda.classes.application.student;
 
-import com.classitda.passproduct.domain.MemberPassProduct;
-import com.classitda.passproduct.domain.repository.MemberPassProductRepository;
-import com.classitda.passproduct.exception.PassProductErrorCode;
-import com.classitda.passproduct.exception.PassProductException;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
@@ -18,23 +14,15 @@ import org.springframework.stereotype.Component;
 @Component
 public class StudentSessionAccessReader {
 
-    private final MemberPassProductRepository memberPassProductRepository;
     private final StudioMembershipRepository studioMembershipRepository;
     private final StudioRepository studioRepository;
 
-    public StudentSessionAccess read(Long memberId, Long studioId, Long memberPassProductId) {
+    public Long readMembershipId(Long memberId, Long studioId) {
         Studio studio = getStudio(studioId);
         StudioMembership membership = getActiveMembership(studio.getId(), memberId);
         validateStudent(membership);
 
-        MemberPassProduct memberPassProduct = getMemberPassProduct(
-                memberPassProductId,
-                membership.getId(),
-                studioId
-        );
-        validateUsable(memberPassProduct);
-
-        return new StudentSessionAccess(membership.getId(), memberPassProduct);
+        return membership.getId();
     }
 
     private Studio getStudio(Long studioId) {
@@ -60,24 +48,4 @@ public class StudentSessionAccessReader {
         }
     }
 
-    private MemberPassProduct getMemberPassProduct(
-            Long memberPassProductId,
-            Long membershipId,
-            Long studioId
-    ) {
-        return memberPassProductRepository.findOwnedWithProductAndClassTypes(
-                        memberPassProductId,
-                        membershipId,
-                        studioId
-                )
-                .orElseThrow(() -> new PassProductException(
-                        PassProductErrorCode.MEMBER_PASS_PRODUCT_NOT_FOUND
-                ));
-    }
-
-    private void validateUsable(MemberPassProduct memberPassProduct) {
-        if (!memberPassProduct.isUsable()) {
-            throw new PassProductException(PassProductErrorCode.MEMBER_PASS_PRODUCT_UNAVAILABLE);
-        }
-    }
 }

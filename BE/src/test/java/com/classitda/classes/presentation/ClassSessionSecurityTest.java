@@ -48,12 +48,12 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 class ClassSessionSecurityTest {
 
     private static final String LIST_URI =
-            "/api/studios/7/class-sessions/student/daily?date=2026-08-17&memberPassProductId=42";
+            "/api/studios/7/class-sessions/student/daily?date=2026-08-17";
     private static final String INSTRUCTOR_DAILY_URI =
             "/api/studios/7/class-sessions/instructor/daily?date=2026-08-17";
     private static final String STUDENT_CALENDAR_URI =
             "/api/studios/7/class-sessions/student/calendar"
-                    + "?from=2026-08-15&to=2026-08-19&memberPassProductId=42";
+                    + "?from=2026-08-15&to=2026-08-19";
     private static final String STUDENT_DETAIL_URI =
             "/api/studios/7/class-sessions/student/11";
     private static final String INSTRUCTOR_CALENDAR_URI =
@@ -134,8 +134,7 @@ class ClassSessionSecurityTest {
         verify(studentDailyQueryService).findAll(
                 1L,
                 7L,
-                LocalDate.of(2026, 8, 17),
-                42L
+                LocalDate.of(2026, 8, 17)
         );
     }
 
@@ -187,8 +186,7 @@ class ClassSessionSecurityTest {
                 1L,
                 7L,
                 LocalDate.of(2026, 8, 15),
-                LocalDate.of(2026, 8, 19),
-                42L
+                LocalDate.of(2026, 8, 19)
         );
     }
 

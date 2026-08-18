@@ -1,10 +1,8 @@
 package com.classitda.classes.application.student.calendar;
 
-import com.classitda.classes.application.student.StudentSessionAccess;
 import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
-import com.classitda.passproduct.domain.MemberPassProduct;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,34 +27,25 @@ public class StudentCalendarQueryService {
             Long memberId,
             Long studioId,
             LocalDate from,
-            LocalDate to,
-            Long memberPassProductId
+            LocalDate to
     ) {
-        validateCriteria(from, to, memberPassProductId);
+        validateCriteria(from, to);
 
-        StudentSessionAccess access = accessReader.read(memberId, studioId, memberPassProductId);
-        MemberPassProduct memberPassProduct = access.memberPassProduct();
-        LocalDate effectiveFrom = laterOf(from, memberPassProduct.getStartedAt());
-        LocalDate effectiveTo = earlierOf(to, memberPassProduct.getExpiresAt());
-        if (effectiveFrom.isAfter(effectiveTo)) {
-            return List.of();
-        }
+        Long membershipId = accessReader.readMembershipId(memberId, studioId);
+        LocalDateTime now = LocalDateTime.now(clock);
 
         return summaryReader.read(
                 studioId,
-                access.membershipId(),
-                effectiveFrom,
-                effectiveTo,
-                memberPassProduct.getPassProduct(),
-                LocalDateTime.now(clock)
+                membershipId,
+                from,
+                to,
+                now
         );
     }
 
-    private void validateCriteria(LocalDate from, LocalDate to, Long memberPassProductId) {
+    private void validateCriteria(LocalDate from, LocalDate to) {
         if (from == null
                 || to == null
-                || memberPassProductId == null
-                || memberPassProductId < 1
                 || from.isAfter(to)
                 || to.equals(LocalDate.MAX)
                 || ChronoUnit.DAYS.between(from, to) >= MAX_RANGE_DAYS) {
@@ -64,11 +53,4 @@ public class StudentCalendarQueryService {
         }
     }
 
-    private LocalDate laterOf(LocalDate first, LocalDate second) {
-        return first.isAfter(second) ? first : second;
-    }
-
-    private LocalDate earlierOf(LocalDate first, LocalDate second) {
-        return first.isBefore(second) ? first : second;
-    }
 }

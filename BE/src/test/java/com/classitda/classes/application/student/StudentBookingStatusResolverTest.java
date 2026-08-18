@@ -29,42 +29,52 @@ class StudentBookingStatusResolverTest {
                 Arguments.of(
                         StudentBookingStatus.CANCELED,
                         context(ClassSessionStatus.CANCELED, NOW.minusHours(2), NOW.minusHours(1),
-                                1, 1, 1, 1)
+                                1, 1, 1, 1, 1, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.COMPLETED,
+                        StudentBookingStatus.ATTENDED,
                         context(ClassSessionStatus.OPENED, NOW.minusHours(2), NOW,
-                                1, 1, 1, 1)
+                                0, 1, 0, 0, 0, 1)
+                ),
+                Arguments.of(
+                        StudentBookingStatus.NO_SHOW,
+                        context(ClassSessionStatus.OPENED, NOW.minusHours(2), NOW,
+                                0, 0, 1, 0, 0, 1)
+                ),
+                Arguments.of(
+                        StudentBookingStatus.ATTENDANCE_PENDING,
+                        context(ClassSessionStatus.OPENED, NOW.minusHours(2), NOW,
+                                1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.RESERVED,
                         context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
-                                1, 1, 1, 1)
+                                1, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.OFFERED,
                         context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
-                                0, 1, 1, 1)
+                                0, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.WAITING,
                         context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
-                                0, 0, 1, 1)
+                                0, 0, 0, 0, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.CLOSED,
                         context(ClassSessionStatus.OPENED, NOW.plusMinutes(30), NOW.plusHours(1),
-                                0, 0, 0, 1)
+                                0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.AVAILABLE,
                         context(ClassSessionStatus.OPENED, NOW.plusHours(1), NOW.plusHours(2),
-                                0, 0, 0, 1)
+                                0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.WAITING_AVAILABLE,
                         context(ClassSessionStatus.OPENED, NOW.plusHours(1), NOW.plusHours(2),
-                                0, 0, 0, 0)
+                                0, 0, 0, 0, 0, 0)
                 )
         );
     }
@@ -74,6 +84,8 @@ class StudentBookingStatusResolverTest {
             LocalDateTime startAt,
             LocalDateTime endAt,
             long ownReservedCount,
+            long ownAttendedCount,
+            long ownNoShowCount,
             long ownOfferedCount,
             long ownWaitingCount,
             long remainingCapacity
@@ -83,6 +95,8 @@ class StudentBookingStatusResolverTest {
                 startAt,
                 endAt,
                 ownReservedCount,
+                ownAttendedCount,
+                ownNoShowCount,
                 ownOfferedCount,
                 ownWaitingCount,
                 30,

@@ -142,22 +142,22 @@ public interface ClassSessionControllerApi {
 
                     ### 수강권 기준
 
-                    - memberPassProductId는 로그인 회원이 같은 시설에서 보유한 활성 수강권이어야 합니다.
-                    - 선택한 수강권의 그룹·개인 형태와 수업 종류에 맞는 회차만 반환합니다.
-                    - 발급 당시 조건을 별도로 저장하지 않으므로 현재 수강권 상품에 연결된 형태와 수업 종류를 기준으로 판단합니다.
-                    - 조회 날짜가 수강권 이용 기간 밖이면 빈 배열을 반환합니다.
+                    - 로그인 회원이 같은 시설에서 보유한 모든 수강권의 수업 종류(ClassType)를 기준으로 조회합니다.
+                    - 오늘과 미래는 조회일에 이용 가능하며 활성·미소진 상태인 수강권의 종류만 사용합니다.
+                    - 과거 날짜는 당시 이용 기간 안이었던 수강권 종류 중 본인이 실제 출석(ATTENDED)한 회차만 반환합니다.
+                    - 조건에 맞는 보유 수강권이 없으면 빈 배열을 반환합니다.
 
                     ### 예약 상태
 
-                    - 예약 가능, 대기 가능, 예약 완료, 대기 중, 빈자리 예약 제안, 마감, 수업 완료, 수업 취소를 구분합니다.
-                    - 본인의 예약·대기 상태는 일반 마감보다 우선하고, 수업 완료와 수업 취소는 본인 상태보다 우선합니다.
+                    - 예약 가능, 대기 가능, 예약 완료, 대기 중, 빈자리 예약 제안, 마감, 출석 처리 대기, 출석, 결석, 수업 취소를 구분합니다.
+                    - 수업이 종료된 뒤에도 예약 상태가 RESERVED이면 출석 처리 대기, 강사가 처리하면 ATTENDED 또는 NO_SHOW를 반환합니다.
+                    - 과거 날짜에는 본인이 ATTENDED 처리된 수업만 반환하며, 수업 취소가 다른 상태보다 우선합니다.
                     - 표시 상태와 잔여석은 조회 시점의 정보이며 실제 예약 요청에서 다시 검증합니다.
 
                     ### local Swagger 테스트 데이터
 
                     - 회원 ID: 1
                     - 시설 ID: 1
-                    - 보유 수강권 ID: 42
                     - 조회 날짜: 로컬 애플리케이션을 시작한 날짜의 다음 날
                     - 시작일의 2일 후에는 예약 가능한 회차 112를 조회할 수 있습니다.
                     - 시작일의 3일 후에는 예약 완료 회차 113, 4일 후에는 대기 중 회차 114를 조회할 수 있습니다.
@@ -167,14 +167,14 @@ public interface ClassSessionControllerApi {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "선택한 수강권으로 이용할 수 있는 해당 날짜의 수업 목록을 반환합니다.",
+                    description = "보유 수강권 전체로 이용할 수 있는 해당 날짜의 수업 목록을 반환합니다.",
                     content = @Content(array = @ArraySchema(
                             schema = @Schema(implementation = MemberClassSessionResponse.class)
                     ))
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "날짜나 보유 수강권 ID가 올바르지 않거나 API 버전 헤더가 유효하지 않습니다.",
+                    description = "날짜가 올바르지 않거나 API 버전 헤더가 유효하지 않습니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
@@ -213,26 +213,15 @@ public interface ClassSessionControllerApi {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "시설, 운영 정책 또는 로그인 회원의 해당 보유 수강권을 찾을 수 없습니다.",
+                    description = "시설 또는 운영 정책을 찾을 수 없습니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(name = "시설 없음", value = """
                                             {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
                                     @ExampleObject(name = "운영 정책 없음", value = """
-                                            {"code":"POLICY-001","message":"운영 정책을 찾을 수 없습니다."}"""),
-                                    @ExampleObject(name = "보유 수강권 없음", value = """
-                                            {"code":"PASS_PRODUCT-010","message":"보유 수강권을 찾을 수 없습니다."}""")
+                                            {"code":"POLICY-001","message":"운영 정책을 찾을 수 없습니다."}""")
                             }
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "선택한 보유 수강권이 홀딩·만료·소진 등으로 현재 사용할 수 없습니다.",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "사용할 수 없는 수강권", value = """
-                                    {"code":"PASS_PRODUCT-011","message":"현재 사용할 수 없는 수강권입니다."}""")
                     )
             )
     })
@@ -259,9 +248,10 @@ public interface ClassSessionControllerApi {
                     ### 수강권 및 권한 기준
 
                     - 같은 시설의 활성 학생 역할(STUDENT)만 조회할 수 있습니다.
-                    - memberPassProductId는 로그인 회원이 같은 시설에서 보유한 활성 수강권이어야 합니다.
-                    - 선택한 수강권의 현재 그룹·개인 형태와 수업 종류에 맞는 회차만 집계합니다.
-                    - 수강권 이용 기간과 조회 기간이 겹치는 날짜만 조회하며, 겹치지 않으면 빈 배열을 반환합니다.
+                    - 로그인 회원이 같은 시설에서 보유한 모든 수강권의 수업 종류(ClassType)를 기준으로 집계합니다.
+                    - 오늘과 미래는 해당 날짜에 이용 가능하며 활성·미소진 상태인 수강권 종류만 사용합니다.
+                    - 과거 날짜는 당시 이용 기간 안이었던 수강권 종류 중 본인이 실제 출석(ATTENDED)한 회차만 집계합니다.
+                    - 조건에 맞는 보유 수강권이 없으면 빈 배열을 반환합니다.
 
                     ### 상태 요약
 
@@ -275,7 +265,6 @@ public interface ClassSessionControllerApi {
 
                     - 회원 ID: 1
                     - 시설 ID: 1
-                    - 보유 수강권 ID: 42
                     - from: 로컬 애플리케이션을 시작한 날짜의 5일 전
                     - to: 로컬 애플리케이션을 시작한 날짜의 5일 후
                     - 5일 전, 3일 전, 전날은 attended=true입니다.
@@ -293,7 +282,7 @@ public interface ClassSessionControllerApi {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "조회 기간이나 보유 수강권 ID가 올바르지 않거나 API 버전 헤더가 유효하지 않습니다.",
+                    description = "조회 기간이 올바르지 않거나 API 버전 헤더가 유효하지 않습니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
@@ -332,24 +321,11 @@ public interface ClassSessionControllerApi {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "시설 또는 로그인 회원의 해당 보유 수강권을 찾을 수 없습니다.",
+                    description = "시설을 찾을 수 없습니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(name = "시설 없음", value = """
-                                            {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
-                                    @ExampleObject(name = "보유 수강권 없음", value = """
-                                            {"code":"PASS_PRODUCT-010","message":"보유 수강권을 찾을 수 없습니다."}""")
-                            }
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "선택한 보유 수강권이 홀딩·만료·소진 등으로 현재 사용할 수 없습니다.",
-                    content = @Content(
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(name = "사용할 수 없는 수강권", value = """
-                                    {"code":"PASS_PRODUCT-011","message":"현재 사용할 수 없는 수강권입니다."}""")
+                            examples = @ExampleObject(name = "시설 없음", value = """
+                                    {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}""")
                     )
             )
     })

@@ -7,4 +7,8 @@ public interface ReservationSummaryProjection {
     long getReservedCount();
 
     long getOwnReservedCount();
+
+    long getOwnAttendedCount();
+
+    long getOwnNoShowCount();
 }

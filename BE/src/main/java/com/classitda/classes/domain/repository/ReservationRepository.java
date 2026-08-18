@@ -14,8 +14,22 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                    COUNT(reservation.id) AS reservedCount,
                    SUM(
                        CASE WHEN reservation.membership.id = :membershipId
+                                 AND reservation.status =
+                                     com.classitda.classes.domain.ReservationStatus.RESERVED
                             THEN 1 ELSE 0 END
-                   ) AS ownReservedCount
+                   ) AS ownReservedCount,
+                   SUM(
+                       CASE WHEN reservation.membership.id = :membershipId
+                                 AND reservation.status =
+                                     com.classitda.classes.domain.ReservationStatus.ATTENDED
+                            THEN 1 ELSE 0 END
+                   ) AS ownAttendedCount,
+                   SUM(
+                       CASE WHEN reservation.membership.id = :membershipId
+                                 AND reservation.status =
+                                     com.classitda.classes.domain.ReservationStatus.NO_SHOW
+                            THEN 1 ELSE 0 END
+                   ) AS ownNoShowCount
             FROM Reservation reservation
             WHERE reservation.classSession.id IN :classSessionIds
               AND reservation.status <>

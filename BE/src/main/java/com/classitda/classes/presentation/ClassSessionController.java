@@ -63,8 +63,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
         return studentDailyQueryService.findAll(
                         memberId,
                         studioId,
-                        request.date(),
-                        request.memberPassProductId()
+                        request.date()
                 ).stream()
                 .map(MemberClassSessionResponse::from)
                 .toList();
@@ -81,8 +80,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
                         memberId,
                         studioId,
                         request.from(),
-                        request.to(),
-                        request.memberPassProductId()
+                        request.to()
                 ).stream()
                 .map(StudentCalendarResponse::from)
                 .toList();

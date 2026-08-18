@@ -1,6 +1,5 @@
 package com.classitda.classes.application.student.daily;
 
-import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ReservationRepository;
 import com.classitda.classes.domain.repository.WaitingRepository;
@@ -9,7 +8,6 @@ import com.classitda.classes.domain.repository.projection.ReservationSummaryProj
 import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
-import com.classitda.passproduct.domain.PassProduct;
 import com.classitda.studio.domain.StudioPolicy;
 import com.classitda.studio.domain.repository.StudioPolicyRepository;
 import com.classitda.studio.exception.StudioErrorCode;
@@ -37,22 +35,15 @@ public class StudentDailyScheduleReader {
             Long studioId,
             Long membershipId,
             LocalDate date,
-            PassProduct passProduct
+            boolean attendedOnly
     ) {
-        List<Long> classTypeIds = passProduct.getClassTypes().stream()
-                .map(ClassType::getId)
-                .toList();
-
-        if (classTypeIds.isEmpty()) {
-            return StudentDailySchedule.empty();
-        }
-
-        List<ClassSessionDailyProjection> classSessions = classSessionRepository.findDailyForMemberPass(
+        List<ClassSessionDailyProjection> classSessions = classSessionRepository.findDailyForStudent(
                 studioId,
                 date.atStartOfDay(),
                 getRangeEnd(date),
-                passProduct.getClassForm(),
-                classTypeIds
+                membershipId,
+                date,
+                attendedOnly
         );
 
         if (classSessions.isEmpty()) {

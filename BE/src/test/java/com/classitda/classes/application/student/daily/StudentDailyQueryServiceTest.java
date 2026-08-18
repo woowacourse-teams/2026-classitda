@@ -29,8 +29,6 @@ import com.classitda.passproduct.domain.MemberPassProduct;
 import com.classitda.passproduct.domain.MemberPassProductStatus;
 import com.classitda.passproduct.domain.PassProduct;
 import com.classitda.passproduct.domain.PassProductPeriodUnit;
-import com.classitda.passproduct.exception.PassProductErrorCode;
-import com.classitda.passproduct.exception.PassProductException;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
@@ -121,7 +119,7 @@ class StudentDailyQueryServiceTest {
         );
         ClassType yoga = 수업_종류를_저장한다(studio, "요가");
         ClassType pilates = 수업_종류를_저장한다(studio, "필라테스");
-        MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
+        보유_수강권을_저장한다(
                 memberMembership,
                 수강권을_저장한다(studio, ClassForm.GROUP, List.of(yoga)),
                 MemberPassProductStatus.ACTIVE,
@@ -146,7 +144,7 @@ class StudentDailyQueryServiceTest {
                 studio, firstInstructor, pilates, "다른 종류", ClassForm.GROUP, 10,
                 QUERY_DATE.atTime(13, 0), ClassSessionStatus.OPENED
         );
-        수업_회차를_저장한다(
+        ClassSession sameTypeOtherForm = 수업_회차를_저장한다(
                 studio, firstInstructor, yoga, "다른 형태", ClassForm.INDIVIDUAL, 1,
                 QUERY_DATE.atTime(15, 0), ClassSessionStatus.OPENED
         );
@@ -187,8 +185,7 @@ class StudentDailyQueryServiceTest {
         List<StudentDailySessionView> responses = studentDailyQueryService.findAll(
                 memberMembership.getMember().getId(),
                 studio.getId(),
-                QUERY_DATE,
-                memberPassProduct.getId()
+                QUERY_DATE
         );
 
         // then
@@ -243,8 +240,172 @@ class StudentDailyQueryServiceTest {
                         QUERY_DATE.atTime(14, 0),
                         QUERY_DATE.atTime(15, 0),
                         StudentBookingStatus.WAITING_AVAILABLE
+                ),
+                new StudentDailySessionView(
+                        sameTypeOtherForm.getId(),
+                        firstInstructor.getId(),
+                        firstInstructor.getMember().getName(),
+                        ClassForm.INDIVIDUAL,
+                        yoga.getId(),
+                        yoga.getName(),
+                        "다른 형태",
+                        "다른 형태 안내",
+                        1,
+                        0,
+                        1,
+                        0,
+                        QUERY_DATE.atTime(15, 0),
+                        QUERY_DATE.atTime(16, 0),
+                        StudentBookingStatus.AVAILABLE
                 )
         );
+    }
+
+    @Test
+    void 보유한_모든_수강권의_수업_종류를_합쳐서_조회한다() {
+        // given
+        Studio studio = 시설을_저장한다(회원을_저장한다("all-pass-owner"), "전체 수강권 조회 시설");
+        정책을_저장한다(studio, 30);
+        StudioMembership memberMembership = 소속을_저장한다(
+                studio,
+                회원을_저장한다("all-pass-member"),
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+        StudioMembership instructor = 소속을_저장한다(
+                studio,
+                회원을_저장한다("all-pass-instructor"),
+                SystemRole.INSTRUCTOR,
+                MembershipStatus.ACTIVE
+        );
+        ClassType yoga = 수업_종류를_저장한다(studio, "전체 수강권 요가");
+        ClassType pilates = 수업_종류를_저장한다(studio, "전체 수강권 필라테스");
+        ClassType barre = 수업_종류를_저장한다(studio, "전체 수강권 바레");
+        보유_수강권을_저장한다(
+                memberMembership,
+                수강권을_저장한다(studio, ClassForm.GROUP, List.of(yoga)),
+                MemberPassProductStatus.ACTIVE,
+                10,
+                QUERY_DATE.minusDays(1),
+                QUERY_DATE.plusDays(1)
+        );
+        보유_수강권을_저장한다(
+                memberMembership,
+                수강권을_저장한다(studio, ClassForm.INDIVIDUAL, List.of(pilates)),
+                MemberPassProductStatus.ACTIVE,
+                10,
+                QUERY_DATE.minusDays(1),
+                QUERY_DATE.plusDays(1)
+        );
+        ClassSession yogaSession = 수업_회차를_저장한다(
+                studio, instructor, yoga, "요가 수업", ClassForm.INDIVIDUAL, 5,
+                QUERY_DATE.atTime(11, 0), ClassSessionStatus.OPENED
+        );
+        ClassSession pilatesSession = 수업_회차를_저장한다(
+                studio, instructor, pilates, "필라테스 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+        );
+        수업_회차를_저장한다(
+                studio, instructor, barre, "바레 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(13, 0), ClassSessionStatus.OPENED
+        );
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        List<StudentDailySessionView> responses = studentDailyQueryService.findAll(
+                memberMembership.getMember().getId(),
+                studio.getId(),
+                QUERY_DATE
+        );
+
+        // then
+        assertThat(responses)
+                .extracting(StudentDailySessionView::id)
+                .containsExactly(yogaSession.getId(), pilatesSession.getId());
+    }
+
+    @Test
+    void 과거_날짜에는_보유_수강권의_수업_중_실제_출석한_내역만_반환한다() {
+        // given
+        LocalDate pastDate = QUERY_DATE.minusDays(1);
+        Studio studio = 시설을_저장한다(회원을_저장한다("past-daily-owner"), "과거 일별 조회 시설");
+        정책을_저장한다(studio, 30);
+        StudioMembership memberMembership = 소속을_저장한다(
+                studio,
+                회원을_저장한다("past-daily-member"),
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+        StudioMembership otherMembership = 소속을_저장한다(
+                studio,
+                회원을_저장한다("past-daily-other-member"),
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+        StudioMembership instructor = 소속을_저장한다(
+                studio,
+                회원을_저장한다("past-daily-instructor"),
+                SystemRole.INSTRUCTOR,
+                MembershipStatus.ACTIVE
+        );
+        ClassType yoga = 수업_종류를_저장한다(studio, "과거 요가");
+        ClassType pilates = 수업_종류를_저장한다(studio, "과거 필라테스");
+        보유_수강권을_저장한다(
+                memberMembership,
+                수강권을_저장한다(studio, ClassForm.GROUP, List.of(yoga)),
+                MemberPassProductStatus.EXHAUSTED,
+                0,
+                pastDate.minusMonths(1),
+                pastDate
+        );
+
+        ClassSession attended = 수업_회차를_저장한다(
+                studio, instructor, yoga, "출석한 수업", ClassForm.GROUP, 5,
+                pastDate.atTime(10, 0), ClassSessionStatus.OPENED
+        );
+        ClassSession unreserved = 수업_회차를_저장한다(
+                studio, instructor, yoga, "예약하지 않은 수업", ClassForm.GROUP, 5,
+                pastDate.atTime(11, 0), ClassSessionStatus.OPENED
+        );
+        ClassSession reservedOnly = 수업_회차를_저장한다(
+                studio, instructor, yoga, "출석 처리되지 않은 수업", ClassForm.GROUP, 5,
+                pastDate.atTime(12, 0), ClassSessionStatus.OPENED
+        );
+        ClassSession otherMemberAttended = 수업_회차를_저장한다(
+                studio, instructor, yoga, "다른 회원이 출석한 수업", ClassForm.GROUP, 5,
+                pastDate.atTime(13, 0), ClassSessionStatus.OPENED
+        );
+        ClassSession otherClassType = 수업_회차를_저장한다(
+                studio, instructor, pilates, "다른 종류 출석 수업", ClassForm.GROUP, 5,
+                pastDate.atTime(14, 0), ClassSessionStatus.OPENED
+        );
+        예약을_저장한다(attended, memberMembership, ReservationStatus.ATTENDED);
+        예약을_저장한다(reservedOnly, memberMembership, ReservationStatus.RESERVED);
+        예약을_저장한다(otherMemberAttended, otherMembership, ReservationStatus.ATTENDED);
+        예약을_저장한다(otherClassType, memberMembership, ReservationStatus.ATTENDED);
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        List<StudentDailySessionView> responses = studentDailyQueryService.findAll(
+                memberMembership.getMember().getId(),
+                studio.getId(),
+                pastDate
+        );
+
+        // then
+        assertThat(responses)
+                .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingStatus)
+                .containsExactly(tuple(attended.getId(), StudentBookingStatus.ATTENDED));
+        assertThat(responses)
+                .extracting(StudentDailySessionView::id)
+                .doesNotContain(
+                        unreserved.getId(),
+                        reservedOnly.getId(),
+                        otherMemberAttended.getId(),
+                        otherClassType.getId()
+                );
     }
 
     @Test
@@ -266,7 +427,7 @@ class StudentDailyQueryServiceTest {
                 MembershipStatus.ACTIVE
         );
         ClassType classType = 수업_종류를_저장한다(studio, "상태 요가");
-        MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
+        보유_수강권을_저장한다(
                 memberMembership,
                 수강권을_저장한다(studio, ClassForm.GROUP, List.of(classType)),
                 MemberPassProductStatus.ACTIVE,
@@ -279,9 +440,17 @@ class StudentDailyQueryServiceTest {
                 studio, instructor, classType, "취소 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(7, 0), ClassSessionStatus.CANCELED
         );
-        ClassSession completed = 수업_회차를_저장한다(
-                studio, instructor, classType, "완료 수업", ClassForm.GROUP, 5,
+        ClassSession attendancePending = 수업_회차를_저장한다(
+                studio, instructor, classType, "출석 처리 대기 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(8, 30), ClassSessionStatus.OPENED
+        );
+        ClassSession attended = 수업_회차를_저장한다(
+                studio, instructor, classType, "출석 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(8, 40), ClassSessionStatus.OPENED
+        );
+        ClassSession noShow = 수업_회차를_저장한다(
+                studio, instructor, classType, "결석 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(8, 50), ClassSessionStatus.OPENED
         );
         ClassSession reserved = 수업_회차를_저장한다(
                 studio, instructor, classType, "예약 수업", ClassForm.GROUP, 5,
@@ -304,8 +473,10 @@ class StudentDailyQueryServiceTest {
                 QUERY_DATE.atTime(11, 0), ClassSessionStatus.CLOSED
         );
         예약을_저장한다(canceled, memberMembership, ReservationStatus.RESERVED);
-        예약을_저장한다(completed, memberMembership, ReservationStatus.RESERVED);
-        대기를_저장한다(completed, memberMembership, 1, WaitingStatus.OFFERED);
+        예약을_저장한다(attendancePending, memberMembership, ReservationStatus.RESERVED);
+        대기를_저장한다(attendancePending, memberMembership, 1, WaitingStatus.OFFERED);
+        예약을_저장한다(attended, memberMembership, ReservationStatus.ATTENDED);
+        예약을_저장한다(noShow, memberMembership, ReservationStatus.NO_SHOW);
         예약을_저장한다(reserved, memberMembership, ReservationStatus.RESERVED);
         대기를_저장한다(offered, memberMembership, 1, WaitingStatus.OFFERED);
         대기를_저장한다(waiting, memberMembership, 1, WaitingStatus.WAITING);
@@ -316,8 +487,7 @@ class StudentDailyQueryServiceTest {
         List<StudentDailySessionView> responses = studentDailyQueryService.findAll(
                 memberMembership.getMember().getId(),
                 studio.getId(),
-                QUERY_DATE,
-                memberPassProduct.getId()
+                QUERY_DATE
         );
 
         // then
@@ -325,7 +495,9 @@ class StudentDailyQueryServiceTest {
                 .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingStatus)
                 .containsExactly(
                         tuple(canceled.getId(), StudentBookingStatus.CANCELED),
-                        tuple(completed.getId(), StudentBookingStatus.COMPLETED),
+                        tuple(attendancePending.getId(), StudentBookingStatus.ATTENDANCE_PENDING),
+                        tuple(attended.getId(), StudentBookingStatus.ATTENDED),
+                        tuple(noShow.getId(), StudentBookingStatus.NO_SHOW),
                         tuple(reserved.getId(), StudentBookingStatus.RESERVED),
                         tuple(offered.getId(), StudentBookingStatus.OFFERED),
                         tuple(waiting.getId(), StudentBookingStatus.WAITING),
@@ -342,7 +514,7 @@ class StudentDailyQueryServiceTest {
 
         // when / then
         assertStudioError(
-                () -> studentDailyQueryService.findAll(stranger.getId(), studio.getId(), QUERY_DATE, 1L),
+                () -> studentDailyQueryService.findAll(stranger.getId(), studio.getId(), QUERY_DATE),
                 StudioErrorCode.NOT_MEMBERSHIP
         );
     }
@@ -359,8 +531,7 @@ class StudentDailyQueryServiceTest {
                 () -> studentDailyQueryService.findAll(
                         inactiveMember.getId(),
                         studio.getId(),
-                        QUERY_DATE,
-                        1L
+                        QUERY_DATE
                 ),
                 StudioErrorCode.MEMBERSHIP_INACTIVE
         );
@@ -382,8 +553,7 @@ class StudentDailyQueryServiceTest {
                 () -> studentDailyQueryService.findAll(
                         staff.getId(),
                         studio.getId(),
-                        QUERY_DATE,
-                        1L
+                        QUERY_DATE
                 ),
                 StudioErrorCode.PERMISSION_DENIED
         );
@@ -420,54 +590,60 @@ class StudentDailyQueryServiceTest {
                 () -> studentDailyQueryService.findAll(
                         staff.getId(),
                         studio.getId(),
-                        QUERY_DATE,
-                        1L
+                        QUERY_DATE
                 ),
                 StudioErrorCode.PERMISSION_DENIED
         );
     }
 
-    @ParameterizedTest
-    @MethodSource("허용되지_않은_보유_수강권")
-    void 다른_회원이나_다른_시설의_보유_수강권은_찾을_수_없는_것으로_처리한다(boolean otherStudio) {
+    @Test
+    void 다른_회원의_보유_수강권으로는_수업을_조회하지_않는다() {
         // given
-        Member owner = 회원을_저장한다("hidden-pass-owner-" + otherStudio);
-        Studio studio = 시설을_저장한다(owner, "보유 수강권 숨김 시설 " + otherStudio);
-        Member member = 회원을_저장한다("hidden-pass-member-" + otherStudio);
-        소속을_저장한다(studio, member, SystemRole.STUDENT, MembershipStatus.ACTIVE);
-
-        Studio passStudio = otherStudio
-                ? 시설을_저장한다(회원을_저장한다("hidden-pass-other-owner"), "다른 보유 수강권 시설")
-                : studio;
-        Member passOwner = otherStudio ? member : 회원을_저장한다("hidden-pass-other-member");
-        StudioMembership passMembership = 소속을_저장한다(
-                passStudio,
-                passOwner,
+        Studio studio = 시설을_저장한다(회원을_저장한다("other-pass-owner"), "다른 회원 수강권 시설");
+        정책을_저장한다(studio, 30);
+        StudioMembership memberMembership = 소속을_저장한다(
+                studio,
+                회원을_저장한다("other-pass-member"),
                 SystemRole.STUDENT,
                 MembershipStatus.ACTIVE
         );
-        ClassType classType = 수업_종류를_저장한다(passStudio, "숨김 수업 종류");
-        MemberPassProduct hiddenPass = 보유_수강권을_저장한다(
-                passMembership,
-                수강권을_저장한다(passStudio, ClassForm.GROUP, List.of(classType)),
+        StudioMembership otherMembership = 소속을_저장한다(
+                studio,
+                회원을_저장한다("other-pass-owner-member"),
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+        StudioMembership instructor = 소속을_저장한다(
+                studio,
+                회원을_저장한다("other-pass-instructor"),
+                SystemRole.INSTRUCTOR,
+                MembershipStatus.ACTIVE
+        );
+        ClassType classType = 수업_종류를_저장한다(studio, "다른 회원 수강권 종류");
+        보유_수강권을_저장한다(
+                otherMembership,
+                수강권을_저장한다(studio, ClassForm.GROUP, List.of(classType)),
                 MemberPassProductStatus.ACTIVE,
                 10,
                 QUERY_DATE.minusDays(1),
                 QUERY_DATE.plusDays(1)
         );
+        수업_회차를_저장한다(
+                studio, instructor, classType, "다른 회원만 수강 가능한 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+        );
         entityManager.flush();
         entityManager.clear();
 
-        // when / then
-        assertPassProductError(
-                () -> studentDailyQueryService.findAll(
-                        member.getId(),
-                        studio.getId(),
-                        QUERY_DATE,
-                        hiddenPass.getId()
-                ),
-                PassProductErrorCode.MEMBER_PASS_PRODUCT_NOT_FOUND
+        // when
+        List<StudentDailySessionView> responses = studentDailyQueryService.findAll(
+                memberMembership.getMember().getId(),
+                studio.getId(),
+                QUERY_DATE
         );
+
+        // then
+        assertThat(responses).isEmpty();
     }
 
     @ParameterizedTest
@@ -486,7 +662,13 @@ class StudentDailyQueryServiceTest {
                 MembershipStatus.ACTIVE
         );
         ClassType classType = 수업_종류를_저장한다(studio, "사용 불가 수업 종류");
-        MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
+        StudioMembership instructor = 소속을_저장한다(
+                studio,
+                회원을_저장한다("unusable-pass-instructor-" + status),
+                SystemRole.INSTRUCTOR,
+                MembershipStatus.ACTIVE
+        );
+        보유_수강권을_저장한다(
                 membership,
                 수강권을_저장한다(studio, ClassForm.GROUP, List.of(classType)),
                 status,
@@ -494,19 +676,23 @@ class StudentDailyQueryServiceTest {
                 QUERY_DATE.minusDays(1),
                 QUERY_DATE.plusDays(1)
         );
+        정책을_저장한다(studio, 30);
+        수업_회차를_저장한다(
+                studio, instructor, classType, "사용 불가 수강권 종류 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+        );
         entityManager.flush();
         entityManager.clear();
 
-        // when / then
-        assertPassProductError(
-                () -> studentDailyQueryService.findAll(
-                        member.getId(),
-                        studio.getId(),
-                        QUERY_DATE,
-                        memberPassProduct.getId()
-                ),
-                PassProductErrorCode.MEMBER_PASS_PRODUCT_UNAVAILABLE
+        // when
+        List<StudentDailySessionView> responses = studentDailyQueryService.findAll(
+                member.getId(),
+                studio.getId(),
+                QUERY_DATE
         );
+
+        // then
+        assertThat(responses).isEmpty();
     }
 
     @Test
@@ -521,13 +707,24 @@ class StudentDailyQueryServiceTest {
                 MembershipStatus.ACTIVE
         );
         ClassType classType = 수업_종류를_저장한다(studio, "기간 외 수업 종류");
-        MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
+        StudioMembership instructor = 소속을_저장한다(
+                studio,
+                회원을_저장한다("period-pass-instructor"),
+                SystemRole.INSTRUCTOR,
+                MembershipStatus.ACTIVE
+        );
+        보유_수강권을_저장한다(
                 membership,
                 수강권을_저장한다(studio, ClassForm.GROUP, List.of(classType)),
                 MemberPassProductStatus.ACTIVE,
                 10,
                 QUERY_DATE.minusMonths(1),
                 QUERY_DATE.minusDays(1)
+        );
+        정책을_저장한다(studio, 30);
+        수업_회차를_저장한다(
+                studio, instructor, classType, "기간 밖 수강권 종류 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
         );
         entityManager.flush();
         entityManager.clear();
@@ -536,8 +733,7 @@ class StudentDailyQueryServiceTest {
         List<StudentDailySessionView> responses = studentDailyQueryService.findAll(
                 member.getId(),
                 studio.getId(),
-                QUERY_DATE,
-                memberPassProduct.getId()
+                QUERY_DATE
         );
 
         // then
@@ -749,19 +945,6 @@ class StudentDailyQueryServiceTest {
         assertThatThrownBy(action::run)
                 .isInstanceOfSatisfying(ClassException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(errorCode));
-    }
-
-    private void assertPassProductError(Runnable action, PassProductErrorCode errorCode) {
-        assertThatThrownBy(action::run)
-                .isInstanceOfSatisfying(PassProductException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(errorCode));
-    }
-
-    private static Stream<Arguments> 허용되지_않은_보유_수강권() {
-        return Stream.of(
-                Arguments.of(false),
-                Arguments.of(true)
-        );
     }
 
     private static Stream<Arguments> 사용할_수_없는_수강권() {

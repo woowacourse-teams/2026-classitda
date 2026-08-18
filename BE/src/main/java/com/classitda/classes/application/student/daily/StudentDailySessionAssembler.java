@@ -32,6 +32,8 @@ public class StudentDailySessionAssembler {
                 classSession.getStartAt(),
                 classSession.getEndAt(),
                 reservationSummary == null ? 0 : reservationSummary.getOwnReservedCount(),
+                reservationSummary == null ? 0 : reservationSummary.getOwnAttendedCount(),
+                reservationSummary == null ? 0 : reservationSummary.getOwnNoShowCount(),
                 waitingSummary == null ? 0 : waitingSummary.getOwnOfferedCount(),
                 waitingSummary == null ? 0 : waitingSummary.getOwnWaitingCount(),
                 reservationCloseMinutesBefore,

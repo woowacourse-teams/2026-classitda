@@ -22,10 +22,23 @@ public class StudentBookingStatusResolver {
                 return context.sessionStatus() == ClassSessionStatus.CANCELED;
             }
         },
-        COMPLETED(StudentBookingStatus.COMPLETED) {
+        ATTENDED(StudentBookingStatus.ATTENDED) {
             @Override
             boolean matches(StudentBookingContext context) {
-                return !context.now().isBefore(context.endAt());
+                return context.ownAttendedCount() > 0;
+            }
+        },
+        NO_SHOW(StudentBookingStatus.NO_SHOW) {
+            @Override
+            boolean matches(StudentBookingContext context) {
+                return context.ownNoShowCount() > 0;
+            }
+        },
+        ATTENDANCE_PENDING(StudentBookingStatus.ATTENDANCE_PENDING) {
+            @Override
+            boolean matches(StudentBookingContext context) {
+                return context.ownReservedCount() > 0
+                        && !context.now().isBefore(context.endAt());
             }
         },
         RESERVED(StudentBookingStatus.RESERVED) {

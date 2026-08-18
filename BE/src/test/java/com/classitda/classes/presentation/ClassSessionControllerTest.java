@@ -33,8 +33,6 @@ import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.exception.GlobalExceptionHandler;
-import com.classitda.passproduct.exception.PassProductErrorCode;
-import com.classitda.passproduct.exception.PassProductException;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import java.time.LocalDate;
@@ -140,13 +138,13 @@ class ClassSessionControllerTest {
     void 회원용_일별_수업_목록을_조회하면_200과_목록을_반환하고_조회_서비스에_위임한다() {
         // given
         LocalDate date = LocalDate.of(2026, 8, 17);
-        when(studentDailyQueryService.findAll(1L, 7L, date, 42L))
+        when(studentDailyQueryService.findAll(1L, 7L, date))
                 .thenReturn(List.of(회원용_일별_수업_뷰()));
 
         // when
         RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
                 7L,
-                "date=2026-08-17&memberPassProductId=42",
+                "date=2026-08-17",
                 "1"
         );
 
@@ -171,30 +169,30 @@ class ClassSessionControllerTest {
                   }
                 ]
                 """, JsonCompareMode.STRICT);
-        verify(studentDailyQueryService).findAll(1L, 7L, date, 42L);
+        verify(studentDailyQueryService).findAll(1L, 7L, date);
     }
 
     @ParameterizedTest
     @MethodSource("유효하지_않은_회원용_목록_쿼리")
-    void 회원용_목록의_날짜나_보유_수강권_요청값이_유효하지_않으면_COMMON_001을_반환한다(String query) {
+    void 회원용_목록의_날짜_요청값이_유효하지_않으면_COMMON_001을_반환한다(String query) {
         // when
         RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(7L, query, "1");
 
         // then
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
-        verify(studentDailyQueryService, never()).findAll(any(), any(), any(), any());
+        verify(studentDailyQueryService, never()).findAll(any(), any(), any());
     }
 
     @Test
     void 회원용_목록에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/student/daily?date=2026-08-17&memberPassProductId=42")
+                .uri("/api/studios/7/class-sessions/student/daily?date=2026-08-17")
                 .exchange();
 
         // then
         오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(studentDailyQueryService, never()).findAll(any(), any(), any(), any());
+        verify(studentDailyQueryService, never()).findAll(any(), any(), any());
     }
 
     @Test
@@ -202,36 +200,13 @@ class ClassSessionControllerTest {
         // when
         RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
                 7L,
-                "date=2026-08-17&memberPassProductId=42",
+                "date=2026-08-17",
                 "2"
         );
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(studentDailyQueryService, never()).findAll(any(), any(), any(), any());
-    }
-
-    @ParameterizedTest
-    @MethodSource("회원용_목록_수강권_예외")
-    void 회원용_목록의_수강권_예외를_정확한_HTTP_응답으로_직렬화한다(
-            RuntimeException exception,
-            int status,
-            String code,
-            String message
-    ) {
-        // given
-        LocalDate date = LocalDate.of(2026, 8, 17);
-        when(studentDailyQueryService.findAll(1L, 7L, date, 42L)).thenThrow(exception);
-
-        // when
-        RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
-                7L,
-                "date=2026-08-17&memberPassProductId=42",
-                "1"
-        );
-
-        // then
-        오류를_검증한다(result, status, code, message);
+        verify(studentDailyQueryService, never()).findAll(any(), any(), any());
     }
 
     @Test
@@ -239,13 +214,13 @@ class ClassSessionControllerTest {
         // given
         LocalDate from = LocalDate.of(2026, 8, 15);
         LocalDate to = LocalDate.of(2026, 8, 19);
-        when(studentCalendarQueryService.findAll(1L, 7L, from, to, 42L))
+        when(studentCalendarQueryService.findAll(1L, 7L, from, to))
                 .thenReturn(학생용_수업_달력_응답());
 
         // when
         RestTestClient.ResponseSpec result = 학생용_수업_달력을_조회한다(
                 7L,
-                "from=2026-08-15&to=2026-08-19&memberPassProductId=42",
+                "from=2026-08-15&to=2026-08-19",
                 "1"
         );
 
@@ -266,7 +241,7 @@ class ClassSessionControllerTest {
                   }
                 ]
                 """, JsonCompareMode.STRICT);
-        verify(studentCalendarQueryService).findAll(1L, 7L, from, to, 42L);
+        verify(studentCalendarQueryService).findAll(1L, 7L, from, to);
     }
 
     @ParameterizedTest
@@ -277,7 +252,7 @@ class ClassSessionControllerTest {
 
         // then
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
-        verify(studentCalendarQueryService, never()).findAll(any(), any(), any(), any(), any());
+        verify(studentCalendarQueryService, never()).findAll(any(), any(), any(), any());
     }
 
     @Test
@@ -285,13 +260,13 @@ class ClassSessionControllerTest {
         // given
         LocalDate from = LocalDate.of(2026, 8, 19);
         LocalDate to = LocalDate.of(2026, 8, 15);
-        when(studentCalendarQueryService.findAll(1L, 7L, from, to, 42L))
+        when(studentCalendarQueryService.findAll(1L, 7L, from, to))
                 .thenThrow(new ClassitdaException(CommonErrorCode.INVALID_INPUT));
 
         // when
         RestTestClient.ResponseSpec result = 학생용_수업_달력을_조회한다(
                 7L,
-                "from=2026-08-19&to=2026-08-15&memberPassProductId=42",
+                "from=2026-08-19&to=2026-08-15",
                 "1"
         );
 
@@ -304,12 +279,12 @@ class ClassSessionControllerTest {
         // when
         RestTestClient.ResponseSpec result = client.get()
                 .uri("/api/studios/7/class-sessions/student/calendar"
-                        + "?from=2026-08-15&to=2026-08-19&memberPassProductId=42")
+                        + "?from=2026-08-15&to=2026-08-19")
                 .exchange();
 
         // then
         오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(studentCalendarQueryService, never()).findAll(any(), any(), any(), any(), any());
+        verify(studentCalendarQueryService, never()).findAll(any(), any(), any(), any());
     }
 
     @Test
@@ -317,37 +292,13 @@ class ClassSessionControllerTest {
         // when
         RestTestClient.ResponseSpec result = 학생용_수업_달력을_조회한다(
                 7L,
-                "from=2026-08-15&to=2026-08-19&memberPassProductId=42",
+                "from=2026-08-15&to=2026-08-19",
                 "2"
         );
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(studentCalendarQueryService, never()).findAll(any(), any(), any(), any(), any());
-    }
-
-    @ParameterizedTest
-    @MethodSource("회원용_목록_수강권_예외")
-    void 학생용_달력의_수강권_예외를_정확한_HTTP_응답으로_직렬화한다(
-            RuntimeException exception,
-            int status,
-            String code,
-            String message
-    ) {
-        // given
-        LocalDate from = LocalDate.of(2026, 8, 15);
-        LocalDate to = LocalDate.of(2026, 8, 19);
-        when(studentCalendarQueryService.findAll(1L, 7L, from, to, 42L)).thenThrow(exception);
-
-        // when
-        RestTestClient.ResponseSpec result = 학생용_수업_달력을_조회한다(
-                7L,
-                "from=2026-08-15&to=2026-08-19&memberPassProductId=42",
-                "1"
-        );
-
-        // then
-        오류를_검증한다(result, status, code, message);
+        verify(studentCalendarQueryService, never()).findAll(any(), any(), any(), any());
     }
 
     @Test
@@ -819,10 +770,8 @@ class ClassSessionControllerTest {
 
     private static Stream<Arguments> 유효하지_않은_회원용_목록_쿼리() {
         return Stream.of(
-                Arguments.of("memberPassProductId=42"),
-                Arguments.of("date=2026-08-17"),
-                Arguments.of("date=invalid&memberPassProductId=42"),
-                Arguments.of("date=2026-08-17&memberPassProductId=0")
+                Arguments.of(""),
+                Arguments.of("date=invalid")
         );
     }
 
@@ -835,12 +784,10 @@ class ClassSessionControllerTest {
 
     private static Stream<Arguments> 유효하지_않은_학생용_달력_쿼리() {
         return Stream.of(
-                Arguments.of("to=2026-08-19&memberPassProductId=42"),
-                Arguments.of("from=2026-08-15&memberPassProductId=42"),
-                Arguments.of("from=2026-08-15&to=2026-08-19"),
-                Arguments.of("from=invalid&to=2026-08-19&memberPassProductId=42"),
-                Arguments.of("from=2026-08-15&to=invalid&memberPassProductId=42"),
-                Arguments.of("from=2026-08-15&to=2026-08-19&memberPassProductId=0")
+                Arguments.of("to=2026-08-19"),
+                Arguments.of("from=2026-08-15"),
+                Arguments.of("from=invalid&to=2026-08-19"),
+                Arguments.of("from=2026-08-15&to=invalid")
         );
     }
 
@@ -884,23 +831,6 @@ class ClassSessionControllerTest {
                         404,
                         "POLICY-001",
                         "운영 정책을 찾을 수 없습니다."
-                )
-        );
-    }
-
-    private static Stream<Arguments> 회원용_목록_수강권_예외() {
-        return Stream.of(
-                Arguments.of(
-                        new PassProductException(PassProductErrorCode.MEMBER_PASS_PRODUCT_NOT_FOUND),
-                        404,
-                        "PASS_PRODUCT-010",
-                        "보유 수강권을 찾을 수 없습니다."
-                ),
-                Arguments.of(
-                        new PassProductException(PassProductErrorCode.MEMBER_PASS_PRODUCT_UNAVAILABLE),
-                        409,
-                        "PASS_PRODUCT-011",
-                        "현재 사용할 수 없는 수강권입니다."
                 )
         );
     }

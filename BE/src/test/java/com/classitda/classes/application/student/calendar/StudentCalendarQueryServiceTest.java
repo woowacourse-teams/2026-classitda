@@ -92,7 +92,7 @@ class StudentCalendarQueryServiceTest {
     }
 
     @Test
-    void 선택한_수강권의_출석_완료와_예약_확정과_대기_중_여부를_날짜별로_조회한다() {
+    void 보유한_모든_수강권_종류의_출석_완료와_예약_확정과_대기_중_여부를_조회한다() {
         // given
         Studio studio = 시설을_저장한다(회원을_저장한다("student-calendar-owner"), "학생 달력 시설");
         StudioMembership studentMembership = 소속을_저장한다(
@@ -115,6 +115,12 @@ class StudentCalendarQueryServiceTest {
         MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
                 studentMembership,
                 수강권을_저장한다(studio, ClassForm.GROUP, List.of(yoga)),
+                RANGE_FROM,
+                RANGE_TO
+        );
+        MemberPassProduct pilatesPass = 보유_수강권을_저장한다(
+                studentMembership,
+                수강권을_저장한다(studio, ClassForm.INDIVIDUAL, List.of(pilates)),
                 RANGE_FROM,
                 RANGE_TO
         );
@@ -149,7 +155,7 @@ class StudentCalendarQueryServiceTest {
         );
         ClassSession otherClassTypeSession = 수업을_저장한다(
                 studio, instructorMembership, pilates, "다른 종류", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(15, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 19).atTime(15, 0), ClassSessionStatus.OPENED
         );
         ClassSession otherClassFormSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "다른 형태", ClassForm.INDIVIDUAL,
@@ -175,7 +181,7 @@ class StudentCalendarQueryServiceTest {
         대기를_저장한다(waitingSession, studentMembership, WaitingStatus.WAITING);
         대기를_저장한다(offeredSession, studentMembership, WaitingStatus.OFFERED);
         예약을_저장한다(canceledSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
-        예약을_저장한다(otherClassTypeSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
+        예약을_저장한다(otherClassTypeSession, studentMembership, pilatesPass, ReservationStatus.RESERVED);
         예약을_저장한다(otherClassFormSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
         예약을_저장한다(otherMemberSession, otherStudentMembership, null, ReservationStatus.RESERVED);
         예약을_저장한다(outOfRangeSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
@@ -188,17 +194,17 @@ class StudentCalendarQueryServiceTest {
                 studentMembership.getMember().getId(),
                 studio.getId(),
                 RANGE_FROM,
-                RANGE_TO,
-                memberPassProduct.getId()
+                RANGE_TO
         );
         long queryCount = statistics.getPrepareStatementCount();
 
         // then
         assertThat(summaries).containsExactly(
                 new StudentCalendarSummary(LocalDate.of(2026, 8, 16), true, false, false),
-                new StudentCalendarSummary(LocalDate.of(2026, 8, 18), false, true, true)
+                new StudentCalendarSummary(LocalDate.of(2026, 8, 18), false, true, true),
+                new StudentCalendarSummary(LocalDate.of(2026, 8, 19), false, true, false)
         );
-        assertThat(queryCount).isEqualTo(5L);
+        assertThat(queryCount).isEqualTo(4L);
     }
 
     @Test
@@ -245,8 +251,7 @@ class StudentCalendarQueryServiceTest {
                 studentMembership.getMember().getId(),
                 studio.getId(),
                 RANGE_FROM,
-                RANGE_TO,
-                memberPassProduct.getId()
+                RANGE_TO
         );
 
         // then
@@ -267,7 +272,7 @@ class StudentCalendarQueryServiceTest {
                 SystemRole.STUDENT
         );
         ClassType classType = 수업_종류를_저장한다(studio, "빈 달력 요가");
-        MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
+        보유_수강권을_저장한다(
                 studentMembership,
                 수강권을_저장한다(studio, ClassForm.GROUP, List.of(classType)),
                 to.plusDays(1),
@@ -282,8 +287,7 @@ class StudentCalendarQueryServiceTest {
                 studentMembership.getMember().getId(),
                 studio.getId(),
                 from,
-                to,
-                memberPassProduct.getId()
+                to
         );
         long queryCount = statistics.getPrepareStatementCount();
 
@@ -294,13 +298,12 @@ class StudentCalendarQueryServiceTest {
 
     @ParameterizedTest
     @MethodSource("잘못된_조회_조건")
-    void 날짜_범위나_보유_수강권_ID가_올바르지_않으면_조회할_수_없다(
+    void 날짜_범위가_올바르지_않으면_조회할_수_없다(
             LocalDate from,
-            LocalDate to,
-            Long memberPassProductId
+            LocalDate to
     ) {
         // when / then
-        assertThatThrownBy(() -> queryService.findAll(1L, 1L, from, to, memberPassProductId))
+        assertThatThrownBy(() -> queryService.findAll(1L, 1L, from, to))
                 .isInstanceOfSatisfying(ClassitdaException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(CommonErrorCode.INVALID_INPUT));
     }
@@ -466,13 +469,11 @@ class StudentCalendarQueryServiceTest {
     private static Stream<Arguments> 잘못된_조회_조건() {
         LocalDate from = LocalDate.of(2026, 8, 1);
         return Stream.of(
-                Arguments.of(null, from, 1L),
-                Arguments.of(from, null, 1L),
-                Arguments.of(from.plusDays(1), from, 1L),
-                Arguments.of(from, from.plusDays(42), 1L),
-                Arguments.of(LocalDate.MAX, LocalDate.MAX, 1L),
-                Arguments.of(from, from, null),
-                Arguments.of(from, from, 0L)
+                Arguments.of(null, from),
+                Arguments.of(from, null),
+                Arguments.of(from.plusDays(1), from),
+                Arguments.of(from, from.plusDays(42)),
+                Arguments.of(LocalDate.MAX, LocalDate.MAX)
         );
     }
 
