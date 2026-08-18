@@ -317,15 +317,11 @@ public interface ClassSessionControllerApi {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "시설 또는 운영 정책을 찾을 수 없습니다.",
+                    description = "시설을 찾을 수 없습니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(name = "시설 없음", value = """
-                                            {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
-                                    @ExampleObject(name = "운영 정책 없음", value = """
-                                            {"code":"POLICY-001","message":"운영 정책을 찾을 수 없습니다."}""")
-                            }
+                            examples = @ExampleObject(name = "시설 없음", value = """
+                                    {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}""")
                     )
             )
     })
@@ -355,10 +351,10 @@ public interface ClassSessionControllerApi {
 
                     ### 집계 기준
 
-                    - SCHEDULED_OPEN과 SCHEDULED_CLOSED는 scheduledCount로 합산합니다.
-                    - COMPLETED는 completedCount로 집계합니다.
+                    - SCHEDULED_OPEN 또는 SCHEDULED_CLOSED 수업이 하나 이상 있으면 scheduled가 true입니다.
+                    - COMPLETED 수업이 하나 이상 있으면 completed가 true입니다.
                     - IN_PROGRESS와 CANCELED는 응답에서 제외합니다.
-                    - mineScheduledCount와 mineCompletedCount는 요청자가 담당하는 수업만 집계합니다.
+                    - mineScheduled와 mineCompleted는 요청자가 담당하는 수업이 하나 이상 있을 때 true입니다.
 
                     ### local Swagger 테스트 데이터
 
@@ -366,14 +362,14 @@ public interface ClassSessionControllerApi {
                     - 시설 ID: 1
                     - from: 로컬 애플리케이션을 시작한 날짜의 전날
                     - to: 로컬 애플리케이션을 시작한 날짜의 다음 날
-                    - 전날은 completedCount=2, mineCompletedCount=1입니다.
-                    - 다음 날은 scheduledCount=6, mineScheduledCount=5입니다.
+                    - 전날은 completed=true, mineCompleted=true입니다.
+                    - 다음 날은 scheduled=true, mineScheduled=true입니다.
                     """
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "예정 또는 완료 수업이 있는 날짜별 집계를 반환합니다.",
+                    description = "예정 또는 완료 수업이 있는 날짜별 존재 여부를 반환합니다.",
                     content = @Content(array = @ArraySchema(
                             schema = @Schema(implementation = InstructorCalendarResponse.class)
                     ))

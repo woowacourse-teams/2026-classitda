@@ -2,7 +2,7 @@ package com.classitda.classes.domain.repository;
 
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.repository.projection.ClassSessionCalendarProjection;
+import com.classitda.classes.domain.repository.projection.ClassSessionCalendarSummaryProjection;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -93,19 +93,42 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("rangeEnd") LocalDateTime rangeEnd
     );
 
-    @Query("""
-            SELECT classSession.instructorMembership.id AS instructorMembershipId,
-                   classSession.startAt AS startAt,
-                   classSession.endAt AS endAt,
-                   classSession.status AS sessionStatus
-            FROM ClassSession classSession
-            WHERE classSession.studioId = :studioId
-              AND classSession.startAt >= :rangeStart
-              AND classSession.startAt < :rangeEnd
-            """)
-    List<ClassSessionCalendarProjection> findCalendarForInstructor(
+    @Query(value = """
+            SELECT DATE(class_session.start_at) AS date,
+                   MAX(CASE
+                           WHEN class_session.start_at > :now THEN 1
+                           ELSE 0
+                       END) AS scheduled,
+                   MAX(CASE
+                           WHEN class_session.end_at <= :now THEN 1
+                           ELSE 0
+                       END) AS completed,
+                   MAX(CASE
+                           WHEN class_session.start_at > :now
+                               AND class_session.instructor_membership_id = :requesterMembershipId
+                               THEN 1
+                           ELSE 0
+                       END) AS mineScheduled,
+                   MAX(CASE
+                           WHEN class_session.end_at <= :now
+                               AND class_session.instructor_membership_id = :requesterMembershipId
+                               THEN 1
+                           ELSE 0
+                       END) AS mineCompleted
+            FROM class_session
+            WHERE class_session.studio_id = :studioId
+              AND class_session.start_at >= :rangeStart
+              AND class_session.start_at < :rangeEnd
+              AND class_session.status <> 'CANCELED'
+            GROUP BY DATE(class_session.start_at)
+            HAVING scheduled = 1 OR completed = 1
+            ORDER BY date ASC
+            """, nativeQuery = true)
+    List<ClassSessionCalendarSummaryProjection> findCalendarSummaryForInstructor(
             @Param("studioId") Long studioId,
+            @Param("requesterMembershipId") Long requesterMembershipId,
             @Param("rangeStart") LocalDateTime rangeStart,
-            @Param("rangeEnd") LocalDateTime rangeEnd
+            @Param("rangeEnd") LocalDateTime rangeEnd,
+            @Param("now") LocalDateTime now
     );
 }

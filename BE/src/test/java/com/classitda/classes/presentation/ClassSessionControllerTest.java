@@ -328,7 +328,7 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 강사용_수업_달력을_조회하면_200과_날짜별_집계를_반환하고_조회_서비스에_위임한다() {
+    void 강사용_수업_달력을_조회하면_200과_날짜별_수업_존재_여부를_반환하고_조회_서비스에_위임한다() {
         // given
         LocalDate from = LocalDate.of(2026, 8, 15);
         LocalDate to = LocalDate.of(2026, 8, 19);
@@ -347,17 +347,17 @@ class ClassSessionControllerTest {
                 [
                   {
                     "date": "2026-08-16",
-                    "scheduledCount": 0,
-                    "completedCount": 2,
-                    "mineScheduledCount": 0,
-                    "mineCompletedCount": 1
+                    "scheduled": false,
+                    "completed": true,
+                    "mineScheduled": false,
+                    "mineCompleted": true
                   },
                   {
                     "date": "2026-08-18",
-                    "scheduledCount": 6,
-                    "completedCount": 0,
-                    "mineScheduledCount": 5,
-                    "mineCompletedCount": 0
+                    "scheduled": true,
+                    "completed": false,
+                    "mineScheduled": true,
+                    "mineCompleted": false
                   }
                 ]
                 """, JsonCompareMode.STRICT);
@@ -809,17 +809,17 @@ class ClassSessionControllerTest {
         return List.of(
                 new InstructorCalendarSummary(
                         LocalDate.of(2026, 8, 16),
-                        0,
-                        2,
-                        0,
-                        1
+                        false,
+                        true,
+                        false,
+                        true
                 ),
                 new InstructorCalendarSummary(
                         LocalDate.of(2026, 8, 18),
-                        6,
-                        0,
-                        5,
-                        0
+                        true,
+                        false,
+                        true,
+                        false
                 )
         );
     }

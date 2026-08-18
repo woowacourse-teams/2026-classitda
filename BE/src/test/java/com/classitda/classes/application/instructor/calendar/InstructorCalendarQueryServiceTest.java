@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
-import com.classitda.classes.application.instructor.InstructorSessionStatusResolver;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionStatus;
@@ -26,7 +25,6 @@ import com.classitda.studio.domain.Permission;
 import com.classitda.studio.domain.PermissionCode;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
-import com.classitda.studio.domain.StudioPolicy;
 import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.StudioRolePermission;
 import com.classitda.studio.domain.SystemRole;
@@ -61,8 +59,7 @@ import org.springframework.test.context.TestPropertySource;
 @Import({
         InstructorCalendarQueryService.class,
         InstructorSessionAccessReader.class,
-        InstructorCalendarScheduleReader.class,
-        InstructorSessionStatusResolver.class,
+        InstructorCalendarSummaryReader.class,
         InstructorCalendarQueryServiceTest.FixedClockConfig.class
 })
 @MySqlRepositoryTest
@@ -104,7 +101,7 @@ class InstructorCalendarQueryServiceTest {
     }
 
     @Test
-    void 대표는_예정과_완료_수업을_날짜별로_집계하고_진행과_취소만_있는_날짜는_생략한다() {
+    void 대표는_예정과_완료_수업_존재_여부를_날짜별로_조회하고_진행과_취소만_있는_날짜는_생략한다() {
         // given
         Member owner = 회원을_저장한다("calendar-summary-owner");
         Studio studio = 시설을_저장한다(owner, "달력 요약 시설");
@@ -121,8 +118,6 @@ class InstructorCalendarQueryServiceTest {
                 MembershipStatus.ACTIVE
         );
         ClassType classType = 수업_종류를_저장한다(studio, "달력 필라테스");
-        정책을_저장한다(studio, 30);
-
         ClassSession completedSession = 수업을_저장한다(
                 studio,
                 ownerMembership,
@@ -197,24 +192,24 @@ class InstructorCalendarQueryServiceTest {
         assertThat(summaries).containsExactly(
                 new InstructorCalendarSummary(
                         LocalDate.of(2026, 8, 16),
-                        0,
-                        1,
-                        0,
-                        1
+                        false,
+                        true,
+                        false,
+                        true
                 ),
                 new InstructorCalendarSummary(
                         LocalDate.of(2026, 8, 18),
-                        2,
-                        0,
-                        1,
-                        0
+                        true,
+                        false,
+                        true,
+                        false
                 )
         );
-        assertThat(queryCount).isEqualTo(5L);
+        assertThat(queryCount).isEqualTo(4L);
     }
 
     @Test
-    void 일반_강사는_시설_전체와_본인_수업_집계를_함께_조회한다() {
+    void 일반_강사는_시설_전체와_본인_수업_존재_여부를_함께_조회한다() {
         // given
         Member owner = 회원을_저장한다("calendar-own-owner");
         Studio studio = 시설을_저장한다(owner, "강사 본인 달력 시설");
@@ -234,7 +229,6 @@ class InstructorCalendarQueryServiceTest {
                 MembershipStatus.ACTIVE
         );
         ClassType classType = 수업_종류를_저장한다(studio, "강사 달력 요가");
-        정책을_저장한다(studio, 30);
         수업을_저장한다(
                 studio,
                 instructorMembership,
@@ -265,15 +259,15 @@ class InstructorCalendarQueryServiceTest {
         // then
         assertThat(summaries).containsExactly(new InstructorCalendarSummary(
                 LocalDate.of(2026, 8, 18),
-                2,
-                0,
-                1,
-                0
+                true,
+                false,
+                true,
+                false
         ));
     }
 
     @Test
-    void 전체_관리_권한자는_시설_전체_수업을_집계한다() {
+    void 전체_관리_권한자는_시설_전체_수업_존재_여부를_조회한다() {
         // given
         Member owner = 회원을_저장한다("calendar-all-owner");
         Studio studio = 시설을_저장한다(owner, "전체 관리 달력 시설");
@@ -288,7 +282,6 @@ class InstructorCalendarQueryServiceTest {
                 MembershipStatus.ACTIVE
         );
         ClassType classType = 수업_종류를_저장한다(studio, "전체 관리 발레");
-        정책을_저장한다(studio, 30);
         수업을_저장한다(
                 studio,
                 instructorMembership,
@@ -311,15 +304,15 @@ class InstructorCalendarQueryServiceTest {
         // then
         assertThat(summaries).containsExactly(new InstructorCalendarSummary(
                 LocalDate.of(2026, 8, 18),
-                1,
-                0,
-                0,
-                0
+                true,
+                false,
+                false,
+                false
         ));
     }
 
     @Test
-    void 전체_관리_권한자도_시설_전체와_본인_수업_집계를_함께_조회한다() {
+    void 전체_관리_권한자도_시설_전체와_본인_수업_존재_여부를_함께_조회한다() {
         // given
         Member owner = 회원을_저장한다("calendar-all-mine-owner");
         Studio studio = 시설을_저장한다(owner, "전체 권한 본인 달력 시설");
@@ -339,7 +332,6 @@ class InstructorCalendarQueryServiceTest {
                 MembershipStatus.ACTIVE
         );
         ClassType classType = 수업_종류를_저장한다(studio, "전체 권한 스피닝");
-        정책을_저장한다(studio, 30);
         수업을_저장한다(
                 studio,
                 managerMembership,
@@ -370,10 +362,10 @@ class InstructorCalendarQueryServiceTest {
         // then
         assertThat(summaries).containsExactly(new InstructorCalendarSummary(
                 LocalDate.of(2026, 8, 18),
-                2,
-                0,
-                1,
-                0
+                true,
+                false,
+                true,
+                false
         ));
     }
 
@@ -575,16 +567,6 @@ class InstructorCalendarQueryServiceTest {
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())
         );
         return classSession;
-    }
-
-    private void 정책을_저장한다(Studio studio, int reservationCloseMinutesBefore) {
-        entityManager.persist(StudioPolicy.builder()
-                .studio(studio)
-                .reservationCloseMinutesBefore(reservationCloseMinutesBefore)
-                .freeCancelMinutesBefore(60)
-                .waitingOfferResponseMinutes(10)
-                .build());
-        entityManager.flush();
     }
 
     private void 예약을_저장한다(
