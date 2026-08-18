@@ -11,6 +11,9 @@ import static org.mockito.Mockito.when;
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
+import com.classitda.classes.application.instructor.InstructorSessionStatus;
+import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
+import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
 import com.classitda.classes.application.student.StudentSessionQueryService;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSessionStatus;
@@ -61,6 +64,9 @@ class ClassSessionControllerTest {
 
     @MockitoBean
     private StudentSessionQueryService studentSessionQueryService;
+
+    @MockitoBean
+    private InstructorDailyQueryService instructorDailyQueryService;
 
     @MockitoBean
     private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
@@ -171,7 +177,7 @@ class ClassSessionControllerTest {
     void 회원용_목록에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions?date=2026-08-17&memberPassProductId=42")
+                .uri("/api/studios/7/class-sessions/student/daily?date=2026-08-17&memberPassProductId=42")
                 .exchange();
 
         // then
@@ -209,6 +215,104 @@ class ClassSessionControllerTest {
         RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
                 7L,
                 "date=2026-08-17&memberPassProductId=42",
+                "1"
+        );
+
+        // then
+        오류를_검증한다(result, status, code, message);
+    }
+
+    @Test
+    void 강사용_일별_수업_목록을_조회하면_200과_목록을_반환하고_조회_서비스에_위임한다() {
+        // given
+        LocalDate date = LocalDate.of(2026, 8, 17);
+        when(instructorDailyQueryService.findAll(1L, 7L, date))
+                .thenReturn(List.of(강사용_일별_수업_응답()));
+
+        // when
+        RestTestClient.ResponseSpec result = 강사용_일별_수업_목록을_조회한다(
+                7L,
+                "date=2026-08-17",
+                "1"
+        );
+
+        // then
+        result.expectStatus().isOk().expectBody().json("""
+                [
+                  {
+                    "id": 11,
+                    "instructorMembershipId": 12,
+                    "instructorName": "김강사",
+                    "classForm": "GROUP",
+                    "classType": {"id": 3, "name": "요가"},
+                    "className": "저녁 요가",
+                    "description": "3층 A룸에서 진행합니다.",
+                    "capacity": 12,
+                    "reservedCount": 8,
+                    "waitingCount": 2,
+                    "startAt": "2026-08-17T20:00:00",
+                    "endAt": "2026-08-17T21:00:00",
+                    "status": "SCHEDULED_OPEN",
+                    "mine": true
+                  }
+                ]
+                """, JsonCompareMode.STRICT);
+        verify(instructorDailyQueryService).findAll(1L, 7L, date);
+    }
+
+    @ParameterizedTest
+    @MethodSource("유효하지_않은_강사용_일별_목록_쿼리")
+    void 강사용_일별_목록의_날짜가_유효하지_않으면_COMMON_001을_반환한다(String query) {
+        // when
+        RestTestClient.ResponseSpec result = 강사용_일별_수업_목록을_조회한다(7L, query, "1");
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(instructorDailyQueryService, never()).findAll(any(), any(), any());
+    }
+
+    @Test
+    void 강사용_일별_목록에서_버전_헤더가_없으면_API_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri("/api/studios/7/class-sessions/instructor/daily?date=2026-08-17")
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        verify(instructorDailyQueryService, never()).findAll(any(), any(), any());
+    }
+
+    @Test
+    void 강사용_일별_목록에서_지원하지_않는_버전이면_API_002를_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = 강사용_일별_수업_목록을_조회한다(
+                7L,
+                "date=2026-08-17",
+                "2"
+        );
+
+        // then
+        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(instructorDailyQueryService, never()).findAll(any(), any(), any());
+    }
+
+    @ParameterizedTest
+    @MethodSource("강사용_일별_목록_조회_예외")
+    void 강사용_일별_목록의_조회_예외를_정확한_HTTP_응답으로_직렬화한다(
+            RuntimeException exception,
+            int status,
+            String code,
+            String message
+    ) {
+        // given
+        LocalDate date = LocalDate.of(2026, 8, 17);
+        when(instructorDailyQueryService.findAll(1L, 7L, date)).thenThrow(exception);
+
+        // when
+        RestTestClient.ResponseSpec result = 강사용_일별_수업_목록을_조회한다(
+                7L,
+                "date=2026-08-17",
                 "1"
         );
 
@@ -354,7 +458,18 @@ class ClassSessionControllerTest {
             String version
     ) {
         return client.get()
-                .uri("/api/studios/%d/class-sessions?%s".formatted(studioId, query))
+                .uri("/api/studios/%d/class-sessions/student/daily?%s".formatted(studioId, query))
+                .header("X-API-Version", version)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec 강사용_일별_수업_목록을_조회한다(
+            Long studioId,
+            String query,
+            String version
+    ) {
+        return client.get()
+                .uri("/api/studios/%d/class-sessions/instructor/daily?%s".formatted(studioId, query))
                 .header("X-API-Version", version)
                 .exchange();
     }
@@ -455,6 +570,48 @@ class ClassSessionControllerTest {
         );
     }
 
+    private static Stream<Arguments> 유효하지_않은_강사용_일별_목록_쿼리() {
+        return Stream.of(
+                Arguments.of(""),
+                Arguments.of("date=invalid")
+        );
+    }
+
+    private static Stream<Arguments> 강사용_일별_목록_조회_예외() {
+        return Stream.of(
+                Arguments.of(
+                        new StudioException(StudioErrorCode.NOT_MEMBERSHIP),
+                        403,
+                        "MEMBERSHIP-001",
+                        "해당 시설의 소속이 아닙니다."
+                ),
+                Arguments.of(
+                        new StudioException(StudioErrorCode.MEMBERSHIP_INACTIVE),
+                        403,
+                        "MEMBERSHIP-002",
+                        "이용이 정지된 소속입니다."
+                ),
+                Arguments.of(
+                        new StudioException(StudioErrorCode.PERMISSION_DENIED),
+                        403,
+                        "PERMISSION-001",
+                        "이 작업을 수행할 권한이 없습니다."
+                ),
+                Arguments.of(
+                        new StudioException(StudioErrorCode.NOT_FOUND),
+                        404,
+                        "STUDIO-002",
+                        "시설을 찾을 수 없습니다."
+                ),
+                Arguments.of(
+                        new StudioException(StudioErrorCode.POLICY_NOT_FOUND),
+                        404,
+                        "POLICY-001",
+                        "운영 정책을 찾을 수 없습니다."
+                )
+        );
+    }
+
     private static Stream<Arguments> 회원용_목록_수강권_예외() {
         return Stream.of(
                 Arguments.of(
@@ -505,6 +662,26 @@ class ClassSessionControllerTest {
                 LocalDateTime.of(2026, 8, 17, 20, 0),
                 LocalDateTime.of(2026, 8, 17, 21, 0),
                 MemberClassSessionBookingStatus.AVAILABLE
+        );
+    }
+
+    private static InstructorDailySessionView 강사용_일별_수업_응답() {
+        return new InstructorDailySessionView(
+                11L,
+                12L,
+                "김강사",
+                ClassForm.GROUP,
+                3L,
+                "요가",
+                "저녁 요가",
+                "3층 A룸에서 진행합니다.",
+                12,
+                8,
+                2,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                LocalDateTime.of(2026, 8, 17, 21, 0),
+                InstructorSessionStatus.SCHEDULED_OPEN,
+                true
         );
     }
 }

@@ -3,9 +3,12 @@ package com.classitda.classes.presentation;
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
 import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
+import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.student.StudentSessionQueryService;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
+import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
+import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
 import com.classitda.classes.presentation.dto.MemberClassSessionListRequest;
 import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
 import jakarta.validation.Valid;
@@ -29,6 +32,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
     private final ClassSessionCommandService classSessionCommandService;
     private final ClassSessionQueryService classSessionQueryService;
     private final StudentSessionQueryService studentSessionQueryService;
+    private final InstructorDailyQueryService instructorDailyQueryService;
 
     @Override
     @PostMapping(version = "1")
@@ -42,7 +46,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
     }
 
     @Override
-    @GetMapping(version = "1")
+    @GetMapping(path = "/student/daily", version = "1")
     public List<MemberClassSessionResponse> findAllForStudent(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
@@ -54,6 +58,18 @@ public class ClassSessionController implements ClassSessionControllerApi {
                 request.date(),
                 request.memberPassProductId()
         );
+    }
+
+    @Override
+    @GetMapping(path = "/instructor/daily", version = "1")
+    public List<InstructorDailySessionResponse> findAllDailyForInstructor(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @Valid @ModelAttribute InstructorDailySessionListRequest request
+    ) {
+        return instructorDailyQueryService.findAll(memberId, studioId, request.date()).stream()
+                .map(InstructorDailySessionResponse::from)
+                .toList();
     }
 
     @Override

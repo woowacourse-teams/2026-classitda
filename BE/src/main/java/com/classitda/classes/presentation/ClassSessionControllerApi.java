@@ -2,6 +2,8 @@ package com.classitda.classes.presentation;
 
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
+import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
+import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
 import com.classitda.classes.presentation.dto.MemberClassSessionListRequest;
 import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
 import com.classitda.common.exception.ErrorResponse;
@@ -20,7 +22,7 @@ import org.springframework.http.ResponseEntity;
 import org.springdoc.core.annotations.ParameterObject;
 
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "수업 회차", description = "시설의 수업 회차를 등록하고 회원에게 공개되는 수업 정보를 조회합니다.")
+@Tag(name = "수업 회차", description = "시설의 수업 회차를 등록하고 회원·강사용 수업 정보를 조회합니다.")
 public interface ClassSessionControllerApi {
 
     @Operation(
@@ -234,6 +236,104 @@ public interface ClassSessionControllerApi {
             Long studioId,
             @ParameterObject
             MemberClassSessionListRequest request
+    );
+
+    @Operation(
+            summary = "강사용 일별 수업 목록 조회",
+            description = """
+                    ### 조회 기준
+
+                    - date에 시작하는 시설 전체 수업 회차를 시작 일시와 회차 ID 오름차순으로 조회합니다.
+                    - 날짜와 현재 시각은 한국 시간(Asia/Seoul)을 기준으로 합니다.
+                    - 하루 전체 타임라인을 반환하므로 페이지네이션을 적용하지 않으며, 수업이 없으면 빈 배열을 반환합니다.
+
+                    ### 조회 권한
+
+                    - 같은 시설의 활성 강사, 대표, 본인 수업 관리 권한자, 전체 수업 관리 권한자가 조회할 수 있습니다.
+                    - 학생, 권한이 없는 직원, 비활성 소속은 조회할 수 없습니다.
+
+                    ### 응답 범위
+
+                    - 담당 강사, 수업 종류, 예약·대기 인원, 수업 상태를 반환합니다.
+                    - mine은 요청자가 담당하는 수업이면 true입니다.
+                    - 수업 상태와 예약·대기 인원은 조회 시점의 정보입니다.
+
+                    ### local Swagger 테스트 데이터
+
+                    - 회원 ID: 3 (강사)
+                    - 시설 ID: 1
+                    - 조회 날짜: 로컬 애플리케이션을 시작한 날짜의 다음 날
+                    - 회차 101~106은 mine=true, 회차 107은 mine=false로 반환됩니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "해당 날짜에 시작하는 시설 전체 수업 목록을 반환합니다.",
+                    content = @Content(array = @ArraySchema(
+                            schema = @Schema(implementation = InstructorDailySessionResponse.class)
+                    ))
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "날짜가 올바르지 않거나 API 버전 헤더가 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "요청 값 오류", value = """
+                                            {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}"""),
+                                    @ExampleObject(name = "버전 헤더 누락", value = """
+                                            {"code":"API-001","message":"X-API-Version 헤더는 필수입니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 버전", value = """
+                                            {"code":"API-002","message":"지원하지 않는 API 버전입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "인증 실패", value = """
+                                    {"code":"AUTH-001","message":"인증이 필요합니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "시설 소속이 아니거나 소속이 비활성 상태이거나 수업 조회 권한이 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code":"MEMBERSHIP-001","message":"해당 시설의 소속이 아닙니다."}"""),
+                                    @ExampleObject(name = "비활성 소속", value = """
+                                            {"code":"MEMBERSHIP-002","message":"이용이 정지된 소속입니다."}"""),
+                                    @ExampleObject(name = "권한 없음", value = """
+                                            {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설 또는 운영 정책을 찾을 수 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "시설 없음", value = """
+                                            {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "운영 정책 없음", value = """
+                                            {"code":"POLICY-001","message":"운영 정책을 찾을 수 없습니다."}""")
+                            }
+                    )
+            )
+    })
+    List<InstructorDailySessionResponse> findAllDailyForInstructor(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            @ParameterObject
+            InstructorDailySessionListRequest request
     );
 
     @Operation(
