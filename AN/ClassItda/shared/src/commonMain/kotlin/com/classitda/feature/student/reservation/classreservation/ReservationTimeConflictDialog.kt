@@ -25,9 +25,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_event_busy
-import androidx.compose.ui.window.Dialog
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -94,8 +94,11 @@ internal fun ReservationTimeConflictDialog(
                 )
 
                 Column(
-                    modifier = Modifier.fillMaxWidth().background(StuColors.SurfaceVariant, AppShape.Card)
-                        .padding(AppSpacing.cardPadding),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(StuColors.SurfaceVariant, AppShape.Card)
+                            .padding(AppSpacing.cardPadding),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
                 ) {
                     Text(text = "겹치는 예약", color = StuColors.TextTertiary, style = MaterialTheme.typography.labelSmall)
@@ -104,8 +107,16 @@ internal fun ReservationTimeConflictDialog(
                         color = StuColors.TextPrimary,
                         style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                     )
-                    Text(text = conflict.dateTimeText, color = StuColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-                    Text(text = conflict.studioName, color = StuColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = conflict.dateTimeText,
+                        color = StuColors.TextSecondary,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        text = conflict.studioName,
+                        color = StuColors.TextSecondary,
+                        style = MaterialTheme.typography.bodySmall,
+                    )
                 }
 
                 Row(

@@ -36,11 +36,17 @@ internal fun ClassReservationRoute(
         onScheduleClick = onScheduleClick,
         onReservationClick = {
             when (val result = viewModel.submitReservation()) {
-                ReservationRequestResult.Success ->
+                ReservationRequestResult.Success -> {
                     onReservationComplete(uiState.classId, requireNotNull(uiState.selectedPassId))
-                is ReservationRequestResult.Failure ->
+                }
+
+                is ReservationRequestResult.Failure -> {
                     onReservationFailure("수업 예약에 실패했습니다.", result.message)
-                is ReservationRequestResult.TimeConflict -> Unit
+                }
+
+                is ReservationRequestResult.TimeConflict -> {
+                    Unit
+                }
             }
         },
     )

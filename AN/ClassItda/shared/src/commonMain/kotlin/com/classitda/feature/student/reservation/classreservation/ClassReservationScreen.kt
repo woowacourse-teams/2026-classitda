@@ -105,7 +105,7 @@ internal fun ClassReservationScreen(
                         text = "선택한 수업",
                         color = StuColors.TextSecondary,
                         style = MaterialTheme.typography.labelLarge,
-                        modifier = Modifier.padding(top = AppSpacing.md)
+                        modifier = Modifier.padding(top = AppSpacing.md),
                     )
 
                     SelectedClassCard(
@@ -352,21 +352,22 @@ private fun ClassPassItem(
     }
 }
 
-private fun highlightedAvailabilityText(text: String) = buildAnnotatedString {
-    val start = text.indexOf("예약 가능")
-    if (start < 0) {
-        append(text)
-        return@buildAnnotatedString
-    }
-    val end = text.indexOf(" |", start).takeIf { it >= 0 } ?: text.length
-    withStyle(SpanStyle(color = StuColors.TextSecondary)) {
-        append(text.substring(0, start))
-        withStyle(SpanStyle(color = StuColors.Green, fontWeight = FontWeight.Medium)) {
-            append(text.substring(start, end))
+private fun highlightedAvailabilityText(text: String) =
+    buildAnnotatedString {
+        val start = text.indexOf("예약 가능")
+        if (start < 0) {
+            append(text)
+            return@buildAnnotatedString
         }
-        append(text.substring(end))
+        val end = text.indexOf(" |", start).takeIf { it >= 0 } ?: text.length
+        withStyle(SpanStyle(color = StuColors.TextSecondary)) {
+            append(text.substring(0, start))
+            withStyle(SpanStyle(color = StuColors.Green, fontWeight = FontWeight.Medium)) {
+                append(text.substring(start, end))
+            }
+            append(text.substring(end))
+        }
     }
-}
 
 @Composable
 private fun ReservationTermsSection(

@@ -1,7 +1,7 @@
 package com.classitda.di.reservation
 
-import com.classitda.data.repository.classreservation.FakeClassReservationRepository
 import com.classitda.data.local.reservation.FakeReservationStore
+import com.classitda.data.repository.classreservation.FakeClassReservationRepository
 import com.classitda.data.repository.reservation.FakeReservationRepository
 import com.classitda.data.repository.waitlist.FakeWaitlistReservationRepository
 import com.classitda.domain.repository.classreservation.ClassReservationRepository

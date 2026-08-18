@@ -45,9 +45,10 @@ internal fun ClassCard(
     Card(
         modifier = modifier.clickable(onClick = onButtonClick),
         shape = AppShape.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = StuColors.White,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = StuColors.White,
+            ),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -78,9 +79,10 @@ internal fun ReservationClassCard(
     Card(
         modifier = modifier,
         shape = AppShape.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = StuColors.White,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = StuColors.White,
+            ),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.md),
@@ -113,9 +115,10 @@ internal fun WaitlistClassCard(
     Card(
         modifier = modifier,
         shape = AppShape.Card,
-        colors = CardDefaults.cardColors(
-            containerColor = StuColors.White,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = StuColors.White,
+            ),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.cardPadding, vertical = AppSpacing.md),
@@ -183,11 +186,12 @@ private fun ReservationInfo(
         verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
     ) {
         ClassStatusLabel(
-            icon = if (leftStudentCount > 0) {
-                Res.drawable.ic_calendar_today
-            } else {
-                Res.drawable.ic_group
-            },
+            icon =
+                if (leftStudentCount > 0) {
+                    Res.drawable.ic_calendar_today
+                } else {
+                    Res.drawable.ic_group
+                },
             text = if (leftStudentCount > 0) "예약 가능" else "대기 가능",
             color = StuColors.TextPrimary,
             modifier = Modifier.align(Alignment.End),
@@ -202,9 +206,7 @@ private fun ReservationInfo(
 }
 
 @Composable
-private fun WaitlistStatus(
-    modifier: Modifier = Modifier,
-) {
+private fun WaitlistStatus(modifier: Modifier = Modifier) {
     ClassStatusLabel(
         icon = Res.drawable.ic_schedule,
         text = "대기 중",

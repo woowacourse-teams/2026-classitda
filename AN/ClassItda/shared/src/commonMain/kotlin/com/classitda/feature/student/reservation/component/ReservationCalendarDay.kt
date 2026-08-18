@@ -37,46 +37,56 @@ internal fun ReservationCalendarDay(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(40.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(40.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
-        val dateModifier = when {
-            isSelected && !isPast -> Modifier.background(
-                StuColors.Green,
-                CircleShape,
-            )
+        val dateModifier =
+            when {
+                isSelected && !isPast -> {
+                    Modifier.background(
+                        StuColors.Green,
+                        CircleShape,
+                    )
+                }
 
-            isToday -> Modifier.border(
-                1.dp,
-                StuColors.Green,
-                CircleShape,
-            )
+                isToday -> {
+                    Modifier.border(
+                        1.dp,
+                        StuColors.Green,
+                        CircleShape,
+                    )
+                }
 
-            else -> Modifier
-        }
+                else -> {
+                    Modifier
+                }
+            }
 
         Box(
-            modifier = Modifier
-                .size(28.dp)
-                .then(dateModifier)
-                .clip(CircleShape)
-                .clickable(
-                    enabled = isCurrentMonth && !isPast,
-                    onClick = onClick,
-                ),
+            modifier =
+                Modifier
+                    .size(28.dp)
+                    .then(dateModifier)
+                    .clip(CircleShape)
+                    .clickable(
+                        enabled = isCurrentMonth && !isPast,
+                        onClick = onClick,
+                    ),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = dayOfMonth.toString(),
-                color = when {
-                    isPast -> StuColors.TextTertiary
-                    isSelected -> StuColors.White
-                    isCurrentMonth -> StuColors.TextPrimary
-                    else -> StuColors.TextTertiary
-                },
+                color =
+                    when {
+                        isPast -> StuColors.TextTertiary
+                        isSelected -> StuColors.White
+                        isCurrentMonth -> StuColors.TextPrimary
+                        else -> StuColors.TextTertiary
+                    },
                 style = MaterialTheme.typography.bodySmall,
             )
         }
@@ -107,9 +117,10 @@ internal fun ReservationCalendarEventDot(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .size(4.dp)
-            .background(color, CircleShape),
+        modifier =
+            modifier
+                .size(4.dp)
+                .background(color, CircleShape),
     )
 }
 

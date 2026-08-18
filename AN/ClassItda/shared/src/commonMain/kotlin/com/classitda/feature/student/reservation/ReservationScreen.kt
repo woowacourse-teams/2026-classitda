@@ -104,9 +104,10 @@ internal fun ReservationScreenContent(
         bottomBar = bottomBar,
     ) { contentPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(contentPadding),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding),
         ) {
             item {
                 ReservationPassSelector(

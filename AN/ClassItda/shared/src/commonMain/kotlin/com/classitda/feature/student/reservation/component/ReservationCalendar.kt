@@ -38,23 +38,26 @@ internal fun ReservationCalendar(
     onTodayClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val displayedMonth = YearMonth(
-        year = year,
-        month = month,
-    )
-    val isPreviousEnabled = year > today.year ||
-        (year == today.year && month > today.month.number)
+    val displayedMonth =
+        YearMonth(
+            year = year,
+            month = month,
+        )
+    val isPreviousEnabled =
+        year > today.year ||
+            (year == today.year && month > today.month.number)
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(StuColors.White)
-            .padding(
-                start = AppSpacing.screenPadding,
-                top = AppSpacing.sm,
-                end = AppSpacing.screenPadding,
-                bottom = AppSpacing.cardPadding,
-            ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(StuColors.White)
+                .padding(
+                    start = AppSpacing.screenPadding,
+                    top = AppSpacing.sm,
+                    end = AppSpacing.screenPadding,
+                    bottom = AppSpacing.cardPadding,
+                ),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
     ) {
         ReservationCalendarHeader(
@@ -70,13 +73,14 @@ internal fun ReservationCalendar(
         ReservationCalendarWeekdayHeader()
 
         if (isMonthMode) {
-            val calendarState = rememberCalendarState(
-                startMonth = displayedMonth,
-                endMonth = displayedMonth,
-                firstVisibleMonth = displayedMonth,
-                firstDayOfWeek = DayOfWeek.MONDAY,
-                outDateStyle = OutDateStyle.EndOfGrid,
-            )
+            val calendarState =
+                rememberCalendarState(
+                    startMonth = displayedMonth,
+                    endMonth = displayedMonth,
+                    firstVisibleMonth = displayedMonth,
+                    firstDayOfWeek = DayOfWeek.MONDAY,
+                    outDateStyle = OutDateStyle.EndOfGrid,
+                )
 
             HorizontalCalendar(
                 state = calendarState,
@@ -91,10 +95,12 @@ internal fun ReservationCalendar(
                         isPast = day.date < today,
                         isSelected = isCurrentMonth && dayOfMonth == selectedDayOfMonth,
                         isToday = day.date == today,
-                        hasConfirmedReservation = isCurrentMonth &&
-                            dayOfMonth in confirmedReservationDays,
-                        hasWaitlistReservation = isCurrentMonth &&
-                            dayOfMonth in waitlistReservationDays,
+                        hasConfirmedReservation =
+                            isCurrentMonth &&
+                                dayOfMonth in confirmedReservationDays,
+                        hasWaitlistReservation =
+                            isCurrentMonth &&
+                                dayOfMonth in waitlistReservationDays,
                         onClick = {
                             onDayClick(dayOfMonth)
                         },
@@ -102,25 +108,28 @@ internal fun ReservationCalendar(
                 },
             )
         } else {
-            val selectedDate = LocalDate(
-                year = year,
-                month = month,
-                day = selectedDayOfMonth,
-            )
-            val weekCalendarState = rememberWeekCalendarState(
-                startDate = displayedMonth.firstDay,
-                endDate = displayedMonth.lastDay,
-                firstVisibleWeekDate = selectedDate,
-                firstDayOfWeek = DayOfWeek.MONDAY,
-            )
+            val selectedDate =
+                LocalDate(
+                    year = year,
+                    month = month,
+                    day = selectedDayOfMonth,
+                )
+            val weekCalendarState =
+                rememberWeekCalendarState(
+                    startDate = displayedMonth.firstDay,
+                    endDate = displayedMonth.lastDay,
+                    firstVisibleWeekDate = selectedDate,
+                    firstDayOfWeek = DayOfWeek.MONDAY,
+                )
 
             WeekCalendar(
                 state = weekCalendarState,
                 userScrollEnabled = false,
                 dayContent = { day ->
                     val dayOfMonth = day.date.day
-                    val isCurrentMonth = day.date.year == year &&
-                        day.date.month.number == month
+                    val isCurrentMonth =
+                        day.date.year == year &&
+                            day.date.month.number == month
 
                     ReservationCalendarDay(
                         dayOfMonth = dayOfMonth,
@@ -128,10 +137,12 @@ internal fun ReservationCalendar(
                         isPast = day.date < today,
                         isSelected = isCurrentMonth && dayOfMonth == selectedDayOfMonth,
                         isToday = day.date == today,
-                        hasConfirmedReservation = isCurrentMonth &&
-                            dayOfMonth in confirmedReservationDays,
-                        hasWaitlistReservation = isCurrentMonth &&
-                            dayOfMonth in waitlistReservationDays,
+                        hasConfirmedReservation =
+                            isCurrentMonth &&
+                                dayOfMonth in confirmedReservationDays,
+                        hasWaitlistReservation =
+                            isCurrentMonth &&
+                                dayOfMonth in waitlistReservationDays,
                         onClick = {
                             onDayClick(dayOfMonth)
                         },

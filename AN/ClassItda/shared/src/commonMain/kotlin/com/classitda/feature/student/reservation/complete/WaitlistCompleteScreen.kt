@@ -194,7 +194,10 @@ private fun WaitlistCompleteSummary(
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
             )
 
-            HorizontalDivider(color = StuColors.Divider, modifier = Modifier.padding(vertical = AppSpacing.cardItemVerticalGap))
+            HorizontalDivider(
+                color = StuColors.Divider,
+                modifier = Modifier.padding(vertical = AppSpacing.cardItemVerticalGap),
+            )
 
             WaitlistSummaryRow(label = "강사", value = reservation.instructorName)
             WaitlistSummaryRow(label = "사용 수강권", value = reservation.classPassName)
@@ -223,8 +226,11 @@ private fun WaitlistSummaryRow(
 @Composable
 private fun WaitlistNoticeCard(modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.fillMaxWidth().background(StuColors.SurfaceVariant, AppShape.Card)
-            .padding(AppSpacing.cardPadding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(StuColors.SurfaceVariant, AppShape.Card)
+                .padding(AppSpacing.cardPadding),
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         Icon(

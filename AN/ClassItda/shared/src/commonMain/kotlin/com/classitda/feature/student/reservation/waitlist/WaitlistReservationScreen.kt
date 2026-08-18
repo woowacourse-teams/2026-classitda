@@ -299,21 +299,22 @@ private fun WaitlistPassSection(
     }
 }
 
-private fun highlightedAvailabilityText(text: String) = buildAnnotatedString {
-    val start = text.indexOf("예약 가능")
-    if (start < 0) {
-        append(text)
-        return@buildAnnotatedString
-    }
-    val end = text.indexOf(" |", start).takeIf { it >= 0 } ?: text.length
-    withStyle(SpanStyle(color = StuColors.TextSecondary)) {
-        append(text.substring(0, start))
-        withStyle(SpanStyle(color = StuColors.Green, fontWeight = FontWeight.Medium)) {
-            append(text.substring(start, end))
+private fun highlightedAvailabilityText(text: String) =
+    buildAnnotatedString {
+        val start = text.indexOf("예약 가능")
+        if (start < 0) {
+            append(text)
+            return@buildAnnotatedString
         }
-        append(text.substring(end))
+        val end = text.indexOf(" |", start).takeIf { it >= 0 } ?: text.length
+        withStyle(SpanStyle(color = StuColors.TextSecondary)) {
+            append(text.substring(0, start))
+            withStyle(SpanStyle(color = StuColors.Green, fontWeight = FontWeight.Medium)) {
+                append(text.substring(start, end))
+            }
+            append(text.substring(end))
+        }
     }
-}
 
 @Composable
 private fun ExpectedWaitingNumber(

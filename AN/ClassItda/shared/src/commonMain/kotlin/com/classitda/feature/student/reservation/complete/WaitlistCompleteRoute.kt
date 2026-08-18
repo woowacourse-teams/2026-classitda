@@ -28,8 +28,9 @@ internal fun WaitlistCompleteRoute(
                 timeText = reservation.timeText,
                 instructorName = reservation.instructorName,
                 roomName = reservation.roomName,
-                classPassName = reservation.classPasses.firstOrNull { it.id == passId }?.name
-                    ?: reservation.classPasses.first().name,
+                classPassName =
+                    reservation.classPasses.firstOrNull { it.id == passId }?.name
+                        ?: reservation.classPasses.first().name,
                 remainingCountText = "2회",
             ),
         onCloseClick = onCloseClick,

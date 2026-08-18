@@ -35,8 +35,11 @@ internal fun ReservationRequestErrorScreen(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.fillMaxSize().background(StuColors.Background)
-            .padding(horizontal = AppSpacing.screenPadding),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(StuColors.Background)
+                .padding(horizontal = AppSpacing.screenPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.weight(1f))

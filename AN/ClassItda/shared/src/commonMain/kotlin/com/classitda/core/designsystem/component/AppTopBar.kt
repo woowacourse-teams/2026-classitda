@@ -26,11 +26,12 @@ fun TopBar(
     val bgColor: Color = if (hasBackground) StuColors.White else StuColors.Background
 
     Box(
-        modifier = modifier
-            .height(52.dp)
-            .fillMaxWidth()
-            .background(bgColor)
-            .padding(start = AppSpacing.screenPadding),
+        modifier =
+            modifier
+                .height(52.dp)
+                .fillMaxWidth()
+                .background(bgColor)
+                .padding(start = AppSpacing.screenPadding),
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(

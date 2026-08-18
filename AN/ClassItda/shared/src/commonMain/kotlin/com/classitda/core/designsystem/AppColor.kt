@@ -35,7 +35,6 @@ object AppColor {
 }
 
 object StuColors {
-
     val Black = AppColor.Black
 
     val Gray900 = AppColor.Gray900

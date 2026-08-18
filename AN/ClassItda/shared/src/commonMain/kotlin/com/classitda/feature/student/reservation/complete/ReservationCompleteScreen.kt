@@ -198,7 +198,10 @@ private fun ReservationSummaryCard(
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
             )
 
-            HorizontalDivider(color = StuColors.Divider, modifier = Modifier.padding(vertical = AppSpacing.cardItemVerticalGap))
+            HorizontalDivider(
+                color = StuColors.Divider,
+                modifier = Modifier.padding(vertical = AppSpacing.cardItemVerticalGap),
+            )
 
             ReservationSummaryRow(
                 label = "강사",
