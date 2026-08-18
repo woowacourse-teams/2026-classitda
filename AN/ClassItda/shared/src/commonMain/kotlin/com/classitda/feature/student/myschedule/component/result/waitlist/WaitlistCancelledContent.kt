@@ -20,21 +20,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_event_busy
+import classitda.shared.generated.resources.my_schedule_cancellation_history
 import classitda.shared.generated.resources.my_schedule_cancelled_at
 import classitda.shared.generated.resources.my_schedule_class_information
 import classitda.shared.generated.resources.my_schedule_class_name
 import classitda.shared.generated.resources.my_schedule_date_time
 import classitda.shared.generated.resources.my_schedule_instructor
-import classitda.shared.generated.resources.my_schedule_instructor_name
-import classitda.shared.generated.resources.my_schedule_location
-import classitda.shared.generated.resources.my_schedule_waitlist_auto_released
-import classitda.shared.generated.resources.my_schedule_waitlist_cancellation_history
 import classitda.shared.generated.resources.my_schedule_waitlist_cancelled_description
 import classitda.shared.generated.resources.my_schedule_waitlist_cancelled_position
 import classitda.shared.generated.resources.my_schedule_waitlist_cancelled_title
 import classitda.shared.generated.resources.my_schedule_waitlist_number
-import classitda.shared.generated.resources.my_schedule_waitlist_progress_status
-import classitda.shared.generated.resources.my_schedule_waitlist_ticket_not_deducted
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -43,17 +38,14 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.component.result.common.MyScheduleResultInformationRow
 import com.classitda.feature.student.myschedule.component.result.common.MyScheduleResultSectionTitle
-import com.classitda.feature.student.myschedule.contract.UpcomingScheduleItemUiModel
-import com.classitda.feature.student.myschedule.preview.waitlistCancelledPreviewFixture
+import com.classitda.feature.student.myschedule.contract.WaitlistCancellationResultUiModel
+import com.classitda.feature.student.myschedule.preview.WaitlistCancellationResultPreviewFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun WaitlistCancelledContent(
-    waitlist: UpcomingScheduleItemUiModel.Waitlist,
-    dateLabel: String,
-    timeRangeLabel: String,
-    cancelledAtLabel: String,
+    result: WaitlistCancellationResultUiModel,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -63,29 +55,14 @@ internal fun WaitlistCancelledContent(
                 .background(StuColors.Background),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
     ) {
-        item {
-            WaitlistCancelledHero()
-        }
-        item {
-            WaitlistCancelledClassInformation(
-                waitlist = waitlist,
-                dateLabel = dateLabel,
-                timeRangeLabel = timeRangeLabel,
-            )
-        }
-        item {
-            WaitlistCancellationHistory(
-                position = waitlist.position,
-                cancelledAtLabel = cancelledAtLabel,
-            )
-        }
+        item { WaitlistCancelledHero() }
+        item { WaitlistCancelledClassInformation(result = result) }
+        item { WaitlistCancellationHistory(result = result) }
     }
 }
 
 @Composable
 private fun WaitlistCancelledHero() {
-    val typography = appTypography()
-
     Column(
         modifier =
             Modifier
@@ -116,13 +93,13 @@ private fun WaitlistCancelledHero() {
         Text(
             text = stringResource(Res.string.my_schedule_waitlist_cancelled_title),
             modifier = Modifier.semantics { heading() },
-            style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
             color = StuColors.TextPrimary,
             textAlign = TextAlign.Center,
         )
         Text(
             text = stringResource(Res.string.my_schedule_waitlist_cancelled_description),
-            style = typography.bodyMedium,
+            style = appTypography().bodyMedium,
             color = StuColors.TextSecondary,
             textAlign = TextAlign.Center,
         )
@@ -130,11 +107,7 @@ private fun WaitlistCancelledHero() {
 }
 
 @Composable
-private fun WaitlistCancelledClassInformation(
-    waitlist: UpcomingScheduleItemUiModel.Waitlist,
-    dateLabel: String,
-    timeRangeLabel: String,
-) {
+private fun WaitlistCancelledClassInformation(result: WaitlistCancellationResultUiModel) {
     Column(
         modifier =
             Modifier
@@ -148,29 +121,22 @@ private fun WaitlistCancelledClassInformation(
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_class_name),
-            value = waitlist.title,
+            value = result.title,
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_instructor),
-            value = stringResource(Res.string.my_schedule_instructor_name, waitlist.instructorName),
+            value = result.instructorName,
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_date_time),
-            value = dateLabel,
-            supportingValue = timeRangeLabel,
-        )
-        MyScheduleResultInformationRow(
-            label = stringResource(Res.string.my_schedule_location),
-            value = waitlist.locationLabel,
+            value = result.dateLabel,
+            supportingValue = result.timeRangeLabel,
         )
     }
 }
 
 @Composable
-private fun WaitlistCancellationHistory(
-    position: Int,
-    cancelledAtLabel: String,
-) {
+private fun WaitlistCancellationHistory(result: WaitlistCancellationResultUiModel) {
     Column(
         modifier =
             Modifier
@@ -180,44 +146,36 @@ private fun WaitlistCancellationHistory(
         verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
     ) {
         MyScheduleResultSectionTitle(
-            text = stringResource(Res.string.my_schedule_waitlist_cancellation_history),
-        )
-        MyScheduleResultInformationRow(
-            label = stringResource(Res.string.my_schedule_waitlist_number),
-            value = stringResource(Res.string.my_schedule_waitlist_cancelled_position, position),
+            text = stringResource(Res.string.my_schedule_cancellation_history),
         )
         MyScheduleResultInformationRow(
             label = stringResource(Res.string.my_schedule_cancelled_at),
-            value = cancelledAtLabel,
+            value = result.cancelledAtLabel,
         )
         MyScheduleResultInformationRow(
-            label = stringResource(Res.string.my_schedule_waitlist_progress_status),
-            value = stringResource(Res.string.my_schedule_waitlist_auto_released),
-            supportingValue = stringResource(Res.string.my_schedule_waitlist_ticket_not_deducted),
-            valueColor = StuColors.TextSecondary,
-            supportingValueColor = StuColors.TextTertiary,
+            label = stringResource(Res.string.my_schedule_waitlist_number),
+            value =
+                stringResource(
+                    Res.string.my_schedule_waitlist_cancelled_position,
+                    result.positionAtCancellation,
+                ),
         )
     }
 }
 
 @Preview(
-    name = "Waitlist cancelled content · Student · Default",
-    group = "Component/MySchedule",
+    name = "F08 waitlist cancellation completed content / Student",
+    group = "Component/MySchedule/WaitlistCancellation",
     showBackground = true,
     locale = "ko",
     widthDp = 390,
     heightDp = 660,
 )
 @Composable
-private fun WaitlistCancelledContentPreview_Success_Student_Default() {
-    val fixture = waitlistCancelledPreviewFixture()
-
+private fun WaitlistCancelledContentPreview_F08Completed_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         WaitlistCancelledContent(
-            waitlist = fixture.item,
-            dateLabel = fixture.dateLabel,
-            timeRangeLabel = fixture.timeRangeLabel,
-            cancelledAtLabel = fixture.cancelledAtLabel,
+            result = WaitlistCancellationResultPreviewFixture.completed,
         )
     }
 }

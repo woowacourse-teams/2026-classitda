@@ -101,6 +101,7 @@
     <string name="my_schedule_cancelled_at_label">%1$d.%2$s.%3$s %4$s</string>
     <string name="my_schedule_book_another_class">다른 수업 예약하기</string>
     <string name="my_schedule_return_to_list">목록으로 이동</string>
+    <string name="my_schedule_return_to_list_waitlist">목록으로 돌아가기</string>
     <string name="my_schedule_detail_title">일정 상세</string>
     <string name="my_schedule_waitlist_detail_title">대기 상세</string>
     <string name="my_schedule_waitlist_applied_at">대기 일시</string>

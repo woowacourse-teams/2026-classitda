@@ -53,8 +53,21 @@ fun WaitlistDetailScreen(
     state: WaitlistDetailUiState,
     onAction: (WaitlistDetailAction) -> Unit,
     onBack: () -> Unit,
+    onBookAnotherClass: () -> Unit,
+    onReturnToList: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    if (state is WaitlistDetailUiState.CancellationCompleted) {
+        WaitlistCancelledScreen(
+            result = state.result,
+            onBack = onBack,
+            onBookAnotherClass = onBookAnotherClass,
+            onReturnToList = onReturnToList,
+            modifier = modifier,
+        )
+        return
+    }
+
     Box(
         modifier =
             modifier
@@ -81,8 +94,7 @@ fun WaitlistDetailScreen(
                     )
                 }
 
-                is WaitlistDetailUiState.CancellationCompleted -> {
-                }
+                is WaitlistDetailUiState.CancellationCompleted -> {}
 
                 is WaitlistDetailUiState.Error -> {
                     WaitlistDetailErrorContent(
@@ -165,6 +177,8 @@ private fun WaitlistDetailScreenPreview_F06Pending_Student_Default() {
             state = WaitlistDetailUiState.Content(WaitlistDetailPreviewFixture.pending),
             onAction = {},
             onBack = {},
+            onBookAnotherClass = {},
+            onReturnToList = {},
         )
     }
 }
@@ -210,6 +224,8 @@ private fun WaitlistDetailScreenPreview_F06CancellationActionHarness_Student() {
                         }
                 },
                 onBack = { lastEvent = "마지막 Action/ID: Back" },
+                onBookAnotherClass = {},
+                onReturnToList = {},
                 modifier = Modifier.height(840.dp),
             )
             Surface(
@@ -291,6 +307,8 @@ private fun WaitlistDetailScreenPreview_F07ModalActionHarness_Student() {
                         }
                 },
                 onBack = { lastEvent = "마지막 Action/ID: Back" },
+                onBookAnotherClass = {},
+                onReturnToList = {},
                 modifier = Modifier.weight(1f),
             )
             if ((screenState as? WaitlistDetailUiState.Content)?.cancellationDialog == null) {
@@ -349,6 +367,8 @@ private fun WaitlistDetailScreenPreview_Loading_Student_Default() {
             state = WaitlistDetailUiState.Loading,
             onAction = {},
             onBack = {},
+            onBookAnotherClass = {},
+            onReturnToList = {},
         )
     }
 }
@@ -368,6 +388,8 @@ private fun WaitlistDetailScreenPreview_Error_Student_Default() {
             state = WaitlistDetailUiState.Error(WaitlistDetailErrorUiModel.NETWORK),
             onAction = {},
             onBack = {},
+            onBookAnotherClass = {},
+            onReturnToList = {},
         )
     }
 }
