@@ -1,0 +1,38 @@
+name: classitda
+
+services:
+  app:
+    container_name: classitda-app
+    image: ${APP_IMAGE:-ghcr.io/woowacourse-teams/2026-classitda:latest}
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      TZ: Asia/Seoul
+
+      DB_HOST: ${DB_HOST:?}
+      DB_PORT: "3306"
+      DB_NAME: classitda
+      DB_USERNAME: ${DB_USERNAME:?}
+      DB_PASSWORD: ${DB_PASSWORD:?}
+
+      REDIS_HOST: ${REDIS_HOST:?}
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+      REDIS_SSL: "true"
+
+      GOOGLE_OAUTH_WEB_CLIENT_ID: ${GOOGLE_OAUTH_WEB_CLIENT_ID:?}
+      AUTH_JWT_PRIVATE_KEY_BASE64: ${AUTH_JWT_PRIVATE_KEY_BASE64:?}
+      AUTH_JWT_PUBLIC_KEY_BASE64: ${AUTH_JWT_PUBLIC_KEY_BASE64:?}
+      AUTH_PHONE_KEY_HMAC_SECRET_BASE64: ${AUTH_PHONE_KEY_HMAC_SECRET_BASE64:?}
+
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60"
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    mem_limit: 1400m
+    init: true
