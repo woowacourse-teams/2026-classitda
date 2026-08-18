@@ -1,4 +1,5 @@
 package com.classitda.feature.student.home.model
+
 data class UpcomingReservationUiModel(
     val classDateTimeText: String,
     val className: String,

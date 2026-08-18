@@ -1,4 +1,5 @@
 package com.classitda.feature.student.home.model
+
 data class MyPassUiModel(
     val passName: String,
     val expireDateText: String,
