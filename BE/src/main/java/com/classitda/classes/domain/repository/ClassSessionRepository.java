@@ -2,6 +2,7 @@ package com.classitda.classes.domain.repository;
 
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.repository.projection.ClassSessionCalendarProjection;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -87,6 +88,22 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             ORDER BY classSession.startAt ASC, classSession.id ASC
             """)
     List<ClassSessionDailyProjection> findDailyForInstructor(
+            @Param("studioId") Long studioId,
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd
+    );
+
+    @Query("""
+            SELECT classSession.instructorMembership.id AS instructorMembershipId,
+                   classSession.startAt AS startAt,
+                   classSession.endAt AS endAt,
+                   classSession.status AS sessionStatus
+            FROM ClassSession classSession
+            WHERE classSession.studioId = :studioId
+              AND classSession.startAt >= :rangeStart
+              AND classSession.startAt < :rangeEnd
+            """)
+    List<ClassSessionCalendarProjection> findCalendarForInstructor(
             @Param("studioId") Long studioId,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd
