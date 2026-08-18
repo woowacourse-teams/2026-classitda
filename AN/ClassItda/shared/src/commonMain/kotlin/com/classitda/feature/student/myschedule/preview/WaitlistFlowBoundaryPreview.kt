@@ -283,9 +283,7 @@ private fun WaitlistBoundaryState.uiState(): WaitlistDetailUiState =
         }
     }
 
-private fun WaitlistDetailAction.nextBoundaryState(
-    current: WaitlistBoundaryState,
-): WaitlistBoundaryState =
+private fun WaitlistDetailAction.nextBoundaryState(current: WaitlistBoundaryState): WaitlistBoundaryState =
     when (this) {
         WaitlistDetailAction.Retry -> current
         is WaitlistDetailAction.CancelWaitlist -> WaitlistBoundaryState.WAITING
@@ -296,12 +294,18 @@ private fun WaitlistDetailAction.nextBoundaryState(
 
 private fun WaitlistDetailAction.toBoundaryPreviewDescription(): String =
     when (this) {
-        WaitlistDetailAction.Retry -> "마지막 Action/ID: Retry"
+        WaitlistDetailAction.Retry -> {
+            "마지막 Action/ID: Retry"
+        }
+
         is WaitlistDetailAction.CancelWaitlist -> {
             "마지막 Action/ID: CancelWaitlist/${waitlistId.value}"
         }
 
-        WaitlistDetailAction.DismissCancellation -> "마지막 Action/ID: DismissCancellation"
+        WaitlistDetailAction.DismissCancellation -> {
+            "마지막 Action/ID: DismissCancellation"
+        }
+
         is WaitlistDetailAction.ConfirmCancellation -> {
             "마지막 Action/ID: ConfirmCancellation/${waitlistId.value}"
         }
