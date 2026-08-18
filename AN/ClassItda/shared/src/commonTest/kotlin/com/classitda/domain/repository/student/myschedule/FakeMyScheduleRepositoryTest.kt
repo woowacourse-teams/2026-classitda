@@ -1,5 +1,8 @@
 package com.classitda.domain.repository.student.myschedule
 
+import com.classitda.data.repository.student.myschedule.FakeMyScheduleFailures
+import com.classitda.data.repository.student.myschedule.FakeMyScheduleRepository
+import com.classitda.data.repository.student.myschedule.createDefaultMyScheduleFakeRepository
 import com.classitda.domain.model.student.myschedule.ClassPeriod
 import com.classitda.domain.model.student.myschedule.ClassSession
 import com.classitda.domain.model.student.myschedule.ClassSessionId
@@ -31,6 +34,57 @@ import kotlin.test.assertNull
 import kotlin.time.Instant
 
 class FakeMyScheduleRepositoryTest {
+    @Test
+    fun `기본 Fake 목록의 모든 ID는 클릭 후 대응 상세를 조회할 수 있다`() =
+        runBlocking {
+            val repository = createDefaultMyScheduleFakeRepository()
+            val upcoming =
+                assertIs<MyScheduleResult.Success<List<UpcomingSchedule>>>(
+                    repository.getUpcomingSchedules(),
+                ).value
+            val history =
+                assertIs<MyScheduleResult.Success<List<UsageHistoryEntry>>>(
+                    repository.getUsageHistory(),
+                ).value
+
+            assertEquals(2, upcoming.size)
+            assertEquals(3, history.size)
+
+            upcoming.forEach { schedule ->
+                when (schedule) {
+                    is UpcomingSchedule.ConfirmedReservation -> {
+                        val detail =
+                            assertIs<MyScheduleResult.Success<ReservationDetail>>(
+                                repository.getReservationDetail(schedule.reservationId),
+                            ).value
+                        assertIs<ReservationDetail.Confirmed>(detail)
+                        assertEquals(schedule.reservationId, detail.reservationId)
+                    }
+
+                    is UpcomingSchedule.Waitlisted -> {
+                        val detail =
+                            assertIs<MyScheduleResult.Success<WaitlistDetail>>(
+                                repository.getWaitlistDetail(schedule.waitlistId),
+                            ).value
+                        assertEquals(schedule.waitlistId, detail.waitlistId)
+                    }
+                }
+            }
+
+            history.forEach { entry ->
+                val detail =
+                    assertIs<MyScheduleResult.Success<ReservationDetail>>(
+                        repository.getReservationDetail(entry.reservationId),
+                    ).value
+                assertEquals(entry.reservationId, detail.reservationId)
+                when (entry.status) {
+                    UsageHistoryStatus.ATTENDED -> assertIs<ReservationDetail.Attended>(detail)
+                    UsageHistoryStatus.ABSENT -> assertIs<ReservationDetail.Absent>(detail)
+                    UsageHistoryStatus.RESERVATION_CANCELLED -> assertIs<ReservationDetail.Cancelled>(detail)
+                }
+            }
+        }
+
     @Test
     fun `빈 목록으로 설정하면 두 목록 조회는 성공한 빈 목록을 반환한다`() =
         runBlocking {

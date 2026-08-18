@@ -1,4 +1,4 @@
-package com.classitda.domain.repository.student.myschedule
+package com.classitda.data.repository.student.myschedule
 
 import com.classitda.domain.model.student.myschedule.PassRestoration
 import com.classitda.domain.model.student.myschedule.ReservationCancellationReceipt
@@ -10,6 +10,9 @@ import com.classitda.domain.model.student.myschedule.UsageHistoryStatus
 import com.classitda.domain.model.student.myschedule.WaitlistCancellationReceipt
 import com.classitda.domain.model.student.myschedule.WaitlistDetail
 import com.classitda.domain.model.student.myschedule.WaitlistId
+import com.classitda.domain.repository.student.myschedule.MyScheduleFailureReason
+import com.classitda.domain.repository.student.myschedule.MyScheduleRepository
+import com.classitda.domain.repository.student.myschedule.MyScheduleResult
 import kotlin.time.Instant
 
 internal data class FakeMyScheduleFailures(
