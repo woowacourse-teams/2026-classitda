@@ -159,6 +159,9 @@ public interface ClassSessionControllerApi {
                     - 시설 ID: 1
                     - 보유 수강권 ID: 42
                     - 조회 날짜: 로컬 애플리케이션을 시작한 날짜의 다음 날
+                    - 시작일의 2일 후에는 예약 가능한 회차 112를 조회할 수 있습니다.
+                    - 시작일의 3일 후에는 예약 완료 회차 113, 4일 후에는 대기 중 회차 114를 조회할 수 있습니다.
+                    - 시작일의 5일 후에는 예약 완료 회차 115와 대기 중 회차 116을 함께 조회할 수 있습니다.
                     """
     )
     @ApiResponses({
@@ -273,6 +276,11 @@ public interface ClassSessionControllerApi {
                     - 회원 ID: 1
                     - 시설 ID: 1
                     - 보유 수강권 ID: 42
+                    - from: 로컬 애플리케이션을 시작한 날짜의 5일 전
+                    - to: 로컬 애플리케이션을 시작한 날짜의 5일 후
+                    - 5일 전, 3일 전, 전날은 attended=true입니다.
+                    - 다음 날, 3일 후, 5일 후는 reserved=true입니다.
+                    - 다음 날, 4일 후, 5일 후는 waiting=true입니다.
                     """
     )
     @ApiResponses({
@@ -551,11 +559,11 @@ public interface ClassSessionControllerApi {
     );
 
     @Operation(
-            summary = "회원용 수업 회차 상세 조회",
+            summary = "학생용 수업 회차 상세 조회",
             description = """
                     ### 조회 대상
 
-                    - 회원에게 공개되는 수업 정보를 조회합니다.
+                    - 학생 화면에 공개되는 수업 정보를 조회합니다.
                     - 시설 대표와 같은 시설의 활성 회원, 강사, 관리자가 조회할 수 있습니다.
                     - 회원, 강사, 관리자에게 동일한 수업 회차 정보를 반환합니다.
 
@@ -563,6 +571,12 @@ public interface ClassSessionControllerApi {
 
                     - 담당 강사, 수업 종류, 수업명, 수업 안내, 정원, 진행 시간, 시작·종료 일시와 상태를 반환합니다.
                     - 예약 회원 목록과 예약·대기 인원은 포함하지 않습니다.
+
+                    ### local Swagger 테스트 데이터
+
+                    - 회원 ID: 1
+                    - 시설 ID: 1
+                    - 수업 회차 ID: 101
                     """
     )
     @ApiResponses({
@@ -620,12 +634,12 @@ public interface ClassSessionControllerApi {
                     )
             )
     })
-    ClassSessionDetailResponse findOne(
+    ClassSessionDetailResponse findOneForStudent(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
             Long studioId,
-            @Parameter(description = "조회할 수업 회차 ID입니다.", required = true, example = "11")
+            @Parameter(description = "조회할 수업 회차 ID입니다.", required = true, example = "101")
             Long classSessionId
     );
 }
