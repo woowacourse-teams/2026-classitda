@@ -99,4 +99,59 @@ internal object ReservationDetailPreviewFixture {
             attendanceTimePlaceholder = "--:--:--",
             usedPass = usedPass,
         )
+
+    object Boundary {
+        private const val LONG_TITLE =
+            "초보자부터 숙련자까지 함께하는 리포머 코어 밸런스 집중 수업"
+
+        private val longClassInfo =
+            ReservationClassInfoUiModel(
+                dateLabel = "2026.08.04 (화)",
+                timeRangeLabel = "오후 6:30 ~ 7:20",
+                memo =
+                    "오늘은 코어 안정화와 균형 동작을 함께 진행합니다. " +
+                        "처음 참여하는 회원은 수업 전에 강사에게 알려주세요.",
+                instructorName = "아주 긴 이름을 가진 이지은 시니어 필라테스 대표 강사",
+                facilityName = "클래스잇다 서울 강남역 프리미엄 리포머 스튜디오 지점",
+            )
+
+        val confirmed =
+            ReservationDetailPreviewFixture.confirmed.copy(
+                reservationId = ReservationId("preview-boundary-reservation-confirmed"),
+                title = LONG_TITLE,
+                classInfo = longClassInfo,
+            )
+
+        val cancelled =
+            ReservationDetailPreviewFixture.cancelled.copy(
+                reservationId = ReservationId("preview-boundary-reservation-cancelled"),
+                title = LONG_TITLE,
+                classInfo = longClassInfo,
+            )
+
+        val attended =
+            ReservationDetailPreviewFixture.attended.copy(
+                reservationId = ReservationId("preview-boundary-reservation-attended"),
+                title = LONG_TITLE,
+                classInfo =
+                    longClassInfo.copy(
+                        dateLabel = "2026년 8월 4일 화요일",
+                        memo = null,
+                    ),
+            )
+
+        val absent =
+            ReservationDetailPreviewFixture.absent.copy(
+                reservationId = ReservationId("preview-boundary-reservation-absent"),
+                title = LONG_TITLE,
+                classInfo = longClassInfo.copy(memo = null),
+            )
+
+        val cancellationCompleted =
+            ReservationDetailPreviewFixture.cancellationCompleted.copy(
+                reservationId = ReservationId("preview-boundary-cancellation-result"),
+                title = LONG_TITLE,
+                classInfo = longClassInfo.copy(memo = null),
+            )
+    }
 }

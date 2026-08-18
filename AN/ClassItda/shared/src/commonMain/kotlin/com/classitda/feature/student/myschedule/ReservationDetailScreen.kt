@@ -340,7 +340,7 @@ private fun ReservationDetailScreenPreview_Error_Student_Default() {
 }
 
 @Preview(
-    name = "Interaction harness · Student",
+    name = "R5 modal action harness · Student",
     group = "Harness/MySchedule/ReservationDetail",
     showBackground = true,
     locale = "ko",
@@ -348,14 +348,14 @@ private fun ReservationDetailScreenPreview_Error_Student_Default() {
     heightDp = 900,
 )
 @Composable
-private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
+private fun ReservationDetailScreenPreview_R5ModalActionHarness_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         var lastEvent by remember { mutableStateOf("마지막 Action/ID: 없음") }
         var screenState by
             remember {
                 mutableStateOf<ReservationDetailUiState>(
                     ReservationDetailUiState.Content(
-                        detail = ReservationDetailPreviewFixture.confirmed,
+                        detail = ReservationDetailPreviewFixture.Boundary.confirmed,
                     ),
                 )
             }
@@ -373,7 +373,7 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
                             is ReservationDetailAction.CancelReservation -> {
                                 screenState =
                                     ReservationDetailUiState.Content(
-                                        detail = ReservationDetailPreviewFixture.confirmed,
+                                        detail = ReservationDetailPreviewFixture.Boundary.confirmed,
                                         cancellationDialog =
                                             ReservationCancellationDialogUiState.Waiting,
                                     )
@@ -383,7 +383,7 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
                             ReservationDetailAction.DismissCancellation -> {
                                 screenState =
                                     ReservationDetailUiState.Content(
-                                        detail = ReservationDetailPreviewFixture.confirmed,
+                                        detail = ReservationDetailPreviewFixture.Boundary.confirmed,
                                     )
                                 "마지막 Action/ID: DismissCancellation"
                             }
@@ -391,7 +391,7 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
                             is ReservationDetailAction.ConfirmCancellation -> {
                                 screenState =
                                     ReservationDetailUiState.Content(
-                                        detail = ReservationDetailPreviewFixture.confirmed,
+                                        detail = ReservationDetailPreviewFixture.Boundary.confirmed,
                                         cancellationDialog =
                                             ReservationCancellationDialogUiState.Submitting,
                                     )
@@ -401,7 +401,7 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
                             is ReservationDetailAction.RetryCancellation -> {
                                 screenState =
                                     ReservationDetailUiState.Content(
-                                        detail = ReservationDetailPreviewFixture.confirmed,
+                                        detail = ReservationDetailPreviewFixture.Boundary.confirmed,
                                         cancellationDialog =
                                             ReservationCancellationDialogUiState.Submitting,
                                     )
@@ -420,7 +420,7 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
                     onClick = {
                         screenState =
                             ReservationDetailUiState.Content(
-                                detail = ReservationDetailPreviewFixture.confirmed,
+                                detail = ReservationDetailPreviewFixture.Boundary.confirmed,
                                 cancellationDialog =
                                     ReservationCancellationDialogUiState.Failed(
                                         error = ReservationCancellationErrorUiModel.NETWORK,
@@ -434,7 +434,7 @@ private fun ReservationDetailScreenPreview_InteractionHarness_Student() {
                     onClick = {
                         screenState =
                             ReservationDetailUiState.CancellationCompleted(
-                                result = ReservationDetailPreviewFixture.cancellationCompleted,
+                                result = ReservationDetailPreviewFixture.Boundary.cancellationCompleted,
                             )
                         lastEvent = "상태: CancellationCompleted / modal: 미노출"
                     },
