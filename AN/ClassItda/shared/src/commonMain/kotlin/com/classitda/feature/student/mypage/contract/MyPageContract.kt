@@ -33,4 +33,6 @@ sealed interface MyPageAction {
     data object OpenPrivacyPolicy : MyPageAction
 
     data object OpenInstructorSignup : MyPageAction
+
+    data object SwitchToInstructor : MyPageAction
 }

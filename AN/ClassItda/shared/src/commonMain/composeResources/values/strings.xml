@@ -148,4 +148,14 @@
     <string name="my_schedule_class_detail_center_cancellation_policy">수업 시작 전까지 센터의 취소 규정에 따라 예약을 취소할 수 있습니다.</string>
     <string name="my_schedule_class_detail_attended_result">출석이 완료된 수업입니다.</string>
     <string name="my_schedule_class_detail_absent_result">결석한 수업입니다.</string>
+    <string name="my_page_title">마이페이지</string>
+    <string name="my_page_instructor_signup">강사로 가입하기</string>
+    <string name="my_page_switch_to_instructor">강사로 전환</string>
+    <string name="my_page_my_info">내 정보</string>
+    <string name="my_page_passes">내 수강권</string>
+    <string name="my_page_connected_facilities">연결된 시설</string>
+    <string name="my_page_notification_settings">알림 설정</string>
+    <string name="my_page_privacy_policy">개인정보처리방침</string>
+    <string name="my_page_contact_email">문의: %1$s</string>
+    <string name="my_page_contact_email_address">contact@classitda.com</string>
 </resources>

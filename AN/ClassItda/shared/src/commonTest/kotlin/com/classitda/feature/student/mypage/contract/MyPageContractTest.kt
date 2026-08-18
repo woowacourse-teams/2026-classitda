@@ -18,6 +18,7 @@ class MyPageContractTest {
         assertIs<MyPageAction.OpenNotificationSettings>(MyPageAction.OpenNotificationSettings)
         assertIs<MyPageAction.OpenPrivacyPolicy>(MyPageAction.OpenPrivacyPolicy)
         assertIs<MyPageAction.OpenInstructorSignup>(MyPageAction.OpenInstructorSignup)
+        assertIs<MyPageAction.SwitchToInstructor>(MyPageAction.SwitchToInstructor)
     }
 
     @Test
