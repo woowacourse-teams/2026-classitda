@@ -786,6 +786,7 @@ class ClassSessionCommandServiceTest {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .name(member.getName())
                 .studioRole(role)
                 .status(status)
                 .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))

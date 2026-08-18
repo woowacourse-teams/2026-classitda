@@ -1,6 +1,5 @@
 package com.classitda.classes.application.student;
 
-import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ReservationRepository;
@@ -10,7 +9,6 @@ import com.classitda.classes.domain.repository.projection.ReservationSummaryProj
 import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
-import com.classitda.passproduct.domain.ClassKind;
 import com.classitda.passproduct.domain.PassProduct;
 import com.classitda.studio.domain.StudioPolicy;
 import com.classitda.studio.domain.repository.StudioPolicyRepository;
@@ -53,7 +51,7 @@ public class StudentSessionScheduleReader {
                 studioId,
                 date.atStartOfDay(),
                 getRangeEnd(date),
-                toClassForm(passProduct.getClassKind()),
+                passProduct.getClassForm(),
                 classTypeIds
         );
 
@@ -70,13 +68,6 @@ public class StudentSessionScheduleReader {
         } catch (DateTimeException exception) {
             throw new ClassitdaException(CommonErrorCode.INVALID_INPUT);
         }
-    }
-
-    private ClassForm toClassForm(ClassKind classKind) {
-        return switch (classKind) {
-            case GROUP -> ClassForm.GROUP;
-            case PERSONAL -> ClassForm.INDIVIDUAL;
-        };
     }
 
     private StudentSessionSchedule createSchedule(

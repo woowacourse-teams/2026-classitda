@@ -29,7 +29,6 @@ import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.classes.presentation.dto.MemberClassSessionBookingStatus;
 import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
 import com.classitda.member.domain.Member;
-import com.classitda.passproduct.domain.ClassKind;
 import com.classitda.passproduct.domain.MemberPassProduct;
 import com.classitda.passproduct.domain.MemberPassProductStatus;
 import com.classitda.passproduct.domain.PassProduct;
@@ -132,7 +131,7 @@ class ClassSessionQueryServiceTest {
         ClassType pilates = 수업_종류를_저장한다(studio, "필라테스");
         MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
                 memberMembership,
-                수강권을_저장한다(studio, ClassKind.GROUP, List.of(yoga)),
+                수강권을_저장한다(studio, ClassForm.GROUP, List.of(yoga)),
                 MemberPassProductStatus.ACTIVE,
                 10,
                 QUERY_DATE.minusMonths(1),
@@ -274,7 +273,7 @@ class ClassSessionQueryServiceTest {
         ClassType classType = 수업_종류를_저장한다(studio, "상태 요가");
         MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
                 memberMembership,
-                수강권을_저장한다(studio, ClassKind.GROUP, List.of(classType)),
+                수강권을_저장한다(studio, ClassForm.GROUP, List.of(classType)),
                 MemberPassProductStatus.ACTIVE,
                 10,
                 QUERY_DATE.minusDays(1),
@@ -413,6 +412,7 @@ class ClassSessionQueryServiceTest {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(staff)
+                .name(staff.getName())
                 .studioRole(staffRole)
                 .status(MembershipStatus.ACTIVE)
                 .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))
@@ -454,7 +454,7 @@ class ClassSessionQueryServiceTest {
         ClassType classType = 수업_종류를_저장한다(passStudio, "숨김 수업 종류");
         MemberPassProduct hiddenPass = 보유_수강권을_저장한다(
                 passMembership,
-                수강권을_저장한다(passStudio, ClassKind.GROUP, List.of(classType)),
+                수강권을_저장한다(passStudio, ClassForm.GROUP, List.of(classType)),
                 MemberPassProductStatus.ACTIVE,
                 10,
                 QUERY_DATE.minusDays(1),
@@ -493,7 +493,7 @@ class ClassSessionQueryServiceTest {
         ClassType classType = 수업_종류를_저장한다(studio, "사용 불가 수업 종류");
         MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
                 membership,
-                수강권을_저장한다(studio, ClassKind.GROUP, List.of(classType)),
+                수강권을_저장한다(studio, ClassForm.GROUP, List.of(classType)),
                 status,
                 remainingCount,
                 QUERY_DATE.minusDays(1),
@@ -528,7 +528,7 @@ class ClassSessionQueryServiceTest {
         ClassType classType = 수업_종류를_저장한다(studio, "기간 외 수업 종류");
         MemberPassProduct memberPassProduct = 보유_수강권을_저장한다(
                 membership,
-                수강권을_저장한다(studio, ClassKind.GROUP, List.of(classType)),
+                수강권을_저장한다(studio, ClassForm.GROUP, List.of(classType)),
                 MemberPassProductStatus.ACTIVE,
                 10,
                 QUERY_DATE.minusMonths(1),
@@ -721,6 +721,7 @@ class ClassSessionQueryServiceTest {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .name(member.getName())
                 .studioRole(role)
                 .status(status)
                 .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))
@@ -816,13 +817,13 @@ class ClassSessionQueryServiceTest {
 
     private PassProduct 수강권을_저장한다(
             Studio studio,
-            ClassKind classKind,
+            ClassForm classForm,
             List<ClassType> classTypes
     ) {
         PassProduct passProduct = PassProduct.builder()
                 .studio(studio)
-                .name(classKind + " 회원용 수강권")
-                .classKind(classKind)
+                .name(classForm + " 회원용 수강권")
+                .classForm(classForm)
                 .classTypes(classTypes)
                 .totalCount(10)
                 .validPeriodAmount(3)

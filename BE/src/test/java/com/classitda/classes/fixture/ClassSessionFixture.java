@@ -71,6 +71,7 @@ public final class ClassSessionFixture {
         return StudioMembership.builder()
                 .studio(studio)
                 .member(instructor)
+                .name(instructor.getName())
                 .studioRole(SystemRole.INSTRUCTOR.toStudioRole(studio))
                 .status(MembershipStatus.ACTIVE)
                 .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))
