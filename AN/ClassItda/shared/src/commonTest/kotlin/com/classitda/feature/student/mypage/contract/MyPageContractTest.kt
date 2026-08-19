@@ -41,6 +41,36 @@ class MyPageContractTest {
     }
 
     @Test
+    fun `프로필 편집 action은 사진 번호 저장 행동을 서로 다르게 구분한다`() {
+        val actions =
+            setOf(
+                ProfileEditAction.RequestPhotoChange,
+                ProfileEditAction.OpenPhoneNumberChange,
+                ProfileEditAction.Save,
+            )
+
+        assertEquals(3, actions.size)
+        assertIs<ProfileEditAction.RequestPhotoChange>(ProfileEditAction.RequestPhotoChange)
+        assertIs<ProfileEditAction.OpenPhoneNumberChange>(ProfileEditAction.OpenPhoneNumberChange)
+        assertIs<ProfileEditAction.Save>(ProfileEditAction.Save)
+    }
+
+    @Test
+    fun `프로필 조회 action은 편집 로그아웃 회원 탈퇴를 서로 다르게 구분한다`() {
+        val actions =
+            setOf(
+                ProfileViewAction.OpenEdit,
+                ProfileViewAction.RequestLogout,
+                ProfileViewAction.RequestWithdrawal,
+            )
+
+        assertEquals(3, actions.size)
+        assertIs<ProfileViewAction.OpenEdit>(ProfileViewAction.OpenEdit)
+        assertIs<ProfileViewAction.RequestLogout>(ProfileViewAction.RequestLogout)
+        assertIs<ProfileViewAction.RequestWithdrawal>(ProfileViewAction.RequestWithdrawal)
+    }
+
+    @Test
     fun `전화번호 오류 상태는 인증 ID와 도메인 실패 이유를 함께 보존한다`() {
         val verificationId = PhoneVerificationId("verification-1")
         val state =
