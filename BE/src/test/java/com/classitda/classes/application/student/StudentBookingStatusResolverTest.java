@@ -15,66 +15,73 @@ class StudentBookingStatusResolverTest {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 10, 0);
 
-    private final StudentBookingStatusResolver resolver = new StudentBookingStatusResolver();
+    private final StudentBookingDecisionPolicy decisionPolicy = new StudentBookingDecisionPolicy();
+    private final StudentBookingStatusResolver resolver = new StudentBookingStatusResolver(decisionPolicy);
 
-    @ParameterizedTest(name = "{0} 상태를 가장 높은 우선순위 규칙으로 결정한다")
+    @ParameterizedTest(name = "{0} 상태를 참여 관계와 예약 가능 여부로 결정한다")
     @MethodSource("bookingStatusContexts")
-    void 예약_상태를_규칙_우선순위에_따라_결정한다(
-            StudentBookingStatus expected,
+    void 회원_수업_상태를_참여_관계와_예약_가능_여부로_결정한다(
+            StudentBookingStatus expectedStatus,
+            StudentParticipation expectedParticipation,
+            BookingAvailability expectedAvailability,
             StudentBookingContext context
     ) {
-        assertThat(resolver.resolve(context)).isEqualTo(expected);
+        StudentBookingDecision decision = decisionPolicy.decide(context);
+
+        assertThat(decision.participation()).isEqualTo(expectedParticipation);
+        assertThat(decision.availability()).isEqualTo(expectedAvailability);
+        assertThat(resolver.resolve(context)).isEqualTo(expectedStatus);
     }
 
     private static Stream<Arguments> bookingStatusContexts() {
         return Stream.of(
                 Arguments.of(
-                        StudentBookingStatus.ABSENT,
+                        StudentBookingStatus.ABSENT, StudentParticipation.ABSENT, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 0, 1, 1, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.ATTENDED,
+                        StudentBookingStatus.ATTENDED, StudentParticipation.ATTENDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 0, 1, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.ATTENDED,
+                        StudentBookingStatus.ATTENDED, StudentParticipation.ATTENDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.ATTENDED,
+                        StudentBookingStatus.ATTENDED, StudentParticipation.ATTENDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW,
                                 1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.RESERVED,
+                        StudentBookingStatus.RESERVED, StudentParticipation.RESERVED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 1, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.OFFERED,
+                        StudentBookingStatus.OFFERED, StudentParticipation.OFFERED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 0, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.WAITING,
+                        StudentBookingStatus.WAITING, StudentParticipation.WAITING, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 0, 0, 0, 0, 1, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.CLOSED,
+                        StudentBookingStatus.CLOSED, StudentParticipation.NONE, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.plusMinutes(30),
                                 0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.AVAILABLE,
+                        StudentBookingStatus.AVAILABLE, StudentParticipation.NONE, BookingAvailability.RESERVABLE,
                         context(BookingWindow.OPEN, NOW.plusHours(1),
                                 0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.WAITING_AVAILABLE,
+                        StudentBookingStatus.WAITING_AVAILABLE, StudentParticipation.NONE, BookingAvailability.WAITLISTABLE,
                         context(BookingWindow.OPEN, NOW.plusHours(1),
                                 0, 0, 0, 0, 0, 0)
                 )

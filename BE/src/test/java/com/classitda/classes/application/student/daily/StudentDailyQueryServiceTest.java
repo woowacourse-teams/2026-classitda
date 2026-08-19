@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
+import com.classitda.classes.application.student.StudentBookingDecisionPolicy;
 import com.classitda.classes.application.student.StudentBookingStatus;
 import com.classitda.classes.application.student.StudentBookingStatusResolver;
 import com.classitda.classes.application.student.StudentSessionAccessReader;
@@ -63,6 +64,7 @@ import org.springframework.context.annotation.Primary;
         StudentOwnedPassesReader.class,
         StudentDailyScheduleReader.class,
         StudentDailySessionAssembler.class,
+        StudentBookingDecisionPolicy.class,
         StudentBookingStatusResolver.class,
         StudentDailyQueryServiceTest.FixedClockConfig.class
 })
