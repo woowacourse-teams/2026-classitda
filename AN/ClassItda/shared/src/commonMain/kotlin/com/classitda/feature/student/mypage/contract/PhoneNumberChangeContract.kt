@@ -32,6 +32,7 @@ sealed interface PhoneNumberChangeUiState {
 
     data class Verified(
         val phoneNumber: String,
+        val verificationCode: String,
     ) : PhoneNumberChangeUiState
 
     data class Error(

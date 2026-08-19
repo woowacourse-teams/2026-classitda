@@ -1,8 +1,10 @@
 package com.classitda.feature.student.mypage
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -21,7 +24,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -34,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
@@ -44,7 +47,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
-import classitda.shared.generated.resources.ic_check_circle
 import classitda.shared.generated.resources.ic_close
 import classitda.shared.generated.resources.phone_number_change_close
 import classitda.shared.generated.resources.phone_number_change_code_label
@@ -66,7 +68,9 @@ import classitda.shared.generated.resources.phone_number_change_verifying
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.core.designsystem.component.PrimaryButton
 import com.classitda.domain.model.student.mypage.PhoneVerificationId
 import com.classitda.domain.repository.student.mypage.MyPageFailureReason
@@ -90,10 +94,10 @@ fun PhoneNumberChangeScreen(
                 topStart = AppSpacing.xxl,
                 topEnd = AppSpacing.xxl,
             ),
-        color = MaterialTheme.colorScheme.background,
+        color = StuColors.Background,
     ) {
         Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
+            containerColor = StuColors.Background,
             topBar = {
                 PhoneNumberChangeTopBar(
                     onClose = { onAction(PhoneNumberChangeAction.Back) },
@@ -149,7 +153,7 @@ private fun PhoneNumberChangeTopBar(onClose: () -> Unit) {
                 painter = painterResource(Res.drawable.ic_close),
                 contentDescription = stringResource(Res.string.phone_number_change_close),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
+                tint = StuColors.TextPrimary,
             )
         }
     }
@@ -163,6 +167,7 @@ private fun PhoneNumberChangeContent(
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val errorMessage = renderState.errorMessage()
+    val typography = appTypography()
 
     Column(
         modifier =
@@ -180,8 +185,8 @@ private fun PhoneNumberChangeContent(
                 Modifier
                     .fillMaxWidth()
                     .semantics { heading() },
-            style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground,
+            style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            color = StuColors.TextPrimary,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxxl * 2))
@@ -229,8 +234,8 @@ private fun PhoneNumberChangeContent(
             Text(
                 text = stringResource(Res.string.phone_number_change_verifying),
                 modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = typography.bodyMedium,
+                color = StuColors.TextSecondary,
                 textAlign = TextAlign.Center,
             )
         }
@@ -242,8 +247,8 @@ private fun PhoneNumberChangeContent(
                     Modifier
                         .fillMaxWidth()
                         .semantics { error(errorMessage) },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
+                style = typography.bodyMedium,
+                color = StuColors.Red,
                 textAlign = TextAlign.Center,
             )
         }
@@ -262,50 +267,87 @@ private fun PhoneNumberInput(
     onRequest: () -> Unit,
     onDone: () -> Unit,
 ) {
+    val typography = appTypography()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         PhoneNumberChangeLabel(text = stringResource(Res.string.phone_number_change_phone_label))
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
+        Surface(
             modifier = Modifier.fillMaxWidth(),
-            enabled = enabled,
-            isError = isError,
-            singleLine = true,
-            textStyle = MaterialTheme.typography.bodyLarge,
-            placeholder = {
-                Text(text = stringResource(Res.string.phone_number_change_phone_input))
-            },
-            trailingIcon = {
+            shape = AppShape.Pill,
+            color = StuColors.Surface,
+            border =
+                BorderStroke(
+                    width = AppSpacing.xs / 4,
+                    color = if (isError) StuColors.Red else StuColors.Divider,
+                ),
+        ) {
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(AppSpacing.xxxl + AppSpacing.xxl)
+                        .padding(start = AppSpacing.lg, end = AppSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+            ) {
+                BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    modifier = Modifier.weight(1f),
+                    enabled = enabled,
+                    singleLine = true,
+                    textStyle =
+                        typography.bodyLarge.copy(
+                            color = if (enabled) StuColors.TextPrimary else StuColors.TextTertiary,
+                        ),
+                    cursorBrush = SolidColor(StuColors.TextPrimary),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = ImeAction.Done,
+                        ),
+                    keyboardActions = KeyboardActions(onDone = { onDone() }),
+                    decorationBox = { innerTextField ->
+                        Box(contentAlignment = Alignment.CenterStart) {
+                            if (value.isEmpty()) {
+                                Text(
+                                    text = stringResource(Res.string.phone_number_change_phone_input),
+                                    style = typography.bodyLarge,
+                                    color = StuColors.TextTertiary,
+                                )
+                            }
+                            innerTextField()
+                        }
+                    },
+                )
                 Button(
                     onClick = onRequest,
+                    modifier =
+                        Modifier.size(
+                            width = VERIFICATION_BUTTON_WIDTH,
+                            height = VERIFICATION_BUTTON_HEIGHT,
+                        ),
                     enabled = isRequestEnabled,
-                    shape = AppShape.Card,
+                    shape = AppShape.Pill,
                     colors =
                         ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
-                            contentColor = MaterialTheme.colorScheme.background,
-                            disabledContainerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.28f),
-                            disabledContentColor = MaterialTheme.colorScheme.background.copy(alpha = 0.72f),
+                            containerColor = StuColors.PrimaryColor,
+                            contentColor = StuColors.White,
+                            disabledContainerColor = StuColors.DividerStrong,
+                            disabledContentColor = StuColors.TextTertiary,
                         ),
+                    contentPadding = PaddingValues(horizontal = AppSpacing.sm),
                 ) {
                     Text(
                         text = requestButtonLabel,
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     )
                 }
-            },
-            keyboardOptions =
-                KeyboardOptions(
-                    keyboardType = KeyboardType.Phone,
-                    imeAction = ImeAction.Done,
-                ),
-            keyboardActions = KeyboardActions(onDone = { onDone() }),
-            shape = AppShape.Pill,
-            colors = phoneNumberChangeTextFieldColors(),
-        )
+            }
+        }
     }
 }
 
@@ -319,74 +361,70 @@ private fun VerificationCodeInput(
     onValueChange: (String) -> Unit,
     onDone: () -> Unit,
 ) {
+    val typography = appTypography()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         PhoneNumberChangeLabel(text = stringResource(Res.string.phone_number_change_code_label))
-        if (isVerified) {
-            VerifiedCodeContent()
-        } else {
-            OutlinedTextField(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = enabled,
-                isError = isError,
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyLarge,
-                placeholder = {
-                    Text(text = stringResource(Res.string.phone_number_change_code_placeholder))
-                },
-                suffix = {
-                    if (remainingSeconds != null) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = enabled || isVerified,
+            readOnly = isVerified,
+            isError = isError,
+            singleLine = true,
+            textStyle = typography.bodyLarge,
+            placeholder = {
+                Text(text = stringResource(Res.string.phone_number_change_code_placeholder))
+            },
+            suffix = {
+                when {
+                    isVerified -> {
+                        VerificationCompletedChip()
+                    }
+
+                    remainingSeconds != null -> {
                         Text(
                             text = formatRemainingTime(remainingSeconds),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color =
-                                if (remainingSeconds == 0) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                },
+                            style = typography.bodyLarge,
+                            color = StuColors.Red,
                         )
                     }
-                },
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Done,
-                    ),
-                keyboardActions = KeyboardActions(onDone = { onDone() }),
-                shape = AppShape.Pill,
-                colors = phoneNumberChangeTextFieldColors(),
-            )
-        }
+                }
+            },
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done,
+                ),
+            keyboardActions = KeyboardActions(onDone = { onDone() }),
+            shape = AppShape.Pill,
+            colors = phoneNumberChangeTextFieldColors(),
+        )
     }
 }
 
 @Composable
-private fun VerifiedCodeContent() {
+private fun VerificationCompletedChip() {
+    val typography = appTypography()
+
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.size(
+                width = VERIFICATION_BUTTON_WIDTH,
+                height = VERIFICATION_BUTTON_HEIGHT,
+            ),
         shape = AppShape.Pill,
-        color = MaterialTheme.colorScheme.primaryContainer,
+        color = StuColors.PrimaryColor,
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_check_circle),
-                contentDescription = null,
-                modifier = Modifier.size(AppSpacing.xl),
-                tint = MaterialTheme.colorScheme.primary,
-            )
+        Box(contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(Res.string.phone_number_change_verified),
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                style = typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                color = StuColors.White,
             )
         }
     }
@@ -394,39 +432,43 @@ private fun VerifiedCodeContent() {
 
 @Composable
 private fun PhoneNumberChangeLabel(text: String) {
+    val typography = appTypography()
+
     Text(
         text = text,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+        style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        color = StuColors.TextSecondary,
     )
 }
 
 @Composable
 private fun phoneNumberChangeTextFieldColors() =
     OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = MaterialTheme.colorScheme.surface,
-        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-        disabledContainerColor = MaterialTheme.colorScheme.surface,
-        focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f),
-        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-        disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-        cursorColor = MaterialTheme.colorScheme.onSurface,
-        errorBorderColor = MaterialTheme.colorScheme.error,
+        focusedContainerColor = StuColors.Surface,
+        unfocusedContainerColor = StuColors.Surface,
+        disabledContainerColor = StuColors.Surface,
+        focusedBorderColor = StuColors.TextPrimary,
+        unfocusedBorderColor = StuColors.Divider,
+        disabledBorderColor = StuColors.Divider,
+        cursorColor = StuColors.TextPrimary,
+        errorBorderColor = StuColors.Red,
     )
 
 @Composable
 private fun PhoneNumberChangeLoadingContent(modifier: Modifier = Modifier) {
+    val typography = appTypography()
+
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        CircularProgressIndicator(color = StuColors.Green)
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = stringResource(Res.string.phone_number_change_loading),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = typography.bodyMedium,
+            color = StuColors.TextSecondary,
         )
     }
 }
@@ -561,7 +603,7 @@ private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderSta
         is PhoneNumberChangeUiState.Verified -> {
             PhoneNumberChangeRenderState(
                 phoneNumber = phoneNumber,
-                verificationCode = "",
+                verificationCode = verificationCode,
                 verificationId = null,
                 remainingSeconds = null,
                 errorReason = null,
@@ -655,7 +697,10 @@ private fun PhoneNumberChangeUiState.reduceForPreview(action: PhoneNumberChangeA
         }
 
         PhoneNumberChangeAction.VerifyCode -> {
-            PhoneNumberChangeUiState.Verified(phoneNumber = phoneNumberForPreview())
+            PhoneNumberChangeUiState.Verified(
+                phoneNumber = phoneNumberForPreview(),
+                verificationCode = verificationCodeForPreview(),
+            )
         }
     }
 
@@ -668,6 +713,17 @@ private fun PhoneNumberChangeUiState.phoneNumberForPreview(): String =
         is PhoneNumberChangeUiState.Verified -> phoneNumber
         is PhoneNumberChangeUiState.Error -> phoneNumber
         PhoneNumberChangeUiState.Loading -> PhoneNumberChangePreviewFixture.PHONE_NUMBER
+    }
+
+private fun PhoneNumberChangeUiState.verificationCodeForPreview(): String =
+    when (this) {
+        is PhoneNumberChangeUiState.Editing -> verificationCode
+        is PhoneNumberChangeUiState.Requesting -> verificationCode
+        is PhoneNumberChangeUiState.CodeEntry -> verificationCode
+        is PhoneNumberChangeUiState.Verifying -> verificationCode
+        is PhoneNumberChangeUiState.Verified -> verificationCode
+        is PhoneNumberChangeUiState.Error -> verificationCode
+        PhoneNumberChangeUiState.Loading -> PhoneNumberChangePreviewFixture.VERIFICATION_CODE
     }
 
 private object PhoneNumberChangePreviewFixture {
@@ -699,7 +755,11 @@ private object PhoneNumberChangePreviewFixture {
             verificationId = verificationId,
             remainingSeconds = 125,
         )
-    val verified = PhoneNumberChangeUiState.Verified(phoneNumber = PHONE_NUMBER)
+    val verified =
+        PhoneNumberChangeUiState.Verified(
+            phoneNumber = PHONE_NUMBER,
+            verificationCode = VERIFICATION_CODE,
+        )
     val expired =
         PhoneNumberChangeUiState.Error(
             phoneNumber = PHONE_NUMBER,
@@ -726,6 +786,8 @@ private object PhoneNumberChangePreviewFixture {
 private const val VERIFICATION_CODE_LENGTH = 6
 private const val SECONDS_PER_MINUTE = 60
 private const val PREVIEW_REMAINING_SECONDS = 180
+private val VERIFICATION_BUTTON_WIDTH = AppSpacing.xxxl * 2 + AppSpacing.lg
+private val VERIFICATION_BUTTON_HEIGHT = AppSpacing.xxl + AppSpacing.lg
 
 @Preview(
     name = "Before request · Student · Default",
@@ -867,6 +929,8 @@ private fun PhoneNumberChangeScreenPreview_Actions_Student_Interactive() {
     var lastAction by remember { mutableStateOf("None") }
 
     AppTheme(theme = ThemeType.STUDENT) {
+        val typography = appTypography()
+
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "마지막 행동: $lastAction",
@@ -874,7 +938,7 @@ private fun PhoneNumberChangeScreenPreview_Actions_Student_Interactive() {
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.sm),
-                style = MaterialTheme.typography.labelLarge,
+                style = typography.labelLarge,
             )
             PhoneNumberChangeScreen(
                 uiState = uiState,

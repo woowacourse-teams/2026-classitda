@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,6 +49,7 @@ import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.student.mypage.MemberId
 import com.classitda.domain.model.student.mypage.MemberProfile
 import com.classitda.domain.model.student.mypage.MyPageSummary
@@ -159,6 +159,8 @@ private fun MyPageContent(
 
 @Composable
 private fun MyPageTitle() {
+    val typography = appTypography()
+
     Text(
         text = stringResource(Res.string.my_page_title),
         modifier =
@@ -170,13 +172,15 @@ private fun MyPageTitle() {
                     end = AppSpacing.screenPadding,
                     bottom = AppSpacing.xl,
                 ),
-        style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+        style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
         color = myPagePrimaryColor,
     )
 }
 
 @Composable
 private fun InstructorSignupBanner(onClick: () -> Unit) {
+    val typography = appTypography()
+
     Row(
         modifier =
             Modifier
@@ -190,7 +194,7 @@ private fun InstructorSignupBanner(onClick: () -> Unit) {
         Text(
             text = stringResource(Res.string.my_page_instructor_signup),
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = StuColors.White,
         )
         Icon(
@@ -204,6 +208,8 @@ private fun InstructorSignupBanner(onClick: () -> Unit) {
 
 @Composable
 private fun InstructorSwitchBar(onSwitch: () -> Unit) {
+    val typography = appTypography()
+
     Row(
         modifier =
             Modifier
@@ -220,7 +226,7 @@ private fun InstructorSwitchBar(onSwitch: () -> Unit) {
         Text(
             text = stringResource(Res.string.my_page_switch_to_instructor),
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = StuColors.White,
         )
         Box(
@@ -248,6 +254,8 @@ private fun MyPageProfileSummary(
     isEmailUnderlined: Boolean,
     onClick: () -> Unit,
 ) {
+    val typography = appTypography()
+
     Row(
         modifier =
             Modifier
@@ -270,24 +278,24 @@ private fun MyPageProfileSummary(
         ) {
             Text(
                 text = profile.name.take(1),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = myPagePrimaryColor,
             )
         }
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = profile.name,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = myPagePrimaryColor,
             )
             Text(
                 text = profile.phoneNumber,
-                style = MaterialTheme.typography.bodyLarge,
+                style = typography.bodyLarge,
                 color = myPageSecondaryColor,
             )
             Text(
                 text = profile.email,
-                style = MaterialTheme.typography.bodyLarge,
+                style = typography.bodyLarge,
                 color = myPageSecondaryColor,
                 textDecoration =
                     if (isEmailUnderlined) {
@@ -303,7 +311,7 @@ private fun MyPageProfileSummary(
         ) {
             Text(
                 text = stringResource(Res.string.my_page_my_info),
-                style = MaterialTheme.typography.bodyMedium,
+                style = typography.bodyMedium,
                 color = myPageSecondaryColor,
             )
             Icon(
@@ -322,6 +330,8 @@ private fun MyPageMenuRow(
     showDivider: Boolean,
     onClick: () -> Unit,
 ) {
+    val typography = appTypography()
+
     Column(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier =
@@ -335,7 +345,7 @@ private fun MyPageMenuRow(
             Text(
                 text = title,
                 modifier = Modifier.weight(1f),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = myPagePrimaryColor,
             )
             Icon(
@@ -356,6 +366,8 @@ private fun MyPageMenuRow(
 
 @Composable
 private fun MyPageContactEmail() {
+    val typography = appTypography()
+
     Text(
         text =
             stringResource(
@@ -366,7 +378,7 @@ private fun MyPageContactEmail() {
             Modifier
                 .fillMaxWidth()
                 .padding(top = AppSpacing.sm),
-        style = MaterialTheme.typography.bodySmall,
+        style = typography.bodySmall,
         color = myPageSecondaryColor,
         textAlign = TextAlign.Center,
     )
@@ -402,11 +414,13 @@ private fun MyPageScreenInteractionHarnessPreview() {
     var lastAction by remember { mutableStateOf("없음") }
 
     AppTheme(theme = ThemeType.STUDENT) {
+        val typography = appTypography()
+
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "마지막 행동: $lastAction",
                 modifier = Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.sm),
-                style = MaterialTheme.typography.labelLarge,
+                style = typography.labelLarge,
             )
             MyPageScreen(
                 uiState = MyPagePreviewFixture.instructorSignup,

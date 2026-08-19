@@ -25,7 +25,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -71,7 +70,9 @@ import classitda.shared.generated.resources.profile_edit_saving
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.student.mypage.MemberId
 import com.classitda.domain.model.student.mypage.MemberProfile
 import com.classitda.domain.repository.student.mypage.MyPageFailureReason
@@ -96,7 +97,7 @@ fun ProfileEditScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = StuColors.Background,
         topBar = {
             ProfileEditTopBar(
                 isSaveEnabled = canSave && !isSaving,
@@ -163,6 +164,8 @@ private fun ProfileEditTopBar(
     onBack: () -> Unit,
     onSave: () -> Unit,
 ) {
+    val typography = appTypography()
+
     Row(
         modifier =
             Modifier
@@ -175,7 +178,7 @@ private fun ProfileEditTopBar(
                 painter = painterResource(Res.drawable.ic_arrow_back),
                 contentDescription = stringResource(Res.string.profile_edit_back),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
+                tint = StuColors.TextPrimary,
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -184,8 +187,8 @@ private fun ProfileEditTopBar(
             onClick = onSave,
             colors =
                 ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.48f),
+                    contentColor = StuColors.TextPrimary,
+                    disabledContentColor = StuColors.TextTertiary,
                 ),
         ) {
             Text(
@@ -195,7 +198,7 @@ private fun ProfileEditTopBar(
                     } else {
                         stringResource(Res.string.profile_edit_complete)
                     },
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = typography.titleLarge.copy(fontWeight = FontWeight.Bold),
             )
         }
     }
@@ -211,6 +214,7 @@ private fun ProfileEditContent(
     modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val typography = appTypography()
 
     Column(
         modifier =
@@ -250,8 +254,8 @@ private fun ProfileEditContent(
                     Modifier
                         .fillMaxWidth()
                         .semantics { error(saveFailureMessage) },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
+                style = typography.bodyMedium,
+                color = StuColors.Red,
                 textAlign = TextAlign.Center,
             )
         }
@@ -266,6 +270,7 @@ private fun EditableProfileAvatar(
     onClick: () -> Unit,
 ) {
     val photoChangeDescription = stringResource(Res.string.profile_edit_photo_change)
+    val typography = appTypography()
 
     Box(
         modifier =
@@ -284,15 +289,15 @@ private fun EditableProfileAvatar(
                 Modifier
                     .fillMaxSize()
                     .background(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = StuColors.SurfaceVariant,
                         shape = CircleShape,
                     ),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = name.first { !it.isWhitespace() }.toString(),
-                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.88f),
+                style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = StuColors.TextPrimary,
             )
         }
         Surface(
@@ -302,11 +307,11 @@ private fun EditableProfileAvatar(
                     .offset(x = AppSpacing.sm, y = AppSpacing.sm)
                     .size(AppSpacing.xxxl),
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surface,
+            color = StuColors.Surface,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = MaterialTheme.colorScheme.outlineVariant,
+                    color = StuColors.Divider,
                 ),
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -314,7 +319,7 @@ private fun EditableProfileAvatar(
                     painter = painterResource(Res.drawable.ic_camera),
                     contentDescription = null,
                     modifier = Modifier.size(AppSpacing.xl),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    tint = StuColors.TextSecondary,
                 )
             }
         }
@@ -329,6 +334,7 @@ private fun EditableNameField(
     onDone: () -> Unit,
 ) {
     val inputDescription = stringResource(Res.string.profile_edit_name_input)
+    val typography = appTypography()
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -343,7 +349,7 @@ private fun EditableNameField(
                     .fillMaxWidth()
                     .semantics { contentDescription = inputDescription },
             enabled = enabled,
-            textStyle = MaterialTheme.typography.bodyLarge,
+            textStyle = typography.bodyLarge,
             singleLine = true,
             shape = AppShape.Card,
             trailingIcon = {
@@ -361,13 +367,13 @@ private fun EditableNameField(
             keyboardActions = KeyboardActions(onDone = { onDone() }),
             colors =
                 OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    focusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f),
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
-                    cursorColor = MaterialTheme.colorScheme.onSurface,
+                    focusedContainerColor = StuColors.SurfaceVariant,
+                    unfocusedContainerColor = StuColors.SurfaceVariant,
+                    disabledContainerColor = StuColors.SurfaceVariant,
+                    focusedBorderColor = StuColors.TextPrimary,
+                    unfocusedBorderColor = StuColors.Divider,
+                    disabledBorderColor = StuColors.Divider,
+                    cursorColor = StuColors.TextPrimary,
                 ),
         )
     }
@@ -379,6 +385,8 @@ private fun PhoneNumberField(
     enabled: Boolean,
     onChange: () -> Unit,
 ) {
+    val typography = appTypography()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
@@ -387,11 +395,11 @@ private fun PhoneNumberField(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = AppShape.Card,
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            color = StuColors.SurfaceVariant,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = MaterialTheme.colorScheme.outlineVariant,
+                    color = StuColors.Divider,
                 ),
         ) {
             Row(
@@ -402,8 +410,8 @@ private fun PhoneNumberField(
                 Text(
                     text = phoneNumber,
                     modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                    style = typography.bodyLarge,
+                    color = StuColors.TextSecondary,
                 )
                 Button(
                     enabled = enabled,
@@ -411,14 +419,14 @@ private fun PhoneNumberField(
                     shape = AppShape.Pill,
                     colors =
                         ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
-                            contentColor = MaterialTheme.colorScheme.background,
+                            containerColor = StuColors.PrimaryColor,
+                            contentColor = StuColors.White,
                         ),
                     contentPadding = ButtonDefaults.ContentPadding,
                 ) {
                     Text(
                         text = stringResource(Res.string.profile_edit_phone_number_change),
-                        style = MaterialTheme.typography.labelLarge,
+                        style = typography.labelLarge,
                     )
                 }
             }
@@ -428,6 +436,8 @@ private fun PhoneNumberField(
 
 @Composable
 private fun ReadOnlyEmailField(email: String) {
+    val typography = appTypography()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
@@ -439,18 +449,18 @@ private fun ReadOnlyEmailField(email: String) {
                     .fillMaxWidth()
                     .semantics(mergeDescendants = true) {},
             shape = AppShape.Card,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.88f),
+            color = StuColors.SurfaceVariant,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = MaterialTheme.colorScheme.outlineVariant,
+                    color = StuColors.Divider,
                 ),
         ) {
             Text(
                 text = email,
                 modifier = Modifier.padding(horizontal = AppSpacing.lg, vertical = AppSpacing.md),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                style = typography.bodyLarge,
+                color = StuColors.TextSecondary,
             )
         }
     }
@@ -458,26 +468,30 @@ private fun ReadOnlyEmailField(email: String) {
 
 @Composable
 private fun ProfileEditFieldLabel(text: String) {
+    val typography = appTypography()
+
     Text(
         text = text,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
+        style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+        color = StuColors.TextPrimary,
     )
 }
 
 @Composable
 private fun ProfileEditLoadingContent(modifier: Modifier = Modifier) {
+    val typography = appTypography()
+
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        CircularProgressIndicator(color = StuColors.Green)
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = stringResource(Res.string.profile_edit_loading),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = typography.bodyMedium,
+            color = StuColors.TextSecondary,
         )
     }
 }
@@ -487,6 +501,8 @@ private fun ProfileEditErrorContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
+
     Column(
         modifier =
             modifier
@@ -498,16 +514,16 @@ private fun ProfileEditErrorContent(
         Text(
             text = stringResource(Res.string.profile_edit_error_title),
             modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground,
+            style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = StuColors.TextPrimary,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         Text(
             text = stringResource(Res.string.profile_edit_error_description),
             modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = typography.bodyMedium,
+            color = StuColors.TextSecondary,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
@@ -660,6 +676,8 @@ private fun ProfileEditScreenPreview_Actions_Student_Interactive() {
     var lastAction by remember { mutableStateOf("None") }
 
     AppTheme(theme = ThemeType.STUDENT) {
+        val typography = appTypography()
+
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "마지막 행동: $lastAction",
@@ -667,7 +685,7 @@ private fun ProfileEditScreenPreview_Actions_Student_Interactive() {
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.sm),
-                style = MaterialTheme.typography.labelLarge,
+                style = typography.labelLarge,
             )
             ProfileEditScreen(
                 uiState =

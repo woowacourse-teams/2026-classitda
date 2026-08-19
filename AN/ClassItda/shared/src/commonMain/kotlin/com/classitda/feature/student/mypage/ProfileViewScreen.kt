@@ -18,7 +18,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -54,7 +53,9 @@ import classitda.shared.generated.resources.profile_view_withdrawal
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.student.mypage.MemberId
 import com.classitda.domain.model.student.mypage.MemberProfile
 import com.classitda.domain.repository.student.mypage.MyPageFailureReason
@@ -71,7 +72,7 @@ fun ProfileViewScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = StuColors.Background,
         topBar = {
             ProfileViewTopBar(
                 onBack = { onAction(ProfileViewAction.Back) },
@@ -110,6 +111,8 @@ private fun ProfileViewTopBar(
     onBack: () -> Unit,
     onEdit: () -> Unit,
 ) {
+    val typography = appTypography()
+
     Row(
         modifier =
             Modifier
@@ -122,7 +125,7 @@ private fun ProfileViewTopBar(
                 painter = painterResource(Res.drawable.ic_arrow_back),
                 contentDescription = stringResource(Res.string.profile_view_back),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
+                tint = StuColors.TextPrimary,
             )
         }
         Text(
@@ -131,15 +134,15 @@ private fun ProfileViewTopBar(
                 Modifier
                     .weight(1f)
                     .semantics { heading() },
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
+            style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = StuColors.TextPrimary,
         )
         IconButton(onClick = onEdit) {
             Icon(
                 painter = painterResource(Res.drawable.ic_edit),
                 contentDescription = stringResource(Res.string.profile_view_edit),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
+                tint = StuColors.TextPrimary,
             )
         }
     }
@@ -152,6 +155,8 @@ private fun ProfileViewContent(
     onWithdrawal: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
+
     Column(
         modifier =
             modifier
@@ -182,16 +187,16 @@ private fun ProfileViewContent(
         TextButton(onClick = onLogout) {
             Text(
                 text = stringResource(Res.string.profile_view_logout),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                style = typography.bodyMedium,
+                color = StuColors.TextSecondary,
             )
         }
         Spacer(modifier = Modifier.height(AppSpacing.xxxl * 5))
         TextButton(onClick = onWithdrawal) {
             Text(
                 text = stringResource(Res.string.profile_view_withdrawal),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
+                style = typography.bodyMedium,
+                color = StuColors.Red,
             )
         }
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
@@ -200,20 +205,22 @@ private fun ProfileViewContent(
 
 @Composable
 private fun ProfileAvatar(name: String) {
+    val typography = appTypography()
+
     Box(
         modifier =
             Modifier
                 .size(AppSpacing.xxxl * 3)
                 .background(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    color = StuColors.SurfaceVariant,
                     shape = CircleShape,
                 ),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = name.first { !it.isWhitespace() }.toString(),
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.88f),
+            style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            color = StuColors.TextPrimary,
         )
     }
 }
@@ -224,14 +231,16 @@ private fun ReadOnlyProfileField(
     value: String,
     isPrimary: Boolean = false,
 ) {
+    val typography = appTypography()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.88f),
+            style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = StuColors.TextPrimary,
         )
         Surface(
             modifier =
@@ -239,22 +248,22 @@ private fun ReadOnlyProfileField(
                     .fillMaxWidth()
                     .semantics(mergeDescendants = true) {},
             shape = AppShape.Card,
-            color = MaterialTheme.colorScheme.surfaceVariant,
+            color = StuColors.SurfaceVariant,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = MaterialTheme.colorScheme.outlineVariant,
+                    color = StuColors.Divider,
                 ),
         ) {
             Text(
                 text = value,
                 modifier = Modifier.padding(horizontal = AppSpacing.lg, vertical = AppSpacing.md),
-                style = MaterialTheme.typography.bodyLarge,
+                style = typography.bodyLarge,
                 color =
                     if (isPrimary) {
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.88f)
+                        StuColors.TextPrimary
                     } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        StuColors.TextSecondary
                     },
             )
         }
@@ -263,17 +272,19 @@ private fun ReadOnlyProfileField(
 
 @Composable
 private fun ProfileViewLoadingContent(modifier: Modifier = Modifier) {
+    val typography = appTypography()
+
     Column(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        CircularProgressIndicator(color = StuColors.Green)
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = stringResource(Res.string.profile_view_loading),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = typography.bodyMedium,
+            color = StuColors.TextSecondary,
         )
     }
 }
@@ -283,6 +294,8 @@ private fun ProfileViewErrorContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val typography = appTypography()
+
     Column(
         modifier =
             modifier
@@ -294,16 +307,16 @@ private fun ProfileViewErrorContent(
         Text(
             text = stringResource(Res.string.profile_view_error_title),
             modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground,
+            style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = StuColors.TextPrimary,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         Text(
             text = stringResource(Res.string.profile_view_error_description),
             modifier = Modifier.fillMaxWidth(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = typography.bodyMedium,
+            color = StuColors.TextSecondary,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
@@ -396,6 +409,8 @@ private fun ProfileViewScreenPreview_Actions_Student_Interactive() {
     var lastAction by remember { mutableStateOf("None") }
 
     AppTheme(theme = ThemeType.STUDENT) {
+        val typography = appTypography()
+
         Column(modifier = Modifier.fillMaxSize()) {
             Text(
                 text = "마지막 행동: $lastAction",
@@ -403,7 +418,7 @@ private fun ProfileViewScreenPreview_Actions_Student_Interactive() {
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.sm),
-                style = MaterialTheme.typography.labelLarge,
+                style = typography.labelLarge,
             )
             ProfileViewScreen(
                 uiState = ProfileViewPreviewFixture.content,

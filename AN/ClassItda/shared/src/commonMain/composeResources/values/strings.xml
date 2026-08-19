@@ -193,12 +193,12 @@
     <string name="phone_number_change_request_again">다시 요청</string>
     <string name="phone_number_change_code_label">인증번호</string>
     <string name="phone_number_change_code_placeholder">6자리 번호 입력</string>
-    <string name="phone_number_change_verified">인증이 완료되었습니다</string>
+    <string name="phone_number_change_verified">인증 완료</string>
     <string name="phone_number_change_verifying">인증번호를 확인하는 중입니다.</string>
     <string name="phone_number_change_complete">완료</string>
     <string name="phone_number_change_loading">전화번호 정보를 불러오는 중입니다.</string>
     <string name="phone_number_change_request_failed">인증번호를 요청하지 못했습니다. 잠시 후 다시 시도해 주세요.</string>
-    <string name="phone_number_change_verification_failed">인증번호를 확인하지 못했습니다. 입력한 번호를 다시 확인해 주세요.</string>
+    <string name="phone_number_change_verification_failed">인증번호를 확인하지 못했습니다. 다시 확인해 주세요.</string>
     <string name="phone_number_change_expired">인증 시간이 만료되었습니다. 다시 인증을 요청해 주세요.</string>
     <string name="phone_number_change_unknown_error">전화번호 인증을 진행하지 못했습니다. 잠시 후 다시 시도해 주세요.</string>
 </resources>

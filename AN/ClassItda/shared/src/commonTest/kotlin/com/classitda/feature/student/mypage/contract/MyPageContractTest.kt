@@ -104,6 +104,17 @@ class MyPageContractTest {
     }
 
     @Test
+    fun `전화번호 인증 성공 상태는 입력한 인증번호를 보존한다`() {
+        val state =
+            PhoneNumberChangeUiState.Verified(
+                phoneNumber = "01012345678",
+                verificationCode = "123456",
+            )
+
+        assertEquals("123456", state.verificationCode)
+    }
+
+    @Test
     fun `저장 중과 저장 실패는 ProfileEditUiState의 배타적인 상태다`() {
         assertIs<ProfileEditUiState.Saving>(
             ProfileEditUiState.Saving(
