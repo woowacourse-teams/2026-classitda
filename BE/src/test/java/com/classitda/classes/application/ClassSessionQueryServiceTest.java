@@ -10,6 +10,7 @@ import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.Reservation;
 import com.classitda.classes.domain.ReservationStatus;
+import com.classitda.classes.domain.SessionPhase;
 import com.classitda.classes.domain.Waiting;
 import com.classitda.classes.domain.WaitingStatus;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
@@ -130,7 +131,7 @@ class ClassSessionQueryServiceTest {
                 60,
                 LocalDateTime.of(2026, 8, 17, 20, 0),
                 LocalDateTime.of(2026, 8, 17, 21, 0),
-                ClassSessionStatus.OPENED
+                SessionPhase.SCHEDULED
         ));
     }
 

@@ -3,6 +3,7 @@ package com.classitda.classes.application;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
 import com.classitda.classes.domain.ClassType;
+import com.classitda.classes.domain.SessionPhase;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
@@ -16,6 +17,8 @@ import com.classitda.studio.domain.repository.StudioMembershipRepository;
 import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
+import java.time.Clock;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +33,7 @@ public class ClassSessionQueryService {
     private final ClassTypeRepository classTypeRepository;
     private final StudioMembershipRepository studioMembershipRepository;
     private final StudioRepository studioRepository;
+    private final Clock clock;
 
     public ClassSessionDetailResponse findOne(
             Long memberId,
@@ -43,8 +47,9 @@ public class ClassSessionQueryService {
                 .findByIdAndStudioId(classSessionId, studioId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
         ClassType classType = getClassType(classSessionId, studioId);
+        SessionPhase sessionPhase = classSession.phaseAt(LocalDateTime.now(clock));
 
-        return ClassSessionDetailResponse.of(classSession, classType);
+        return ClassSessionDetailResponse.of(classSession, classType, sessionPhase);
     }
 
     private Studio getStudio(Long studioId) {

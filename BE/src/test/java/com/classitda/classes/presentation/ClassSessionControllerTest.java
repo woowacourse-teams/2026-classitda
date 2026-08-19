@@ -23,6 +23,7 @@ import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.application.student.daily.StudentDailySessionView;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSessionStatus;
+import com.classitda.classes.domain.SessionPhase;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;
@@ -128,7 +129,7 @@ class ClassSessionControllerTest {
                   "durationMinutes": 60,
                   "startAt": "2026-08-17T20:00:00",
                   "endAt": "2026-08-17T21:00:00",
-                  "status": "OPENED"
+                  "sessionPhase": "SCHEDULED"
                 }
                 """, JsonCompareMode.STRICT);
         verify(queryService).findOne(1L, 7L, 11L);
@@ -848,7 +849,7 @@ class ClassSessionControllerTest {
                 60,
                 LocalDateTime.of(2026, 8, 17, 20, 0),
                 LocalDateTime.of(2026, 8, 17, 21, 0),
-                ClassSessionStatus.OPENED
+                SessionPhase.SCHEDULED
         );
     }
 

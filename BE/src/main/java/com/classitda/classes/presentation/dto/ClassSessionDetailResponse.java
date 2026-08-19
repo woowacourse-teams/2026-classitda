@@ -2,8 +2,8 @@ package com.classitda.classes.presentation.dto;
 
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassType;
+import com.classitda.classes.domain.SessionPhase;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
@@ -49,12 +49,14 @@ public record ClassSessionDetailResponse(
         )
         LocalDateTime endAt,
 
-        ClassSessionStatus status
+        @Schema(description = "현재 시각을 기준으로 계산한 수업 진행 단계")
+        SessionPhase sessionPhase
 ) {
 
     public static ClassSessionDetailResponse of(
             ClassSession classSession,
-            ClassType classType
+            ClassType classType,
+            SessionPhase sessionPhase
     ) {
         return new ClassSessionDetailResponse(
                 classSession.getId(),
@@ -68,7 +70,7 @@ public record ClassSessionDetailResponse(
                 classSession.getDurationMinutes(),
                 classSession.getStartAt(),
                 classSession.getEndAt(),
-                classSession.getStatus()
+                sessionPhase
         );
     }
 }
