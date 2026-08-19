@@ -25,6 +25,18 @@ internal object MyScheduleUpcomingPreviewFixture {
             instructorName = "박소연 대표 강사",
         )
 
+    val approvalRequired =
+        waitlisted.copy(
+            waitlistId = WaitlistId("preview-waitlist-approval-required"),
+            currentPosition = 0,
+        )
+
+    val waitlistedPosition2 =
+        waitlisted.copy(
+            waitlistId = WaitlistId("preview-waitlist-position-2"),
+            currentPosition = 2,
+        )
+
     val sections =
         listOf(
             UpcomingDateSectionUiModel(
@@ -33,7 +45,7 @@ internal object MyScheduleUpcomingPreviewFixture {
             ),
             UpcomingDateSectionUiModel(
                 dateLabel = "8월 9일 일요일",
-                items = listOf(waitlisted),
+                items = listOf(approvalRequired, waitlisted, waitlistedPosition2),
             ),
         )
 

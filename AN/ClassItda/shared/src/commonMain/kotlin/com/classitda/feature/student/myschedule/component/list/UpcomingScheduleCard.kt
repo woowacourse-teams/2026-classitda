@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.my_schedule_status_approval_required
 import classitda.shared.generated.resources.my_schedule_status_confirmed
 import classitda.shared.generated.resources.my_schedule_status_confirmed_mark
 import classitda.shared.generated.resources.my_schedule_status_waitlist
@@ -13,6 +14,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleCardUiModel
+import com.classitda.feature.student.myschedule.contract.UpcomingScheduleStatusUiModel
 import com.classitda.feature.student.myschedule.preview.MyScheduleUpcomingPreviewFixture
 
 @Composable
@@ -43,10 +45,21 @@ private fun UpcomingScheduleStatus(item: UpcomingScheduleCardUiModel) {
         }
 
         is UpcomingScheduleCardUiModel.Waitlisted -> {
-            ScheduleStatusLabel(
-                label = Res.string.my_schedule_status_waitlist,
-                contentColor = StuColors.Orange,
-            )
+            when (item.status) {
+                UpcomingScheduleStatusUiModel.APPROVAL_REQUIRED -> {
+                    ScheduleStatusLabel(
+                        label = Res.string.my_schedule_status_approval_required,
+                        contentColor = StuColors.Orange,
+                    )
+                }
+
+                UpcomingScheduleStatusUiModel.WAITLISTED -> {
+                    ScheduleStatusLabel(
+                        label = Res.string.my_schedule_status_waitlist,
+                        contentColor = StuColors.Orange,
+                    )
+                }
+            }
         }
     }
 }
@@ -79,6 +92,40 @@ private fun UpcomingScheduleCardPreview_Waitlist_Student_Default() {
     AppTheme(theme = ThemeType.STUDENT) {
         UpcomingScheduleCard(
             item = MyScheduleUpcomingPreviewFixture.waitlisted,
+            onClick = {},
+            modifier = Modifier.padding(AppSpacing.screenPadding),
+        )
+    }
+}
+
+@Preview(
+    name = "Approval required · Student · Default",
+    group = "Component/MySchedule/UpcomingCard",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun UpcomingScheduleCardPreview_ApprovalRequired_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        UpcomingScheduleCard(
+            item = MyScheduleUpcomingPreviewFixture.approvalRequired,
+            onClick = {},
+            modifier = Modifier.padding(AppSpacing.screenPadding),
+        )
+    }
+}
+
+@Preview(
+    name = "Waitlist position 2 · Student · Default",
+    group = "Component/MySchedule/UpcomingCard",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun UpcomingScheduleCardPreview_WaitlistPosition2_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        UpcomingScheduleCard(
+            item = MyScheduleUpcomingPreviewFixture.waitlistedPosition2,
             onClick = {},
             modifier = Modifier.padding(AppSpacing.screenPadding),
         )

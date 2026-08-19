@@ -53,8 +53,16 @@ class MyScheduleListUiModelTest {
             createWaitlisted(WaitlistId("waitlist-zero"), currentPosition = 0).currentPosition,
         )
         assertEquals(
+            UpcomingScheduleStatusUiModel.APPROVAL_REQUIRED,
+            createWaitlisted(WaitlistId("waitlist-zero"), currentPosition = 0).status,
+        )
+        assertEquals(
             1,
             createWaitlisted(WaitlistId("waitlist-one"), currentPosition = 1).currentPosition,
+        )
+        assertEquals(
+            UpcomingScheduleStatusUiModel.WAITLISTED,
+            createWaitlisted(WaitlistId("waitlist-one"), currentPosition = 1).status,
         )
 
         assertFailsWith<IllegalArgumentException> {

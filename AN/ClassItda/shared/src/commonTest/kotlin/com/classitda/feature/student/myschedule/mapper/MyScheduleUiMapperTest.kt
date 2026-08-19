@@ -25,6 +25,7 @@ import com.classitda.domain.model.student.myschedule.WaitlistId
 import com.classitda.feature.student.myschedule.contract.ReservationCancellationAvailabilityUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleCardUiModel
+import com.classitda.feature.student.myschedule.contract.UpcomingScheduleStatusUiModel
 import com.classitda.feature.student.myschedule.contract.UsageHistoryStatusUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistCancellationAvailabilityUiModel
 import kotlinx.datetime.LocalDate
@@ -93,6 +94,47 @@ class MyScheduleUiMapperTest {
         assertEquals(
             2,
             assertIs<UpcomingScheduleCardUiModel.Waitlisted>(sections.last().items.single()).currentPosition,
+        )
+    }
+
+    @Test
+    fun `대기 순번 0 1 2는 카드 상태와 WaitlistId를 함께 보존한다`() {
+        val schedules =
+            listOf(0, 1, 2).map { currentPosition ->
+                createWaitlisted(
+                    id = "waitlist-position-$currentPosition",
+                    session = createSession(
+                        id = "session-position-$currentPosition",
+                        startsAt = "2026-08-08T02:00:00Z",
+                        endsAt = "2026-08-08T03:50:00Z",
+                    ),
+                    currentPosition = currentPosition,
+                )
+            }
+
+        val waitlistedCards =
+            mapper
+                .mapUpcomingSchedules(schedules)
+                .single()
+                .items
+                .map { assertIs<UpcomingScheduleCardUiModel.Waitlisted>(it) }
+                .sortedBy { it.currentPosition }
+
+        assertContentEquals(
+            listOf(
+                WaitlistId("waitlist-position-0"),
+                WaitlistId("waitlist-position-1"),
+                WaitlistId("waitlist-position-2"),
+            ),
+            waitlistedCards.map { it.waitlistId },
+        )
+        assertContentEquals(
+            listOf(
+                UpcomingScheduleStatusUiModel.APPROVAL_REQUIRED,
+                UpcomingScheduleStatusUiModel.WAITLISTED,
+                UpcomingScheduleStatusUiModel.WAITLISTED,
+            ),
+            waitlistedCards.map { it.status },
         )
     }
 
