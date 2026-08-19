@@ -60,7 +60,7 @@ public class Reservation extends BaseEntity {
 
     private LocalDateTime absentAt;
 
-    void cancel(LocalDateTime occurredAt) {
+    public void cancel(LocalDateTime occurredAt) {
         if (occurredAt == null) {
             throw new ClassException(ClassErrorCode.RESERVATION_CANCEL_OCCURRED_AT_REQUIRED);
         }
@@ -70,7 +70,7 @@ public class Reservation extends BaseEntity {
         canceledAt = occurredAt;
     }
 
-    void markAttended(LocalDateTime occurredAt) {
+    public void markAttended(LocalDateTime occurredAt) {
         if (occurredAt == null) {
             throw new ClassException(
                     ClassErrorCode.RESERVATION_ATTENDANCE_OCCURRED_AT_REQUIRED
@@ -82,7 +82,7 @@ public class Reservation extends BaseEntity {
         attendedAt = occurredAt;
     }
 
-    void markAbsent(LocalDateTime occurredAt) {
+    public void markAbsent(LocalDateTime occurredAt) {
         if (occurredAt == null) {
             throw new ClassException(
                     ClassErrorCode.RESERVATION_ABSENCE_OCCURRED_AT_REQUIRED
