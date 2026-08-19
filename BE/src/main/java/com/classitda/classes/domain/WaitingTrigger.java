@@ -31,4 +31,15 @@ public sealed interface WaitingTrigger {
             }
         }
     }
+
+    record ExpirationReached(LocalDateTime occurredAt) implements WaitingTrigger {
+
+        public ExpirationReached {
+            if (occurredAt == null) {
+                throw new ClassException(
+                        ClassErrorCode.WAITING_EXPIRATION_OCCURRED_AT_REQUIRED
+                );
+            }
+        }
+    }
 }

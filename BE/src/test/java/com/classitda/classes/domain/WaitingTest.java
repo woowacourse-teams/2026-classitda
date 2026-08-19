@@ -17,6 +17,7 @@ class WaitingTest {
     private static final LocalDateTime OFFERED_AT = LocalDateTime.of(2026, 8, 25, 19, 0);
     private static final LocalDateTime OFFER_EXPIRES_AT = OFFERED_AT.plusMinutes(10);
     private static final LocalDateTime CANCELED_AT = OFFERED_AT.plusMinutes(5);
+    private static final LocalDateTime EXPIRED_AT = OFFER_EXPIRES_AT;
 
     @Test
     void 대기_중인_회원에게_제안하면_상태와_제안_기한을_함께_변경한다() {
@@ -167,6 +168,68 @@ class WaitingTest {
                 .isInstanceOfSatisfying(ClassException.class, exception ->
                         assertThat(exception.getErrorCode())
                                 .isEqualTo(ClassErrorCode.WAITING_CANCEL_OCCURRED_AT_REQUIRED));
+        assertThat(waiting.getStatus()).isEqualTo(WaitingStatus.WAITING);
+        assertThat(waiting.getEndedAt()).isNull();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = WaitingStatus.class, names = {"WAITING", "OFFERED"})
+    void 활성_대기가_만료되면_상태와_종료_정보를_함께_변경한다(
+            WaitingStatus currentStatus
+    ) {
+        // given
+        LocalDateTime originalOfferedAt = currentStatus == WaitingStatus.OFFERED
+                ? OFFERED_AT
+                : null;
+        LocalDateTime originalOfferExpiresAt = currentStatus == WaitingStatus.OFFERED
+                ? OFFER_EXPIRES_AT
+                : null;
+        Waiting waiting = 대기(
+                currentStatus,
+                originalOfferedAt,
+                originalOfferExpiresAt
+        );
+
+        // when
+        waiting.expire(EXPIRED_AT);
+
+        // then
+        assertThat(waiting.getStatus()).isEqualTo(WaitingStatus.EXPIRED);
+        assertThat(waiting.getEndedAt()).isEqualTo(EXPIRED_AT);
+        assertThat(waiting.getOfferedAt()).isEqualTo(originalOfferedAt);
+        assertThat(waiting.getOfferExpiresAt()).isEqualTo(originalOfferExpiresAt);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = WaitingStatus.class, names = {"ACCEPTED", "EXPIRED", "CANCELED"})
+    void 종료된_대기는_만료시킬_수_없다(WaitingStatus currentStatus) {
+        // given
+        LocalDateTime originalEndedAt = EXPIRED_AT.minusMinutes(1);
+        Waiting waiting = Waiting.builder()
+                .status(currentStatus)
+                .sequence(1)
+                .endedAt(originalEndedAt)
+                .build();
+
+        // when / then
+        assertThatThrownBy(() -> waiting.expire(EXPIRED_AT))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(ClassErrorCode.INVALID_WAITING_TRANSITION));
+        assertThat(waiting.getStatus()).isEqualTo(currentStatus);
+        assertThat(waiting.getEndedAt()).isEqualTo(originalEndedAt);
+    }
+
+    @Test
+    void 대기_만료_시각은_필수다() {
+        // given
+        Waiting waiting = 대기(WaitingStatus.WAITING, null, null);
+
+        // when / then
+        assertThatThrownBy(() -> waiting.expire(null))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(ClassErrorCode.WAITING_EXPIRATION_OCCURRED_AT_REQUIRED));
         assertThat(waiting.getStatus()).isEqualTo(WaitingStatus.WAITING);
         assertThat(waiting.getEndedAt()).isNull();
     }

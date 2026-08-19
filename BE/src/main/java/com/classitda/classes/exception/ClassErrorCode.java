@@ -95,6 +95,11 @@ public enum ClassErrorCode implements ErrorCode {
             "WAITING-005",
             "대기 취소 시각은 필수입니다.",
             HttpStatus.BAD_REQUEST
+    ),
+    WAITING_EXPIRATION_OCCURRED_AT_REQUIRED(
+            "WAITING-006",
+            "대기 만료 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
     );
 
     private final String code;
