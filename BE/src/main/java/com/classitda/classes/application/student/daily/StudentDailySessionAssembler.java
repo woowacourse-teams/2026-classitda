@@ -3,8 +3,9 @@ package com.classitda.classes.application.student.daily;
 import com.classitda.classes.application.student.StudentBookingContext;
 import com.classitda.classes.application.student.StudentBookingContext.ReservationCounts;
 import com.classitda.classes.application.student.StudentBookingContext.WaitingCounts;
+import com.classitda.classes.application.student.StudentBookingDecision;
+import com.classitda.classes.application.student.StudentBookingDecisionPolicy;
 import com.classitda.classes.application.student.StudentBookingStatus;
-import com.classitda.classes.application.student.StudentBookingStatusResolver;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StudentDailySessionAssembler {
 
-    private final StudentBookingStatusResolver bookingStatusResolver;
+    private final StudentBookingDecisionPolicy bookingDecisionPolicy;
 
     StudentDailySessionView assemble(
             ClassSessionDailyProjection classSession,
@@ -41,7 +42,8 @@ public class StudentDailySessionAssembler {
                 remainingCapacity,
                 now
         );
-        StudentBookingStatus bookingStatus = bookingStatusResolver.resolve(bookingContext);
+        StudentBookingDecision bookingDecision = bookingDecisionPolicy.decide(bookingContext);
+        StudentBookingStatus bookingStatus = bookingDecision.legacyStatus();
 
         return StudentDailySessionView.of(
                 classSession,

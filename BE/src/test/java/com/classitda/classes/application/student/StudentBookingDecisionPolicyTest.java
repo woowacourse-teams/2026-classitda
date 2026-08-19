@@ -11,12 +11,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class StudentBookingStatusResolverTest {
+class StudentBookingDecisionPolicyTest {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 10, 0);
 
     private final StudentBookingDecisionPolicy decisionPolicy = new StudentBookingDecisionPolicy();
-    private final StudentBookingStatusResolver resolver = new StudentBookingStatusResolver(decisionPolicy);
 
     @ParameterizedTest(name = "{0} 상태를 참여 관계와 예약 가능 여부로 결정한다")
     @MethodSource("bookingStatusContexts")
@@ -30,7 +29,7 @@ class StudentBookingStatusResolverTest {
 
         assertThat(decision.participation()).isEqualTo(expectedParticipation);
         assertThat(decision.availability()).isEqualTo(expectedAvailability);
-        assertThat(resolver.resolve(context)).isEqualTo(expectedStatus);
+        assertThat(decision.legacyStatus()).isEqualTo(expectedStatus);
     }
 
     private static Stream<Arguments> bookingStatusContexts() {
