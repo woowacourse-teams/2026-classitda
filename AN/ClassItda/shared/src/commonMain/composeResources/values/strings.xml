@@ -193,6 +193,7 @@
     <string name="phone_number_change_request_again">다시 요청</string>
     <string name="phone_number_change_code_label">인증번호</string>
     <string name="phone_number_change_code_placeholder">6자리 번호 입력</string>
+    <string name="phone_number_change_verify">확인</string>
     <string name="phone_number_change_verified">인증 완료</string>
     <string name="phone_number_change_verifying">인증번호를 확인하는 중입니다.</string>
     <string name="phone_number_change_complete">완료</string>

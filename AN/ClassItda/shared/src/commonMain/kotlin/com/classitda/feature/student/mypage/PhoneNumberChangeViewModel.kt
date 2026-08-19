@@ -2,11 +2,14 @@ package com.classitda.feature.student.mypage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.domain.model.student.mypage.PhoneVerificationId
 import com.classitda.domain.repository.student.mypage.MyPageFailureReason
 import com.classitda.domain.repository.student.mypage.MyPageRepository
 import com.classitda.domain.repository.student.mypage.MyPageResult
 import com.classitda.feature.student.mypage.contract.PhoneNumberChangeAction
 import com.classitda.feature.student.mypage.contract.PhoneNumberChangeUiState
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,6 +32,8 @@ internal class PhoneNumberChangeViewModel(
             ),
         )
     val uiState: StateFlow<PhoneNumberChangeUiState> = _uiState.asStateFlow()
+
+    private var countdownJob: Job? = null
 
     fun onAction(action: PhoneNumberChangeAction) {
         when (action) {
@@ -64,8 +69,9 @@ internal class PhoneNumberChangeViewModel(
                             phoneNumber = state.phoneNumber,
                             verificationCode = state.verificationCode,
                             verificationId = state.verificationId,
-                            remainingSeconds = initialRemainingSeconds,
+                            remainingSeconds = state.remainingSeconds ?: initialRemainingSeconds,
                         )
+                    startCountdown(state.verificationId)
                 }
             }
 
@@ -76,6 +82,7 @@ internal class PhoneNumberChangeViewModel(
     }
 
     private fun changePhoneNumber(phoneNumber: String) {
+        stopCountdown()
         when (_uiState.value) {
             is PhoneNumberChangeUiState.Editing,
             is PhoneNumberChangeUiState.Error,
@@ -94,6 +101,7 @@ internal class PhoneNumberChangeViewModel(
     }
 
     private fun requestVerification() {
+        stopCountdown()
         val state = _uiState.value
         val phoneNumber =
             when (state) {
@@ -107,12 +115,15 @@ internal class PhoneNumberChangeViewModel(
             _uiState.value =
                 when (val result = repository.requestPhoneVerification(phoneNumber)) {
                     is MyPageResult.Success -> {
-                        PhoneNumberChangeUiState.CodeEntry(
-                            phoneNumber = phoneNumber,
-                            verificationCode = "",
-                            verificationId = result.value.verificationId,
-                            remainingSeconds = initialRemainingSeconds,
-                        )
+                        val nextState =
+                            PhoneNumberChangeUiState.CodeEntry(
+                                phoneNumber = phoneNumber,
+                                verificationCode = "",
+                                verificationId = result.value.verificationId,
+                                remainingSeconds = initialRemainingSeconds,
+                            )
+                        startCountdown(nextState.verificationId)
+                        nextState
                     }
 
                     is MyPageResult.Failure -> {
@@ -141,8 +152,9 @@ internal class PhoneNumberChangeViewModel(
                             phoneNumber = state.phoneNumber,
                             verificationCode = sanitized,
                             verificationId = state.verificationId,
-                            remainingSeconds = initialRemainingSeconds,
+                            remainingSeconds = state.remainingSeconds ?: initialRemainingSeconds,
                         )
+                    startCountdown(state.verificationId)
                 }
             }
 
@@ -155,6 +167,8 @@ internal class PhoneNumberChangeViewModel(
     private fun verifyCode() {
         val state = _uiState.value as? PhoneNumberChangeUiState.CodeEntry ?: return
         if (state.verificationCode.length != VERIFICATION_CODE_LENGTH || state.remainingSeconds <= 0) return
+
+        stopCountdown()
 
         _uiState.value =
             PhoneNumberChangeUiState.Verifying(
@@ -180,19 +194,116 @@ internal class PhoneNumberChangeViewModel(
                     }
 
                     is MyPageResult.Failure -> {
-                        PhoneNumberChangeUiState.Error(
-                            phoneNumber = state.phoneNumber,
-                            verificationCode = state.verificationCode,
-                            verificationId = state.verificationId,
-                            reason = result.reason,
-                        )
+                        val remainingSeconds =
+                            if (result.reason == MyPageFailureReason.VERIFICATION_EXPIRED) {
+                                0
+                            } else {
+                                state.remainingSeconds
+                            }
+                        val nextState =
+                            PhoneNumberChangeUiState.Error(
+                                phoneNumber = state.phoneNumber,
+                                verificationCode = state.verificationCode,
+                                verificationId = state.verificationId,
+                                reason = result.reason,
+                                remainingSeconds = remainingSeconds,
+                            )
+                        if (remainingSeconds > 0) {
+                            startCountdown(state.verificationId)
+                        }
+                        nextState
                     }
                 }
         }
     }
 
+    private fun startCountdown(verificationId: PhoneVerificationId) {
+        countdownJob?.cancel()
+        countdownJob =
+            viewModelScope.launch {
+                while (true) {
+                    delay(ONE_SECOND_MILLIS)
+                    val state = _uiState.value
+                    val currentRemainingSeconds =
+                        when (state) {
+                            is PhoneNumberChangeUiState.CodeEntry -> {
+                                if (state.verificationId != verificationId) break
+                                state.remainingSeconds
+                            }
+
+                            is PhoneNumberChangeUiState.Error -> {
+                                if (state.verificationId != verificationId ||
+                                    state.reason == MyPageFailureReason.VERIFICATION_EXPIRED
+                                ) {
+                                    break
+                                }
+                                state.remainingSeconds ?: break
+                            }
+
+                            else -> {
+                                break
+                            }
+                        }
+
+                    val nextRemainingSeconds = currentRemainingSeconds - 1
+                    if (nextRemainingSeconds <= 0) {
+                        val currentState = _uiState.value
+                        val phoneNumber = currentState.phoneNumberOrNull() ?: break
+                        _uiState.value =
+                            PhoneNumberChangeUiState.Error(
+                                phoneNumber = phoneNumber,
+                                verificationCode = currentState.verificationCodeOrEmpty(),
+                                verificationId = verificationId,
+                                reason = MyPageFailureReason.VERIFICATION_EXPIRED,
+                                remainingSeconds = 0,
+                            )
+                        break
+                    }
+                    _uiState.value =
+                        when (val currentState = _uiState.value) {
+                            is PhoneNumberChangeUiState.CodeEntry -> {
+                                currentState.copy(remainingSeconds = nextRemainingSeconds)
+                            }
+
+                            is PhoneNumberChangeUiState.Error -> {
+                                currentState.copy(remainingSeconds = nextRemainingSeconds)
+                            }
+
+                            else -> {
+                                break
+                            }
+                        }
+                }
+            }
+    }
+
+    private fun PhoneNumberChangeUiState.phoneNumberOrNull(): String? =
+        when (this) {
+            is PhoneNumberChangeUiState.CodeEntry -> phoneNumber
+            is PhoneNumberChangeUiState.Error -> phoneNumber
+            else -> null
+        }
+
+    private fun PhoneNumberChangeUiState.verificationCodeOrEmpty(): String =
+        when (this) {
+            is PhoneNumberChangeUiState.CodeEntry -> verificationCode
+            is PhoneNumberChangeUiState.Error -> verificationCode
+            else -> ""
+        }
+
+    private fun stopCountdown() {
+        countdownJob?.cancel()
+        countdownJob = null
+    }
+
+    override fun onCleared() {
+        stopCountdown()
+        super.onCleared()
+    }
+
     private companion object {
         const val DEFAULT_REMAINING_SECONDS = 180
         const val VERIFICATION_CODE_LENGTH = 6
+        const val ONE_SECOND_MILLIS = 1_000L
     }
 }

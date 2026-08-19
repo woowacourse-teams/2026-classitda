@@ -164,7 +164,7 @@ private fun ConnectedFacilitiesList(
         }
         itemsIndexed(
             items = facilities,
-            key = { _, facility -> facility.id },
+            key = { _, facility -> facility.id.value },
         ) { index, facility ->
             ConnectedFacilityRow(facility = facility)
             if (index < facilities.lastIndex) {
