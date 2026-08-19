@@ -1,10 +1,9 @@
-name: BE Deploy
+name: BE CD
 
 on:
   push:
     branches:
       - main
-      - be/feat/64-cicd파이프라인구축
     paths:
       - 'BE/**'
       - '.github/workflows/be-deploy.yml'
