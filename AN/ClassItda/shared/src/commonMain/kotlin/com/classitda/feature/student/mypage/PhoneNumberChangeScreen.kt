@@ -76,6 +76,7 @@ import com.classitda.domain.model.student.mypage.PhoneVerificationId
 import com.classitda.domain.repository.student.mypage.MyPageFailureReason
 import com.classitda.feature.student.mypage.contract.PhoneNumberChangeAction
 import com.classitda.feature.student.mypage.contract.PhoneNumberChangeUiState
+import com.classitda.feature.student.mypage.preview.MyPageProfileBoundaryFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -666,7 +667,10 @@ private fun PhoneNumberChangeAction.previewLabel(): String =
 
 private fun PhoneNumberChangeUiState.reduceForPreview(action: PhoneNumberChangeAction): PhoneNumberChangeUiState =
     when (action) {
-        PhoneNumberChangeAction.Back,
+        PhoneNumberChangeAction.Back -> {
+            PhoneNumberChangePreviewFixture.beforeRequest
+        }
+
         PhoneNumberChangeAction.Retry,
         PhoneNumberChangeAction.Complete,
         -> {
@@ -949,5 +953,22 @@ private fun PhoneNumberChangeScreenPreview_Actions_Student_Interactive() {
                 modifier = Modifier.weight(1f),
             )
         }
+    }
+}
+
+@Preview(
+    name = "F05 · Long content · Large font · Small screen",
+    group = "Boundary/MyPageProfile",
+    widthDp = 320,
+    heightDp = 568,
+    fontScale = 1.5f,
+)
+@Composable
+private fun PhoneNumberChangeScreenPreview_Boundary_LongContent_LargeFont_SmallScreen() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        PhoneNumberChangeScreen(
+            uiState = MyPageProfileBoundaryFixture.phoneNumberChangeState,
+            onAction = {},
+        )
     }
 }

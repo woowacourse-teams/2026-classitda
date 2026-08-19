@@ -78,6 +78,7 @@ import com.classitda.domain.model.student.mypage.MemberProfile
 import com.classitda.domain.repository.student.mypage.MyPageFailureReason
 import com.classitda.feature.student.mypage.contract.ProfileEditAction
 import com.classitda.feature.student.mypage.contract.ProfileEditUiState
+import com.classitda.feature.student.mypage.preview.MyPageProfileBoundaryFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -703,5 +704,22 @@ private fun ProfileEditScreenPreview_Actions_Student_Interactive() {
                 modifier = Modifier.weight(1f),
             )
         }
+    }
+}
+
+@Preview(
+    name = "F04 · Long content · Large font · Small screen",
+    group = "Boundary/MyPageProfile",
+    widthDp = 320,
+    heightDp = 568,
+    fontScale = 1.5f,
+)
+@Composable
+private fun ProfileEditScreenPreview_Boundary_LongContent_LargeFont_SmallScreen() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ProfileEditScreen(
+            uiState = MyPageProfileBoundaryFixture.profileEditState,
+            onAction = {},
+        )
     }
 }
