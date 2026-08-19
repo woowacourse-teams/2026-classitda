@@ -161,8 +161,9 @@ class StudentCalendarQueryServiceTest {
         );
         ClassSession canceledSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "취소 수업", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(14, 0), ClassSessionStatus.CANCELED
+                LocalDate.of(2026, 8, 18).atTime(14, 0), ClassSessionStatus.OPENED
         );
+        canceledSession.cancel(canceledSession.getStartAt().minusMinutes(1));
         ClassSession otherClassTypeSession = 수업을_저장한다(
                 studio, instructorMembership, pilates, "다른 종류", ClassForm.GROUP,
                 LocalDate.of(2026, 8, 19).atTime(15, 0), ClassSessionStatus.OPENED

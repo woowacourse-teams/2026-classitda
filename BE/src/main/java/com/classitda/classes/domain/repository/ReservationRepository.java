@@ -59,8 +59,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
               AND classType.studio.id = :studioId
               AND reservation.classSession.startAt >= :rangeStart
               AND reservation.classSession.startAt < :rangeEnd
-              AND reservation.classSession.status <>
-                  com.classitda.classes.domain.ClassSessionStatus.CANCELED
+              AND reservation.classSession.canceledAt IS NULL
               AND reservation.status IN (
                   com.classitda.classes.domain.ReservationStatus.RESERVED,
                   com.classitda.classes.domain.ReservationStatus.ATTENDED,
