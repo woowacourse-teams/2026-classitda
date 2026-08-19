@@ -1,5 +1,7 @@
 package com.classitda.classes.domain;
 
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.studio.domain.StudioMembership;
 import jakarta.persistence.Column;
@@ -48,4 +50,30 @@ public class Waiting extends BaseEntity {
     private WaitingStatus status;
 
     private LocalDateTime offeredAt;
+
+    private LocalDateTime offerExpiresAt;
+
+    void offer(LocalDateTime occurredAt, LocalDateTime expiresAt) {
+        if (occurredAt == null) {
+            throw new ClassException(ClassErrorCode.WAITING_OFFERED_AT_REQUIRED);
+        }
+        if (expiresAt == null) {
+            throw new ClassException(ClassErrorCode.WAITING_OFFER_EXPIRES_AT_REQUIRED);
+        }
+
+        requireWaiting();
+        if (!expiresAt.isAfter(occurredAt)) {
+            throw new ClassException(ClassErrorCode.INVALID_WAITING_OFFER_DEADLINE);
+        }
+
+        status = WaitingStatus.OFFERED;
+        offeredAt = occurredAt;
+        offerExpiresAt = expiresAt;
+    }
+
+    private void requireWaiting() {
+        if (status != WaitingStatus.WAITING) {
+            throw new ClassException(ClassErrorCode.INVALID_WAITING_TRANSITION);
+        }
+    }
 }

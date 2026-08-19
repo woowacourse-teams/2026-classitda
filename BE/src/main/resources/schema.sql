@@ -368,6 +368,7 @@ CREATE TABLE waiting
     status           VARCHAR(20) NOT NULL,
     active_flag      TINYINT GENERATED ALWAYS AS (IF(status IN ('CANCELED', 'EXPIRED'), NULL, 1)) STORED,
     offered_at       DATETIME(6) NULL,
+    offer_expires_at DATETIME(6) NULL,
     created_at       DATETIME(6) NOT NULL,
     updated_at       DATETIME(6) NULL,
     PRIMARY KEY (id),

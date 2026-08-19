@@ -68,6 +68,28 @@ public enum ClassErrorCode implements ErrorCode {
             "RESERVATION-004",
             "예약 결석 처리 시각은 필수입니다.",
             HttpStatus.BAD_REQUEST
+    ),
+
+    // WAITING
+    INVALID_WAITING_TRANSITION(
+            "WAITING-001",
+            "현재 대기 상태에서는 요청한 상태 전이를 수행할 수 없습니다.",
+            HttpStatus.CONFLICT
+    ),
+    WAITING_OFFERED_AT_REQUIRED(
+            "WAITING-002",
+            "대기 제안 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    WAITING_OFFER_EXPIRES_AT_REQUIRED(
+            "WAITING-003",
+            "대기 제안 만료 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    INVALID_WAITING_OFFER_DEADLINE(
+            "WAITING-004",
+            "대기 제안 만료 시각은 제안 시각 이후여야 합니다.",
+            HttpStatus.BAD_REQUEST
     );
 
     private final String code;
