@@ -21,4 +21,6 @@ interface MyScheduleRepository {
     suspend fun cancelReservation(reservationId: ReservationId): MyScheduleResult<ReservationCancellationReceipt>
 
     suspend fun cancelWaitlist(waitlistId: WaitlistId): MyScheduleResult<WaitlistCancellationReceipt>
+
+    suspend fun approveWaitlist(waitlistId: WaitlistId): MyScheduleResult<Unit>
 }

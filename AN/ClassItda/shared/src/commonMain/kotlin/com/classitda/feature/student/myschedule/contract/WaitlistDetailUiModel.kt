@@ -84,13 +84,23 @@ sealed interface WaitlistDetailUiState {
     data class Content(
         val detail: WaitlistDetailUiModel,
         val cancellationDialog: WaitlistCancellationDialogUiState? = null,
+        val approvalDialog: WaitlistApprovalDialogUiState? = null,
     ) : WaitlistDetailUiState {
         init {
+            require(cancellationDialog == null || approvalDialog == null) {
+                "대기 취소와 승인 확인 창은 동시에 표시할 수 없습니다."
+            }
             require(
                 cancellationDialog == null ||
                     detail.cancellation is WaitlistCancellationAvailabilityUiModel.Available,
             ) {
                 "대기 취소 확인 창은 취소 가능한 대기 상세에서만 표시할 수 있습니다."
+            }
+            require(
+                approvalDialog == null ||
+                    detail.status == WaitlistDetailStatusUiModel.APPROVAL_REQUIRED,
+            ) {
+                "승인 확인 창은 승인 필요한 대기 상세에서만 표시할 수 있습니다."
             }
         }
     }
@@ -98,6 +108,8 @@ sealed interface WaitlistDetailUiState {
     data class CancellationCompleted(
         val result: WaitlistCancellationResultUiModel,
     ) : WaitlistDetailUiState
+
+    data object ApprovalCompleted : WaitlistDetailUiState
 
     data class Error(
         val error: WaitlistDetailErrorUiModel,
@@ -123,11 +135,21 @@ sealed interface WaitlistDetailAction {
 
     data object DismissCancellation : WaitlistDetailAction
 
+    data object DismissApproval : WaitlistDetailAction
+
     data class ConfirmCancellation(
         val waitlistId: WaitlistId,
     ) : WaitlistDetailAction
 
     data class RetryCancellation(
+        val waitlistId: WaitlistId,
+    ) : WaitlistDetailAction
+
+    data class ConfirmApproval(
+        val waitlistId: WaitlistId,
+    ) : WaitlistDetailAction
+
+    data class RetryApproval(
         val waitlistId: WaitlistId,
     ) : WaitlistDetailAction
 }
@@ -146,6 +168,23 @@ enum class WaitlistCancellationErrorUiModel {
     NETWORK,
     CONFLICT,
     CANCELLATION_NOT_ALLOWED,
+    UNKNOWN,
+}
+
+sealed interface WaitlistApprovalDialogUiState {
+    data object Waiting : WaitlistApprovalDialogUiState
+
+    data object Submitting : WaitlistApprovalDialogUiState
+
+    data class Failed(
+        val error: WaitlistApprovalErrorUiModel,
+    ) : WaitlistApprovalDialogUiState
+}
+
+enum class WaitlistApprovalErrorUiModel {
+    NETWORK,
+    CONFLICT,
+    APPROVAL_NOT_ALLOWED,
     UNKNOWN,
 }
 
@@ -170,6 +209,9 @@ data class WaitlistCancellationResultUiModel(
 
 internal val WaitlistCancellationDialogUiState.canDismiss: Boolean
     get() = this !is WaitlistCancellationDialogUiState.Submitting
+
+internal val WaitlistApprovalDialogUiState.canDismiss: Boolean
+    get() = this !is WaitlistApprovalDialogUiState.Submitting
 
 internal fun WaitlistDetailUiModel.cancellationActionOrNull(): WaitlistDetailAction.CancelWaitlist? =
     if (cancellation is WaitlistCancellationAvailabilityUiModel.Available) {

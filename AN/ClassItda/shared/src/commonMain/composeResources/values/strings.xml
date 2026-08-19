@@ -125,6 +125,12 @@
     <string name="my_schedule_waitlist_cancel_confirm_submit">대기 취소하기</string>
     <string name="my_schedule_waitlist_cancel_confirm_submitting">처리 중</string>
     <string name="my_schedule_waitlist_cancel_confirm_failed">대기 신청을 취소하지 못했습니다. 잠시 후 다시 시도해 주세요.</string>
+    <string name="my_schedule_waitlist_approve_confirm_title">예약을 승인하시겠습니까?</string>
+    <string name="my_schedule_waitlist_approve_confirm_description">현재 대기 순번은 %1$d번입니다. 승인하면 예약 완료 상태로 변경됩니다.</string>
+    <string name="my_schedule_waitlist_approve_confirm_dismiss">취소</string>
+    <string name="my_schedule_waitlist_approve_confirm_submit">승인하기</string>
+    <string name="my_schedule_waitlist_approve_confirm_submitting">처리 중</string>
+    <string name="my_schedule_waitlist_approve_confirm_failed">예약을 승인하지 못했습니다. 잠시 후 다시 시도해 주세요.</string>
     <string name="my_schedule_waitlist_cancelled_title">대기 신청이 취소되었습니다</string>
     <string name="my_schedule_waitlist_cancelled_description">신청하신 클래스의 대기 예약이 취소되었습니다.</string>
     <string name="my_schedule_waitlist_cancellation_history">대기 취소 내역</string>

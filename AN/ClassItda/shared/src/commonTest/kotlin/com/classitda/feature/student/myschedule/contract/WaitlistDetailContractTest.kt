@@ -17,13 +17,15 @@ class WaitlistDetailContractTest {
                 WaitlistDetailUiState.Loading,
                 WaitlistDetailUiState.Content(createDetail()),
                 WaitlistDetailUiState.CancellationCompleted(createCancellationResult()),
+                WaitlistDetailUiState.ApprovalCompleted,
                 WaitlistDetailUiState.Error(WaitlistDetailErrorUiModel.NETWORK),
             )
 
         assertIs<WaitlistDetailUiState.Loading>(states[0])
         assertIs<WaitlistDetailUiState.Content>(states[1])
         assertIs<WaitlistDetailUiState.CancellationCompleted>(states[2])
-        assertIs<WaitlistDetailUiState.Error>(states[3])
+        assertIs<WaitlistDetailUiState.ApprovalCompleted>(states[3])
+        assertIs<WaitlistDetailUiState.Error>(states[4])
     }
 
     @Test
@@ -107,6 +109,51 @@ class WaitlistDetailContractTest {
         assertTrue(WaitlistCancellationDialogUiState.Waiting.canDismiss)
         assertTrue(failed.canDismiss)
         assertFalse(WaitlistCancellationDialogUiState.Submitting.canDismiss)
+    }
+
+    @Test
+    fun `승인 확인 창도 제출 중에는 중복 승인과 dismiss를 차단한다`() {
+        val failed =
+            WaitlistApprovalDialogUiState.Failed(
+                WaitlistApprovalErrorUiModel.NETWORK,
+            )
+
+        assertTrue(WaitlistApprovalDialogUiState.Waiting.canDismiss)
+        assertTrue(failed.canDismiss)
+        assertFalse(WaitlistApprovalDialogUiState.Submitting.canDismiss)
+    }
+
+    @Test
+    fun `승인 확인 창은 승인 필요한 상세에만 결합할 수 있다`() {
+        WaitlistDetailUiState.Content(
+            detail = createDetail().copy(currentPosition = 0),
+            approvalDialog = WaitlistApprovalDialogUiState.Waiting,
+        )
+
+        assertFailsWith<IllegalArgumentException> {
+            WaitlistDetailUiState.Content(
+                detail = createDetail(),
+                approvalDialog = WaitlistApprovalDialogUiState.Waiting,
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            WaitlistDetailUiState.Content(
+                detail = createDetail().copy(currentPosition = 0),
+                cancellationDialog = WaitlistCancellationDialogUiState.Waiting,
+                approvalDialog = WaitlistApprovalDialogUiState.Waiting,
+            )
+        }
+    }
+
+    @Test
+    fun `승인 확인과 재시도 Action은 승인 대상 WaitlistId를 유지한다`() {
+        val waitlistId = WaitlistId("waitlist-to-approve")
+
+        val confirm = WaitlistDetailAction.ConfirmApproval(waitlistId)
+        val retry = WaitlistDetailAction.RetryApproval(waitlistId)
+
+        assertEquals(waitlistId, confirm.waitlistId)
+        assertEquals(waitlistId, retry.waitlistId)
     }
 
     @Test

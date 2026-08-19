@@ -78,12 +78,21 @@ class FakeMyScheduleRepositoryTest {
                     ).value
                 assertEquals(entry.reservationId, detail.reservationId)
                 when (entry.status) {
-                    UsageHistoryStatus.ATTENDED -> assertIs<ReservationDetail.Attended>(detail)
-                    UsageHistoryStatus.ABSENT -> assertIs<ReservationDetail.Absent>(detail)
+                    UsageHistoryStatus.ATTENDED -> {
+                        assertIs<ReservationDetail.Attended>(detail)
+                    }
+
+                    UsageHistoryStatus.ABSENT -> {
+                        assertIs<ReservationDetail.Absent>(detail)
+                    }
+
                     UsageHistoryStatus.CLASS_CANCELLED -> {
                         assertIs<ReservationDetail.ClassCancelled>(detail)
                     }
-                    UsageHistoryStatus.RESERVATION_CANCELLED -> assertIs<ReservationDetail.Cancelled>(detail)
+
+                    UsageHistoryStatus.RESERVATION_CANCELLED -> {
+                        assertIs<ReservationDetail.Cancelled>(detail)
+                    }
                 }
             }
         }
@@ -233,7 +242,91 @@ class FakeMyScheduleRepositoryTest {
             assertEquals(fixture.waitlistId, repository.lastWaitlistDetailRequestId)
         }
 
-    private fun createFixture(): RepositoryFixture {
+    @Test
+    fun `승인 실패 시 기존 대기 상태를 유지한다`() =
+        runBlocking {
+            val fixture = createFixture(currentPosition = 0)
+            val repository =
+                fixture.createRepository(
+                    failures =
+                        FakeMyScheduleFailures(
+                            waitlistApproval = MyScheduleFailureReason.CONFLICT,
+                        ),
+                )
+            val upcomingBefore = repository.upcomingSchedulesSnapshot
+            val waitlistDetailBefore =
+                assertIs<MyScheduleResult.Success<WaitlistDetail>>(
+                    repository.getWaitlistDetail(fixture.waitlistId),
+                ).value
+
+            assertEquals(
+                MyScheduleResult.Failure(MyScheduleFailureReason.CONFLICT),
+                repository.approveWaitlist(fixture.waitlistId),
+            )
+            assertEquals(fixture.waitlistId, repository.lastWaitlistApprovalRequestId)
+            assertEquals(upcomingBefore, repository.upcomingSchedulesSnapshot)
+            assertEquals(
+                waitlistDetailBefore,
+                assertIs<MyScheduleResult.Success<WaitlistDetail>>(
+                    repository.getWaitlistDetail(fixture.waitlistId),
+                ).value,
+            )
+        }
+
+    @Test
+    fun `승인 성공 시 0번 대기를 예약 완료 일정으로 전환한다`() =
+        runBlocking {
+            val fixture = createFixture(currentPosition = 0)
+            val repository = fixture.createRepository()
+
+            assertEquals(
+                MyScheduleResult.Success(Unit),
+                repository.approveWaitlist(fixture.waitlistId),
+            )
+            assertEquals(fixture.waitlistId, repository.lastWaitlistApprovalRequestId)
+            assertNull(
+                repository.upcomingSchedulesSnapshot
+                    .filterIsInstance<UpcomingSchedule.Waitlisted>()
+                    .find { it.waitlistId == fixture.waitlistId },
+            )
+            val confirmed =
+                repository.upcomingSchedulesSnapshot
+                    .filterIsInstance<UpcomingSchedule.ConfirmedReservation>()
+                    .single { it.session == fixture.waitlistDetail.session }
+            assertEquals(
+                ReservationId("reservation-approved-${fixture.waitlistId.value}"),
+                confirmed.reservationId,
+            )
+            assertIs<ReservationDetail.Confirmed>(
+                assertIs<MyScheduleResult.Success<ReservationDetail>>(
+                    repository.getReservationDetail(confirmed.reservationId),
+                ).value,
+            )
+            assertEquals(
+                MyScheduleResult.Failure(MyScheduleFailureReason.NOT_FOUND),
+                repository.getWaitlistDetail(fixture.waitlistId),
+            )
+        }
+
+    @Test
+    fun `1번 이상 대기는 승인할 수 없고 상태를 유지한다`() =
+        runBlocking {
+            val fixture = createFixture(currentPosition = 2)
+            val repository = fixture.createRepository()
+            val upcomingBefore = repository.upcomingSchedulesSnapshot
+
+            assertEquals(
+                MyScheduleResult.Failure(MyScheduleFailureReason.APPROVAL_NOT_ALLOWED),
+                repository.approveWaitlist(fixture.waitlistId),
+            )
+            assertEquals(upcomingBefore, repository.upcomingSchedulesSnapshot)
+            assertIs<MyScheduleResult.Success<WaitlistDetail>>(
+                repository.getWaitlistDetail(fixture.waitlistId),
+            )
+            Unit
+        }
+
+    private fun createFixture(currentPosition: Int = 2): RepositoryFixture {
         val reservationId = ReservationId("reservation-1")
         val waitlistId = WaitlistId("waitlist-1")
         val reservationSession = createSession("reservation-session")
@@ -249,7 +342,7 @@ class FakeMyScheduleRepositoryTest {
                 waitlistId = waitlistId,
                 session = waitlistSession,
                 appliedAt = Instant.parse("2026-08-03T12:20:00Z"),
-                currentPosition = 2,
+                currentPosition = currentPosition,
             )
         val reservationDetail =
             ReservationDetail.Confirmed(

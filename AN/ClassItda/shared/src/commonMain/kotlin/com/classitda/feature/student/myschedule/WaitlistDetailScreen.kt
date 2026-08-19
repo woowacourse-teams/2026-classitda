@@ -34,10 +34,12 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.student.myschedule.component.common.MySchedulePrimaryButton
 import com.classitda.feature.student.myschedule.component.common.MyScheduleSecondaryButton
+import com.classitda.feature.student.myschedule.component.detail.waitlist.WaitlistApprovalConfirmDialog
 import com.classitda.feature.student.myschedule.component.detail.waitlist.WaitlistCancellationConfirmDialog
 import com.classitda.feature.student.myschedule.component.detail.waitlist.WaitlistDetailContent
 import com.classitda.feature.student.myschedule.component.detail.waitlist.WaitlistDetailTopBar
 import com.classitda.feature.student.myschedule.component.list.MyScheduleLoadingContent
+import com.classitda.feature.student.myschedule.contract.WaitlistApprovalDialogUiState
 import com.classitda.feature.student.myschedule.contract.WaitlistCancellationDialogUiState
 import com.classitda.feature.student.myschedule.contract.WaitlistCancellationErrorUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailAction
@@ -68,6 +70,7 @@ fun WaitlistDetailScreen(
         )
         return
     }
+    if (state is WaitlistDetailUiState.ApprovalCompleted) return
 
     Box(
         modifier =
@@ -102,6 +105,8 @@ fun WaitlistDetailScreen(
 
                 is WaitlistDetailUiState.CancellationCompleted -> {}
 
+                WaitlistDetailUiState.ApprovalCompleted -> {}
+
                 is WaitlistDetailUiState.Error -> {
                     WaitlistDetailErrorContent(
                         onRetry = { onAction(WaitlistDetailAction.Retry) },
@@ -128,6 +133,24 @@ fun WaitlistDetailScreen(
                     )
                 },
                 onDismiss = { onAction(WaitlistDetailAction.DismissCancellation) },
+            )
+        }
+        val approvalDialogState = contentState?.approvalDialog
+        if (contentState != null && approvalDialogState != null) {
+            WaitlistApprovalConfirmDialog(
+                position = contentState.detail.currentPosition,
+                state = approvalDialogState,
+                onConfirm = {
+                    onAction(
+                        WaitlistDetailAction.ConfirmApproval(contentState.detail.waitlistId),
+                    )
+                },
+                onRetry = {
+                    onAction(
+                        WaitlistDetailAction.RetryApproval(contentState.detail.waitlistId),
+                    )
+                },
+                onDismiss = { onAction(WaitlistDetailAction.DismissApproval) },
             )
         }
     }
@@ -245,12 +268,24 @@ private fun WaitlistDetailScreenPreview_F06CancellationActionHarness_Student() {
                                 "마지막 Action/ID: DismissCancellation"
                             }
 
+                            WaitlistDetailAction.DismissApproval -> {
+                                "마지막 Action/ID: DismissApproval"
+                            }
+
                             is WaitlistDetailAction.ConfirmCancellation -> {
                                 "마지막 Action/ID: ConfirmCancellation/${action.waitlistId.value}"
                             }
 
                             is WaitlistDetailAction.RetryCancellation -> {
                                 "마지막 Action/ID: RetryCancellation/${action.waitlistId.value}"
+                            }
+
+                            is WaitlistDetailAction.ConfirmApproval -> {
+                                "마지막 Action/ID: ConfirmApproval/${action.waitlistId.value}"
+                            }
+
+                            is WaitlistDetailAction.RetryApproval -> {
+                                "마지막 Action/ID: RetryApproval/${action.waitlistId.value}"
                             }
                         }
                 },
@@ -322,6 +357,14 @@ private fun WaitlistDetailScreenPreview_F07ModalActionHarness_Student() {
                                 "마지막 Action/ID: DismissCancellation"
                             }
 
+                            WaitlistDetailAction.DismissApproval -> {
+                                screenState =
+                                    WaitlistDetailUiState.Content(
+                                        detail = WaitlistDetailPreviewFixture.approvalRequired,
+                                    )
+                                "마지막 Action/ID: DismissApproval"
+                            }
+
                             is WaitlistDetailAction.ConfirmCancellation -> {
                                 screenState =
                                     WaitlistDetailUiState.Content(
@@ -338,6 +381,24 @@ private fun WaitlistDetailScreenPreview_F07ModalActionHarness_Student() {
                                         cancellationDialog = WaitlistCancellationDialogUiState.Submitting,
                                     )
                                 "마지막 Action/ID: RetryCancellation/${action.waitlistId.value}"
+                            }
+
+                            is WaitlistDetailAction.ConfirmApproval -> {
+                                screenState =
+                                    WaitlistDetailUiState.Content(
+                                        detail = WaitlistDetailPreviewFixture.approvalRequired,
+                                        approvalDialog = WaitlistApprovalDialogUiState.Submitting,
+                                    )
+                                "마지막 Action/ID: ConfirmApproval/${action.waitlistId.value}"
+                            }
+
+                            is WaitlistDetailAction.RetryApproval -> {
+                                screenState =
+                                    WaitlistDetailUiState.Content(
+                                        detail = WaitlistDetailPreviewFixture.approvalRequired,
+                                        approvalDialog = WaitlistApprovalDialogUiState.Submitting,
+                                    )
+                                "마지막 Action/ID: RetryApproval/${action.waitlistId.value}"
                             }
                         }
                 },

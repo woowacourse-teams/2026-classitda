@@ -15,5 +15,6 @@ enum class MyScheduleFailureReason {
     NOT_FOUND,
     CONFLICT,
     CANCELLATION_NOT_ALLOWED,
+    APPROVAL_NOT_ALLOWED,
     UNKNOWN,
 }

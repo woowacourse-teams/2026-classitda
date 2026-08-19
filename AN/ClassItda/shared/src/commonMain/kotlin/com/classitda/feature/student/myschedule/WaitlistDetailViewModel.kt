@@ -6,11 +6,14 @@ import com.classitda.domain.model.student.myschedule.WaitlistId
 import com.classitda.domain.repository.student.myschedule.MyScheduleFailureReason
 import com.classitda.domain.repository.student.myschedule.MyScheduleRepository
 import com.classitda.domain.repository.student.myschedule.MyScheduleResult
+import com.classitda.feature.student.myschedule.contract.WaitlistApprovalDialogUiState
+import com.classitda.feature.student.myschedule.contract.WaitlistApprovalErrorUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistCancellationAvailabilityUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistCancellationDialogUiState
 import com.classitda.feature.student.myschedule.contract.WaitlistCancellationErrorUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailAction
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailErrorUiModel
+import com.classitda.feature.student.myschedule.contract.WaitlistDetailStatusUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailUiState
 import com.classitda.feature.student.myschedule.contract.canDismiss
 import com.classitda.feature.student.myschedule.mapper.MyScheduleUiMapper
@@ -45,11 +48,15 @@ internal class WaitlistDetailViewModel(
             }
 
             is WaitlistDetailAction.ApproveWaitlist -> {
-                // 승인 요청은 다음 커밋의 Repository/ViewModel 범위에서 연결한다.
+                openApprovalDialog(action.waitlistId)
             }
 
             WaitlistDetailAction.DismissCancellation -> {
                 dismissCancellationDialog()
+            }
+
+            WaitlistDetailAction.DismissApproval -> {
+                dismissApprovalDialog()
             }
 
             is WaitlistDetailAction.ConfirmCancellation -> {
@@ -61,6 +68,20 @@ internal class WaitlistDetailViewModel(
 
             is WaitlistDetailAction.RetryCancellation -> {
                 submitCancellation(
+                    waitlistId = action.waitlistId,
+                    expectedDialogState = null,
+                )
+            }
+
+            is WaitlistDetailAction.ConfirmApproval -> {
+                submitApproval(
+                    waitlistId = action.waitlistId,
+                    expectedDialogState = WaitlistApprovalDialogUiState.Waiting,
+                )
+            }
+
+            is WaitlistDetailAction.RetryApproval -> {
+                submitApproval(
                     waitlistId = action.waitlistId,
                     expectedDialogState = null,
                 )
@@ -161,6 +182,64 @@ internal class WaitlistDetailViewModel(
         }
     }
 
+    private fun openApprovalDialog(requestedId: WaitlistId) {
+        val content = _uiState.value as? WaitlistDetailUiState.Content ?: return
+        if (
+            requestedId != waitlistId ||
+            content.detail.waitlistId != waitlistId ||
+            content.detail.status != WaitlistDetailStatusUiModel.APPROVAL_REQUIRED ||
+            content.approvalDialog != null
+        ) {
+            return
+        }
+
+        _uiState.value =
+            content.copy(
+                approvalDialog = WaitlistApprovalDialogUiState.Waiting,
+            )
+    }
+
+    private fun dismissApprovalDialog() {
+        val content = _uiState.value as? WaitlistDetailUiState.Content ?: return
+        val dialog = content.approvalDialog ?: return
+        if (!dialog.canDismiss) return
+
+        _uiState.value = content.copy(approvalDialog = null)
+    }
+
+    private fun submitApproval(
+        waitlistId: WaitlistId,
+        expectedDialogState: WaitlistApprovalDialogUiState?,
+    ) {
+        val content = _uiState.value as? WaitlistDetailUiState.Content ?: return
+        val dialog = content.approvalDialog ?: return
+        val canSubmit =
+            when {
+                waitlistId != this.waitlistId -> false
+                content.detail.waitlistId != this.waitlistId -> false
+                dialog is WaitlistApprovalDialogUiState.Submitting -> false
+                expectedDialogState != null -> dialog == expectedDialogState
+                else -> dialog is WaitlistApprovalDialogUiState.Failed
+            }
+        if (!canSubmit) return
+
+        _uiState.value =
+            content.copy(
+                approvalDialog = WaitlistApprovalDialogUiState.Submitting,
+            )
+        viewModelScope.launch {
+            when (val result = repository.approveWaitlist(waitlistId)) {
+                is MyScheduleResult.Success -> {
+                    _uiState.value = WaitlistDetailUiState.ApprovalCompleted
+                }
+
+                is MyScheduleResult.Failure -> {
+                    updateApprovalFailure(result.reason.toApprovalErrorUiModel())
+                }
+            }
+        }
+    }
+
     private fun updateCancellationFailure(error: WaitlistCancellationErrorUiModel) {
         _uiState.update { state ->
             val content = state as? WaitlistDetailUiState.Content ?: return@update state
@@ -185,6 +264,7 @@ internal class WaitlistDetailViewModel(
 
             MyScheduleFailureReason.CONFLICT,
             MyScheduleFailureReason.CANCELLATION_NOT_ALLOWED,
+            MyScheduleFailureReason.APPROVAL_NOT_ALLOWED,
             MyScheduleFailureReason.UNKNOWN,
             -> {
                 WaitlistDetailErrorUiModel.UNKNOWN
@@ -206,9 +286,44 @@ internal class WaitlistDetailViewModel(
             }
 
             MyScheduleFailureReason.NOT_FOUND,
+            MyScheduleFailureReason.APPROVAL_NOT_ALLOWED,
             MyScheduleFailureReason.UNKNOWN,
             -> {
                 WaitlistCancellationErrorUiModel.UNKNOWN
+            }
+        }
+
+    private fun updateApprovalFailure(error: WaitlistApprovalErrorUiModel) {
+        _uiState.update { state ->
+            val content = state as? WaitlistDetailUiState.Content ?: return@update state
+            if (content.approvalDialog !is WaitlistApprovalDialogUiState.Submitting) {
+                return@update state
+            }
+            content.copy(
+                approvalDialog = WaitlistApprovalDialogUiState.Failed(error),
+            )
+        }
+    }
+
+    private fun MyScheduleFailureReason.toApprovalErrorUiModel(): WaitlistApprovalErrorUiModel =
+        when (this) {
+            MyScheduleFailureReason.NETWORK -> {
+                WaitlistApprovalErrorUiModel.NETWORK
+            }
+
+            MyScheduleFailureReason.CONFLICT -> {
+                WaitlistApprovalErrorUiModel.CONFLICT
+            }
+
+            MyScheduleFailureReason.APPROVAL_NOT_ALLOWED -> {
+                WaitlistApprovalErrorUiModel.APPROVAL_NOT_ALLOWED
+            }
+
+            MyScheduleFailureReason.NOT_FOUND,
+            MyScheduleFailureReason.CANCELLATION_NOT_ALLOWED,
+            MyScheduleFailureReason.UNKNOWN,
+            -> {
+                WaitlistApprovalErrorUiModel.UNKNOWN
             }
         }
 }
