@@ -198,7 +198,7 @@ private fun ProfileEditTopBar(
                     } else {
                         stringResource(Res.string.profile_edit_complete)
                     },
-                style = typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             )
         }
     }
