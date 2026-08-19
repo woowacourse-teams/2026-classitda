@@ -55,11 +55,12 @@ jobs:
       - name: cloudflared 설치
         env:
           CLOUDFLARED_VERSION: '2026.8.2'
-정        run: |
+          CLOUDFLARED_SHA256: 'fcfb02b575a52ca1af2e3267af4e1517bcdeb30ac48c834c69abaed3c0576ad2'
+        run: |
           set -eu
           curl -fsSL -o cloudflared \
             "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-amd64"
-          echo "${CLOUDFLARED_SHA2가56}  cloudflared" | sha256sum -c -
+          echo "${CLOUDFLARED_SHA256}  cloudflared" | sha256sum -c -
           chmod +x cloudflared
           sudo mv cloudflared /usr/local/bin/
 
