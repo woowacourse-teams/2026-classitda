@@ -13,6 +13,7 @@ class ReservationStateMachineTest {
     private static final LocalDateTime RESERVED_AT = LocalDateTime.of(2026, 8, 18, 9, 0);
     private static final LocalDateTime CANCELED_AT = LocalDateTime.of(2026, 8, 19, 10, 0);
     private static final LocalDateTime ATTENDED_AT = LocalDateTime.of(2026, 8, 25, 20, 5);
+    private static final LocalDateTime ABSENT_AT = LocalDateTime.of(2026, 8, 25, 20, 10);
 
     private final ReservationStateMachine stateMachine = new ReservationStateMachine();
 
@@ -43,6 +44,22 @@ class ReservationStateMachineTest {
         assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.ATTENDED);
         assertThat(reservation.getAttendedAt()).isEqualTo(ATTENDED_AT);
         assertThat(reservation.getCanceledAt()).isNull();
+    }
+
+    @Test
+    void 결석_확인_트리거를_결석_전이로_연결한다() {
+        // given
+        Reservation reservation = 예약();
+        ReservationTrigger trigger = new ReservationTrigger.AbsenceConfirmed(ABSENT_AT);
+
+        // when
+        stateMachine.handle(reservation, trigger);
+
+        // then
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.ABSENT);
+        assertThat(reservation.getAbsentAt()).isEqualTo(ABSENT_AT);
+        assertThat(reservation.getCanceledAt()).isNull();
+        assertThat(reservation.getAttendedAt()).isNull();
     }
 
     @Test
@@ -79,10 +96,22 @@ class ReservationStateMachineTest {
                                 ));
     }
 
+    @Test
+    void 결석_확인_트리거의_발생_시각은_필수다() {
+        // when / then
+        assertThatThrownBy(() -> new ReservationTrigger.AbsenceConfirmed(null))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(
+                                        ClassErrorCode.RESERVATION_ABSENCE_OCCURRED_AT_REQUIRED
+                                ));
+    }
+
     private Reservation 예약() {
         return Reservation.builder()
                 .status(ReservationStatus.RESERVED)
                 .reservedAt(RESERVED_AT)
                 .build();
     }
+
 }

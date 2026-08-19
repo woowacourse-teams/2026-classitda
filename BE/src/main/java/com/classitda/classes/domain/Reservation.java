@@ -58,6 +58,8 @@ public class Reservation extends BaseEntity {
 
     private LocalDateTime attendedAt;
 
+    private LocalDateTime absentAt;
+
     void cancel(LocalDateTime occurredAt) {
         if (occurredAt == null) {
             throw new ClassException(ClassErrorCode.RESERVATION_CANCEL_OCCURRED_AT_REQUIRED);
@@ -80,8 +82,28 @@ public class Reservation extends BaseEntity {
         attendedAt = occurredAt;
     }
 
+    void markAbsent(LocalDateTime occurredAt) {
+        if (occurredAt == null) {
+            throw new ClassException(
+                    ClassErrorCode.RESERVATION_ABSENCE_OCCURRED_AT_REQUIRED
+            );
+        }
+        requireAbsentMarkable();
+
+        status = ReservationStatus.ABSENT;
+        attendedAt = null;
+        absentAt = occurredAt;
+    }
+
     private void requireReserved() {
         if (status != ReservationStatus.RESERVED) {
+            throw new ClassException(ClassErrorCode.INVALID_RESERVATION_TRANSITION);
+        }
+    }
+
+    private void requireAbsentMarkable() {
+        if (status != ReservationStatus.RESERVED
+                && status != ReservationStatus.ATTENDED) {
             throw new ClassException(ClassErrorCode.INVALID_RESERVATION_TRANSITION);
         }
     }

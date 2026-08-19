@@ -27,4 +27,15 @@ public sealed interface ReservationTrigger {
             }
         }
     }
+
+    record AbsenceConfirmed(LocalDateTime occurredAt) implements ReservationTrigger {
+
+        public AbsenceConfirmed {
+            if (occurredAt == null) {
+                throw new ClassException(
+                        ClassErrorCode.RESERVATION_ABSENCE_OCCURRED_AT_REQUIRED
+                );
+            }
+        }
+    }
 }
