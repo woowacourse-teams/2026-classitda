@@ -23,6 +23,14 @@ internal object MyScheduleListStatePreviewFixture {
                 ),
         )
 
+    val approvalCompleted =
+        content.copy(
+            upcoming =
+                UpcomingScheduleTabState.Content(
+                    sections = MyScheduleUpcomingPreviewFixture.sectionsAfterApproval,
+                ),
+        )
+
     val upcomingLoading =
         content.copy(upcoming = UpcomingScheduleTabState.Loading)
 

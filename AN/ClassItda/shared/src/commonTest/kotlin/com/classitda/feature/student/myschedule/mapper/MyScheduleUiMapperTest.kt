@@ -338,9 +338,13 @@ class MyScheduleUiMapperTest {
         assertIs<WaitlistCancellationAvailabilityUiModel.Available>(uiModel.cancellation)
 
         val approvalRequired = mapper.mapWaitlistDetail(detail.copy(currentPosition = 0))
+        val stillWaitlisted = mapper.mapWaitlistDetail(detail.copy(currentPosition = 1))
 
         assertEquals(0, approvalRequired.currentPosition)
         assertEquals(WaitlistDetailStatusUiModel.APPROVAL_REQUIRED, approvalRequired.status)
+        assertEquals(1, stillWaitlisted.currentPosition)
+        assertEquals(WaitlistDetailStatusUiModel.WAITLISTED, stillWaitlisted.status)
+        assertEquals(detail.waitlistId, stillWaitlisted.waitlistId)
     }
 
     @Test

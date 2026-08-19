@@ -235,6 +235,26 @@ private fun MyScheduleScreenPreview_F01Content_Student_Default() {
 }
 
 @Preview(
+    name = "Approval completed · Student · Default",
+    group = "Screen/MySchedule/StateChange",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun MyScheduleScreenPreview_ApprovalCompleted_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        MyScheduleScreen(
+            state = MyScheduleListStatePreviewFixture.approvalCompleted,
+            onAction = {},
+            onOpenReservation = {},
+            onOpenWaitlist = { _, _ -> },
+        )
+    }
+}
+
+@Preview(
     name = "F01 Interaction · Student",
     group = "Harness/MySchedule",
     showBackground = true,

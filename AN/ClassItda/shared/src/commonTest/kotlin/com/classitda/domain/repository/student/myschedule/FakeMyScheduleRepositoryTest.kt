@@ -28,6 +28,7 @@ import com.classitda.domain.model.student.myschedule.WaitlistId
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNull
@@ -47,8 +48,15 @@ class FakeMyScheduleRepositoryTest {
                     repository.getUsageHistory(),
                 ).value
 
-            assertEquals(2, upcoming.size)
+            assertEquals(4, upcoming.size)
             assertEquals(4, history.size)
+            assertContentEquals(
+                listOf(0, 1, 2),
+                upcoming
+                    .filterIsInstance<UpcomingSchedule.Waitlisted>()
+                    .map { it.currentPosition }
+                    .sorted(),
+            )
 
             upcoming.forEach { schedule ->
                 when (schedule) {
@@ -67,6 +75,7 @@ class FakeMyScheduleRepositoryTest {
                                 repository.getWaitlistDetail(schedule.waitlistId),
                             ).value
                         assertEquals(schedule.waitlistId, detail.waitlistId)
+                        assertEquals(schedule.currentPosition, detail.currentPosition)
                     }
                 }
             }

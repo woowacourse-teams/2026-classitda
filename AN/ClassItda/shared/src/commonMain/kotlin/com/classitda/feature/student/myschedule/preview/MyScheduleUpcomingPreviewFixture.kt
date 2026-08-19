@@ -37,6 +37,14 @@ internal object MyScheduleUpcomingPreviewFixture {
             currentPosition = 2,
         )
 
+    val approvedFromWaitlist =
+        UpcomingScheduleCardUiModel.ConfirmedReservation(
+            reservationId = ReservationId("preview-reservation-approved-from-waitlist"),
+            timeRangeLabel = approvalRequired.timeRangeLabel,
+            title = approvalRequired.title,
+            instructorName = approvalRequired.instructorName,
+        )
+
     val sections =
         listOf(
             UpcomingDateSectionUiModel(
@@ -46,6 +54,18 @@ internal object MyScheduleUpcomingPreviewFixture {
             UpcomingDateSectionUiModel(
                 dateLabel = "8월 9일 일요일",
                 items = listOf(approvalRequired, waitlisted, waitlistedPosition2),
+            ),
+        )
+
+    val sectionsAfterApproval =
+        listOf(
+            UpcomingDateSectionUiModel(
+                dateLabel = "8월 8일 토요일",
+                items = listOf(confirmedReservation),
+            ),
+            UpcomingDateSectionUiModel(
+                dateLabel = "8월 9일 일요일",
+                items = listOf(approvedFromWaitlist, waitlisted, waitlistedPosition2),
             ),
         )
 
