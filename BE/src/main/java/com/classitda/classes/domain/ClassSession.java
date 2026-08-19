@@ -96,6 +96,22 @@ public class ClassSession extends BaseEntity {
         this.status = status;
     }
 
+    public SessionPhase phaseAt(LocalDateTime now) {
+        if (now == null) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_CURRENT_TIME_REQUIRED);
+        }
+        if (status == ClassSessionStatus.CANCELED) {
+            return SessionPhase.CANCELED;
+        }
+        if (!now.isBefore(endAt)) {
+            return SessionPhase.COMPLETED;
+        }
+        if (!now.isBefore(startAt)) {
+            return SessionPhase.IN_PROGRESS;
+        }
+        return SessionPhase.SCHEDULED;
+    }
+
     public void updateDetails(
             String name,
             String description,

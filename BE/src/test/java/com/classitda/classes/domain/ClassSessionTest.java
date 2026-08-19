@@ -362,6 +362,35 @@ class ClassSessionTest {
         assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.CANCELED);
     }
 
+    @ParameterizedTest
+    @MethodSource("수업_단계")
+    void 현재_시각에_따라_수업_단계를_계산한다(
+            ClassSessionStatus status,
+            LocalDateTime now,
+            SessionPhase expectedPhase
+    ) {
+        // given
+        ClassSession classSession = 상태가_다른_수업_회차(status);
+
+        // when
+        SessionPhase phase = classSession.phaseAt(now);
+
+        // then
+        assertThat(phase).isEqualTo(expectedPhase);
+    }
+
+    @Test
+    void 수업_단계를_계산할_현재_시각은_필수다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+
+        // when / then
+        assertClassError(
+                () -> classSession.phaseAt(null),
+                ClassErrorCode.CLASS_SESSION_CURRENT_TIME_REQUIRED
+        );
+    }
+
     @Test
     void 수업_회차와_양수_수업_종류_ID로_연결을_생성할_수_있다() {
         // given
@@ -466,6 +495,19 @@ class ClassSessionTest {
                 arguments((Long) null),
                 arguments(0L),
                 arguments(-1L)
+        );
+    }
+
+    private static Stream<Arguments> 수업_단계() {
+        LocalDateTime startAt = LocalDateTime.of(2026, 8, 17, 20, 0);
+        LocalDateTime endAt = startAt.plusHours(1);
+        return Stream.of(
+                arguments(ClassSessionStatus.OPENED, startAt.minusNanos(1), SessionPhase.SCHEDULED),
+                arguments(ClassSessionStatus.CLOSED, startAt.minusNanos(1), SessionPhase.SCHEDULED),
+                arguments(ClassSessionStatus.OPENED, startAt, SessionPhase.IN_PROGRESS),
+                arguments(ClassSessionStatus.OPENED, endAt.minusNanos(1), SessionPhase.IN_PROGRESS),
+                arguments(ClassSessionStatus.OPENED, endAt, SessionPhase.COMPLETED),
+                arguments(ClassSessionStatus.CANCELED, endAt.plusHours(1), SessionPhase.CANCELED)
         );
     }
 
