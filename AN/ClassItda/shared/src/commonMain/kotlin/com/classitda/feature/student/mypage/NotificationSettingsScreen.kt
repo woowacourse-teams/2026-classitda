@@ -82,9 +82,9 @@ import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.student.mypage.DeviceNotificationPermission
 import com.classitda.domain.model.student.mypage.NotificationPreferences
 import com.classitda.domain.model.student.mypage.NotificationSettingType
-import com.classitda.domain.repository.student.mypage.MyPageFailureReason
 import com.classitda.feature.student.mypage.contract.NotificationSettingsAction
 import com.classitda.feature.student.mypage.contract.NotificationSettingsUiState
+import com.classitda.feature.student.mypage.preview.MyPageSettingsBoundaryFixture
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -562,48 +562,12 @@ private fun NotificationSettingsAction.previewLabel(): String =
     when (this) {
         NotificationSettingsAction.Back -> "Back"
         NotificationSettingsAction.Retry -> "Retry"
-        is NotificationSettingsAction.Toggle -> "Toggle(${type.name}, $enabled)"
+        is NotificationSettingsAction.Toggle -> "Toggle(type=${type.name}, requestedEnabled=$enabled)"
     }
 
-private object NotificationSettingsPreviewFixture {
-    val preferences =
-        NotificationPreferences(
-            isReservationAndScheduleEnabled = true,
-            isFacilityNoticeEnabled = true,
-            isChatAndMessageEnabled = true,
-            isBenefitAndEventEnabled = false,
-            isNightMarketingEnabled = false,
-        )
-    val content =
-        NotificationSettingsUiState.Content(
-            permission = DeviceNotificationPermission.ALLOWED,
-            preferences = preferences,
-        )
-    val updating =
-        NotificationSettingsUiState.Updating(
-            permission = DeviceNotificationPermission.ALLOWED,
-            preferences = preferences,
-            type = NotificationSettingType.RESERVATION_AND_SCHEDULE,
-            requestedEnabled = false,
-        )
-    val updateFailed =
-        NotificationSettingsUiState.UpdateFailed(
-            permission = DeviceNotificationPermission.ALLOWED,
-            preferences = preferences,
-            type = NotificationSettingType.RESERVATION_AND_SCHEDULE,
-            requestedEnabled = true,
-            reason = MyPageFailureReason.NETWORK,
-        )
-    val blockedPermission =
-        NotificationSettingsUiState.Content(
-            permission = DeviceNotificationPermission.BLOCKED,
-            preferences = preferences,
-        )
-}
-
 @Preview(
-    name = "F07 · Reduced · Student",
-    group = "Screen/NotificationSettings/Reduced",
+    name = "F07 · 05-C · Student",
+    group = "Screen/NotificationSettings/05-C",
     widthDp = 390,
     heightDp = 840,
 )
@@ -611,7 +575,7 @@ private object NotificationSettingsPreviewFixture {
 private fun NotificationSettingsScreenPreview_Default_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         NotificationSettingsScreen(
-            uiState = NotificationSettingsPreviewFixture.content,
+            uiState = MyPageSettingsBoundaryFixture.notificationsAllowed,
             onAction = {},
         )
     }
@@ -619,7 +583,7 @@ private fun NotificationSettingsScreenPreview_Default_Student() {
 
 @Preview(
     name = "Item updating · Student",
-    group = "Screen/NotificationSettings/Reduced",
+    group = "Screen/NotificationSettings/05-C",
     widthDp = 390,
     heightDp = 840,
 )
@@ -627,7 +591,7 @@ private fun NotificationSettingsScreenPreview_Default_Student() {
 private fun NotificationSettingsScreenPreview_ItemUpdating_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         NotificationSettingsScreen(
-            uiState = NotificationSettingsPreviewFixture.updating,
+            uiState = MyPageSettingsBoundaryFixture.notificationsUpdating,
             onAction = {},
         )
     }
@@ -635,7 +599,7 @@ private fun NotificationSettingsScreenPreview_ItemUpdating_Student() {
 
 @Preview(
     name = "Update failed · Student",
-    group = "Screen/NotificationSettings/Reduced",
+    group = "Screen/NotificationSettings/05-C",
     widthDp = 390,
     heightDp = 840,
 )
@@ -643,7 +607,7 @@ private fun NotificationSettingsScreenPreview_ItemUpdating_Student() {
 private fun NotificationSettingsScreenPreview_UpdateFailed_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         NotificationSettingsScreen(
-            uiState = NotificationSettingsPreviewFixture.updateFailed,
+            uiState = MyPageSettingsBoundaryFixture.notificationsUpdateFailed,
             onAction = {},
         )
     }
@@ -651,7 +615,7 @@ private fun NotificationSettingsScreenPreview_UpdateFailed_Student() {
 
 @Preview(
     name = "Permission blocked · Student",
-    group = "Screen/NotificationSettings/Reduced",
+    group = "Screen/NotificationSettings/05-C",
     widthDp = 390,
     heightDp = 840,
 )
@@ -659,7 +623,23 @@ private fun NotificationSettingsScreenPreview_UpdateFailed_Student() {
 private fun NotificationSettingsScreenPreview_PermissionBlocked_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         NotificationSettingsScreen(
-            uiState = NotificationSettingsPreviewFixture.blockedPermission,
+            uiState = MyPageSettingsBoundaryFixture.notificationsBlocked,
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Permission unknown · Student",
+    group = "Boundary/NotificationSettings/05-C",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun NotificationSettingsScreenPreview_PermissionUnknown_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        NotificationSettingsScreen(
+            uiState = MyPageSettingsBoundaryFixture.notificationsUnknown,
             onAction = {},
         )
     }
@@ -667,7 +647,7 @@ private fun NotificationSettingsScreenPreview_PermissionBlocked_Student() {
 
 @Preview(
     name = "Long strings · Large font · Small screen",
-    group = "Boundary/NotificationSettings/Reduced",
+    group = "Boundary/NotificationSettings/05-C",
     widthDp = 320,
     heightDp = 568,
     fontScale = 1.5f,
@@ -676,7 +656,7 @@ private fun NotificationSettingsScreenPreview_PermissionBlocked_Student() {
 private fun NotificationSettingsScreenPreview_LongStrings_LargeFont_SmallScreen() {
     AppTheme(theme = ThemeType.STUDENT) {
         NotificationSettingsScreen(
-            uiState = NotificationSettingsPreviewFixture.content,
+            uiState = MyPageSettingsBoundaryFixture.notificationsAllowed,
             onAction = {},
         )
     }
@@ -684,7 +664,7 @@ private fun NotificationSettingsScreenPreview_LongStrings_LargeFont_SmallScreen(
 
 @Preview(
     name = "Actions · Student · Interactive",
-    group = "Harness/NotificationSettings/Reduced",
+    group = "Harness/NotificationSettings/05-C",
     widthDp = 390,
     heightDp = 840,
 )
@@ -710,7 +690,7 @@ private fun NotificationSettingsScreenPreview_Actions_Student_Interactive() {
             )
             Box(modifier = Modifier.weight(1f)) {
                 NotificationSettingsScreen(
-                    uiState = NotificationSettingsPreviewFixture.updateFailed,
+                    uiState = MyPageSettingsBoundaryFixture.notificationsUpdateFailed,
                     onAction = { lastAction = it.previewLabel() },
                 )
             }

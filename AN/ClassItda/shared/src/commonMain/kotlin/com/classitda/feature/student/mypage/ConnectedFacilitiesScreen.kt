@@ -17,6 +17,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,14 +49,13 @@ import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.my_page_connected_facilities
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
-import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.student.mypage.ConnectedFacility
-import com.classitda.domain.model.student.mypage.FacilityId
 import com.classitda.domain.repository.student.mypage.MyPageFailureReason
 import com.classitda.feature.student.mypage.contract.ConnectedFacilitiesAction
 import com.classitda.feature.student.mypage.contract.ConnectedFacilitiesUiState
+import com.classitda.feature.student.mypage.preview.MyPageSettingsBoundaryFixture
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 import org.jetbrains.compose.resources.painterResource
@@ -69,7 +69,7 @@ fun ConnectedFacilitiesScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = StuColors.Background,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ConnectedFacilitiesTopBar(
                 onBack = { onAction(ConnectedFacilitiesAction.Back) },
@@ -123,7 +123,7 @@ private fun ConnectedFacilitiesTopBar(onBack: () -> Unit) {
                 painter = painterResource(Res.drawable.ic_arrow_back),
                 contentDescription = stringResource(Res.string.connected_facilities_back),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = StuColors.TextPrimary,
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
         Text(
@@ -133,7 +133,7 @@ private fun ConnectedFacilitiesTopBar(onBack: () -> Unit) {
                     .weight(1f)
                     .semantics { heading() },
             style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -164,11 +164,11 @@ private fun ConnectedFacilitiesList(
         }
         itemsIndexed(
             items = facilities,
-            key = { _, facility -> facility.id.value },
+            key = { _, facility -> facility.id },
         ) { index, facility ->
             ConnectedFacilityRow(facility = facility)
             if (index < facilities.lastIndex) {
-                HorizontalDivider(color = StuColors.Divider)
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
         }
     }
@@ -193,7 +193,7 @@ private fun ConnectedFacilitiesCount(
             append(sentence.substring(0, countStart))
             withStyle(
                 SpanStyle(
-                    color = StuColors.TextPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
                 ),
             ) {
@@ -206,7 +206,7 @@ private fun ConnectedFacilitiesCount(
         text = annotatedSentence,
         modifier = modifier.fillMaxWidth(),
         style = typography.bodyLarge,
-        color = StuColors.TextSecondary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
@@ -225,7 +225,7 @@ private fun ConnectedFacilityRow(facility: ConnectedFacility) {
             text = facility.name,
             modifier = Modifier.fillMaxWidth(),
             style = typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text =
@@ -235,7 +235,7 @@ private fun ConnectedFacilityRow(facility: ConnectedFacility) {
                 ),
             modifier = Modifier.fillMaxWidth(),
             style = typography.bodyLarge,
-            color = StuColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -249,12 +249,12 @@ private fun ConnectedFacilitiesLoadingContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(color = StuColors.Green)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = stringResource(Res.string.connected_facilities_loading),
             style = typography.bodyMedium,
-            color = StuColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -280,7 +280,7 @@ private fun ConnectedFacilitiesErrorContent(
             text = errorTitle,
             modifier = Modifier.fillMaxWidth(),
             style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -288,7 +288,7 @@ private fun ConnectedFacilitiesErrorContent(
             text = stringResource(Res.string.connected_facilities_error_description),
             modifier = Modifier.fillMaxWidth(),
             style = typography.bodyMedium,
-            color = StuColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
@@ -316,41 +316,12 @@ private fun ConnectedFacilitiesAction.previewLabel(): String =
     }
 
 private object ConnectedFacilitiesPreviewFixture {
-    val content =
-        ConnectedFacilitiesUiState.Content(
-            facilities =
-                listOf(
-                    ConnectedFacility(
-                        id = FacilityId("facility-gangnam"),
-                        name = "필라테스 더 밸런스 강남점",
-                        connectedOn = LocalDate(2023, 12, 1),
-                    ),
-                    ConnectedFacility(
-                        id = FacilityId("facility-seocho"),
-                        name = "에이원 휘트니스 서초",
-                        connectedOn = LocalDate(2024, 2, 15),
-                    ),
-                    ConnectedFacility(
-                        id = FacilityId("facility-gyodae"),
-                        name = "요가스테이 교대점",
-                        connectedOn = LocalDate(2024, 5, 20),
-                    ),
-                ),
-        )
-    val empty = ConnectedFacilitiesUiState.Empty
+    val content = MyPageSettingsBoundaryFixture.facilitiesMany
+    val empty = MyPageSettingsBoundaryFixture.facilitiesEmpty
+    val one = MyPageSettingsBoundaryFixture.facilitiesOne
     val loading = ConnectedFacilitiesUiState.Loading
     val error = ConnectedFacilitiesUiState.Error(MyPageFailureReason.NETWORK)
-    val longName =
-        ConnectedFacilitiesUiState.Content(
-            facilities =
-                listOf(
-                    ConnectedFacility(
-                        id = FacilityId("facility-long-name"),
-                        name = "필라테스와 요가 및 재활 운동을 함께 운영하는 클래스잇다 프리미엄 센터 강남 본점",
-                        connectedOn = LocalDate(2024, 12, 31),
-                    ),
-                ),
-        )
+    val longName = MyPageSettingsBoundaryFixture.facilitiesLongName
 }
 
 @Preview(
@@ -435,6 +406,22 @@ private fun ConnectedFacilitiesScreenPreview_LongName_LargeFont_SmallScreen() {
 }
 
 @Preview(
+    name = "Boundary · One facility",
+    group = "Boundary/ConnectedFacilities",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun ConnectedFacilitiesScreenPreview_Boundary_OneFacility() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ConnectedFacilitiesScreen(
+            uiState = ConnectedFacilitiesPreviewFixture.one,
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
     name = "Back and Retry · Student · Interactive",
     group = "Harness/ConnectedFacilities",
     widthDp = 390,
@@ -458,7 +445,7 @@ private fun ConnectedFacilitiesScreenPreview_BackAndRetry_Student_Interactive() 
                             vertical = AppSpacing.sm,
                         ),
                 style = typography.labelLarge,
-                color = StuColors.TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Box(modifier = Modifier.weight(1f)) {
                 ConnectedFacilitiesScreen(
