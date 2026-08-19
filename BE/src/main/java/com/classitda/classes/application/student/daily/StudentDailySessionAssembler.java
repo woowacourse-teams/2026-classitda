@@ -1,15 +1,16 @@
 package com.classitda.classes.application.student.daily;
 
-import com.classitda.classes.application.student.StudentBookingContext;
-import com.classitda.classes.application.student.StudentBookingContext.ReservationCounts;
-import com.classitda.classes.application.student.StudentBookingContext.WaitingCounts;
 import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.application.student.StudentBookingDecisionPolicy;
+import com.classitda.classes.application.student.StudentSessionFacts;
 import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.ReservationStatus;
+import com.classitda.classes.domain.WaitingStatus;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
 import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -27,51 +28,55 @@ public class StudentDailySessionAssembler {
             LocalDateTime now
     ) {
         ClassSession session = classSession.getSession();
-        ReservationCounts reservation = toReservationCounts(reservationSummary);
-        WaitingCounts waiting = toWaitingCounts(waitingSummary);
-        long remainingCapacity = Math.max(
-                (long) session.getCapacity() - reservation.totalCount(), 0
-        );
+        long reservedCount = reservationSummary == null ? 0 : reservationSummary.getReservedCount();
+        long waitingCount = waitingSummary == null ? 0 : waitingSummary.getWaitingCount();
+        long remainingCapacity = Math.max((long) session.getCapacity() - reservedCount, 0);
 
-        StudentBookingContext bookingContext = new StudentBookingContext(
+        StudentSessionFacts facts = new StudentSessionFacts(
                 session.bookingWindowAt(now, reservationCloseMinutesBefore),
                 session.getStartAt(),
-                reservation,
-                waiting,
+                resolveOwnReservationStatus(reservationSummary),
+                resolveOwnWaitingStatus(waitingSummary),
                 remainingCapacity,
                 now
         );
-        StudentBookingDecision bookingDecision = bookingDecisionPolicy.decide(bookingContext);
+        StudentBookingDecision bookingDecision = bookingDecisionPolicy.decide(facts);
 
         return StudentDailySessionView.of(
                 classSession,
-                reservation.totalCount(),
+                reservedCount,
                 remainingCapacity,
-                waiting.totalCount(),
+                waitingCount,
                 bookingDecision
         );
     }
 
-    private ReservationCounts toReservationCounts(ReservationSummaryProjection summary) {
+    private Optional<ReservationStatus> resolveOwnReservationStatus(ReservationSummaryProjection summary) {
         if (summary == null) {
-            return new ReservationCounts(0, 0, 0, 0);
+            return Optional.empty();
         }
-        return new ReservationCounts(
-                summary.getReservedCount(),
-                summary.getOwnReservedCount(),
-                summary.getOwnAttendedCount(),
-                summary.getOwnAbsentCount()
-        );
+        if (summary.getOwnAbsentCount() > 0) {
+            return Optional.of(ReservationStatus.ABSENT);
+        }
+        if (summary.getOwnAttendedCount() > 0) {
+            return Optional.of(ReservationStatus.ATTENDED);
+        }
+        if (summary.getOwnReservedCount() > 0) {
+            return Optional.of(ReservationStatus.RESERVED);
+        }
+        return Optional.empty();
     }
 
-    private WaitingCounts toWaitingCounts(WaitingSummaryProjection summary) {
+    private Optional<WaitingStatus> resolveOwnWaitingStatus(WaitingSummaryProjection summary) {
         if (summary == null) {
-            return new WaitingCounts(0, 0, 0);
+            return Optional.empty();
         }
-        return new WaitingCounts(
-                summary.getWaitingCount(),
-                summary.getOwnOfferedCount(),
-                summary.getOwnWaitingCount()
-        );
+        if (summary.getOwnOfferedCount() > 0) {
+            return Optional.of(WaitingStatus.OFFERED);
+        }
+        if (summary.getOwnWaitingCount() > 0) {
+            return Optional.of(WaitingStatus.WAITING);
+        }
+        return Optional.empty();
     }
 }
