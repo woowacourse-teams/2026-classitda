@@ -19,6 +19,7 @@ internal object MyScheduleUpcomingPreviewFixture {
     val waitlisted =
         UpcomingScheduleCardUiModel.Waitlisted(
             waitlistId = WaitlistId("preview-waitlist-f01"),
+            currentPosition = 1,
             timeRangeLabel = "오전 11:00 ~ 오후 12:50",
             title = "엄청나게 어마어마하게 긴 글자의 수업을 가진 필라테스",
             instructorName = "박소연 대표 강사",

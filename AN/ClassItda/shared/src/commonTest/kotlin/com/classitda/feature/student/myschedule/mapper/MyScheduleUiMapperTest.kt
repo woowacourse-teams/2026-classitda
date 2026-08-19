@@ -90,6 +90,10 @@ class MyScheduleUiMapperTest {
             WaitlistId("waitlist-august-9"),
             assertIs<UpcomingScheduleCardUiModel.Waitlisted>(sections.last().items.single()).waitlistId,
         )
+        assertEquals(
+            2,
+            assertIs<UpcomingScheduleCardUiModel.Waitlisted>(sections.last().items.single()).currentPosition,
+        )
     }
 
     @Test
@@ -145,6 +149,21 @@ class MyScheduleUiMapperTest {
                 .single()
                 .status,
         )
+
+        val classCancelled =
+            mapper.mapUsageHistory(
+                listOf(
+                    createHistory(
+                        id = "reservation-class-cancelled",
+                        status = UsageHistoryStatus.CLASS_CANCELLED,
+                        session = createAugustFourthSession(),
+                    ),
+                ),
+            )
+        assertEquals(
+            UsageHistoryStatusUiModel.CLASS_CANCELLED,
+            classCancelled.single().items.single().status,
+        )
     }
 
     @Test
@@ -194,9 +213,20 @@ class MyScheduleUiMapperTest {
                     ),
                 cancellationDeadlineHoursBeforeStart = 4,
             )
+        val classCancelled =
+            mapper.mapReservationDetail(
+                detail =
+                    ReservationDetail.ClassCancelled(
+                        reservationId = ReservationId("reservation-class-cancelled"),
+                        session = session,
+                        cancelledAt = Instant.parse("2026-08-01T06:25:00Z"),
+                    ),
+                cancellationDeadlineHoursBeforeStart = 4,
+            )
 
         assertIs<ReservationDetailUiModel.Confirmed>(confirmed)
         assertIs<ReservationDetailUiModel.Cancelled>(cancelled)
+        assertIs<ReservationDetailUiModel.ClassCancelled>(classCancelled)
         assertIs<ReservationDetailUiModel.Attended>(attended)
         assertIs<ReservationDetailUiModel.Absent>(absent)
         assertEquals("2026.08.04 (화)", confirmed.classInfo.dateLabel)
@@ -304,12 +334,13 @@ class MyScheduleUiMapperTest {
     private fun createWaitlisted(
         id: String,
         session: ClassSession,
+        currentPosition: Int = 2,
     ): UpcomingSchedule.Waitlisted =
         UpcomingSchedule.Waitlisted(
             waitlistId = WaitlistId(id),
             session = session,
             appliedAt = Instant.parse("2026-08-03T12:20:00Z"),
-            currentPosition = 2,
+            currentPosition = currentPosition,
         )
 
     private fun createHistory(

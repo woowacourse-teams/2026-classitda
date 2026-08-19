@@ -26,6 +26,7 @@
     <string name="my_schedule_status_completed">이용 완료</string>
     <string name="my_schedule_status_attended">출석 완료</string>
     <string name="my_schedule_status_absent">결석</string>
+    <string name="my_schedule_status_class_canceled">수업 취소</string>
     <string name="my_schedule_status_reservation_canceled">예약 취소</string>
     <string name="my_schedule_status_confirmed_mark">✓</string>
     <string name="my_schedule_status_completed_mark">✓</string>

@@ -18,7 +18,7 @@ sealed interface UpcomingSchedule {
         val currentPosition: Int,
     ) : UpcomingSchedule {
         init {
-            require(currentPosition >= 1) { "현재 대기 순번은 1 이상이어야 합니다." }
+            require(currentPosition >= 0) { "현재 대기 순번은 0 이상이어야 합니다." }
         }
     }
 }

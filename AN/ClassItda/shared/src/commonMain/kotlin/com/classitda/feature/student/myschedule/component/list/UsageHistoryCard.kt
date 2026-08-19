@@ -7,6 +7,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.my_schedule_status_absent
 import classitda.shared.generated.resources.my_schedule_status_attended
+import classitda.shared.generated.resources.my_schedule_status_class_canceled
 import classitda.shared.generated.resources.my_schedule_status_completed_mark
 import classitda.shared.generated.resources.my_schedule_status_reservation_canceled
 import classitda.shared.generated.resources.my_schedule_status_reservation_canceled_mark
@@ -49,6 +50,14 @@ private fun UsageHistoryStatus(status: UsageHistoryStatusUiModel) {
             ScheduleStatusLabel(
                 label = Res.string.my_schedule_status_absent,
                 contentColor = StuColors.TextSecondary,
+                mark = Res.string.my_schedule_status_reservation_canceled_mark,
+            )
+        }
+
+        UsageHistoryStatusUiModel.CLASS_CANCELLED -> {
+            ScheduleStatusLabel(
+                label = Res.string.my_schedule_status_class_canceled,
+                contentColor = StuColors.Red,
                 mark = Res.string.my_schedule_status_reservation_canceled_mark,
             )
         }

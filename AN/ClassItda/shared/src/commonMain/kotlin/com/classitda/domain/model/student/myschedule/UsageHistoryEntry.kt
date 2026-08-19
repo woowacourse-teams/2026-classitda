@@ -9,5 +9,6 @@ data class UsageHistoryEntry(
 enum class UsageHistoryStatus {
     ATTENDED,
     ABSENT,
+    CLASS_CANCELLED,
     RESERVATION_CANCELLED,
 }

@@ -48,17 +48,11 @@ class ScheduleListTest {
     }
 
     @Test
-    fun `현재 대기 순번이 1이면 생성할 수 있다`() {
+    fun `현재 대기 순번이 0과 1이면 생성할 수 있다`() {
+        assertEquals(0, createWaitlisted(currentPosition = 0).currentPosition)
         val schedule = createWaitlisted(currentPosition = 1)
 
         assertEquals(1, schedule.currentPosition)
-    }
-
-    @Test
-    fun `현재 대기 순번이 0이면 생성할 수 없다`() {
-        assertFailsWith<IllegalArgumentException> {
-            createWaitlisted(currentPosition = 0)
-        }
     }
 
     @Test
@@ -74,6 +68,7 @@ class ScheduleListTest {
             listOf(
                 UsageHistoryStatus.ATTENDED,
                 UsageHistoryStatus.ABSENT,
+                UsageHistoryStatus.CLASS_CANCELLED,
                 UsageHistoryStatus.RESERVATION_CANCELLED,
             )
         val session = createSession()
@@ -92,6 +87,7 @@ class ScheduleListTest {
                 ReservationId("reservation-1"),
                 ReservationId("reservation-2"),
                 ReservationId("reservation-3"),
+                ReservationId("reservation-4"),
             ),
             history.map(UsageHistoryEntry::reservationId),
         )

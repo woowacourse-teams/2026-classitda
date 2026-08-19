@@ -80,6 +80,9 @@ class FakeMyScheduleRepositoryTest {
                 when (entry.status) {
                     UsageHistoryStatus.ATTENDED -> assertIs<ReservationDetail.Attended>(detail)
                     UsageHistoryStatus.ABSENT -> assertIs<ReservationDetail.Absent>(detail)
+                    UsageHistoryStatus.CLASS_CANCELLED -> {
+                        assertIs<ReservationDetail.ClassCancelled>(detail)
+                    }
                     UsageHistoryStatus.RESERVATION_CANCELLED -> assertIs<ReservationDetail.Cancelled>(detail)
                 }
             }

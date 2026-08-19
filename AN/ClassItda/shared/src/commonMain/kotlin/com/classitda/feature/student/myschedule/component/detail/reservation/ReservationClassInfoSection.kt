@@ -68,6 +68,7 @@ internal fun ReservationClassInfoSection(model: ReservationDetailUiModel) {
             is ReservationDetailUiModel.Attended -> ReservationUsedPassInformation(pass = model.usedPass)
             is ReservationDetailUiModel.Absent -> ReservationUsedPassInformation(pass = model.usedPass)
             is ReservationDetailUiModel.Cancelled -> Unit
+            is ReservationDetailUiModel.ClassCancelled -> Unit
         }
 
         classInfo.memo?.let { memo ->

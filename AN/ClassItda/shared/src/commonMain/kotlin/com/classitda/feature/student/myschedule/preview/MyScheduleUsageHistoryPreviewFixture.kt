@@ -51,11 +51,24 @@ internal object MyScheduleUsageHistoryPreviewFixture {
             status = UsageHistoryStatusUiModel.RESERVATION_CANCELLED,
         )
 
+    val classCancelled =
+        UsageHistoryCardUiModel(
+            reservationId = ReservationId("preview-reservation-f02-class-cancelled"),
+            dateTimeLabel =
+                usageHistoryDateTimeLabel(
+                    date = LocalDate(2026, 8, 3),
+                    timeRangeLabel = "오후 2:00 ~ 2:50",
+                ),
+            title = "캐딜락 스트레칭",
+            instructorName = "김민지 강사",
+            status = UsageHistoryStatusUiModel.CLASS_CANCELLED,
+        )
+
     val sections =
         listOf(
             UsageHistoryMonthSectionUiModel(
                 monthLabel = "2026년 8월",
-                items = listOf(attended, absent, reservationCancelled),
+                items = listOf(attended, absent, classCancelled, reservationCancelled),
             ),
         )
 

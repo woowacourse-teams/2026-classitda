@@ -57,6 +57,8 @@ internal fun ReservationDetailFooter(
 
         is ReservationDetailUiModel.Cancelled -> {}
 
+        is ReservationDetailUiModel.ClassCancelled -> {}
+
         is ReservationDetailUiModel.Attended -> {
             ReservationDetailNotice(
                 notices =

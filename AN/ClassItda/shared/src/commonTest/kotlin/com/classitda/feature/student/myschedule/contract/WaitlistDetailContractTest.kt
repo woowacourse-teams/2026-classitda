@@ -27,12 +27,10 @@ class WaitlistDetailContractTest {
     }
 
     @Test
-    fun `현재 대기 순번은 1을 허용하고 0과 음수를 거부한다`() {
+    fun `현재 대기 순번은 0과 1을 허용하고 음수를 거부한다`() {
+        assertEquals(0, createDetail().copy(currentPosition = 0).currentPosition)
         createDetail().copy(currentPosition = 1)
 
-        assertFailsWith<IllegalArgumentException> {
-            createDetail().copy(currentPosition = 0)
-        }
         assertFailsWith<IllegalArgumentException> {
             createDetail().copy(currentPosition = -1)
         }
