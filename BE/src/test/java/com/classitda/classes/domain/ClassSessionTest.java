@@ -24,6 +24,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class ClassSessionTest {
 
+    private static final int RESERVATION_CLOSE_MINUTES_BEFORE = 60;
+
     @Test
     void 수업_회차를_생성하면_종료_시각을_시작_시각과_진행_시간으로_계산한다() {
         // given
@@ -389,6 +391,73 @@ class ClassSessionTest {
                 () -> classSession.phaseAt(null),
                 ClassErrorCode.CLASS_SESSION_CURRENT_TIME_REQUIRED
         );
+    }
+
+    @Test
+    void 예약_마감_시각은_수업_시작_시각에서_정책_시간을_뺀다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+
+        // when
+        LocalDateTime closeAt = classSession.bookingCloseAt(RESERVATION_CLOSE_MINUTES_BEFORE);
+
+        // then
+        assertThat(closeAt).isEqualTo(classSession.getStartAt().minusMinutes(RESERVATION_CLOSE_MINUTES_BEFORE));
+    }
+
+    @Test
+    void 예약_마감_시각_전에는_예약창이_열려_있다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        LocalDateTime now = classSession.bookingCloseAt(RESERVATION_CLOSE_MINUTES_BEFORE).minusNanos(1);
+
+        // when
+        BookingWindow bookingWindow = classSession.bookingWindowAt(now, RESERVATION_CLOSE_MINUTES_BEFORE);
+
+        // then
+        assertThat(bookingWindow).isEqualTo(BookingWindow.OPEN);
+    }
+
+    @Test
+    void 예약_마감_시각부터는_예약창이_닫힌다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        LocalDateTime now = classSession.bookingCloseAt(RESERVATION_CLOSE_MINUTES_BEFORE);
+
+        // when
+        BookingWindow bookingWindow = classSession.bookingWindowAt(now, RESERVATION_CLOSE_MINUTES_BEFORE);
+
+        // then
+        assertThat(bookingWindow).isEqualTo(BookingWindow.CLOSED);
+    }
+
+    @Test
+    void 취소된_수업은_예약_마감_전이어도_예약창이_닫힌다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        LocalDateTime canceledAt = classSession.getStartAt().minusHours(2);
+        classSession.cancel(canceledAt);
+
+        // when
+        BookingWindow bookingWindow = classSession.bookingWindowAt(canceledAt, RESERVATION_CLOSE_MINUTES_BEFORE);
+
+        // then
+        assertThat(bookingWindow).isEqualTo(BookingWindow.CLOSED);
+    }
+
+    @Test
+    void 최신_예약_마감_정책을_입력하면_같은_수업의_예약창도_다시_계산된다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        LocalDateTime now = classSession.getStartAt().minusMinutes(90);
+
+        // when
+        BookingWindow previousPolicyWindow = classSession.bookingWindowAt(now, 60);
+        BookingWindow latestPolicyWindow = classSession.bookingWindowAt(now, 120);
+
+        // then
+        assertThat(previousPolicyWindow).isEqualTo(BookingWindow.OPEN);
+        assertThat(latestPolicyWindow).isEqualTo(BookingWindow.CLOSED);
     }
 
     @Test

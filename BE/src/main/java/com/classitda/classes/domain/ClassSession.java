@@ -114,6 +114,17 @@ public class ClassSession extends BaseEntity {
         return SessionPhase.SCHEDULED;
     }
 
+    public LocalDateTime bookingCloseAt(int reservationCloseMinutesBefore) {
+        return startAt.minusMinutes(reservationCloseMinutesBefore);
+    }
+
+    public BookingWindow bookingWindowAt(LocalDateTime now, int reservationCloseMinutesBefore) {
+        if (isCanceled()) {
+            return BookingWindow.CLOSED;
+        }
+        return now.isBefore(bookingCloseAt(reservationCloseMinutesBefore)) ? BookingWindow.OPEN : BookingWindow.CLOSED;
+    }
+
     public void cancel(LocalDateTime occurredAt) {
         if (occurredAt == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_CANCEL_OCCURRED_AT_REQUIRED);
