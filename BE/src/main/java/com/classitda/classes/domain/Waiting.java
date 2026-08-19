@@ -53,6 +53,8 @@ public class Waiting extends BaseEntity {
 
     private LocalDateTime offerExpiresAt;
 
+    private LocalDateTime endedAt;
+
     void offer(LocalDateTime occurredAt, LocalDateTime expiresAt) {
         if (occurredAt == null) {
             throw new ClassException(ClassErrorCode.WAITING_OFFERED_AT_REQUIRED);
@@ -71,8 +73,24 @@ public class Waiting extends BaseEntity {
         offerExpiresAt = expiresAt;
     }
 
+    void cancel(LocalDateTime occurredAt) {
+        if (occurredAt == null) {
+            throw new ClassException(ClassErrorCode.WAITING_CANCEL_OCCURRED_AT_REQUIRED);
+        }
+
+        requireActive();
+        status = WaitingStatus.CANCELED;
+        endedAt = occurredAt;
+    }
+
     private void requireWaiting() {
         if (status != WaitingStatus.WAITING) {
+            throw new ClassException(ClassErrorCode.INVALID_WAITING_TRANSITION);
+        }
+    }
+
+    private void requireActive() {
+        if (status != WaitingStatus.WAITING && status != WaitingStatus.OFFERED) {
             throw new ClassException(ClassErrorCode.INVALID_WAITING_TRANSITION);
         }
     }

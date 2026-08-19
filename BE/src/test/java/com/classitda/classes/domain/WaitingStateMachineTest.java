@@ -12,6 +12,7 @@ class WaitingStateMachineTest {
 
     private static final LocalDateTime OFFERED_AT = LocalDateTime.of(2026, 8, 25, 19, 0);
     private static final LocalDateTime OFFER_EXPIRES_AT = OFFERED_AT.plusMinutes(10);
+    private static final LocalDateTime CANCELED_AT = OFFERED_AT.plusMinutes(5);
 
     private final WaitingStateMachine stateMachine = new WaitingStateMachine();
 
@@ -65,6 +66,29 @@ class WaitingStateMachineTest {
                 .isInstanceOfSatisfying(ClassException.class, exception ->
                         assertThat(exception.getErrorCode())
                                 .isEqualTo(ClassErrorCode.WAITING_OFFER_EXPIRES_AT_REQUIRED));
+    }
+
+    @Test
+    void 취소_요청_트리거를_대기_취소_전이로_연결한다() {
+        // given
+        Waiting waiting = 대기();
+        WaitingTrigger trigger = new WaitingTrigger.CancelRequested(CANCELED_AT);
+
+        // when
+        stateMachine.handle(waiting, trigger);
+
+        // then
+        assertThat(waiting.getStatus()).isEqualTo(WaitingStatus.CANCELED);
+        assertThat(waiting.getEndedAt()).isEqualTo(CANCELED_AT);
+    }
+
+    @Test
+    void 취소_요청_트리거의_발생_시각은_필수다() {
+        // when / then
+        assertThatThrownBy(() -> new WaitingTrigger.CancelRequested(null))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(ClassErrorCode.WAITING_CANCEL_OCCURRED_AT_REQUIRED));
     }
 
     private Waiting 대기() {

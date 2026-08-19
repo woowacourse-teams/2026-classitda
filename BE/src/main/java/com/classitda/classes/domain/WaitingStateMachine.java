@@ -13,6 +13,8 @@ public final class WaitingStateMachine {
         switch (trigger) {
             case WaitingTrigger.OfferIssued offerIssued ->
                     waiting.offer(offerIssued.offeredAt(), offerIssued.offerExpiresAt());
+            case WaitingTrigger.CancelRequested cancelRequested ->
+                    waiting.cancel(cancelRequested.occurredAt());
         }
     }
 }

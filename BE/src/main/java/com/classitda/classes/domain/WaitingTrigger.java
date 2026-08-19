@@ -22,4 +22,13 @@ public sealed interface WaitingTrigger {
             }
         }
     }
+
+    record CancelRequested(LocalDateTime occurredAt) implements WaitingTrigger {
+
+        public CancelRequested {
+            if (occurredAt == null) {
+                throw new ClassException(ClassErrorCode.WAITING_CANCEL_OCCURRED_AT_REQUIRED);
+            }
+        }
+    }
 }
