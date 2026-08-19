@@ -1,14 +1,13 @@
 package com.classitda.classes.application.student;
 
-import com.classitda.classes.domain.ClassSessionStatus;
+import com.classitda.classes.domain.BookingWindow;
 import java.time.LocalDateTime;
 
 public record StudentBookingContext(
-        ClassSessionStatus sessionStatus,
+        BookingWindow bookingWindow,
         LocalDateTime startAt,
         ReservationCounts reservation,
         WaitingCounts waiting,
-        int reservationCloseMinutesBefore,
         long remainingCapacity,
         LocalDateTime now
 ) {

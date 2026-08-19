@@ -34,11 +34,10 @@ public class StudentDailySessionAssembler {
         );
 
         StudentBookingContext bookingContext = new StudentBookingContext(
-                session.getStatus(),
+                session.bookingWindowAt(now, reservationCloseMinutesBefore),
                 session.getStartAt(),
                 reservation,
                 waiting,
-                reservationCloseMinutesBefore,
                 remainingCapacity,
                 now
         );

@@ -1,6 +1,6 @@
 package com.classitda.classes.application.student;
 
-import com.classitda.classes.domain.ClassSessionStatus;
+import com.classitda.classes.domain.BookingWindow;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -56,10 +56,7 @@ public class StudentBookingStatusResolver {
         CLOSED(StudentBookingStatus.CLOSED) {
             @Override
             boolean matches(StudentBookingContext context) {
-                return context.sessionStatus() == ClassSessionStatus.CLOSED
-                        || !context.now().isBefore(
-                                context.startAt().minusMinutes(context.reservationCloseMinutesBefore())
-                        );
+                return context.bookingWindow() == BookingWindow.CLOSED;
             }
         },
         // TODO(#46, #68): 수강권 홀딩과 이용 가능 횟수 구현 후,

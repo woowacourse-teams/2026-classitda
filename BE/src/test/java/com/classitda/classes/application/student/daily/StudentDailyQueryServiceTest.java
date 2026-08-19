@@ -465,9 +465,9 @@ class StudentDailyQueryServiceTest {
                 studio, instructor, classType, "마감 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(10, 30), ClassSessionStatus.OPENED
         );
-        ClassSession closedByStatus = 수업_회차를_저장한다(
-                studio, instructor, classType, "상태 마감 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(11, 0), ClassSessionStatus.CLOSED
+        ClassSession availableBeforeClose = 수업_회차를_저장한다(
+                studio, instructor, classType, "예약 가능 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(11, 0), ClassSessionStatus.OPENED
         );
         예약을_저장한다(canceled, memberMembership, ReservationStatus.RESERVED);
         예약을_저장한다(attendancePending, memberMembership, ReservationStatus.RESERVED);
@@ -498,7 +498,7 @@ class StudentDailyQueryServiceTest {
                         tuple(offered.getId(), StudentBookingStatus.OFFERED),
                         tuple(waiting.getId(), StudentBookingStatus.WAITING),
                         tuple(closedAtBoundary.getId(), StudentBookingStatus.CLOSED),
-                        tuple(closedByStatus.getId(), StudentBookingStatus.CLOSED)
+                        tuple(availableBeforeClose.getId(), StudentBookingStatus.AVAILABLE)
                 );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)

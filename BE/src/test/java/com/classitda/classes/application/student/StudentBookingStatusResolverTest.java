@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classitda.classes.application.student.StudentBookingContext.ReservationCounts;
 import com.classitda.classes.application.student.StudentBookingContext.WaitingCounts;
-import com.classitda.classes.domain.ClassSessionStatus;
+import com.classitda.classes.domain.BookingWindow;
 import java.time.LocalDateTime;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,59 +30,59 @@ class StudentBookingStatusResolverTest {
         return Stream.of(
                 Arguments.of(
                         StudentBookingStatus.ABSENT,
-                        context(ClassSessionStatus.OPENED, NOW.minusHours(2),
+                        context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 0, 1, 1, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.ATTENDED,
-                        context(ClassSessionStatus.OPENED, NOW.minusHours(2),
+                        context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 0, 1, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.ATTENDED,
-                        context(ClassSessionStatus.OPENED, NOW.minusHours(2),
+                        context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.ATTENDED,
-                        context(ClassSessionStatus.OPENED, NOW,
+                        context(BookingWindow.CLOSED, NOW,
                                 1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.RESERVED,
-                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1),
+                        context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 1, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.OFFERED,
-                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1),
+                        context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 0, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.WAITING,
-                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1),
+                        context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 0, 0, 0, 0, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.CLOSED,
-                        context(ClassSessionStatus.OPENED, NOW.plusMinutes(30),
+                        context(BookingWindow.CLOSED, NOW.plusMinutes(30),
                                 0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.AVAILABLE,
-                        context(ClassSessionStatus.OPENED, NOW.plusHours(1),
+                        context(BookingWindow.OPEN, NOW.plusHours(1),
                                 0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.WAITING_AVAILABLE,
-                        context(ClassSessionStatus.OPENED, NOW.plusHours(1),
+                        context(BookingWindow.OPEN, NOW.plusHours(1),
                                 0, 0, 0, 0, 0, 0)
                 )
         );
     }
 
     private static StudentBookingContext context(
-            ClassSessionStatus sessionStatus,
+            BookingWindow bookingWindow,
             LocalDateTime startAt,
             long ownReservedCount,
             long ownAttendedCount,
@@ -92,11 +92,10 @@ class StudentBookingStatusResolverTest {
             long remainingCapacity
     ) {
         return new StudentBookingContext(
-                sessionStatus,
+                bookingWindow,
                 startAt,
                 new ReservationCounts(0, ownReservedCount, ownAttendedCount, ownAbsentCount),
                 new WaitingCounts(0, ownOfferedCount, ownWaitingCount),
-                30,
                 remainingCapacity,
                 NOW
         );
