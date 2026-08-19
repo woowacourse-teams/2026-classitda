@@ -58,8 +58,7 @@ public interface WaitingRepository extends JpaRepository<Waiting, Long> {
               AND classType.studio.id = :studioId
               AND waiting.classSession.startAt >= :rangeStart
               AND waiting.classSession.startAt < :rangeEnd
-              AND waiting.classSession.status <>
-                  com.classitda.classes.domain.ClassSessionStatus.CANCELED
+              AND waiting.classSession.canceledAt IS NULL
               AND waiting.status = com.classitda.classes.domain.WaitingStatus.WAITING
             ORDER BY waiting.classSession.startAt ASC,
                      waiting.classSession.id ASC,

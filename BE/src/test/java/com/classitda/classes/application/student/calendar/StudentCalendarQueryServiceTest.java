@@ -194,6 +194,7 @@ class StudentCalendarQueryServiceTest {
         대기를_저장한다(waitingSession, studentMembership, WaitingStatus.WAITING);
         대기를_저장한다(offeredSession, studentMembership, WaitingStatus.OFFERED);
         예약을_저장한다(canceledSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
+        대기를_저장한다(canceledSession, studentMembership, WaitingStatus.WAITING);
         예약을_저장한다(otherClassTypeSession, studentMembership, pilatesPass, ReservationStatus.RESERVED);
         예약을_저장한다(otherClassFormSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
         예약을_저장한다(otherMemberSession, otherStudentMembership, null, ReservationStatus.RESERVED);
