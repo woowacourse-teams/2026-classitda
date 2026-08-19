@@ -57,8 +57,8 @@ private fun UsageHistoryStatus(status: UsageHistoryStatusUiModel) {
         UsageHistoryStatusUiModel.CLASS_CANCELLED -> {
             ScheduleStatusLabel(
                 label = Res.string.my_schedule_status_class_canceled,
-                contentColor = StuColors.Red,
-                mark = Res.string.my_schedule_status_reservation_canceled_mark,
+                contentColor = StuColors.TextSecondary,
+                mark = Res.string.my_schedule_status_completed_mark,
             )
         }
 
@@ -117,6 +117,23 @@ private fun UsageHistoryCardPreview_ReservationCancelled_Student_Default() {
     AppTheme(theme = ThemeType.STUDENT) {
         UsageHistoryCard(
             item = MyScheduleUsageHistoryPreviewFixture.reservationCancelled,
+            onClick = {},
+            modifier = Modifier.padding(AppSpacing.screenPadding),
+        )
+    }
+}
+
+@Preview(
+    name = "Class cancelled · Student · Default",
+    group = "Component/MySchedule/UsageHistoryCard",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun UsageHistoryCardPreview_ClassCancelled_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        UsageHistoryCard(
+            item = MyScheduleUsageHistoryPreviewFixture.classCancelled,
             onClick = {},
             modifier = Modifier.padding(AppSpacing.screenPadding),
         )

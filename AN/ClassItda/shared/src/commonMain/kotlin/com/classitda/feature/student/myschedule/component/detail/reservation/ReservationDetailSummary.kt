@@ -123,8 +123,8 @@ private fun ReservationDetailUiModel.statusPresentation(): ReservationDetailStat
         is ReservationDetailUiModel.ClassCancelled -> {
             ReservationDetailStatusPresentation(
                 label = Res.string.my_schedule_status_class_canceled,
-                mark = Res.string.my_schedule_status_reservation_canceled_mark,
-                color = StuColors.Red,
+                mark = Res.string.my_schedule_status_completed_mark,
+                color = StuColors.TextSecondary,
             )
         }
 
@@ -199,5 +199,18 @@ private fun ReservationDetailSummaryPreview_F09Attended_Student() {
 private fun ReservationDetailSummaryPreview_F10Absent_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         ReservationDetailSummary(model = ReservationDetailPreviewFixture.absent)
+    }
+}
+
+@Preview(
+    name = "Reservation detail summary / Class cancelled / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationDetailSummaryPreview_ClassCancelled_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationDetailSummary(model = ReservationDetailPreviewFixture.classCancelled)
     }
 }

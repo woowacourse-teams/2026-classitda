@@ -155,6 +155,7 @@
     <string name="my_schedule_class_detail_reservation_cancellation_deadline">수업 시작 %1$d시간 전까지 취소 시 횟수가 차감되지 않습니다.</string>
     <string name="my_schedule_class_detail_waitlist_confirmation_policy">대기 중인 상태에서 예약이 확정된 후 취소 시에도 동일한 규정이 적용됩니다.</string>
     <string name="my_schedule_class_detail_center_cancellation_policy">수업 시작 전까지 센터의 취소 규정에 따라 예약을 취소할 수 있습니다.</string>
+    <string name="my_schedule_class_detail_class_cancellation_notice">시설 또는 강사의 사정으로 수업이 취소되었습니다.</string>
     <string name="my_schedule_class_detail_attended_result">출석이 완료된 수업입니다.</string>
     <string name="my_schedule_class_detail_absent_result">결석한 수업입니다.</string>
     <string name="my_page_title">마이페이지</string>

@@ -103,6 +103,18 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
             memo = "편안한 복장으로 참여해 주세요.",
         )
 
+    val classCancelledReservationId = ReservationId("reservation-history-class-cancelled")
+    val classCancelledSession =
+        createSession(
+            id = "session-history-class-cancelled",
+            title = "체어 밸런스",
+            startsAt = "2026-07-26T01:00:00Z",
+            endsAt = "2026-07-26T01:50:00Z",
+            instructorName = "이지은 강사",
+            facilityName = "하타룸",
+            memo = null,
+        )
+
     return FakeMyScheduleRepository(
         upcomingSchedules =
             listOf(
@@ -135,6 +147,11 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
                     session = cancelledSession,
                     status = UsageHistoryStatus.RESERVATION_CANCELLED,
                 ),
+                UsageHistoryEntry(
+                    reservationId = classCancelledReservationId,
+                    session = classCancelledSession,
+                    status = UsageHistoryStatus.CLASS_CANCELLED,
+                ),
             ),
         reservationDetails =
             listOf(
@@ -160,6 +177,11 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
                     reservationId = cancelledReservationId,
                     session = cancelledSession,
                     cancelledAt = Instant.parse("2026-07-25T04:20:00Z"),
+                ),
+                ReservationDetail.ClassCancelled(
+                    reservationId = classCancelledReservationId,
+                    session = classCancelledSession,
+                    cancelledAt = Instant.parse("2026-07-24T04:20:00Z"),
                 ),
             ),
         waitlistDetails =

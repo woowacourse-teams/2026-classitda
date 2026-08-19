@@ -104,11 +104,12 @@ class MyScheduleUiMapperTest {
             listOf(0, 1, 2).map { currentPosition ->
                 createWaitlisted(
                     id = "waitlist-position-$currentPosition",
-                    session = createSession(
-                        id = "session-position-$currentPosition",
-                        startsAt = "2026-08-08T02:00:00Z",
-                        endsAt = "2026-08-08T03:50:00Z",
-                    ),
+                    session =
+                        createSession(
+                            id = "session-position-$currentPosition",
+                            startsAt = "2026-08-08T02:00:00Z",
+                            endsAt = "2026-08-08T03:50:00Z",
+                        ),
                     currentPosition = currentPosition,
                 )
             }
@@ -205,7 +206,11 @@ class MyScheduleUiMapperTest {
             )
         assertEquals(
             UsageHistoryStatusUiModel.CLASS_CANCELLED,
-            classCancelled.single().items.single().status,
+            classCancelled
+                .single()
+                .items
+                .single()
+                .status,
         )
     }
 
@@ -272,6 +277,8 @@ class MyScheduleUiMapperTest {
         assertIs<ReservationDetailUiModel.ClassCancelled>(classCancelled)
         assertIs<ReservationDetailUiModel.Attended>(attended)
         assertIs<ReservationDetailUiModel.Absent>(absent)
+        assertEquals("2026.08.01 (토) 오후 3:25", classCancelled.cancelledAtLabel)
+        assertEquals("2026.08.01 (토) 오후 3:25", cancelled.cancelledAtLabel)
         assertEquals("2026.08.04 (화)", confirmed.classInfo.dateLabel)
         assertEquals("2026년 8월 4일 화요일", attended.classInfo.dateLabel)
         assertEquals("2026.08.04 (화) 오후 6:20", attended.checkedInAtLabel)

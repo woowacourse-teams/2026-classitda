@@ -48,7 +48,7 @@ class FakeMyScheduleRepositoryTest {
                 ).value
 
             assertEquals(2, upcoming.size)
-            assertEquals(3, history.size)
+            assertEquals(4, history.size)
 
             upcoming.forEach { schedule ->
                 when (schedule) {

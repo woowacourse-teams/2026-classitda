@@ -58,6 +58,17 @@ class ReservationDetailContractTest {
     }
 
     @Test
+    fun `수업 취소 상세는 예약 취소 상세와 분리되고 사용자 취소 Action을 제공하지 않는다`() {
+        val classCancelled = createClassCancelled()
+        val reservationCancelled = createCancelled()
+
+        assertIs<ReservationDetailUiModel.ClassCancelled>(classCancelled)
+        assertIs<ReservationDetailUiModel.Cancelled>(reservationCancelled)
+        assertNull(classCancelled.cancellationActionOrNull())
+        assertNull(reservationCancelled.cancellationActionOrNull())
+    }
+
+    @Test
     fun `예약 완료여도 취소 불가 상태면 취소 Action을 제공하지 않는다`() {
         val unavailable =
             createConfirmed().copy(
