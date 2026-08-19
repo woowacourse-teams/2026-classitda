@@ -600,8 +600,9 @@ class ClassSessionCommandServiceTest {
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
         수업을_저장한다(context, classType, LocalDateTime.of(2026, 8, 17, 10, 0),
                 60, ClassSessionStatus.OPENED, "활성 수업");
-        수업을_저장한다(context, classType, LocalDateTime.of(2026, 8, 18, 10, 0),
-                60, ClassSessionStatus.CANCELED, "취소 수업");
+        ClassSession canceled = 수업을_저장한다(context, classType, LocalDateTime.of(2026, 8, 18, 10, 0),
+                60, ClassSessionStatus.OPENED, "취소 수업");
+        canceled.cancel(canceled.getStartAt().minusMinutes(1));
 
         // when
         commandService.save(owner.getId(), context.studio().getId(),
@@ -821,7 +822,7 @@ class ClassSessionCommandServiceTest {
                 .build());
     }
 
-    private void 수업을_저장한다(
+    private ClassSession 수업을_저장한다(
             StudioContext context,
             ClassType classType,
             LocalDateTime startAt,
@@ -829,7 +830,7 @@ class ClassSessionCommandServiceTest {
             ClassSessionStatus status,
             String name
     ) {
-        수업을_저장한다(
+        return 수업을_저장한다(
                 context,
                 context.membership(),
                 classType,
@@ -840,7 +841,7 @@ class ClassSessionCommandServiceTest {
         );
     }
 
-    private void 수업을_저장한다(
+    private ClassSession 수업을_저장한다(
             StudioContext context,
             StudioMembership instructorMembership,
             ClassType classType,
@@ -854,6 +855,7 @@ class ClassSessionCommandServiceTest {
                 durationMinutes, 10, startAt, status));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(session.getId(), classType.getId()));
+        return session;
     }
 
     private void 영속_설정을_정리한다(PersistenceSetup setup) {

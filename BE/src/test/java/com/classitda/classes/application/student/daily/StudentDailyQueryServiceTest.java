@@ -434,8 +434,9 @@ class StudentDailyQueryServiceTest {
 
         ClassSession canceled = 수업_회차를_저장한다(
                 studio, instructor, classType, "취소 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(7, 0), ClassSessionStatus.CANCELED
+                QUERY_DATE.atTime(7, 0), ClassSessionStatus.OPENED
         );
+        canceled.cancel(canceled.getStartAt().minusMinutes(1));
         ClassSession attendancePending = 수업_회차를_저장한다(
                 studio, instructor, classType, "출석 처리 대기 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(8, 30), ClassSessionStatus.OPENED

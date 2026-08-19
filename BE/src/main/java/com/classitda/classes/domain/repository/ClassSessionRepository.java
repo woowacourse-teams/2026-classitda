@@ -18,7 +18,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             SELECT CASE WHEN COUNT(classSession) > 0 THEN true ELSE false END
             FROM ClassSession classSession
             WHERE classSession.instructorMembership.id = :instructorMembershipId
-              AND classSession.status <> com.classitda.classes.domain.ClassSessionStatus.CANCELED
+              AND classSession.canceledAt IS NULL
               AND classSession.startAt < :endAt
               AND classSession.endAt > :startAt
             """)
@@ -44,7 +44,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
               AND classSession.startAt >= :rangeStart
               AND classSession.startAt < :rangeEnd
               AND classType.id IN :classTypeIds
-              AND classSession.status <> com.classitda.classes.domain.ClassSessionStatus.CANCELED
+              AND classSession.canceledAt IS NULL
               AND (
                   :attendanceHistoryOnly = false
                   OR EXISTS (
