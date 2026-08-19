@@ -58,6 +58,11 @@ public enum ClassErrorCode implements ErrorCode {
             "RESERVATION-002",
             "예약 취소 시각은 필수입니다.",
             HttpStatus.BAD_REQUEST
+    ),
+    RESERVATION_ATTENDANCE_OCCURRED_AT_REQUIRED(
+            "RESERVATION-003",
+            "예약 출석 처리 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
     );
 
     private final String code;

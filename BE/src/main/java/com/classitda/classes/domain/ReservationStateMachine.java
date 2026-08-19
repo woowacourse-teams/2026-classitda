@@ -16,6 +16,8 @@ public final class ReservationStateMachine {
         switch (trigger) {
             case ReservationTrigger.CancelRequested cancelRequested ->
                     reservation.cancel(cancelRequested.occurredAt());
+            case ReservationTrigger.AttendanceConfirmed attendanceConfirmed ->
+                    reservation.markAttended(attendanceConfirmed.occurredAt());
         }
     }
 }

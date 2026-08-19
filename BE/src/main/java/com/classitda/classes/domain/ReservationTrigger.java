@@ -16,4 +16,15 @@ public sealed interface ReservationTrigger {
             }
         }
     }
+
+    record AttendanceConfirmed(LocalDateTime occurredAt) implements ReservationTrigger {
+
+        public AttendanceConfirmed {
+            if (occurredAt == null) {
+                throw new ClassException(
+                        ClassErrorCode.RESERVATION_ATTENDANCE_OCCURRED_AT_REQUIRED
+                );
+            }
+        }
+    }
 }

@@ -12,6 +12,7 @@ class ReservationStateMachineTest {
 
     private static final LocalDateTime RESERVED_AT = LocalDateTime.of(2026, 8, 18, 9, 0);
     private static final LocalDateTime CANCELED_AT = LocalDateTime.of(2026, 8, 19, 10, 0);
+    private static final LocalDateTime ATTENDED_AT = LocalDateTime.of(2026, 8, 25, 20, 5);
 
     private final ReservationStateMachine stateMachine = new ReservationStateMachine();
 
@@ -27,6 +28,21 @@ class ReservationStateMachineTest {
         // then
         assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.CANCELED);
         assertThat(reservation.getCanceledAt()).isEqualTo(CANCELED_AT);
+    }
+
+    @Test
+    void 출석_확인_트리거를_출석_완료_전이로_연결한다() {
+        // given
+        Reservation reservation = 예약();
+        ReservationTrigger trigger = new ReservationTrigger.AttendanceConfirmed(ATTENDED_AT);
+
+        // when
+        stateMachine.handle(reservation, trigger);
+
+        // then
+        assertThat(reservation.getStatus()).isEqualTo(ReservationStatus.ATTENDED);
+        assertThat(reservation.getAttendedAt()).isEqualTo(ATTENDED_AT);
+        assertThat(reservation.getCanceledAt()).isNull();
     }
 
     @Test
@@ -50,6 +66,17 @@ class ReservationStateMachineTest {
                 .isInstanceOfSatisfying(ClassException.class, exception ->
                         assertThat(exception.getErrorCode())
                                 .isEqualTo(ClassErrorCode.RESERVATION_CANCEL_OCCURRED_AT_REQUIRED));
+    }
+
+    @Test
+    void 출석_확인_트리거의_발생_시각은_필수다() {
+        // when / then
+        assertThatThrownBy(() -> new ReservationTrigger.AttendanceConfirmed(null))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(
+                                        ClassErrorCode.RESERVATION_ATTENDANCE_OCCURRED_AT_REQUIRED
+                                ));
     }
 
     private Reservation 예약() {

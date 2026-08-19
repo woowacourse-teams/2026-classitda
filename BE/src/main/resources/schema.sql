@@ -346,6 +346,7 @@ CREATE TABLE reservation
     active_flag            TINYINT GENERATED ALWAYS AS (IF(status = 'CANCELED', NULL, 1)) STORED,
     reserved_at            DATETIME(6) NOT NULL,
     canceled_at            DATETIME(6) NULL,
+    attended_at            DATETIME(6) NULL,
     created_at             DATETIME(6) NOT NULL,
     updated_at             DATETIME(6) NULL,
     PRIMARY KEY (id),
