@@ -51,9 +51,9 @@ if grep -qE '^(AUTH_PHONE_KEY_HMAC_SECRET_BASE64|AUTH_JWT_PRIVATE_KEY_BASE64|AUT
     "$(openssl pkcs8 -topk8 -nocrypt -in "${KEY_DIR}/private.pem" -outform DER | base64 | tr -d '\n')"
   fill_if_empty "AUTH_JWT_PUBLIC_KEY_BASE64" \
     "$(openssl rsa -in "${KEY_DIR}/private.pem" -pubout -outform DER 2>/dev/null | base64 | tr -d '\n')"
-
-  chmod 600 "${ENV_FILE}"
 fi
+
+chmod 600 "${ENV_FILE}"
 
 cd "${PROJECT_DIR}"
 
