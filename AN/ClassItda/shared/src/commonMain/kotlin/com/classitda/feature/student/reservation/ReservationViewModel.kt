@@ -26,7 +26,7 @@ internal data class ReservationUiState(
     val classes: List<ReservationClassUiModel> = emptyList(),
     val passes: List<ReservationPassUiModel> = emptyList(),
     val selectedPassId: String? = null,
-    val isPassSelectionVisible: Boolean = true,
+    val isPassSelectionVisible: Boolean = false,
 )
 
 internal class ReservationViewModel(

@@ -21,37 +21,29 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
-import com.classitda.data.repository.home.FakeNoticeRepository
-import com.classitda.data.repository.home.FakePassRepository
-import com.classitda.data.repository.home.FakeReservationRepository
-import com.classitda.feature.student.StudentBottomTab
 import com.classitda.feature.student.StudentTab
 import com.classitda.feature.student.home.component.PrimaryTextButton
 import com.classitda.feature.student.home.model.FacilityNoticeUiModel
 import com.classitda.feature.student.home.model.MyPassUiModel
 import com.classitda.feature.student.home.model.PendingReservationUiModel
 import com.classitda.feature.student.home.model.UpcomingReservationUiModel
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun HomeScreen(
     onTabSelected: (StudentTab) -> Unit = {},
-    viewModel: HomeViewModel =
-        viewModel {
-            HomeViewModel(
-                reservationRepository = FakeReservationRepository(),
-                passRepository = FakePassRepository(),
-                noticeRepository = FakeNoticeRepository(),
-            )
-        },
+    bottomBar: @Composable () -> Unit = {},
+    viewModel: HomeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -64,6 +56,7 @@ fun HomeScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onTabSelected = onTabSelected,
+        bottomBar = bottomBar,
         onRefresh = viewModel::onRefresh,
         onRetry = viewModel::onRetry,
         onPendingReservationApproveClick = viewModel::onPendingReservationApproveClick,
@@ -73,6 +66,35 @@ fun HomeScreen(
     )
 }
 
+private data class StudioSwitchOptionsUiModel(
+    val instructorModeOptions: List<InstructorStudioOptionUiModel>,
+    val memberModeOptions: List<MemberStudioOptionUiModel>,
+) {
+    fun selectedId(): String = instructorModeOptions.first().id
+
+    fun studioNameOf(id: String): String =
+        instructorModeOptions.firstOrNull { it.id == id }?.studioName
+            ?: memberModeOptions.first { it.id == id }.studioName
+}
+
+private val studioSwitchOptions =
+    StudioSwitchOptionsUiModel(
+        instructorModeOptions =
+            listOf(
+                InstructorStudioOptionUiModel(
+                    id = "coco-yeongdeung",
+                    studioName = "코코필라테스&필라테스 영등점",
+                    isLead = true,
+                ),
+            ),
+        memberModeOptions =
+            listOf(
+                MemberStudioOptionUiModel(id = "coco-seongsu", studioName = "코코 필라테스 성수점"),
+                MemberStudioOptionUiModel(id = "movement-wangsimni", studioName = "필라테스 무브먼트 왕십리"),
+            ),
+    )
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun HomeScreenStateless(
     uiState: HomeUiState,
@@ -84,6 +106,7 @@ private fun HomeScreenStateless(
     onApproveReservation: () -> Unit,
     onConfirmedDialogDismiss: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    bottomBar: @Composable () -> Unit = {},
 ) {
     val content =
         when (uiState) {
@@ -123,21 +146,43 @@ private fun HomeScreenStateless(
         )
     }
 
+    var showStudioSwitchDialog by remember { mutableStateOf(false) }
+    var currentStudioId by remember { mutableStateOf(studioSwitchOptions.selectedId()) }
+    var selectedStudioOptionId by remember { mutableStateOf(currentStudioId) }
+
+    if (showStudioSwitchDialog) {
+        StudioSwitchDialog(
+            instructorModeOptions =
+                studioSwitchOptions.instructorModeOptions.map {
+                    it.copy(isSelected = it.id == selectedStudioOptionId)
+                },
+            memberModeOptions =
+                studioSwitchOptions.memberModeOptions.map {
+                    it.copy(isSelected = it.id == selectedStudioOptionId)
+                },
+            onOptionClick = { optionId -> selectedStudioOptionId = optionId },
+            onDismissRequest = { showStudioSwitchDialog = false },
+            onConfirmClick = {
+                currentStudioId = selectedStudioOptionId
+                showStudioSwitchDialog = false
+            },
+            isConfirmEnabled = selectedStudioOptionId != currentStudioId,
+        )
+    }
+
     Scaffold(
         containerColor = StuColors.Background,
         topBar = {
             HomeTopBar(
-                studioName = "코코필라테스&필라테스 영등점",
-                onStudioClick = { /*TODO*/ },
+                studioName = studioSwitchOptions.studioNameOf(currentStudioId),
+                onStudioClick = {
+                    selectedStudioOptionId = currentStudioId
+                    showStudioSwitchDialog = true
+                },
                 onNotificationClick = { /*TODO*/ },
             )
         },
-        bottomBar = {
-            StudentBottomTab(
-                selectedTab = StudentTab.HOME,
-                onTabSelected = onTabSelected,
-            )
-        },
+        bottomBar = bottomBar,
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
         when {

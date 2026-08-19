@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -134,8 +135,9 @@ private fun ReservationCompleteTopBar(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(52.dp)
                 .background(StuColors.White)
+                .statusBarsPadding()
+                .height(52.dp)
                 .padding(horizontal = AppSpacing.screenPadding),
     ) {
         Text(
