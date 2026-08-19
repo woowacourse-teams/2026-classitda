@@ -53,8 +53,6 @@ jobs:
     timeout-minutes: 10
     environment: production
     steps:
-      - uses: actions/checkout@v4
-
       - name: cloudflared 설치
         run: |
           set -eu
@@ -117,13 +115,6 @@ jobs:
           ssh -F ~/.ssh/config target 'chmod 600 /opt/classitda/.env.new && mv /opt/classitda/.env.new /opt/classitda/.env'
           rm -f env.tmp
 
-      - name: 설정 파일 동기화
-        run: |
-          set -eu
-          ssh -F ~/.ssh/config target 'mkdir -p /opt/classitda/nginx'
-          scp -F ~/.ssh/config BE/docker/compose.prod.yml   target:/opt/classitda/compose.yml
-          scp -F ~/.ssh/config BE/docker/nginx/api.conf     target:/opt/classitda/nginx/api.conf
-
       - name: 배포
         env:
           IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
@@ -145,11 +136,9 @@ jobs:
             return 1
           }
 
-          docker compose pull app
-          docker compose up -d
+          docker compose up -d --pull always app
 
           if wait_healthy; then
-            docker compose exec -T nginx nginx -t && docker compose exec -T nginx nginx -s reload
             echo "배포 성공: $APP_IMAGE"
             docker image prune -f
             exit 0
@@ -164,7 +153,7 @@ jobs:
           fi
 
           echo "===== 롤백: $PREVIOUS ====="
-          APP_IMAGE="$PREVIOUS" docker compose up -d
+          APP_IMAGE="$PREVIOUS" docker compose up -d app
           if wait_healthy; then
             echo "롤백 완료. 배포는 실패로 처리합니다."
           else
