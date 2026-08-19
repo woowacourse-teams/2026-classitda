@@ -5,7 +5,6 @@ import com.classitda.classes.application.student.StudentBookingContext.Reservati
 import com.classitda.classes.application.student.StudentBookingContext.WaitingCounts;
 import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.application.student.StudentBookingDecisionPolicy;
-import com.classitda.classes.application.student.StudentBookingStatus;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
@@ -43,14 +42,13 @@ public class StudentDailySessionAssembler {
                 now
         );
         StudentBookingDecision bookingDecision = bookingDecisionPolicy.decide(bookingContext);
-        StudentBookingStatus bookingStatus = bookingDecision.legacyStatus();
 
         return StudentDailySessionView.of(
                 classSession,
                 reservation.totalCount(),
                 remainingCapacity,
                 waiting.totalCount(),
-                bookingStatus
+                bookingDecision
         );
     }
 

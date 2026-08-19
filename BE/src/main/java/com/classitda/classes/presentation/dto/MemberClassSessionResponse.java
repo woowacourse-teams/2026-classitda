@@ -1,5 +1,8 @@
 package com.classitda.classes.presentation.dto;
 
+import com.classitda.classes.application.student.BookingAvailability;
+import com.classitda.classes.application.student.StudentAttendanceResult;
+import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.daily.StudentDailySessionView;
 import com.classitda.classes.domain.ClassForm;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -45,7 +48,14 @@ public record MemberClassSessionResponse(
         @Schema(description = "수업 종료 일시", example = "2026-08-17T21:00:00")
         LocalDateTime endAt,
 
-        MemberClassSessionBookingStatus bookingStatus
+        @Schema(description = "회원의 현재 예약 관계", example = "NONE")
+        StudentBookingRelation bookingRelation,
+
+        @Schema(description = "회원의 출결 결과", example = "NOT_RECORDED")
+        StudentAttendanceResult attendanceResult,
+
+        @Schema(description = "회원에게 허용되는 예약 유형", example = "RESERVABLE")
+        BookingAvailability availability
 ) {
 
     public static MemberClassSessionResponse from(StudentDailySessionView session) {
@@ -63,7 +73,9 @@ public record MemberClassSessionResponse(
                 session.waitingCount(),
                 session.startAt(),
                 session.endAt(),
-                MemberClassSessionBookingStatus.from(session.bookingStatus())
+                session.bookingDecision().bookingRelation(),
+                session.bookingDecision().attendanceResult(),
+                session.bookingDecision().availability()
         );
     }
 }

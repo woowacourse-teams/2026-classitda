@@ -17,70 +17,70 @@ class StudentBookingDecisionPolicyTest {
 
     private final StudentBookingDecisionPolicy decisionPolicy = new StudentBookingDecisionPolicy();
 
-    @ParameterizedTest(name = "{0} 상태를 참여 관계와 예약 가능 여부로 결정한다")
-    @MethodSource("bookingStatusContexts")
+    @ParameterizedTest(name = "{0} 예약 관계와 {1} 출결 결과와 {2} 예약 가능 여부를 결정한다")
+    @MethodSource("bookingDecisionContexts")
     void 회원_수업_상태를_참여_관계와_예약_가능_여부로_결정한다(
-            StudentBookingStatus expectedStatus,
-            StudentParticipation expectedParticipation,
+            StudentBookingRelation expectedBookingRelation,
+            StudentAttendanceResult expectedAttendanceResult,
             BookingAvailability expectedAvailability,
             StudentBookingContext context
     ) {
         StudentBookingDecision decision = decisionPolicy.decide(context);
 
-        assertThat(decision.participation()).isEqualTo(expectedParticipation);
+        assertThat(decision.bookingRelation()).isEqualTo(expectedBookingRelation);
+        assertThat(decision.attendanceResult()).isEqualTo(expectedAttendanceResult);
         assertThat(decision.availability()).isEqualTo(expectedAvailability);
-        assertThat(decision.legacyStatus()).isEqualTo(expectedStatus);
     }
 
-    private static Stream<Arguments> bookingStatusContexts() {
+    private static Stream<Arguments> bookingDecisionContexts() {
         return Stream.of(
                 Arguments.of(
-                        StudentBookingStatus.ABSENT, StudentParticipation.ABSENT, BookingAvailability.CLOSED,
+                        StudentBookingRelation.NONE, StudentAttendanceResult.ABSENT, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 0, 1, 1, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.ATTENDED, StudentParticipation.ATTENDED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 0, 1, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.ATTENDED, StudentParticipation.ATTENDED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.minusHours(2),
                                 1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.ATTENDED, StudentParticipation.ATTENDED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW,
                                 1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.RESERVED, StudentParticipation.RESERVED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.RESERVED, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 1, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.OFFERED, StudentParticipation.OFFERED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.OFFERED, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 0, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.WAITING, StudentParticipation.WAITING, BookingAvailability.CLOSED,
+                        StudentBookingRelation.WAITING, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.plusHours(1),
                                 0, 0, 0, 0, 1, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.CLOSED, StudentParticipation.NONE, BookingAvailability.CLOSED,
+                        StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
                         context(BookingWindow.CLOSED, NOW.plusMinutes(30),
                                 0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.AVAILABLE, StudentParticipation.NONE, BookingAvailability.RESERVABLE,
+                        StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE,
                         context(BookingWindow.OPEN, NOW.plusHours(1),
                                 0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.WAITING_AVAILABLE, StudentParticipation.NONE, BookingAvailability.WAITLISTABLE,
+                        StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.WAITLISTABLE,
                         context(BookingWindow.OPEN, NOW.plusHours(1),
                                 0, 0, 0, 0, 0, 0)
                 )

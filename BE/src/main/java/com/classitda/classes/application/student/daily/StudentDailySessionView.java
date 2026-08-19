@@ -1,6 +1,6 @@
 package com.classitda.classes.application.student.daily;
 
-import com.classitda.classes.application.student.StudentBookingStatus;
+import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
@@ -21,7 +21,7 @@ public record StudentDailySessionView(
         long waitingCount,
         LocalDateTime startAt,
         LocalDateTime endAt,
-        StudentBookingStatus bookingStatus
+        StudentBookingDecision bookingDecision
 ) {
 
     static StudentDailySessionView of(
@@ -29,7 +29,7 @@ public record StudentDailySessionView(
             long reservedCount,
             long remainingCapacity,
             long waitingCount,
-            StudentBookingStatus bookingStatus
+            StudentBookingDecision bookingDecision
     ) {
         ClassSession session = classSession.getSession();
         return new StudentDailySessionView(
@@ -47,7 +47,7 @@ public record StudentDailySessionView(
                 waitingCount,
                 session.getStartAt(),
                 session.getEndAt(),
-                bookingStatus
+                bookingDecision
         );
     }
 }

@@ -7,31 +7,42 @@ import org.springframework.stereotype.Component;
 public class StudentBookingDecisionPolicy {
 
     public StudentBookingDecision decide(StudentBookingContext context) {
-        return new StudentBookingDecision(resolveParticipation(context), resolveAvailability(context));
+        StudentAttendanceResult attendanceResult = resolveAttendanceResult(context);
+        StudentBookingRelation bookingRelation = resolveBookingRelation(context, attendanceResult);
+        return new StudentBookingDecision(bookingRelation, attendanceResult, resolveAvailability(context));
     }
 
-    private StudentParticipation resolveParticipation(StudentBookingContext context) {
+    private StudentAttendanceResult resolveAttendanceResult(StudentBookingContext context) {
         if (context.reservation().ownAbsentCount() > 0) {
-            return StudentParticipation.ABSENT;
+            return StudentAttendanceResult.ABSENT;
         }
         if (context.reservation().ownAttendedCount() > 0) {
-            return StudentParticipation.ATTENDED;
+            return StudentAttendanceResult.ATTENDED;
+        }
+        if (context.reservation().ownReservedCount() > 0 && !context.now().isBefore(context.startAt())) {
+            return StudentAttendanceResult.ATTENDED;
+        }
+        return StudentAttendanceResult.NOT_RECORDED;
+    }
+
+    private StudentBookingRelation resolveBookingRelation(StudentBookingContext context, StudentAttendanceResult attendanceResult) {
+        if (attendanceResult != StudentAttendanceResult.NOT_RECORDED) {
+            return StudentBookingRelation.NONE;
         }
         if (context.reservation().ownReservedCount() > 0) {
-            return context.now().isBefore(context.startAt())
-                    ? StudentParticipation.RESERVED
-                    : StudentParticipation.ATTENDED;
+            return StudentBookingRelation.RESERVED;
         }
         if (context.waiting().ownOfferedCount() > 0) {
-            return StudentParticipation.OFFERED;
+            return StudentBookingRelation.OFFERED;
         }
         if (context.waiting().ownWaitingCount() > 0) {
-            return StudentParticipation.WAITING;
+            return StudentBookingRelation.WAITING;
         }
-        return StudentParticipation.NONE;
+        return StudentBookingRelation.NONE;
     }
 
     private BookingAvailability resolveAvailability(StudentBookingContext context) {
+        // TODO(#46, #68): 사용 가능한 호환 수강권이 없으면 BLOCKED를 반환한다.
         if (context.bookingWindow() == BookingWindow.CLOSED) {
             return BookingAvailability.CLOSED;
         }

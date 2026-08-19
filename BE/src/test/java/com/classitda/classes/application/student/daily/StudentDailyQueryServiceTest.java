@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
+import com.classitda.classes.application.student.BookingAvailability;
+import com.classitda.classes.application.student.StudentAttendanceResult;
+import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.application.student.StudentBookingDecisionPolicy;
-import com.classitda.classes.application.student.StudentBookingStatus;
+import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.classes.domain.ClassForm;
@@ -206,7 +209,7 @@ class StudentDailyQueryServiceTest {
                         1,
                         QUERY_DATE.atTime(12, 0),
                         QUERY_DATE.atTime(13, 0),
-                        StudentBookingStatus.AVAILABLE
+                        decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE)
                 ),
                 new StudentDailySessionView(
                         sameTimeSecond.getId(),
@@ -223,7 +226,7 @@ class StudentDailyQueryServiceTest {
                         0,
                         QUERY_DATE.atTime(12, 0),
                         QUERY_DATE.atTime(13, 0),
-                        StudentBookingStatus.AVAILABLE
+                        decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE)
                 ),
                 new StudentDailySessionView(
                         laterSession.getId(),
@@ -240,7 +243,7 @@ class StudentDailyQueryServiceTest {
                         0,
                         QUERY_DATE.atTime(14, 0),
                         QUERY_DATE.atTime(15, 0),
-                        StudentBookingStatus.WAITING_AVAILABLE
+                        decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.WAITLISTABLE)
                 )
         );
         assertThat(responses)
@@ -388,11 +391,11 @@ class StudentDailyQueryServiceTest {
 
         // then
         assertThat(responses)
-                .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingStatus)
+                .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingDecision)
                 .containsExactly(
-                        tuple(attended.getId(), StudentBookingStatus.ATTENDED),
-                        tuple(reservedOnly.getId(), StudentBookingStatus.ATTENDED),
-                        tuple(absent.getId(), StudentBookingStatus.ABSENT)
+                        tuple(attended.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(reservedOnly.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(absent.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ABSENT, BookingAvailability.CLOSED))
                 );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
@@ -488,16 +491,16 @@ class StudentDailyQueryServiceTest {
 
         // then
         assertThat(responses)
-                .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingStatus)
+                .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingDecision)
                 .containsExactly(
-                        tuple(attendancePending.getId(), StudentBookingStatus.ATTENDED),
-                        tuple(attended.getId(), StudentBookingStatus.ATTENDED),
-                        tuple(absent.getId(), StudentBookingStatus.ABSENT),
-                        tuple(reserved.getId(), StudentBookingStatus.RESERVED),
-                        tuple(offered.getId(), StudentBookingStatus.OFFERED),
-                        tuple(waiting.getId(), StudentBookingStatus.WAITING),
-                        tuple(closedAtBoundary.getId(), StudentBookingStatus.CLOSED),
-                        tuple(availableBeforeClose.getId(), StudentBookingStatus.AVAILABLE)
+                        tuple(attendancePending.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(attended.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(absent.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ABSENT, BookingAvailability.CLOSED)),
+                        tuple(reserved.getId(), decision(StudentBookingRelation.RESERVED, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(offered.getId(), decision(StudentBookingRelation.OFFERED, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(waiting.getId(), decision(StudentBookingRelation.WAITING, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(closedAtBoundary.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(availableBeforeClose.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE))
                 );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
@@ -930,6 +933,14 @@ class StudentDailyQueryServiceTest {
                 .status(status)
                 .offeredAt(status == WaitingStatus.OFFERED ? NOW.minusMinutes(5) : null)
                 .build());
+    }
+
+    private static StudentBookingDecision decision(
+            StudentBookingRelation bookingRelation,
+            StudentAttendanceResult attendanceResult,
+            BookingAvailability availability
+    ) {
+        return new StudentBookingDecision(bookingRelation, attendanceResult, availability);
     }
 
     private void assertStudioError(Runnable action, StudioErrorCode errorCode) {

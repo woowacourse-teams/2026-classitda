@@ -16,7 +16,10 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarQ
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarSummary;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
-import com.classitda.classes.application.student.StudentBookingStatus;
+import com.classitda.classes.application.student.BookingAvailability;
+import com.classitda.classes.application.student.StudentAttendanceResult;
+import com.classitda.classes.application.student.StudentBookingDecision;
+import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
 import com.classitda.classes.application.student.calendar.StudentCalendarSummary;
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
@@ -165,7 +168,9 @@ class ClassSessionControllerTest {
                     "waitingCount": 2,
                     "startAt": "2026-08-17T20:00:00",
                     "endAt": "2026-08-17T21:00:00",
-                    "bookingStatus": "AVAILABLE"
+                    "bookingRelation": "NONE",
+                    "attendanceResult": "NOT_RECORDED",
+                    "availability": "RESERVABLE"
                   }
                 ]
                 """, JsonCompareMode.STRICT);
@@ -868,7 +873,11 @@ class ClassSessionControllerTest {
                 2,
                 LocalDateTime.of(2026, 8, 17, 20, 0),
                 LocalDateTime.of(2026, 8, 17, 21, 0),
-                StudentBookingStatus.AVAILABLE
+                new StudentBookingDecision(
+                        StudentBookingRelation.NONE,
+                        StudentAttendanceResult.NOT_RECORDED,
+                        BookingAvailability.RESERVABLE
+                )
         );
     }
 
