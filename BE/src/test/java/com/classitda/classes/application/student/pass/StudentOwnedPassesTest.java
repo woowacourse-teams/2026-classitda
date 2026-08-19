@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.passproduct.domain.repository.projection.MemberPassProductClassTypeProjection;
 import java.time.LocalDate;
 import java.util.List;
@@ -21,8 +22,9 @@ class StudentOwnedPassesTest {
 
         assertThat(ownedPasses.coveredClassTypeIdsOn(LocalDate.of(2026, 8, 19)))
                 .containsExactly(1L);
-        assertThat(ownedPasses.covers(1L, LocalDate.of(2026, 8, 19))).isTrue();
-        assertThat(ownedPasses.covers(2L, LocalDate.of(2026, 8, 19))).isFalse();
+        assertThat(ownedPasses.covers(ClassForm.GROUP, 1L, LocalDate.of(2026, 8, 19))).isTrue();
+        assertThat(ownedPasses.covers(ClassForm.INDIVIDUAL, 1L, LocalDate.of(2026, 8, 19))).isFalse();
+        assertThat(ownedPasses.covers(ClassForm.GROUP, 2L, LocalDate.of(2026, 8, 19))).isFalse();
     }
 
     @Test
@@ -33,8 +35,8 @@ class StudentOwnedPassesTest {
                 1L
         );
 
-        assertThat(ownedPasses.covers(1L, LocalDate.of(2026, 7, 31))).isFalse();
-        assertThat(ownedPasses.covers(1L, LocalDate.of(2026, 9, 1))).isFalse();
+        assertThat(ownedPasses.covers(ClassForm.GROUP, 1L, LocalDate.of(2026, 7, 31))).isFalse();
+        assertThat(ownedPasses.covers(ClassForm.GROUP, 1L, LocalDate.of(2026, 9, 1))).isFalse();
     }
 
     private StudentOwnedPasses ownedPasses(
@@ -44,6 +46,7 @@ class StudentOwnedPassesTest {
     ) {
         MemberPassProductClassTypeProjection passClassType = mock(MemberPassProductClassTypeProjection.class);
         given(passClassType.getMemberPassProductId()).willReturn(1L);
+        given(passClassType.getClassForm()).willReturn(ClassForm.GROUP);
         given(passClassType.getClassTypeId()).willReturn(classTypeId);
         given(passClassType.getStartedAt()).willReturn(startedAt);
         given(passClassType.getExpiresAt()).willReturn(expiresAt);

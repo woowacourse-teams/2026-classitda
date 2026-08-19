@@ -55,6 +55,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
 
     @Override
     @GetMapping(path = "/student/daily", version = "1")
+    // TODO(#68): 홀딩 기능 구현 후 홀딩 수강권 정보와 수업 목록을 함께 반환하는 응답 객체로 확장한다.
     public List<MemberClassSessionResponse> findAllForStudent(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,

@@ -1,6 +1,8 @@
 package com.classitda.classes.application.student.daily;
 
 import com.classitda.classes.application.student.StudentBookingContext;
+import com.classitda.classes.application.student.StudentBookingContext.ReservationCounts;
+import com.classitda.classes.application.student.StudentBookingContext.WaitingCounts;
 import com.classitda.classes.application.student.StudentBookingStatus;
 import com.classitda.classes.application.student.StudentBookingStatusResolver;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
@@ -23,19 +25,17 @@ public class StudentDailySessionAssembler {
             int reservationCloseMinutesBefore,
             LocalDateTime now
     ) {
-        long reservedCount = reservationSummary == null ? 0 : reservationSummary.getReservedCount();
-        long waitingCount = waitingSummary == null ? 0 : waitingSummary.getWaitingCount();
-        long remainingCapacity = Math.max((long) classSession.getCapacity() - reservedCount, 0);
+        ReservationCounts reservation = toReservationCounts(reservationSummary);
+        WaitingCounts waiting = toWaitingCounts(waitingSummary);
+        long remainingCapacity = Math.max(
+                (long) classSession.getCapacity() - reservation.totalCount(), 0
+        );
 
         StudentBookingContext bookingContext = new StudentBookingContext(
                 classSession.getSessionStatus(),
                 classSession.getStartAt(),
-                classSession.getEndAt(),
-                reservationSummary == null ? 0 : reservationSummary.getOwnReservedCount(),
-                reservationSummary == null ? 0 : reservationSummary.getOwnAttendedCount(),
-                reservationSummary == null ? 0 : reservationSummary.getOwnNoShowCount(),
-                waitingSummary == null ? 0 : waitingSummary.getOwnOfferedCount(),
-                waitingSummary == null ? 0 : waitingSummary.getOwnWaitingCount(),
+                reservation,
+                waiting,
                 reservationCloseMinutesBefore,
                 remainingCapacity,
                 now
@@ -44,10 +44,33 @@ public class StudentDailySessionAssembler {
 
         return StudentDailySessionView.of(
                 classSession,
-                reservedCount,
+                reservation.totalCount(),
                 remainingCapacity,
-                waitingCount,
+                waiting.totalCount(),
                 bookingStatus
+        );
+    }
+
+    private ReservationCounts toReservationCounts(ReservationSummaryProjection summary) {
+        if (summary == null) {
+            return new ReservationCounts(0, 0, 0, 0);
+        }
+        return new ReservationCounts(
+                summary.getReservedCount(),
+                summary.getOwnReservedCount(),
+                summary.getOwnAttendedCount(),
+                summary.getOwnAbsentCount()
+        );
+    }
+
+    private WaitingCounts toWaitingCounts(WaitingSummaryProjection summary) {
+        if (summary == null) {
+            return new WaitingCounts(0, 0, 0);
+        }
+        return new WaitingCounts(
+                summary.getWaitingCount(),
+                summary.getOwnOfferedCount(),
+                summary.getOwnWaitingCount()
         );
     }
 }

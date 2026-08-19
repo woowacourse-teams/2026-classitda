@@ -29,9 +29,9 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                    SUM(
                        CASE WHEN reservation.membership.id = :membershipId
                                  AND reservation.status =
-                                     com.classitda.classes.domain.ReservationStatus.NO_SHOW
+                                     com.classitda.classes.domain.ReservationStatus.ABSENT
                             THEN 1 ELSE 0 END
-                   ) AS ownNoShowCount
+                   ) AS ownAbsentCount
             FROM Reservation reservation
             WHERE reservation.classSession.id IN :classSessionIds
               AND reservation.status <>
@@ -45,6 +45,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query("""
             SELECT reservation.classSession.id AS classSessionId,
+                   reservation.classSession.classForm AS classForm,
                    classType.id AS classTypeId,
                    reservation.classSession.startAt AS startAt,
                    reservation.classSession.endAt AS endAt,

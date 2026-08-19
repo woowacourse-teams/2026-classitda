@@ -3,8 +3,6 @@ package com.classitda.classes.application.student.daily;
 import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.application.student.pass.StudentOwnedPasses;
 import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
-import com.classitda.common.exception.ClassitdaException;
-import com.classitda.common.exception.CommonErrorCode;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -29,7 +27,6 @@ public class StudentDailyQueryService {
             Long studioId,
             LocalDate date
     ) {
-        validateCriteria(date);
         LocalDateTime now = LocalDateTime.now(clock);
 
         Long membershipId = accessReader.readMembershipId(memberId, studioId);
@@ -39,24 +36,20 @@ public class StudentDailyQueryService {
             return List.of();
         }
 
+        boolean attendanceHistoryOnly = date.isBefore(now.toLocalDate());
         StudentDailySchedule schedule = scheduleReader.read(
                 studioId,
                 membershipId,
                 date,
                 classTypeIds,
-                date.isBefore(now.toLocalDate())
+                ownedPasses,
+                attendanceHistoryOnly
         );
         if (schedule.isEmpty()) {
             return List.of();
         }
 
         return assemble(schedule, now);
-    }
-
-    private void validateCriteria(LocalDate date) {
-        if (date == null) {
-            throw new ClassitdaException(CommonErrorCode.INVALID_INPUT);
-        }
     }
 
     private List<StudentDailySessionView> assemble(

@@ -7,8 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
         description = "회원에게 표시할 예약 상태. "
                 + "AVAILABLE: 예약 가능, WAITING_AVAILABLE: 대기 가능, RESERVED: 예약 완료, "
                 + "WAITING: 대기 중, OFFERED: 빈자리 예약 제안, CLOSED: 마감, "
-                + "ATTENDANCE_PENDING: 출석 처리 대기, ATTENDED: 출석 완료, "
-                + "NO_SHOW: 결석, CANCELED: 수업 취소"
+                + "UNAVAILABLE: 수강권으로 예약·대기 불가, ATTENDED: 출석, ABSENT: 결석"
 )
 public enum MemberClassSessionBookingStatus {
     AVAILABLE,
@@ -17,10 +16,9 @@ public enum MemberClassSessionBookingStatus {
     WAITING,
     OFFERED,
     CLOSED,
-    ATTENDANCE_PENDING,
+    UNAVAILABLE,
     ATTENDED,
-    NO_SHOW,
-    CANCELED;
+    ABSENT;
 
     public static MemberClassSessionBookingStatus from(StudentBookingStatus status) {
         return valueOf(status.name());

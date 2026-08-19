@@ -1,5 +1,6 @@
 package com.classitda.classes.application.student.daily;
 
+import com.classitda.classes.application.student.pass.StudentOwnedPasses;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ReservationRepository;
 import com.classitda.classes.domain.repository.WaitingRepository;
@@ -36,7 +37,8 @@ public class StudentDailyScheduleReader {
             Long membershipId,
             LocalDate date,
             List<Long> classTypeIds,
-            boolean attendedOnly
+            StudentOwnedPasses ownedPasses,
+            boolean attendanceHistoryOnly
     ) {
         List<ClassSessionDailyProjection> classSessions = classSessionRepository.findDailyForStudent(
                 studioId,
@@ -44,8 +46,14 @@ public class StudentDailyScheduleReader {
                 getRangeEnd(date),
                 classTypeIds,
                 membershipId,
-                attendedOnly
-        );
+                attendanceHistoryOnly
+        ).stream()
+                .filter(classSession -> ownedPasses.covers(
+                        classSession.getClassForm(),
+                        classSession.getClassTypeId(),
+                        classSession.getStartAt().toLocalDate()
+                ))
+                .toList();
 
         if (classSessions.isEmpty()) {
             return StudentDailySchedule.empty();

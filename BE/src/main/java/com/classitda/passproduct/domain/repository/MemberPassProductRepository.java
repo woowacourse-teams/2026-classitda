@@ -11,6 +11,7 @@ public interface MemberPassProductRepository extends JpaRepository<MemberPassPro
 
     @Query("""
             SELECT memberPassProduct.id AS memberPassProductId,
+                   passProduct.classForm AS classForm,
                    passProductClassType.classType.id AS classTypeId,
                    memberPassProduct.startedAt AS startedAt,
                    memberPassProduct.expiresAt AS expiresAt

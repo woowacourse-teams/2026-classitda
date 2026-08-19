@@ -6,14 +6,25 @@ import java.time.LocalDateTime;
 public record StudentBookingContext(
         ClassSessionStatus sessionStatus,
         LocalDateTime startAt,
-        LocalDateTime endAt,
-        long ownReservedCount,
-        long ownAttendedCount,
-        long ownNoShowCount,
-        long ownOfferedCount,
-        long ownWaitingCount,
+        ReservationCounts reservation,
+        WaitingCounts waiting,
         int reservationCloseMinutesBefore,
         long remainingCapacity,
         LocalDateTime now
 ) {
+
+    public record ReservationCounts(
+            long totalCount,
+            long ownReservedCount,
+            long ownAttendedCount,
+            long ownAbsentCount
+    ) {
+    }
+
+    public record WaitingCounts(
+            long totalCount,
+            long ownOfferedCount,
+            long ownWaitingCount
+    ) {
+    }
 }

@@ -161,7 +161,7 @@ class StudentCalendarQueryServiceTest {
         );
         ClassSession otherClassFormSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "다른 형태", ClassForm.INDIVIDUAL,
-                LocalDate.of(2026, 8, 18).atTime(16, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 17).atTime(16, 0), ClassSessionStatus.OPENED
         );
         ClassSession otherMemberSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "다른 회원 예약", ClassForm.GROUP,
@@ -203,8 +203,7 @@ class StudentCalendarQueryServiceTest {
         // then
         assertThat(summaries).containsExactly(
                 new StudentCalendarSummary(LocalDate.of(2026, 8, 16), true, false, false),
-                new StudentCalendarSummary(LocalDate.of(2026, 8, 18), false, true, true),
-                new StudentCalendarSummary(LocalDate.of(2026, 8, 19), false, true, false)
+                new StudentCalendarSummary(LocalDate.of(2026, 8, 18), false, true, true)
         );
         assertThat(queryCount).isEqualTo(6L);
     }

@@ -242,25 +242,11 @@ class StudentDailyQueryServiceTest {
                         QUERY_DATE.atTime(14, 0),
                         QUERY_DATE.atTime(15, 0),
                         StudentBookingStatus.WAITING_AVAILABLE
-                ),
-                new StudentDailySessionView(
-                        sameTypeOtherForm.getId(),
-                        firstInstructor.getId(),
-                        firstInstructor.getMember().getName(),
-                        ClassForm.INDIVIDUAL,
-                        yoga.getId(),
-                        yoga.getName(),
-                        "다른 형태",
-                        "다른 형태 안내",
-                        1,
-                        0,
-                        1,
-                        0,
-                        QUERY_DATE.atTime(15, 0),
-                        QUERY_DATE.atTime(16, 0),
-                        StudentBookingStatus.AVAILABLE
                 )
         );
+        assertThat(responses)
+                .extracting(StudentDailySessionView::id)
+                .doesNotContain(sameTypeOtherForm.getId());
     }
 
     @Test
@@ -300,11 +286,11 @@ class StudentDailyQueryServiceTest {
                 QUERY_DATE.plusDays(1)
         );
         ClassSession yogaSession = 수업_회차를_저장한다(
-                studio, instructor, yoga, "요가 수업", ClassForm.INDIVIDUAL, 5,
+                studio, instructor, yoga, "요가 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(11, 0), ClassSessionStatus.OPENED
         );
         ClassSession pilatesSession = 수업_회차를_저장한다(
-                studio, instructor, pilates, "필라테스 수업", ClassForm.GROUP, 5,
+                studio, instructor, pilates, "필라테스 수업", ClassForm.INDIVIDUAL, 5,
                 QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
         );
         수업_회차를_저장한다(
@@ -328,7 +314,7 @@ class StudentDailyQueryServiceTest {
     }
 
     @Test
-    void 과거_날짜에는_보유_수강권의_수업_중_실제_출석한_내역만_반환한다() {
+    void 과거_날짜에는_보유_수강권의_수업_중_예약과_출석과_결석_내역만_반환한다() {
         // given
         LocalDate pastDate = QUERY_DATE.minusDays(1);
         Studio studio = 시설을_저장한다(회원을_저장한다("past-daily-owner"), "과거 일별 조회 시설");
@@ -374,6 +360,10 @@ class StudentDailyQueryServiceTest {
                 studio, instructor, yoga, "출석 처리되지 않은 수업", ClassForm.GROUP, 5,
                 pastDate.atTime(12, 0), ClassSessionStatus.OPENED
         );
+        ClassSession absent = 수업_회차를_저장한다(
+                studio, instructor, yoga, "결석한 수업", ClassForm.GROUP, 5,
+                pastDate.atTime(12, 30), ClassSessionStatus.OPENED
+        );
         ClassSession otherMemberAttended = 수업_회차를_저장한다(
                 studio, instructor, yoga, "다른 회원이 출석한 수업", ClassForm.GROUP, 5,
                 pastDate.atTime(13, 0), ClassSessionStatus.OPENED
@@ -384,6 +374,7 @@ class StudentDailyQueryServiceTest {
         );
         예약을_저장한다(attended, memberMembership, ReservationStatus.ATTENDED);
         예약을_저장한다(reservedOnly, memberMembership, ReservationStatus.RESERVED);
+        예약을_저장한다(absent, memberMembership, ReservationStatus.ABSENT);
         예약을_저장한다(otherMemberAttended, otherMembership, ReservationStatus.ATTENDED);
         예약을_저장한다(otherClassType, memberMembership, ReservationStatus.ATTENDED);
         entityManager.flush();
@@ -399,12 +390,15 @@ class StudentDailyQueryServiceTest {
         // then
         assertThat(responses)
                 .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingStatus)
-                .containsExactly(tuple(attended.getId(), StudentBookingStatus.ATTENDED));
+                .containsExactly(
+                        tuple(attended.getId(), StudentBookingStatus.ATTENDED),
+                        tuple(reservedOnly.getId(), StudentBookingStatus.ATTENDED),
+                        tuple(absent.getId(), StudentBookingStatus.ABSENT)
+                );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
                 .doesNotContain(
                         unreserved.getId(),
-                        reservedOnly.getId(),
                         otherMemberAttended.getId(),
                         otherClassType.getId()
                 );
@@ -450,7 +444,7 @@ class StudentDailyQueryServiceTest {
                 studio, instructor, classType, "출석 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(8, 40), ClassSessionStatus.OPENED
         );
-        ClassSession noShow = 수업_회차를_저장한다(
+        ClassSession absent = 수업_회차를_저장한다(
                 studio, instructor, classType, "결석 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(8, 50), ClassSessionStatus.OPENED
         );
@@ -478,7 +472,7 @@ class StudentDailyQueryServiceTest {
         예약을_저장한다(attendancePending, memberMembership, ReservationStatus.RESERVED);
         대기를_저장한다(attendancePending, memberMembership, 1, WaitingStatus.OFFERED);
         예약을_저장한다(attended, memberMembership, ReservationStatus.ATTENDED);
-        예약을_저장한다(noShow, memberMembership, ReservationStatus.NO_SHOW);
+        예약을_저장한다(absent, memberMembership, ReservationStatus.ABSENT);
         예약을_저장한다(reserved, memberMembership, ReservationStatus.RESERVED);
         대기를_저장한다(offered, memberMembership, 1, WaitingStatus.OFFERED);
         대기를_저장한다(waiting, memberMembership, 1, WaitingStatus.WAITING);
@@ -496,16 +490,18 @@ class StudentDailyQueryServiceTest {
         assertThat(responses)
                 .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingStatus)
                 .containsExactly(
-                        tuple(canceled.getId(), StudentBookingStatus.CANCELED),
-                        tuple(attendancePending.getId(), StudentBookingStatus.ATTENDANCE_PENDING),
+                        tuple(attendancePending.getId(), StudentBookingStatus.ATTENDED),
                         tuple(attended.getId(), StudentBookingStatus.ATTENDED),
-                        tuple(noShow.getId(), StudentBookingStatus.NO_SHOW),
+                        tuple(absent.getId(), StudentBookingStatus.ABSENT),
                         tuple(reserved.getId(), StudentBookingStatus.RESERVED),
                         tuple(offered.getId(), StudentBookingStatus.OFFERED),
                         tuple(waiting.getId(), StudentBookingStatus.WAITING),
                         tuple(closedAtBoundary.getId(), StudentBookingStatus.CLOSED),
                         tuple(closedByStatus.getId(), StudentBookingStatus.CLOSED)
                 );
+        assertThat(responses)
+                .extracting(StudentDailySessionView::id)
+                .doesNotContain(canceled.getId());
     }
 
     @Test

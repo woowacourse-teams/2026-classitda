@@ -2,6 +2,8 @@ package com.classitda.classes.application.student;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.classitda.classes.application.student.StudentBookingContext.ReservationCounts;
+import com.classitda.classes.application.student.StudentBookingContext.WaitingCounts;
 import com.classitda.classes.domain.ClassSessionStatus;
 import java.time.LocalDateTime;
 import java.util.stream.Stream;
@@ -27,53 +29,53 @@ class StudentBookingStatusResolverTest {
     private static Stream<Arguments> bookingStatusContexts() {
         return Stream.of(
                 Arguments.of(
-                        StudentBookingStatus.CANCELED,
-                        context(ClassSessionStatus.CANCELED, NOW.minusHours(2), NOW.minusHours(1),
-                                1, 1, 1, 1, 1, 1)
+                        StudentBookingStatus.ABSENT,
+                        context(ClassSessionStatus.OPENED, NOW.minusHours(2),
+                                0, 1, 1, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.ATTENDED,
-                        context(ClassSessionStatus.OPENED, NOW.minusHours(2), NOW,
+                        context(ClassSessionStatus.OPENED, NOW.minusHours(2),
                                 0, 1, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.NO_SHOW,
-                        context(ClassSessionStatus.OPENED, NOW.minusHours(2), NOW,
-                                0, 0, 1, 0, 0, 1)
+                        StudentBookingStatus.ATTENDED,
+                        context(ClassSessionStatus.OPENED, NOW.minusHours(2),
+                                1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
-                        StudentBookingStatus.ATTENDANCE_PENDING,
-                        context(ClassSessionStatus.OPENED, NOW.minusHours(2), NOW,
+                        StudentBookingStatus.ATTENDED,
+                        context(ClassSessionStatus.OPENED, NOW,
                                 1, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.RESERVED,
-                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
+                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1),
                                 1, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.OFFERED,
-                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
+                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1),
                                 0, 0, 0, 1, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.WAITING,
-                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1), NOW.plusHours(2),
+                        context(ClassSessionStatus.CLOSED, NOW.plusHours(1),
                                 0, 0, 0, 0, 1, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.CLOSED,
-                        context(ClassSessionStatus.OPENED, NOW.plusMinutes(30), NOW.plusHours(1),
+                        context(ClassSessionStatus.OPENED, NOW.plusMinutes(30),
                                 0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.AVAILABLE,
-                        context(ClassSessionStatus.OPENED, NOW.plusHours(1), NOW.plusHours(2),
+                        context(ClassSessionStatus.OPENED, NOW.plusHours(1),
                                 0, 0, 0, 0, 0, 1)
                 ),
                 Arguments.of(
                         StudentBookingStatus.WAITING_AVAILABLE,
-                        context(ClassSessionStatus.OPENED, NOW.plusHours(1), NOW.plusHours(2),
+                        context(ClassSessionStatus.OPENED, NOW.plusHours(1),
                                 0, 0, 0, 0, 0, 0)
                 )
         );
@@ -82,10 +84,9 @@ class StudentBookingStatusResolverTest {
     private static StudentBookingContext context(
             ClassSessionStatus sessionStatus,
             LocalDateTime startAt,
-            LocalDateTime endAt,
             long ownReservedCount,
             long ownAttendedCount,
-            long ownNoShowCount,
+            long ownAbsentCount,
             long ownOfferedCount,
             long ownWaitingCount,
             long remainingCapacity
@@ -93,12 +94,8 @@ class StudentBookingStatusResolverTest {
         return new StudentBookingContext(
                 sessionStatus,
                 startAt,
-                endAt,
-                ownReservedCount,
-                ownAttendedCount,
-                ownNoShowCount,
-                ownOfferedCount,
-                ownWaitingCount,
+                new ReservationCounts(0, ownReservedCount, ownAttendedCount, ownAbsentCount),
+                new WaitingCounts(0, ownOfferedCount, ownWaitingCount),
                 30,
                 remainingCapacity,
                 NOW

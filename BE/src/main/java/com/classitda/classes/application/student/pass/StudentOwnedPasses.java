@@ -1,5 +1,6 @@
 package com.classitda.classes.application.student.pass;
 
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.passproduct.domain.repository.projection.MemberPassProductClassTypeProjection;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
@@ -29,6 +30,8 @@ public final class StudentOwnedPasses {
     }
 
     public List<Long> coveredClassTypeIdsOn(LocalDate date) {
+        // TODO(#46, #68): 홀딩·이용 가능 횟수는 수업 노출 범위에서 제외하지 않는다.
+        // 수강권 기능 구현 후 회차별 예약 가능 수강권 존재 여부와 홀딩 수강권 정보를 별도로 제공한다.
         return passes.stream()
                 .filter(pass -> pass.isVisibleOn(date))
                 .flatMap(pass -> pass.classTypeIds().stream())
@@ -37,8 +40,8 @@ public final class StudentOwnedPasses {
                 .toList();
     }
 
-    public boolean covers(Long classTypeId, LocalDate date) {
+    public boolean covers(ClassForm classForm, Long classTypeId, LocalDate date) {
         return passes.stream()
-                .anyMatch(pass -> pass.covers(classTypeId, date));
+                .anyMatch(pass -> pass.covers(classForm, classTypeId, date));
     }
 }

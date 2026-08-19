@@ -10,5 +10,5 @@ public interface ReservationSummaryProjection {
 
     long getOwnAttendedCount();
 
-    long getOwnNoShowCount();
+    long getOwnAbsentCount();
 }

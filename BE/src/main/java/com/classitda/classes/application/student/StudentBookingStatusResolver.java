@@ -16,47 +16,41 @@ public class StudentBookingStatusResolver {
     }
 
     private enum BookingStatusRule {
-        CANCELED(StudentBookingStatus.CANCELED) {
+        ABSENT(StudentBookingStatus.ABSENT) {
             @Override
             boolean matches(StudentBookingContext context) {
-                return context.sessionStatus() == ClassSessionStatus.CANCELED;
+                return context.reservation().ownAbsentCount() > 0;
             }
         },
         ATTENDED(StudentBookingStatus.ATTENDED) {
             @Override
             boolean matches(StudentBookingContext context) {
-                return context.ownAttendedCount() > 0;
+                return context.reservation().ownAttendedCount() > 0;
             }
         },
-        NO_SHOW(StudentBookingStatus.NO_SHOW) {
+        DEFAULT_ATTENDED(StudentBookingStatus.ATTENDED) {
             @Override
             boolean matches(StudentBookingContext context) {
-                return context.ownNoShowCount() > 0;
-            }
-        },
-        ATTENDANCE_PENDING(StudentBookingStatus.ATTENDANCE_PENDING) {
-            @Override
-            boolean matches(StudentBookingContext context) {
-                return context.ownReservedCount() > 0
-                        && !context.now().isBefore(context.endAt());
+                return context.reservation().ownReservedCount() > 0
+                        && !context.now().isBefore(context.startAt());
             }
         },
         RESERVED(StudentBookingStatus.RESERVED) {
             @Override
             boolean matches(StudentBookingContext context) {
-                return context.ownReservedCount() > 0;
+                return context.reservation().ownReservedCount() > 0;
             }
         },
         OFFERED(StudentBookingStatus.OFFERED) {
             @Override
             boolean matches(StudentBookingContext context) {
-                return context.ownOfferedCount() > 0;
+                return context.waiting().ownOfferedCount() > 0;
             }
         },
         WAITING(StudentBookingStatus.WAITING) {
             @Override
             boolean matches(StudentBookingContext context) {
-                return context.ownWaitingCount() > 0;
+                return context.waiting().ownWaitingCount() > 0;
             }
         },
         CLOSED(StudentBookingStatus.CLOSED) {
@@ -68,6 +62,8 @@ public class StudentBookingStatusResolver {
                         );
             }
         },
+        // TODO(#46, #68): 수강권 홀딩과 이용 가능 횟수 구현 후,
+        // 호환 수강권 중 실제로 사용할 수 있는 수강권이 없으면 UNAVAILABLE을 우선 판정한다.
         AVAILABLE(StudentBookingStatus.AVAILABLE) {
             @Override
             boolean matches(StudentBookingContext context) {

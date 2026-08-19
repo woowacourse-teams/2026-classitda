@@ -1,6 +1,7 @@
 package com.classitda.classes.application.student.calendar;
 
 import com.classitda.classes.application.student.pass.StudentOwnedPasses;
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ReservationStatus;
 import com.classitda.classes.domain.repository.ReservationRepository;
 import com.classitda.classes.domain.repository.WaitingRepository;
@@ -39,7 +40,12 @@ public class StudentCalendarSummaryReader {
                         rangeStart,
                         rangeEnd
                 ).stream()
-                .filter(event -> isCovered(ownedPasses, event.getClassTypeId(), event.getStartAt()))
+                .filter(event -> isCovered(
+                        ownedPasses,
+                        event.getClassForm(),
+                        event.getClassTypeId(),
+                        event.getStartAt()
+                ))
                 .forEach(event -> addReservationSummary(summaries, event, now, today));
 
         waitingRepository.findCalendarEventsForStudent(
@@ -48,7 +54,12 @@ public class StudentCalendarSummaryReader {
                         rangeStart,
                         rangeEnd
                 ).stream()
-                .filter(event -> isCovered(ownedPasses, event.getClassTypeId(), event.getStartAt()))
+                .filter(event -> isCovered(
+                        ownedPasses,
+                        event.getClassForm(),
+                        event.getClassTypeId(),
+                        event.getStartAt()
+                ))
                 .filter(event -> !event.getStartAt().toLocalDate().isBefore(today))
                 .filter(event -> now.isBefore(event.getEndAt()))
                 .forEach(event -> merge(
@@ -61,10 +72,11 @@ public class StudentCalendarSummaryReader {
 
     private boolean isCovered(
             StudentOwnedPasses ownedPasses,
+            ClassForm classForm,
             Long classTypeId,
             LocalDateTime startAt
     ) {
-        return ownedPasses.covers(classTypeId, startAt.toLocalDate());
+        return ownedPasses.covers(classForm, classTypeId, startAt.toLocalDate());
     }
 
     private void addReservationSummary(
