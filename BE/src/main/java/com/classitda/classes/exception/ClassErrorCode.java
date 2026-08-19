@@ -46,6 +46,18 @@ public enum ClassErrorCode implements ErrorCode {
             "CLASS_SESSION-017",
             "담당 가능한 강사 소속을 찾을 수 없습니다.",
             HttpStatus.NOT_FOUND
+    ),
+
+    // RESERVATION
+    INVALID_RESERVATION_TRANSITION(
+            "RESERVATION-001",
+            "현재 예약 상태에서는 요청한 상태 전이를 수행할 수 없습니다.",
+            HttpStatus.CONFLICT
+    ),
+    RESERVATION_CANCEL_OCCURRED_AT_REQUIRED(
+            "RESERVATION-002",
+            "예약 취소 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
     );
 
     private final String code;

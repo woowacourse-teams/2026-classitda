@@ -1,5 +1,7 @@
 package com.classitda.classes.domain;
 
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;
 import com.classitda.passproduct.domain.MemberPassProduct;
 import com.classitda.studio.domain.StudioMembership;
@@ -53,4 +55,16 @@ public class Reservation extends BaseEntity {
     private LocalDateTime reservedAt;
 
     private LocalDateTime canceledAt;
+
+    void cancel(LocalDateTime occurredAt) {
+        if (occurredAt == null) {
+            throw new ClassException(ClassErrorCode.RESERVATION_CANCEL_OCCURRED_AT_REQUIRED);
+        }
+        if (status != ReservationStatus.RESERVED) {
+            throw new ClassException(ClassErrorCode.INVALID_RESERVATION_TRANSITION);
+        }
+
+        status = ReservationStatus.CANCELED;
+        canceledAt = occurredAt;
+    }
 }
