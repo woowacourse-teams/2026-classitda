@@ -31,7 +31,6 @@ public class StudentCalendarSummaryReader {
     ) {
         LocalDateTime rangeStart = from.atStartOfDay();
         LocalDateTime rangeEnd = to.plusDays(1).atStartOfDay();
-        LocalDate today = now.toLocalDate();
         Map<LocalDate, StudentCalendarSummary> summaries = new TreeMap<>();
 
         reservationRepository.findCalendarEventsForStudent(
@@ -46,7 +45,7 @@ public class StudentCalendarSummaryReader {
                         event.getClassTypeId(),
                         event.getStartAt()
                 ))
-                .forEach(event -> addReservationSummary(summaries, event, now, today));
+                .forEach(event -> addReservationSummary(summaries, event, now));
 
         waitingRepository.findCalendarEventsForStudent(
                         studioId,
@@ -60,8 +59,7 @@ public class StudentCalendarSummaryReader {
                         event.getClassTypeId(),
                         event.getStartAt()
                 ))
-                .filter(event -> !event.getStartAt().toLocalDate().isBefore(today))
-                .filter(event -> now.isBefore(event.getEndAt()))
+                .filter(event -> now.isBefore(event.getStartAt()))
                 .forEach(event -> merge(
                         summaries,
                         new StudentCalendarSummary(event.getStartAt().toLocalDate(), false, false, true)
@@ -82,18 +80,14 @@ public class StudentCalendarSummaryReader {
     private void addReservationSummary(
             Map<LocalDate, StudentCalendarSummary> summaries,
             StudentReservationCalendarEventProjection event,
-            LocalDateTime now,
-            LocalDate today
+            LocalDateTime now
     ) {
         LocalDate date = event.getStartAt().toLocalDate();
-        if (event.getReservationStatus() == ReservationStatus.ATTENDED
-                && !now.isBefore(event.getEndAt())) {
+        if (!now.isBefore(event.getStartAt())) {
             merge(summaries, new StudentCalendarSummary(date, true, false, false));
             return;
         }
-        if (event.getReservationStatus() == ReservationStatus.RESERVED
-                && !date.isBefore(today)
-                && now.isBefore(event.getEndAt())) {
+        if (event.getReservationStatus() == ReservationStatus.RESERVED) {
             merge(summaries, new StudentCalendarSummary(date, false, true, false));
         }
     }
@@ -104,7 +98,7 @@ public class StudentCalendarSummaryReader {
     ) {
         summaries.merge(added.date(), added, (existing, next) -> new StudentCalendarSummary(
                 existing.date(),
-                existing.attended() || next.attended(),
+                existing.pastReservation() || next.pastReservation(),
                 existing.reserved() || next.reserved(),
                 existing.waiting() || next.waiting()
         ));

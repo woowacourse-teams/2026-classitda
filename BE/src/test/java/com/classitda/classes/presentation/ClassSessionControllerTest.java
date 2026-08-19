@@ -229,13 +229,13 @@ class ClassSessionControllerTest {
                 [
                   {
                     "date": "2026-08-16",
-                    "attended": true,
+                    "pastReservation": true,
                     "reserved": false,
                     "waiting": false
                   },
                   {
                     "date": "2026-08-18",
-                    "attended": false,
+                    "pastReservation": false,
                     "reserved": true,
                     "waiting": true
                   }

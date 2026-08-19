@@ -14,7 +14,5 @@ public interface StudentReservationCalendarEventProjection {
 
     LocalDateTime getStartAt();
 
-    LocalDateTime getEndAt();
-
     ReservationStatus getReservationStatus();
 }

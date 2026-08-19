@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public record StudentCalendarSummary(
         LocalDate date,
-        boolean attended,
+        boolean pastReservation,
         boolean reserved,
         boolean waiting
 ) {

@@ -47,8 +47,7 @@ public interface WaitingRepository extends JpaRepository<Waiting, Long> {
             SELECT waiting.classSession.id AS classSessionId,
                    waiting.classSession.classForm AS classForm,
                    classType.id AS classTypeId,
-                   waiting.classSession.startAt AS startAt,
-                   waiting.classSession.endAt AS endAt
+                   waiting.classSession.startAt AS startAt
             FROM Waiting waiting,
                  ClassSessionClassType classSessionClassType,
                  ClassType classType

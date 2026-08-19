@@ -94,7 +94,7 @@ class StudentCalendarQueryServiceTest {
     }
 
     @Test
-    void 보유한_모든_수강권_종류의_출석_완료와_예약_확정과_대기_중_여부를_조회한다() {
+    void 보유한_모든_수강권_종류의_지난_예약과_예약_확정과_대기_중_여부를_조회한다() {
         // given
         Studio studio = 시설을_저장한다(회원을_저장한다("student-calendar-owner"), "학생 달력 시설");
         StudioMembership studentMembership = 소속을_저장한다(
@@ -139,6 +139,14 @@ class StudentCalendarQueryServiceTest {
                 studio, instructorMembership, yoga, "출석 처리 전 종료 수업", ClassForm.GROUP,
                 LocalDate.of(2026, 8, 15).atTime(9, 0), ClassSessionStatus.OPENED
         );
+        ClassSession absentSession = 수업을_저장한다(
+                studio, instructorMembership, yoga, "결석", ClassForm.GROUP,
+                LocalDate.of(2026, 8, 17).atTime(8, 0), ClassSessionStatus.OPENED
+        );
+        ClassSession startedWaitingSession = 수업을_저장한다(
+                studio, instructorMembership, yoga, "시작한 수업 대기", ClassForm.GROUP,
+                LocalDate.of(2026, 8, 17).atTime(9, 0), ClassSessionStatus.OPENED
+        );
         ClassSession reservedSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "예약 확정", ClassForm.GROUP,
                 LocalDate.of(2026, 8, 18).atTime(11, 0), ClassSessionStatus.OPENED
@@ -179,6 +187,8 @@ class StudentCalendarQueryServiceTest {
         예약을_저장한다(attendedSession, studentMembership, memberPassProduct, ReservationStatus.ATTENDED);
         예약을_저장한다(futureAttendedSession, studentMembership, memberPassProduct, ReservationStatus.ATTENDED);
         예약을_저장한다(endedReservedSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
+        예약을_저장한다(absentSession, studentMembership, memberPassProduct, ReservationStatus.ABSENT);
+        대기를_저장한다(startedWaitingSession, studentMembership, WaitingStatus.WAITING);
         예약을_저장한다(reservedSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
         대기를_저장한다(waitingSession, studentMembership, WaitingStatus.WAITING);
         대기를_저장한다(offeredSession, studentMembership, WaitingStatus.OFFERED);
@@ -202,7 +212,9 @@ class StudentCalendarQueryServiceTest {
 
         // then
         assertThat(summaries).containsExactly(
+                new StudentCalendarSummary(LocalDate.of(2026, 8, 15), true, false, false),
                 new StudentCalendarSummary(LocalDate.of(2026, 8, 16), true, false, false),
+                new StudentCalendarSummary(LocalDate.of(2026, 8, 17), true, false, false),
                 new StudentCalendarSummary(LocalDate.of(2026, 8, 18), false, true, true)
         );
         assertThat(queryCount).isEqualTo(6L);

@@ -248,16 +248,16 @@ public interface ClassSessionControllerApi {
                     ### 수강권 및 권한 기준
 
                     - 같은 시설의 활성 학생 역할(STUDENT)만 조회할 수 있습니다.
-                    - 로그인 회원이 같은 시설에서 보유한 모든 수강권의 수업 종류(ClassType)를 기준으로 집계합니다.
-                    - 오늘과 미래는 해당 날짜에 이용 가능하며 활성·미소진 상태인 수강권 종류만 사용합니다.
-                    - 과거 날짜는 당시 이용 기간 안이었던 수강권 종류 중 본인이 실제 출석(ATTENDED)한 회차만 집계합니다.
+                    - 로그인 회원이 같은 시설에서 보유한 모든 수강권의 수업 형태(ClassForm)와 수업 종류(ClassType)를 기준으로 집계합니다.
+                    - 조회일이 수강권 이용 기간 안이면 현재 상태와 잔여 횟수와 관계없이 ClassForm과 ClassType이 모두 일치하는 회차를 집계합니다.
+                    - 시작 시각이 지난 본인의 RESERVED, ATTENDED, ABSENT 예약은 지난 예약 내역으로 집계합니다.
                     - 조건에 맞는 보유 수강권이 없으면 빈 배열을 반환합니다.
 
                     ### 상태 요약
 
-                    - attended는 본인의 ATTENDED 예약이 있고 종료된 수업이 하나 이상 있으면 true입니다.
-                    - reserved는 본인의 RESERVED 예약이 있고 종료되지 않은 수업이 하나 이상 있으면 true입니다.
-                    - waiting은 본인의 WAITING 대기가 있고 종료되지 않은 수업이 하나 이상 있으면 true입니다.
+                    - pastReservation은 시작 시각이 지난 본인의 RESERVED, ATTENDED, ABSENT 예약이 하나 이상 있으면 true입니다.
+                    - reserved는 시작 전인 본인의 RESERVED 예약이 하나 이상 있으면 true입니다.
+                    - waiting은 시작 전인 수업에 본인의 WAITING 대기가 하나 이상 있으면 true입니다.
                     - 한 날짜에 여러 상태가 있으면 여러 필드가 동시에 true일 수 있습니다.
                     - 취소된 수업과 그 밖의 예약·대기 상태는 응답에서 제외합니다.
 
@@ -267,7 +267,7 @@ public interface ClassSessionControllerApi {
                     - 시설 ID: 1
                     - from: 로컬 애플리케이션을 시작한 날짜의 5일 전
                     - to: 로컬 애플리케이션을 시작한 날짜의 5일 후
-                    - 5일 전, 3일 전, 전날은 attended=true입니다.
+                    - 5일 전, 3일 전, 전날은 pastReservation=true입니다.
                     - 다음 날, 3일 후, 5일 후는 reserved=true입니다.
                     - 다음 날, 4일 후, 5일 후는 waiting=true입니다.
                     """
@@ -275,7 +275,7 @@ public interface ClassSessionControllerApi {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "출석 완료, 예약 확정 또는 대기 중 수업이 있는 날짜별 상태를 반환합니다.",
+                    description = "지난 예약 내역, 예약 확정 또는 대기 중 수업이 있는 날짜별 상태를 반환합니다.",
                     content = @Content(array = @ArraySchema(
                             schema = @Schema(implementation = StudentCalendarResponse.class)
                     ))

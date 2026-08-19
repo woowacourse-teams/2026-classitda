@@ -12,6 +12,4 @@ public interface StudentWaitingCalendarEventProjection {
     Long getClassTypeId();
 
     LocalDateTime getStartAt();
-
-    LocalDateTime getEndAt();
 }

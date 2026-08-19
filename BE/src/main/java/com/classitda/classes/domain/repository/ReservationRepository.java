@@ -48,7 +48,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                    reservation.classSession.classForm AS classForm,
                    classType.id AS classTypeId,
                    reservation.classSession.startAt AS startAt,
-                   reservation.classSession.endAt AS endAt,
                    reservation.status AS reservationStatus
             FROM Reservation reservation,
                  ClassSessionClassType classSessionClassType,
@@ -64,7 +63,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
                   com.classitda.classes.domain.ClassSessionStatus.CANCELED
               AND reservation.status IN (
                   com.classitda.classes.domain.ReservationStatus.RESERVED,
-                  com.classitda.classes.domain.ReservationStatus.ATTENDED
+                  com.classitda.classes.domain.ReservationStatus.ATTENDED,
+                  com.classitda.classes.domain.ReservationStatus.ABSENT
               )
             ORDER BY reservation.classSession.startAt ASC,
                      reservation.classSession.id ASC,
