@@ -8,6 +8,7 @@ sealed interface ProfileViewUiState {
 
     data class Content(
         val profile: MemberProfile,
+        val uiModel: MemberProfileUiModel? = null,
     ) : ProfileViewUiState
 
     data class Error(
@@ -34,17 +35,20 @@ sealed interface ProfileEditUiState {
         val profile: MemberProfile,
         val draftName: String,
         val canSave: Boolean,
+        val uiModel: MemberProfileUiModel? = null,
     ) : ProfileEditUiState
 
     data class Saving(
         val profile: MemberProfile,
         val draftName: String,
+        val uiModel: MemberProfileUiModel? = null,
     ) : ProfileEditUiState
 
     data class SaveFailed(
         val profile: MemberProfile,
         val draftName: String,
         val reason: MyPageFailureReason,
+        val uiModel: MemberProfileUiModel? = null,
     ) : ProfileEditUiState
 
     data class Error(

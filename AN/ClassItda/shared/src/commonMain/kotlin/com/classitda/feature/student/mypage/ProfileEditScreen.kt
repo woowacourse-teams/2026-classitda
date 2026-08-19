@@ -20,7 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -39,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -215,12 +215,18 @@ private fun ProfileEditContent(
     modifier: Modifier = Modifier,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
     val typography = appTypography()
+    val clearEditingFocus: () -> Unit = {
+        focusManager.clearFocus()
+        keyboardController?.hide()
+    }
 
     Column(
         modifier =
             modifier
                 .fillMaxSize()
+                .clickable(onClick = clearEditingFocus)
                 .verticalScroll(rememberScrollState())
                 .imePadding()
                 .padding(horizontal = AppSpacing.screenPadding),
@@ -230,20 +236,26 @@ private fun ProfileEditContent(
         EditableProfileAvatar(
             name = profile.name,
             enabled = !isSaving,
-            onClick = { onAction(ProfileEditAction.RequestPhotoChange) },
+            onClick = {
+                clearEditingFocus()
+                onAction(ProfileEditAction.RequestPhotoChange)
+            },
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxxl * 2))
         EditableNameField(
             value = draftName,
             enabled = !isSaving,
             onValueChange = { onAction(ProfileEditAction.NameChanged(it)) },
-            onDone = { keyboardController?.hide() },
+            onDone = clearEditingFocus,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xl))
         PhoneNumberField(
             phoneNumber = profile.phoneNumber,
             enabled = !isSaving,
-            onChange = { onAction(ProfileEditAction.OpenPhoneNumberChange) },
+            onChange = {
+                clearEditingFocus()
+                onAction(ProfileEditAction.OpenPhoneNumberChange)
+            },
         )
         Spacer(modifier = Modifier.height(AppSpacing.xl))
         ReadOnlyEmailField(email = profile.email)
@@ -394,7 +406,14 @@ private fun PhoneNumberField(
     ) {
         ProfileEditFieldLabel(text = stringResource(Res.string.profile_edit_phone_number))
         Surface(
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        enabled = enabled,
+                        role = Role.Button,
+                        onClick = onChange,
+                    ),
             shape = AppShape.Card,
             color = StuColors.SurfaceVariant,
             border =
@@ -414,20 +433,19 @@ private fun PhoneNumberField(
                     style = typography.bodyLarge,
                     color = StuColors.TextSecondary,
                 )
-                Button(
-                    enabled = enabled,
-                    onClick = onChange,
+                Surface(
                     shape = AppShape.Pill,
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = StuColors.PrimaryColor,
-                            contentColor = StuColors.White,
-                        ),
-                    contentPadding = ButtonDefaults.ContentPadding,
+                    color = StuColors.PrimaryColor,
                 ) {
                     Text(
                         text = stringResource(Res.string.profile_edit_phone_number_change),
+                        modifier =
+                            Modifier.padding(
+                                horizontal = AppSpacing.lg,
+                                vertical = AppSpacing.sm,
+                            ),
                         style = typography.labelLarge,
+                        color = StuColors.White,
                     )
                 }
             }

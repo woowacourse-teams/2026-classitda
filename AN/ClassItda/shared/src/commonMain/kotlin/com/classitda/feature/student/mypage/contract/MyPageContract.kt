@@ -8,6 +8,7 @@ sealed interface MyPageContentState {
 
     data class Content(
         val summary: MyPageSummary,
+        val uiModel: MyPageSummaryUiModel? = null,
     ) : MyPageContentState
 
     data class Error(

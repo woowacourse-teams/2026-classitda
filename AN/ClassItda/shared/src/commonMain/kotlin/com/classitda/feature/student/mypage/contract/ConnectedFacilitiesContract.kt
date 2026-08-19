@@ -10,6 +10,7 @@ sealed interface ConnectedFacilitiesUiState {
 
     data class Content(
         val facilities: List<ConnectedFacility>,
+        val uiModels: List<ConnectedFacilityUiModel> = emptyList(),
     ) : ConnectedFacilitiesUiState
 
     data class Error(

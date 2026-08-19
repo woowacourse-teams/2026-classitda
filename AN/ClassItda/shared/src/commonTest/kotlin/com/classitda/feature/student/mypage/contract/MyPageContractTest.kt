@@ -79,10 +79,12 @@ class MyPageContractTest {
                 verificationCode = "123456",
                 verificationId = verificationId,
                 reason = MyPageFailureReason.VERIFICATION_FAILED,
+                remainingSeconds = 97,
             )
 
         assertEquals(verificationId, state.verificationId)
         assertEquals(MyPageFailureReason.VERIFICATION_FAILED, state.reason)
+        assertEquals(97, state.remainingSeconds)
     }
 
     @Test

@@ -64,6 +64,7 @@ import classitda.shared.generated.resources.phone_number_change_title
 import classitda.shared.generated.resources.phone_number_change_unknown_error
 import classitda.shared.generated.resources.phone_number_change_verification_failed
 import classitda.shared.generated.resources.phone_number_change_verified
+import classitda.shared.generated.resources.phone_number_change_verify
 import classitda.shared.generated.resources.phone_number_change_verifying
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
@@ -223,6 +224,7 @@ private fun PhoneNumberChangeContent(
                     ),
                 )
             },
+            onVerify = { onAction(PhoneNumberChangeAction.VerifyCode) },
             onDone = {
                 keyboardController?.hide()
                 if (renderState.isCodeInputEnabled && renderState.verificationCode.length == VERIFICATION_CODE_LENGTH) {
@@ -360,6 +362,7 @@ private fun VerificationCodeInput(
     isError: Boolean,
     remainingSeconds: Int?,
     onValueChange: (String) -> Unit,
+    onVerify: () -> Unit,
     onDone: () -> Unit,
 ) {
     val typography = appTypography()
@@ -388,11 +391,42 @@ private fun VerificationCodeInput(
                     }
 
                     remainingSeconds != null -> {
-                        Text(
-                            text = formatRemainingTime(remainingSeconds),
-                            style = typography.bodyLarge,
-                            color = StuColors.Red,
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                        ) {
+                            Text(
+                                text = formatRemainingTime(remainingSeconds),
+                                style = typography.bodyLarge,
+                                color = StuColors.Red,
+                            )
+                            Button(
+                                onClick = onVerify,
+                                enabled =
+                                    enabled &&
+                                        value.length == VERIFICATION_CODE_LENGTH &&
+                                        remainingSeconds > 0,
+                                modifier =
+                                    Modifier.size(
+                                        width = VERIFICATION_BUTTON_WIDTH,
+                                        height = VERIFICATION_BUTTON_HEIGHT,
+                                    ),
+                                shape = AppShape.Pill,
+                                colors =
+                                    ButtonDefaults.buttonColors(
+                                        containerColor = StuColors.PrimaryColor,
+                                        contentColor = StuColors.White,
+                                        disabledContainerColor = StuColors.DividerStrong,
+                                        disabledContentColor = StuColors.TextTertiary,
+                                    ),
+                                contentPadding = PaddingValues(horizontal = AppSpacing.sm),
+                            ) {
+                                Text(
+                                    text = stringResource(Res.string.phone_number_change_verify),
+                                    style = typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                )
+                            }
+                        }
                     }
                 }
             },
@@ -625,7 +659,7 @@ private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderSta
                 phoneNumber = phoneNumber,
                 verificationCode = verificationCode,
                 verificationId = verificationId,
-                remainingSeconds = if (isExpired) 0 else null,
+                remainingSeconds = remainingSeconds ?: if (isExpired) 0 else null,
                 errorReason = reason,
                 isPhoneInputEnabled = isRequestFailure,
                 isCodeInputEnabled = !isRequestFailure && !isExpired,
@@ -752,6 +786,13 @@ private object PhoneNumberChangePreviewFixture {
             verificationId = verificationId,
             remainingSeconds = PREVIEW_REMAINING_SECONDS,
         )
+    val codeEntryReady =
+        PhoneNumberChangeUiState.CodeEntry(
+            phoneNumber = PHONE_NUMBER,
+            verificationCode = VERIFICATION_CODE,
+            verificationId = verificationId,
+            remainingSeconds = PREVIEW_REMAINING_SECONDS,
+        )
     val verifying =
         PhoneNumberChangeUiState.Verifying(
             phoneNumber = PHONE_NUMBER,
@@ -784,6 +825,7 @@ private object PhoneNumberChangePreviewFixture {
             verificationCode = VERIFICATION_CODE,
             verificationId = verificationId,
             reason = MyPageFailureReason.VERIFICATION_FAILED,
+            remainingSeconds = 125,
         )
 }
 
@@ -836,6 +878,22 @@ private fun PhoneNumberChangeScreenPreview_CodeEntry_Student_FixedTimer() {
     AppTheme(theme = ThemeType.STUDENT) {
         PhoneNumberChangeScreen(
             uiState = PhoneNumberChangePreviewFixture.codeEntry,
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Code entry · Student · Confirm enabled",
+    group = "Screen/PhoneNumberChange",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun PhoneNumberChangeScreenPreview_CodeEntry_Student_ConfirmEnabled() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        PhoneNumberChangeScreen(
+            uiState = PhoneNumberChangePreviewFixture.codeEntryReady,
             onAction = {},
         )
     }

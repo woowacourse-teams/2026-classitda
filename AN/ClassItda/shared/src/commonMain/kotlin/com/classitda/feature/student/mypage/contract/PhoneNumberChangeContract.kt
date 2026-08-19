@@ -40,6 +40,7 @@ sealed interface PhoneNumberChangeUiState {
         val verificationCode: String,
         val verificationId: PhoneVerificationId?,
         val reason: MyPageFailureReason,
+        val remainingSeconds: Int? = null,
     ) : PhoneNumberChangeUiState
 }
 

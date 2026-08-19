@@ -11,6 +11,7 @@ sealed interface NotificationSettingsUiState {
     data class Content(
         val permission: DeviceNotificationPermission,
         val preferences: NotificationPreferences,
+        val uiModel: NotificationSettingsUiModel? = null,
     ) : NotificationSettingsUiState
 
     data class Updating(
@@ -18,6 +19,7 @@ sealed interface NotificationSettingsUiState {
         val preferences: NotificationPreferences,
         val type: NotificationSettingType,
         val requestedEnabled: Boolean,
+        val uiModel: NotificationSettingsUiModel? = null,
     ) : NotificationSettingsUiState
 
     data class UpdateFailed(
@@ -26,6 +28,7 @@ sealed interface NotificationSettingsUiState {
         val type: NotificationSettingType,
         val requestedEnabled: Boolean,
         val reason: MyPageFailureReason,
+        val uiModel: NotificationSettingsUiModel? = null,
     ) : NotificationSettingsUiState
 
     data class Error(
