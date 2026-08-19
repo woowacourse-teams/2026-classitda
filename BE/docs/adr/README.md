@@ -112,6 +112,12 @@ Accepted (YYYY-MM-DD)
 | [0003](0003-use-testcontainers-for-mysql-tests.md) | Testcontainers 기반 MySQL 검증 | Repository와 스키마 검증 테스트를 MySQL 8.4에서 실행해요 |
 | [0004](0004-keep-external-io-outside-db-transaction.md) | 외부 I/O와 DB 트랜잭션 경계 | Redis·외부 API 호출은 DB 트랜잭션 밖에서 수행하고 DB 쓰기만 짧게 묶어요 |
 | [0005](0005-authentication-token-and-session-boundary.md) | Access·Refresh 상태 경계 | Access Token은 stateless로 검증하고 Refresh Session은 Redis에서 관리해요 |
+| [0006](0006-terminate-tls-at-cloudflare.md) | DNS·TLS 종단 위치 | DNS와 TLS를 Cloudflare에서 처리하고 Origin Certificate로 origin 구간까지 암호화해요 |
+| [0007](0007-manual-production-schema-application.md) | 프로덕션 스키마 반영 | 마이그레이션 도구를 보류하고 `schema.sql`을 운영 DB에 직접 적용해요 |
+| [0008](0008-run-rds-without-storage-encryption.md) | RDS 저장 시 암호화 | KMS 권한 제약으로 저장 시 암호화 없이 운영하고 전송 구간을 강제해요 |
+| [0009](0009-deploy-through-cloudflare-tunnel.md) | 배포 경로 | 인바운드 포트 없이 Cloudflare Tunnel로 배포하고 서버에 접속해요 |
+| [0010](0010-use-managed-database-and-cache.md) | 데이터 계층 위치 | MySQL과 Redis를 RDS·ElastiCache로 분리하고 EC2에는 앱만 둬요 |
+| [0011](0011-include-nginx-config-in-deploy-pipeline.md) | nginx 운영 방식 (`Proposed`) | `api.conf`를 저장소에 두고 배포가 nginx까지 다루자는 제안이에요 |
 
 ## 다른 문서와의 관계
 
