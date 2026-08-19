@@ -134,14 +134,15 @@ class InstructorCalendarQueryServiceTest {
                 LocalDate.of(2026, 8, 17).atTime(9, 30),
                 ClassSessionStatus.OPENED
         );
-        수업을_저장한다(
+        ClassSession canceledSession = 수업을_저장한다(
                 studio,
                 instructorMembership,
                 classType,
                 "취소 수업",
                 LocalDate.of(2026, 8, 17).atTime(20, 0),
-                ClassSessionStatus.CANCELED
+                ClassSessionStatus.OPENED
         );
+        canceledSession.cancel(canceledSession.getStartAt().minusMinutes(1));
         수업을_저장한다(
                 studio,
                 ownerMembership,

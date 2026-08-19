@@ -119,7 +119,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             WHERE class_session.studio_id = :studioId
               AND class_session.start_at >= :rangeStart
               AND class_session.start_at < :rangeEnd
-              AND class_session.status <> 'CANCELED'
+              AND class_session.canceled_at IS NULL
             GROUP BY DATE(class_session.start_at)
             HAVING scheduled = 1 OR completed = 1
             ORDER BY date ASC
