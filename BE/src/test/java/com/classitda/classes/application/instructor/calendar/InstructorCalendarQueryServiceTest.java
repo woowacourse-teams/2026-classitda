@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.Reservation;
 import com.classitda.classes.domain.ReservationStatus;
@@ -123,24 +122,21 @@ class InstructorCalendarQueryServiceTest {
                 ownerMembership,
                 classType,
                 "완료 수업",
-                LocalDate.of(2026, 8, 16).atTime(9, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 16).atTime(9, 0)
         );
         수업을_저장한다(
                 studio,
                 instructorMembership,
                 classType,
                 "진행 수업",
-                LocalDate.of(2026, 8, 17).atTime(9, 30),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 17).atTime(9, 30)
         );
         ClassSession canceledSession = 수업을_저장한다(
                 studio,
                 instructorMembership,
                 classType,
                 "취소 수업",
-                LocalDate.of(2026, 8, 17).atTime(20, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 17).atTime(20, 0)
         );
         canceledSession.cancel(canceledSession.getStartAt().minusMinutes(1));
         수업을_저장한다(
@@ -148,24 +144,21 @@ class InstructorCalendarQueryServiceTest {
                 ownerMembership,
                 classType,
                 "예약 가능 예정 수업",
-                LocalDate.of(2026, 8, 18).atTime(11, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(11, 0)
         );
         수업을_저장한다(
                 studio,
                 instructorMembership,
                 classType,
                 "예약 마감 예정 수업",
-                LocalDate.of(2026, 8, 18).atTime(12, 0),
-                ClassSessionStatus.CLOSED
+                LocalDate.of(2026, 8, 18).atTime(12, 0)
         );
         수업을_저장한다(
                 studio,
                 instructorMembership,
                 classType,
                 "기간 밖 수업",
-                LocalDate.of(2026, 8, 20).atTime(10, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 20).atTime(10, 0)
         );
 
         StudioMembership studentMembership = 소속을_저장한다(
@@ -235,16 +228,14 @@ class InstructorCalendarQueryServiceTest {
                 instructorMembership,
                 classType,
                 "내 달력 수업",
-                LocalDate.of(2026, 8, 18).atTime(11, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(11, 0)
         );
         수업을_저장한다(
                 studio,
                 otherInstructor,
                 classType,
                 "다른 강사 달력 수업",
-                LocalDate.of(2026, 8, 18).atTime(12, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(12, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -288,8 +279,7 @@ class InstructorCalendarQueryServiceTest {
                 instructorMembership,
                 classType,
                 "전체 관리 대상 수업",
-                LocalDate.of(2026, 8, 18).atTime(13, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(13, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -338,16 +328,14 @@ class InstructorCalendarQueryServiceTest {
                 managerMembership,
                 classType,
                 "내 전체 권한 수업",
-                LocalDate.of(2026, 8, 18).atTime(14, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(14, 0)
         );
         수업을_저장한다(
                 studio,
                 otherInstructor,
                 classType,
                 "다른 강사 전체 권한 수업",
-                LocalDate.of(2026, 8, 18).atTime(15, 0),
-                ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(15, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -550,8 +538,7 @@ class InstructorCalendarQueryServiceTest {
             StudioMembership instructorMembership,
             ClassType classType,
             String name,
-            LocalDateTime startAt,
-            ClassSessionStatus status
+            LocalDateTime startAt
     ) {
         ClassSession classSession = classSessionRepository.saveAndFlush(ClassSessionFixture.수업_회차(
                 studio.getId(),
@@ -561,8 +548,7 @@ class InstructorCalendarQueryServiceTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                startAt,
-                status
+                startAt
         ));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())

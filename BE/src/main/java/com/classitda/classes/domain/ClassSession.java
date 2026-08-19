@@ -64,10 +64,6 @@ public class ClassSession extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime endAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ClassSessionStatus status;
-
     private LocalDateTime canceledAt;
 
     @Builder
@@ -79,12 +75,10 @@ public class ClassSession extends BaseEntity {
             ClassForm classForm,
             int durationMinutes,
             int capacity,
-            LocalDateTime startAt,
-            ClassSessionStatus status
+            LocalDateTime startAt
     ) {
         validateStudioId(studioId);
         validateInstructorMembership(instructorMembership);
-        validateStatus(status);
         validateDetails(name, classForm, durationMinutes, capacity, startAt);
         this.studioId = studioId;
         this.instructorMembership = instructorMembership;
@@ -95,7 +89,6 @@ public class ClassSession extends BaseEntity {
         this.capacity = capacity;
         this.startAt = startAt;
         this.endAt = calculateEndAt(startAt, durationMinutes);
-        this.status = status;
     }
 
     public SessionPhase phaseAt(LocalDateTime now) {
@@ -136,12 +129,11 @@ public class ClassSession extends BaseEntity {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_ALREADY_STARTED);
         }
 
-        status = ClassSessionStatus.CANCELED;
         canceledAt = occurredAt;
     }
 
     public boolean isCanceled() {
-        return canceledAt != null || status == ClassSessionStatus.CANCELED;
+        return canceledAt != null;
     }
 
     public void updateDetails(
@@ -223,12 +215,6 @@ public class ClassSession extends BaseEntity {
     private void validateStartAt(LocalDateTime startAt) {
         if (startAt == null) {
             throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_START_AT);
-        }
-    }
-
-    private void validateStatus(ClassSessionStatus status) {
-        if (status == null) {
-            throw new ClassException(ClassErrorCode.CLASS_SESSION_STATUS_REQUIRED);
         }
     }
 

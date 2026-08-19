@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassTemplate;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
@@ -129,7 +128,7 @@ class ClassSessionCommandServiceTest {
         assertThat(saved.getInstructorMembership().getId()).isEqualTo(context.membership().getId());
         assertThat(saved.getStartAt()).isEqualTo(LocalDateTime.of(2026, 8, 17, 20, 0));
         assertThat(saved.getEndAt()).isEqualTo(LocalDateTime.of(2026, 8, 17, 21, 0));
-        assertThat(saved.getStatus()).isEqualTo(ClassSessionStatus.OPENED);
+        assertThat(saved.isCanceled()).isFalse();
         assertThat(classSessionClassTypeRepository.findAll())
                 .extracting(ClassSessionClassType::getClassSessionId, ClassSessionClassType::getClassTypeId)
                 .containsExactly(org.assertj.core.groups.Tuple.tuple(saved.getId(), classType.getId()));
@@ -505,7 +504,7 @@ class ClassSessionCommandServiceTest {
         StudioContext context = 시설과_대표_소속을_저장한다(owner, "충돌 시설");
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
         수업을_저장한다(context, classType, LocalDateTime.of(2026, 8, 17, 10, 0),
-                60, ClassSessionStatus.OPENED, "기존 수업");
+                60, "기존 수업");
 
         // when / then
         assertClassError(
@@ -544,7 +543,6 @@ class ClassSessionCommandServiceTest {
                 classType,
                 LocalDateTime.of(2026, 8, 17, 10, 0),
                 60,
-                ClassSessionStatus.OPENED,
                 "선택 강사의 기존 수업"
         );
 
@@ -572,7 +570,7 @@ class ClassSessionCommandServiceTest {
                 context.studio(), instructor, instructorRole, MembershipStatus.ACTIVE);
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
         수업을_저장한다(context, classType, LocalDateTime.of(2026, 8, 17, 10, 0),
-                60, ClassSessionStatus.OPENED, "요청자의 기존 수업");
+                60, "요청자의 기존 수업");
 
         // when
         commandService.save(
@@ -599,9 +597,9 @@ class ClassSessionCommandServiceTest {
         StudioContext context = 시설과_대표_소속을_저장한다(owner, "인접 시설");
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
         수업을_저장한다(context, classType, LocalDateTime.of(2026, 8, 17, 10, 0),
-                60, ClassSessionStatus.OPENED, "활성 수업");
+                60, "활성 수업");
         ClassSession canceled = 수업을_저장한다(context, classType, LocalDateTime.of(2026, 8, 18, 10, 0),
-                60, ClassSessionStatus.OPENED, "취소 수업");
+                60, "취소 수업");
         canceled.cancel(canceled.getStartAt().minusMinutes(1));
 
         // when
@@ -625,7 +623,7 @@ class ClassSessionCommandServiceTest {
         StudioContext context = 시설과_대표_소속을_저장한다(owner, "배치 롤백 시설");
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
         수업을_저장한다(context, classType, LocalDateTime.of(2026, 8, 19, 20, 0),
-                60, ClassSessionStatus.OPENED, "나중 충돌 수업");
+                60, "나중 충돌 수업");
 
         // when / then
         assertClassError(
@@ -827,7 +825,6 @@ class ClassSessionCommandServiceTest {
             ClassType classType,
             LocalDateTime startAt,
             int durationMinutes,
-            ClassSessionStatus status,
             String name
     ) {
         return 수업을_저장한다(
@@ -836,7 +833,6 @@ class ClassSessionCommandServiceTest {
                 classType,
                 startAt,
                 durationMinutes,
-                status,
                 name
         );
     }
@@ -847,12 +843,11 @@ class ClassSessionCommandServiceTest {
             ClassType classType,
             LocalDateTime startAt,
             int durationMinutes,
-            ClassSessionStatus status,
             String name
     ) {
         ClassSession session = classSessionRepository.saveAndFlush(ClassSessionFixture.수업_회차(
                 context.studio().getId(), instructorMembership, name, null, ClassForm.GROUP,
-                durationMinutes, 10, startAt, status));
+                durationMinutes, 10, startAt));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(session.getId(), classType.getId()));
         return session;

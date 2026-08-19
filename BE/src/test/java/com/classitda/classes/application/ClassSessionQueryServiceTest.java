@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.Reservation;
 import com.classitda.classes.domain.ReservationStatus;
@@ -309,8 +308,7 @@ class ClassSessionQueryServiceTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         ));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())
@@ -325,8 +323,7 @@ class ClassSessionQueryServiceTest {
             String name,
             ClassForm classForm,
             int capacity,
-            LocalDateTime startAt,
-            ClassSessionStatus status
+            LocalDateTime startAt
     ) {
         ClassSession classSession = classSessionRepository.saveAndFlush(ClassSessionFixture.수업_회차(
                 studio.getId(),
@@ -336,8 +333,7 @@ class ClassSessionQueryServiceTest {
                 classForm,
                 60,
                 capacity,
-                startAt,
-                status
+                startAt
         ));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())

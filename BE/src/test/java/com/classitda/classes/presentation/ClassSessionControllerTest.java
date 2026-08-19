@@ -22,7 +22,6 @@ import com.classitda.classes.application.student.calendar.StudentCalendarSummary
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.application.student.daily.StudentDailySessionView;
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.SessionPhase;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;

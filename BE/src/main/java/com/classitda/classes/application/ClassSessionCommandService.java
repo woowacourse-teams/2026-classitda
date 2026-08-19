@@ -2,7 +2,6 @@ package com.classitda.classes.application;
 
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTemplateRepository;
@@ -245,7 +244,6 @@ public class ClassSessionCommandService {
                         .durationMinutes(request.durationMinutes())
                         .capacity(request.capacity())
                         .startAt(LocalDateTime.of(sessionDate, request.startTime()))
-                        .status(ClassSessionStatus.OPENED)
                         .build())
                 .toList();
     }

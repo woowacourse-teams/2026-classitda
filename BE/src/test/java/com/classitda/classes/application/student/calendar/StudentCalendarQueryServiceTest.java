@@ -7,7 +7,6 @@ import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.Reservation;
 import com.classitda.classes.domain.ReservationStatus;
@@ -129,60 +128,60 @@ class StudentCalendarQueryServiceTest {
 
         ClassSession attendedSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "수강 완료", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 16).atTime(9, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 16).atTime(9, 0)
         );
         ClassSession futureAttendedSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "종료 전 출석 상태", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 19).atTime(9, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 19).atTime(9, 0)
         );
         ClassSession endedReservedSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "출석 처리 전 종료 수업", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 15).atTime(9, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 15).atTime(9, 0)
         );
         ClassSession absentSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "결석", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 17).atTime(8, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 17).atTime(8, 0)
         );
         ClassSession startedWaitingSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "시작한 수업 대기", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 17).atTime(9, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 17).atTime(9, 0)
         );
         ClassSession reservedSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "예약 확정", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(11, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(11, 0)
         );
         ClassSession waitingSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "대기 중", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(12, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(12, 0)
         );
         ClassSession offeredSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "빈자리 제안", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(13, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(13, 0)
         );
         ClassSession canceledSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "취소 수업", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(14, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(14, 0)
         );
         canceledSession.cancel(canceledSession.getStartAt().minusMinutes(1));
         ClassSession otherClassTypeSession = 수업을_저장한다(
                 studio, instructorMembership, pilates, "다른 종류", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 19).atTime(15, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 19).atTime(15, 0)
         );
         ClassSession otherClassFormSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "다른 형태", ClassForm.INDIVIDUAL,
-                LocalDate.of(2026, 8, 17).atTime(16, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 17).atTime(16, 0)
         );
         ClassSession otherMemberSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "다른 회원 예약", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(17, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(17, 0)
         );
         수업을_저장한다(
                 studio, instructorMembership, yoga, "예약 없는 완료 수업", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 16).atTime(11, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 16).atTime(11, 0)
         );
         ClassSession outOfRangeSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "기간 밖", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 20).atTime(11, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 20).atTime(11, 0)
         );
 
         예약을_저장한다(attendedSession, studentMembership, memberPassProduct, ReservationStatus.ATTENDED);
@@ -245,15 +244,15 @@ class StudentCalendarQueryServiceTest {
         );
         ClassSession before = 수업을_저장한다(
                 studio, instructorMembership, classType, "수강권 기간 전", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 16).atTime(11, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 16).atTime(11, 0)
         );
         ClassSession within = 수업을_저장한다(
                 studio, instructorMembership, classType, "수강권 기간 안", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(11, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 18).atTime(11, 0)
         );
         ClassSession after = 수업을_저장한다(
                 studio, instructorMembership, classType, "수강권 기간 후", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 19).atTime(11, 0), ClassSessionStatus.OPENED
+                LocalDate.of(2026, 8, 19).atTime(11, 0)
         );
         예약을_저장한다(before, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
         예약을_저장한다(within, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
@@ -431,8 +430,7 @@ class StudentCalendarQueryServiceTest {
             ClassType classType,
             String name,
             ClassForm classForm,
-            LocalDateTime startAt,
-            ClassSessionStatus status
+            LocalDateTime startAt
     ) {
         ClassSession classSession = classSessionRepository.saveAndFlush(ClassSessionFixture.수업_회차(
                 studio.getId(),
@@ -442,8 +440,7 @@ class StudentCalendarQueryServiceTest {
                 classForm,
                 60,
                 12,
-                startAt,
-                status
+                startAt
         ));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())

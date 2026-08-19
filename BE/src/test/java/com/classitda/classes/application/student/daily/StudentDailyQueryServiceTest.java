@@ -10,7 +10,6 @@ import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.Reservation;
 import com.classitda.classes.domain.ReservationStatus;
@@ -132,27 +131,27 @@ class StudentDailyQueryServiceTest {
 
         ClassSession laterSession = 수업_회차를_저장한다(
                 studio, firstInstructor, yoga, "오후 요가", ClassForm.GROUP, 1,
-                QUERY_DATE.atTime(14, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(14, 0)
         );
         ClassSession sameTimeFirst = 수업_회차를_저장한다(
                 studio, firstInstructor, yoga, "정오 요가 A", ClassForm.GROUP, 3,
-                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(12, 0)
         );
         ClassSession sameTimeSecond = 수업_회차를_저장한다(
                 studio, secondInstructor, yoga, "정오 요가 B", ClassForm.GROUP, 2,
-                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(12, 0)
         );
         수업_회차를_저장한다(
                 studio, firstInstructor, pilates, "다른 종류", ClassForm.GROUP, 10,
-                QUERY_DATE.atTime(13, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(13, 0)
         );
         ClassSession sameTypeOtherForm = 수업_회차를_저장한다(
                 studio, firstInstructor, yoga, "다른 형태", ClassForm.INDIVIDUAL, 1,
-                QUERY_DATE.atTime(15, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(15, 0)
         );
         수업_회차를_저장한다(
                 studio, firstInstructor, yoga, "다른 날짜", ClassForm.GROUP, 10,
-                QUERY_DATE.plusDays(1).atStartOfDay(), ClassSessionStatus.OPENED
+                QUERY_DATE.plusDays(1).atStartOfDay()
         );
 
         StudioMembership firstParticipant = 소속을_저장한다(
@@ -287,15 +286,15 @@ class StudentDailyQueryServiceTest {
         );
         ClassSession yogaSession = 수업_회차를_저장한다(
                 studio, instructor, yoga, "요가 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(11, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(11, 0)
         );
         ClassSession pilatesSession = 수업_회차를_저장한다(
                 studio, instructor, pilates, "필라테스 수업", ClassForm.INDIVIDUAL, 5,
-                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(12, 0)
         );
         수업_회차를_저장한다(
                 studio, instructor, barre, "바레 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(13, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(13, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -350,27 +349,27 @@ class StudentDailyQueryServiceTest {
 
         ClassSession attended = 수업_회차를_저장한다(
                 studio, instructor, yoga, "출석한 수업", ClassForm.GROUP, 5,
-                pastDate.atTime(10, 0), ClassSessionStatus.OPENED
+                pastDate.atTime(10, 0)
         );
         ClassSession unreserved = 수업_회차를_저장한다(
                 studio, instructor, yoga, "예약하지 않은 수업", ClassForm.GROUP, 5,
-                pastDate.atTime(11, 0), ClassSessionStatus.OPENED
+                pastDate.atTime(11, 0)
         );
         ClassSession reservedOnly = 수업_회차를_저장한다(
                 studio, instructor, yoga, "출석 처리되지 않은 수업", ClassForm.GROUP, 5,
-                pastDate.atTime(12, 0), ClassSessionStatus.OPENED
+                pastDate.atTime(12, 0)
         );
         ClassSession absent = 수업_회차를_저장한다(
                 studio, instructor, yoga, "결석한 수업", ClassForm.GROUP, 5,
-                pastDate.atTime(12, 30), ClassSessionStatus.OPENED
+                pastDate.atTime(12, 30)
         );
         ClassSession otherMemberAttended = 수업_회차를_저장한다(
                 studio, instructor, yoga, "다른 회원이 출석한 수업", ClassForm.GROUP, 5,
-                pastDate.atTime(13, 0), ClassSessionStatus.OPENED
+                pastDate.atTime(13, 0)
         );
         ClassSession otherClassType = 수업_회차를_저장한다(
                 studio, instructor, pilates, "다른 종류 출석 수업", ClassForm.GROUP, 5,
-                pastDate.atTime(14, 0), ClassSessionStatus.OPENED
+                pastDate.atTime(14, 0)
         );
         예약을_저장한다(attended, memberMembership, ReservationStatus.ATTENDED);
         예약을_저장한다(reservedOnly, memberMembership, ReservationStatus.RESERVED);
@@ -434,40 +433,40 @@ class StudentDailyQueryServiceTest {
 
         ClassSession canceled = 수업_회차를_저장한다(
                 studio, instructor, classType, "취소 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(7, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(7, 0)
         );
         canceled.cancel(canceled.getStartAt().minusMinutes(1));
         ClassSession attendancePending = 수업_회차를_저장한다(
                 studio, instructor, classType, "출석 처리 대기 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(8, 30), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(8, 30)
         );
         ClassSession attended = 수업_회차를_저장한다(
                 studio, instructor, classType, "출석 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(8, 40), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(8, 40)
         );
         ClassSession absent = 수업_회차를_저장한다(
                 studio, instructor, classType, "결석 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(8, 50), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(8, 50)
         );
         ClassSession reserved = 수업_회차를_저장한다(
                 studio, instructor, classType, "예약 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(10, 10), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(10, 10)
         );
         ClassSession offered = 수업_회차를_저장한다(
                 studio, instructor, classType, "제안 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(10, 20), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(10, 20)
         );
         ClassSession waiting = 수업_회차를_저장한다(
                 studio, instructor, classType, "대기 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(10, 25), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(10, 25)
         );
         ClassSession closedAtBoundary = 수업_회차를_저장한다(
                 studio, instructor, classType, "마감 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(10, 30), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(10, 30)
         );
         ClassSession availableBeforeClose = 수업_회차를_저장한다(
                 studio, instructor, classType, "예약 가능 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(11, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(11, 0)
         );
         예약을_저장한다(canceled, memberMembership, ReservationStatus.RESERVED);
         예약을_저장한다(attendancePending, memberMembership, ReservationStatus.RESERVED);
@@ -629,7 +628,7 @@ class StudentDailyQueryServiceTest {
         );
         수업_회차를_저장한다(
                 studio, instructor, classType, "다른 회원만 수강 가능한 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(12, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -678,7 +677,7 @@ class StudentDailyQueryServiceTest {
         정책을_저장한다(studio, 30);
         수업_회차를_저장한다(
                 studio, instructor, classType, "사용 불가 수강권 종류 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(12, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -725,7 +724,7 @@ class StudentDailyQueryServiceTest {
         정책을_저장한다(studio, 30);
         수업_회차를_저장한다(
                 studio, instructor, classType, "기간 밖 수강권 종류 수업", ClassForm.GROUP, 5,
-                QUERY_DATE.atTime(12, 0), ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(12, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -819,8 +818,7 @@ class StudentDailyQueryServiceTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         ));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())
@@ -835,8 +833,7 @@ class StudentDailyQueryServiceTest {
             String name,
             ClassForm classForm,
             int capacity,
-            LocalDateTime startAt,
-            ClassSessionStatus status
+            LocalDateTime startAt
     ) {
         ClassSession classSession = classSessionRepository.saveAndFlush(ClassSessionFixture.수업_회차(
                 studio.getId(),
@@ -846,8 +843,7 @@ class StudentDailyQueryServiceTest {
                 classForm,
                 60,
                 capacity,
-                startAt,
-                status
+                startAt
         ));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())

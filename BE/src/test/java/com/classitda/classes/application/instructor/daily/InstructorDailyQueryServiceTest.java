@@ -7,7 +7,6 @@ import com.classitda.classes.application.instructor.InstructorSessionAccessReade
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.Reservation;
 import com.classitda.classes.domain.ReservationStatus;
@@ -129,32 +128,28 @@ class InstructorDailyQueryServiceTest {
                 ownerMembership,
                 classType,
                 "대표 수업",
-                QUERY_DATE.atTime(12, 0),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(12, 0)
         );
         ClassSession earlySession = 수업을_저장한다(
                 studio,
                 firstInstructor,
                 classType,
                 "오전 필라테스",
-                QUERY_DATE.atTime(11, 0),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(11, 0)
         );
         ClassSession secondAtSameTime = 수업을_저장한다(
                 studio,
                 secondInstructor,
                 classType,
                 "정오 필라테스",
-                QUERY_DATE.atTime(12, 0),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(12, 0)
         );
         수업을_저장한다(
                 studio,
                 firstInstructor,
                 classType,
                 "다음 날 수업",
-                QUERY_DATE.plusDays(1).atStartOfDay(),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.plusDays(1).atStartOfDay()
         );
 
         StudioMembership firstStudent = 소속을_저장한다(
@@ -250,16 +245,14 @@ class InstructorDailyQueryServiceTest {
                 instructorMembership,
                 classType,
                 "내 수업",
-                QUERY_DATE.atTime(13, 0),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(13, 0)
         );
         ClassSession otherSession = 수업을_저장한다(
                 studio,
                 otherInstructor,
                 classType,
                 "다른 강사 수업",
-                QUERY_DATE.atTime(14, 0),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(14, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -302,8 +295,7 @@ class InstructorDailyQueryServiceTest {
                 instructorMembership,
                 classType,
                 "전체 관리 대상 수업",
-                QUERY_DATE.atTime(15, 0),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(15, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -349,16 +341,14 @@ class InstructorDailyQueryServiceTest {
                 managerMembership,
                 classType,
                 "총괄 강사 수업",
-                QUERY_DATE.atTime(16, 0),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(16, 0)
         );
         ClassSession otherSession = 수업을_저장한다(
                 studio,
                 otherInstructor,
                 classType,
                 "다른 강사 수업",
-                QUERY_DATE.atTime(17, 0),
-                ClassSessionStatus.OPENED
+                QUERY_DATE.atTime(17, 0)
         );
         entityManager.flush();
         entityManager.clear();
@@ -574,8 +564,7 @@ class InstructorDailyQueryServiceTest {
             StudioMembership instructorMembership,
             ClassType classType,
             String name,
-            LocalDateTime startAt,
-            ClassSessionStatus status
+            LocalDateTime startAt
     ) {
         ClassSession classSession = classSessionRepository.saveAndFlush(ClassSessionFixture.수업_회차(
                 studio.getId(),
@@ -585,8 +574,7 @@ class InstructorDailyQueryServiceTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                startAt,
-                status
+                startAt
         ));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())

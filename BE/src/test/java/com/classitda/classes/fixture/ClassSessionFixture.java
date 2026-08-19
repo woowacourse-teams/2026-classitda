@@ -3,7 +3,6 @@ package com.classitda.classes.fixture;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.member.domain.Member;
 import com.classitda.member.fixture.MemberFixture;
@@ -24,10 +23,6 @@ public final class ClassSessionFixture {
     }
 
     public static ClassSession 기본_수업_회차() {
-        return 상태가_다른_수업_회차(ClassSessionStatus.OPENED);
-    }
-
-    public static ClassSession 상태가_다른_수업_회차(ClassSessionStatus status) {
         return 수업_회차(
                 1L,
                 기본_담당_강사_소속(),
@@ -36,8 +31,7 @@ public final class ClassSessionFixture {
                 ClassForm.GROUP,
                 60,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                status
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         );
     }
 
@@ -49,8 +43,7 @@ public final class ClassSessionFixture {
             ClassForm classForm,
             int durationMinutes,
             int capacity,
-            LocalDateTime startAt,
-            ClassSessionStatus status
+            LocalDateTime startAt
     ) {
         return ClassSession.builder()
                 .studioId(studioId)
@@ -61,7 +54,6 @@ public final class ClassSessionFixture {
                 .durationMinutes(durationMinutes)
                 .capacity(capacity)
                 .startAt(startAt)
-                .status(status)
                 .build();
     }
 

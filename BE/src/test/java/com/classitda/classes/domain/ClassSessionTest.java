@@ -2,7 +2,6 @@ package com.classitda.classes.domain;
 
 import static com.classitda.classes.fixture.ClassSessionFixture.기본_담당_강사_소속;
 import static com.classitda.classes.fixture.ClassSessionFixture.기본_수업_회차;
-import static com.classitda.classes.fixture.ClassSessionFixture.상태가_다른_수업_회차;
 import static com.classitda.classes.fixture.ClassSessionFixture.수업_종류_연결;
 import static com.classitda.classes.fixture.ClassSessionFixture.수업_회차;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,8 +40,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                startAt,
-                ClassSessionStatus.OPENED
+                startAt
         );
 
         // then
@@ -55,7 +53,7 @@ class ClassSessionTest {
         assertThat(classSession.getCapacity()).isEqualTo(12);
         assertThat(classSession.getStartAt()).isEqualTo(startAt);
         assertThat(classSession.getEndAt()).isEqualTo(startAt.plusMinutes(60));
-        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.OPENED);
+        assertThat(classSession.isCanceled()).isFalse();
     }
 
     @Test
@@ -74,8 +72,7 @@ class ClassSessionTest {
                 ClassForm.INDIVIDUAL,
                 durationMinutes,
                 capacity,
-                LocalDateTime.MIN,
-                ClassSessionStatus.OPENED
+                LocalDateTime.MIN
         );
 
         // then
@@ -96,8 +93,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 1_440,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         );
 
         // then
@@ -118,8 +114,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         );
 
         // then
@@ -141,8 +136,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         ), ClassErrorCode.INVALID_CLASS_SESSION_NAME);
     }
 
@@ -160,8 +154,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         ), ClassErrorCode.CLASS_SESSION_STUDIO_REQUIRED);
     }
 
@@ -179,8 +172,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         ), ClassErrorCode.CLASS_SESSION_INSTRUCTOR_REQUIRED);
     }
 
@@ -198,8 +190,7 @@ class ClassSessionTest {
                 classForm,
                 60,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         ), ClassErrorCode.INVALID_CLASS_SESSION_FORM);
     }
 
@@ -218,8 +209,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 durationMinutes,
                 12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         ), ClassErrorCode.INVALID_CLASS_SESSION_DURATION_MINUTES);
     }
 
@@ -238,8 +228,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 60,
                 capacity,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                ClassSessionStatus.OPENED
+                LocalDateTime.of(2026, 8, 17, 20, 0)
         ), ClassErrorCode.INVALID_CLASS_SESSION_CAPACITY);
     }
 
@@ -257,8 +246,7 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 60,
                 12,
-                startAt,
-                ClassSessionStatus.OPENED
+                startAt
         ), ClassErrorCode.INVALID_CLASS_SESSION_START_AT);
     }
 
@@ -276,28 +264,8 @@ class ClassSessionTest {
                 ClassForm.GROUP,
                 1,
                 12,
-                startAt,
-                ClassSessionStatus.OPENED
+                startAt
         ), ClassErrorCode.INVALID_CLASS_SESSION_START_AT);
-    }
-
-    @Test
-    void 상태가_null이면_수업_회차를_생성할_수_없다() {
-        // given
-        ClassSessionStatus status = null;
-
-        // when / then
-        assertClassError(() -> 수업_회차(
-                1L,
-                기본_담당_강사_소속(),
-                "저녁 요가",
-                null,
-                ClassForm.GROUP,
-                60,
-                12,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                status
-        ), ClassErrorCode.CLASS_SESSION_STATUS_REQUIRED);
     }
 
     @Test
@@ -306,7 +274,6 @@ class ClassSessionTest {
         ClassSession classSession = 기본_수업_회차();
         Long originalStudioId = classSession.getStudioId();
         StudioMembership originalInstructor = classSession.getInstructorMembership();
-        ClassSessionStatus originalStatus = classSession.getStatus();
         LocalDateTime changedStartAt = LocalDateTime.of(2026, 8, 18, 11, 0);
 
         // when
@@ -329,7 +296,7 @@ class ClassSessionTest {
         assertThat(classSession.getEndAt()).isEqualTo(changedStartAt.plusMinutes(90));
         assertThat(classSession.getStudioId()).isEqualTo(originalStudioId);
         assertThat(classSession.getInstructorMembership()).isSameAs(originalInstructor);
-        assertThat(classSession.getStatus()).isEqualTo(originalStatus);
+        assertThat(classSession.isCanceled()).isFalse();
     }
 
     @ParameterizedTest
@@ -349,7 +316,8 @@ class ClassSessionTest {
     @Test
     void 취소된_수업_회차는_상세_정보를_수정할_수_없다() {
         // given
-        ClassSession classSession = 상태가_다른_수업_회차(ClassSessionStatus.CANCELED);
+        ClassSession classSession = 기본_수업_회차();
+        classSession.cancel(classSession.getStartAt().minusMinutes(1));
 
         // when / then
         assertClassError(() -> classSession.updateDetails(
@@ -361,18 +329,14 @@ class ClassSessionTest {
                 LocalDateTime.of(2026, 8, 18, 9, 0)
         ), ClassErrorCode.CLASS_SESSION_CANCELED);
         assertThat(classSession.getName()).isEqualTo("저녁 요가");
-        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.CANCELED);
+        assertThat(classSession.isCanceled()).isTrue();
     }
 
     @ParameterizedTest
     @MethodSource("수업_단계")
-    void 현재_시각에_따라_수업_단계를_계산한다(
-            ClassSessionStatus status,
-            LocalDateTime now,
-            SessionPhase expectedPhase
-    ) {
+    void 현재_시각에_따라_수업_단계를_계산한다(LocalDateTime now, SessionPhase expectedPhase) {
         // given
-        ClassSession classSession = 상태가_다른_수업_회차(status);
+        ClassSession classSession = 기본_수업_회차();
 
         // when
         SessionPhase phase = classSession.phaseAt(now);
@@ -471,7 +435,6 @@ class ClassSessionTest {
 
         // then
         assertThat(classSession.getCanceledAt()).isEqualTo(canceledAt);
-        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.CANCELED);
         assertThat(classSession.isCanceled()).isTrue();
         assertThat(classSession.phaseAt(canceledAt)).isEqualTo(SessionPhase.CANCELED);
     }
@@ -484,7 +447,7 @@ class ClassSessionTest {
         // when / then
         assertClassError(() -> classSession.cancel(null), ClassErrorCode.CLASS_SESSION_CANCEL_OCCURRED_AT_REQUIRED);
         assertThat(classSession.getCanceledAt()).isNull();
-        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.OPENED);
+        assertThat(classSession.isCanceled()).isFalse();
     }
 
     @Test
@@ -497,7 +460,7 @@ class ClassSessionTest {
         // when / then
         assertClassError(() -> classSession.cancel(originalCanceledAt.plusMinutes(1)), ClassErrorCode.CLASS_SESSION_ALREADY_CANCELED);
         assertThat(classSession.getCanceledAt()).isEqualTo(originalCanceledAt);
-        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.CANCELED);
+        assertThat(classSession.isCanceled()).isTrue();
     }
 
     @ParameterizedTest
@@ -510,7 +473,7 @@ class ClassSessionTest {
         // when / then
         assertClassError(() -> classSession.cancel(occurredAt), ClassErrorCode.CLASS_SESSION_ALREADY_STARTED);
         assertThat(classSession.getCanceledAt()).isNull();
-        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.OPENED);
+        assertThat(classSession.isCanceled()).isFalse();
     }
 
     @Test
@@ -642,12 +605,10 @@ class ClassSessionTest {
         LocalDateTime startAt = LocalDateTime.of(2026, 8, 17, 20, 0);
         LocalDateTime endAt = startAt.plusHours(1);
         return Stream.of(
-                arguments(ClassSessionStatus.OPENED, startAt.minusNanos(1), SessionPhase.SCHEDULED),
-                arguments(ClassSessionStatus.CLOSED, startAt.minusNanos(1), SessionPhase.SCHEDULED),
-                arguments(ClassSessionStatus.OPENED, startAt, SessionPhase.IN_PROGRESS),
-                arguments(ClassSessionStatus.OPENED, endAt.minusNanos(1), SessionPhase.IN_PROGRESS),
-                arguments(ClassSessionStatus.OPENED, endAt, SessionPhase.COMPLETED),
-                arguments(ClassSessionStatus.CANCELED, endAt.plusHours(1), SessionPhase.CANCELED)
+                arguments(startAt.minusNanos(1), SessionPhase.SCHEDULED),
+                arguments(startAt, SessionPhase.IN_PROGRESS),
+                arguments(endAt.minusNanos(1), SessionPhase.IN_PROGRESS),
+                arguments(endAt, SessionPhase.COMPLETED)
         );
     }
 
