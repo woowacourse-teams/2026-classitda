@@ -43,6 +43,7 @@ import com.classitda.feature.student.myschedule.contract.WaitlistCancellationErr
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailAction
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailErrorUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailUiState
+import com.classitda.feature.student.myschedule.contract.approvalActionOrNull
 import com.classitda.feature.student.myschedule.contract.cancellationActionOrNull
 import com.classitda.feature.student.myschedule.preview.WaitlistCancellationResultPreviewFixture
 import com.classitda.feature.student.myschedule.preview.WaitlistDetailPreviewFixture
@@ -83,11 +84,16 @@ fun WaitlistDetailScreen(
 
                 is WaitlistDetailUiState.Content -> {
                     val cancellationAction = state.detail.cancellationActionOrNull()
+                    val approvalAction = state.detail.approvalActionOrNull()
 
                     WaitlistDetailContent(
                         model = state.detail,
                         onCancelWaitlist =
                             cancellationAction?.let { action ->
+                                { onAction(action) }
+                            },
+                        onApproveWaitlist =
+                            approvalAction?.let { action ->
                                 { onAction(action) }
                             },
                         modifier = Modifier.weight(1f),
@@ -184,6 +190,27 @@ private fun WaitlistDetailScreenPreview_F06Pending_Student_Default() {
 }
 
 @Preview(
+    name = "F06 approval required / Student / Default",
+    group = "Screen/MySchedule/WaitlistDetail",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 1031,
+)
+@Composable
+private fun WaitlistDetailScreenPreview_F06ApprovalRequired_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        WaitlistDetailScreen(
+            state = WaitlistDetailUiState.Content(WaitlistDetailPreviewFixture.approvalRequired),
+            onAction = {},
+            onBack = {},
+            onBookAnotherClass = {},
+            onReturnToList = {},
+        )
+    }
+}
+
+@Preview(
     name = "F06 cancellation action harness / Student",
     group = "Harness/MySchedule/WaitlistDetail",
     showBackground = true,
@@ -208,6 +235,10 @@ private fun WaitlistDetailScreenPreview_F06CancellationActionHarness_Student() {
 
                             is WaitlistDetailAction.CancelWaitlist -> {
                                 "마지막 Action/ID: CancelWaitlist/${action.waitlistId.value}"
+                            }
+
+                            is WaitlistDetailAction.ApproveWaitlist -> {
+                                "마지막 Action/ID: ApproveWaitlist/${action.waitlistId.value}"
                             }
 
                             WaitlistDetailAction.DismissCancellation -> {
@@ -277,6 +308,10 @@ private fun WaitlistDetailScreenPreview_F07ModalActionHarness_Student() {
 
                             is WaitlistDetailAction.CancelWaitlist -> {
                                 "마지막 Action/ID: CancelWaitlist/${action.waitlistId.value}"
+                            }
+
+                            is WaitlistDetailAction.ApproveWaitlist -> {
+                                "마지막 Action/ID: ApproveWaitlist/${action.waitlistId.value}"
                             }
 
                             WaitlistDetailAction.DismissCancellation -> {

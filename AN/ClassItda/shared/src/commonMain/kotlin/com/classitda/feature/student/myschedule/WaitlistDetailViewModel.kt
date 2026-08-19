@@ -44,6 +44,10 @@ internal class WaitlistDetailViewModel(
                 openCancellationDialog(action.waitlistId)
             }
 
+            is WaitlistDetailAction.ApproveWaitlist -> {
+                // 승인 요청은 다음 커밋의 Repository/ViewModel 범위에서 연결한다.
+            }
+
             WaitlistDetailAction.DismissCancellation -> {
                 dismissCancellationDialog()
             }

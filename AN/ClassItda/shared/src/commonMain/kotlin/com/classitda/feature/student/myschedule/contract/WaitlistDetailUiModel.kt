@@ -14,8 +14,21 @@ data class WaitlistDetailUiModel(
     init {
         require(title.isNotBlank()) { "수업명 표시는 비어 있을 수 없습니다." }
         require(appliedAtLabel.isNotBlank()) { "대기 일시 표시는 비어 있을 수 없습니다." }
-        require(currentPosition >= 1) { "현재 대기 순번은 1 이상이어야 합니다." }
+        require(currentPosition >= 0) { "현재 대기 순번은 0 이상이어야 합니다." }
     }
+
+    val status: WaitlistDetailStatusUiModel
+        get() =
+            if (currentPosition == 0) {
+                WaitlistDetailStatusUiModel.APPROVAL_REQUIRED
+            } else {
+                WaitlistDetailStatusUiModel.WAITLISTED
+            }
+}
+
+enum class WaitlistDetailStatusUiModel {
+    APPROVAL_REQUIRED,
+    WAITLISTED,
 }
 
 data class WaitlistClassInfoUiModel(
@@ -104,6 +117,10 @@ sealed interface WaitlistDetailAction {
         val waitlistId: WaitlistId,
     ) : WaitlistDetailAction
 
+    data class ApproveWaitlist(
+        val waitlistId: WaitlistId,
+    ) : WaitlistDetailAction
+
     data object DismissCancellation : WaitlistDetailAction
 
     data class ConfirmCancellation(
@@ -157,6 +174,13 @@ internal val WaitlistCancellationDialogUiState.canDismiss: Boolean
 internal fun WaitlistDetailUiModel.cancellationActionOrNull(): WaitlistDetailAction.CancelWaitlist? =
     if (cancellation is WaitlistCancellationAvailabilityUiModel.Available) {
         WaitlistDetailAction.CancelWaitlist(waitlistId)
+    } else {
+        null
+    }
+
+internal fun WaitlistDetailUiModel.approvalActionOrNull(): WaitlistDetailAction.ApproveWaitlist? =
+    if (status == WaitlistDetailStatusUiModel.APPROVAL_REQUIRED) {
+        WaitlistDetailAction.ApproveWaitlist(waitlistId)
     } else {
         null
     }

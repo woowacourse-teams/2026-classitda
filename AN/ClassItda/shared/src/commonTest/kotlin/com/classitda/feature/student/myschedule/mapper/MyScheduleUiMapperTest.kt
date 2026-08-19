@@ -28,6 +28,7 @@ import com.classitda.feature.student.myschedule.contract.UpcomingScheduleCardUiM
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleStatusUiModel
 import com.classitda.feature.student.myschedule.contract.UsageHistoryStatusUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistCancellationAvailabilityUiModel
+import com.classitda.feature.student.myschedule.contract.WaitlistDetailStatusUiModel
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -326,7 +327,13 @@ class MyScheduleUiMapperTest {
         assertEquals("2026.08.04 (화)", uiModel.classInfo.dateLabel)
         assertEquals("오후 6:30 ~ 7:20", uiModel.classInfo.timeRangeLabel)
         assertEquals(2, uiModel.currentPosition)
+        assertEquals(WaitlistDetailStatusUiModel.WAITLISTED, uiModel.status)
         assertIs<WaitlistCancellationAvailabilityUiModel.Available>(uiModel.cancellation)
+
+        val approvalRequired = mapper.mapWaitlistDetail(detail.copy(currentPosition = 0))
+
+        assertEquals(0, approvalRequired.currentPosition)
+        assertEquals(WaitlistDetailStatusUiModel.APPROVAL_REQUIRED, approvalRequired.status)
     }
 
     @Test
