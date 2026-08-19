@@ -30,8 +30,8 @@ import classitda.shared.generated.resources.ic_calendar_today
 import classitda.shared.generated.resources.ic_chat_bubble_outline
 import classitda.shared.generated.resources.ic_confirmation_number
 import classitda.shared.generated.resources.ic_schedule
-import classitda.shared.generated.resources.my_schedule_bullet
 import classitda.shared.generated.resources.my_schedule_approve_waitlist
+import classitda.shared.generated.resources.my_schedule_bullet
 import classitda.shared.generated.resources.my_schedule_cancel_waitlist
 import classitda.shared.generated.resources.my_schedule_class_detail_date
 import classitda.shared.generated.resources.my_schedule_class_detail_information
@@ -57,10 +57,10 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.feature.student.myschedule.component.common.MyScheduleWarningButton
 import com.classitda.feature.student.myschedule.component.common.MySchedulePrimaryButton
-import com.classitda.feature.student.myschedule.contract.WaitlistDetailUiModel
+import com.classitda.feature.student.myschedule.component.common.MyScheduleWarningButton
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailStatusUiModel
+import com.classitda.feature.student.myschedule.contract.WaitlistDetailUiModel
 import com.classitda.feature.student.myschedule.preview.WaitlistDetailPreviewFixture
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
