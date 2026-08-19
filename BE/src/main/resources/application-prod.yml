@@ -8,9 +8,9 @@ spring:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
       username: ${REDIS_USERNAME:}
-      password: ${REDIS_PASSWORD}
+      password: ${REDIS_PASSWORD:}
       ssl:
-        enabled: ${REDIS_SSL:true}
+        enabled: ${REDIS_SSL:false}
   sql:
     init:
       mode: never
