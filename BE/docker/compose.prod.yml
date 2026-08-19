@@ -3,7 +3,7 @@ name: classitda
 services:
   app:
     container_name: classitda-app
-    image: ${APP_IMAGE:-ghcr.io/woowacourse-teams/2026-classitda:latest}
+    image: ${APP_IMAGE:?}
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: prod
