@@ -105,14 +105,14 @@ jobs:
             echo "DB_USERNAME=$DB_USERNAME"
             echo "DB_PASSWORD=$DB_PASSWORD"
             echo "REDIS_HOST=$REDIS_HOST"
-            echo "REDIS_PASSWORD=$REDIS_PASSWORD"
+            echo "REDIS_PASSWORD=$(printf '%s' "$REDIS_PASSWORD" | tr -d '[:space:]')"
             echo "GOOGLE_OAUTH_WEB_CLIENT_ID=$GOOGLE_OAUTH_WEB_CLIENT_ID"
             echo "AUTH_JWT_PRIVATE_KEY_BASE64=$AUTH_JWT_PRIVATE_KEY_BASE64"
             echo "AUTH_JWT_PUBLIC_KEY_BASE64=$AUTH_JWT_PUBLIC_KEY_BASE64"
             echo "AUTH_PHONE_KEY_HMAC_SECRET_BASE64=$AUTH_PHONE_KEY_HMAC_SECRET_BASE64"
           } > env.tmp
           scp -F ~/.ssh/config env.tmp target:/opt/classitda/.env.new
-          ssh -F ~/.ssh/config target 'chmod 600 /opt/classitda/.env.new && mv /opt/classitda/.env.new /opt/classitda/.env'
+          ssh -F ~/.ssh/config target 'set -eu; umask 077; cd /opt/classitda; [ -f .env ] && cp .env .env.prev && chmod 600 .env.prev || true; chmod 600 .env.new; mv .env.new .env'
           rm -f env.tmp
 
       - name: 배포
@@ -153,6 +153,10 @@ jobs:
           fi
 
           echo "===== 롤백: $PREVIOUS ====="
+          if [ -f .env.prev ]; then
+            echo ".env 도 이전 값으로 되돌립니다."
+            cp .env.prev .env
+          fi
           APP_IMAGE="$PREVIOUS" docker compose up -d app
           if wait_healthy; then
             echo "롤백 완료. 배포는 실패로 처리합니다."
