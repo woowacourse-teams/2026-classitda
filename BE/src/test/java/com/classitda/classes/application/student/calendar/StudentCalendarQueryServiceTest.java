@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classitda.classes.application.student.StudentSessionAccessReader;
+import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionStatus;
@@ -56,6 +57,7 @@ import org.springframework.test.context.TestPropertySource;
 @Import({
         StudentCalendarQueryService.class,
         StudentSessionAccessReader.class,
+        StudentOwnedPassesReader.class,
         StudentCalendarSummaryReader.class,
         StudentCalendarQueryServiceTest.FixedClockConfig.class
 })
@@ -204,7 +206,7 @@ class StudentCalendarQueryServiceTest {
                 new StudentCalendarSummary(LocalDate.of(2026, 8, 18), false, true, true),
                 new StudentCalendarSummary(LocalDate.of(2026, 8, 19), false, true, false)
         );
-        assertThat(queryCount).isEqualTo(4L);
+        assertThat(queryCount).isEqualTo(6L);
     }
 
     @Test
@@ -293,7 +295,7 @@ class StudentCalendarQueryServiceTest {
 
         // then
         assertThat(summaries).isEmpty();
-        assertThat(queryCount).isEqualTo(4L);
+        assertThat(queryCount).isEqualTo(6L);
     }
 
     @ParameterizedTest

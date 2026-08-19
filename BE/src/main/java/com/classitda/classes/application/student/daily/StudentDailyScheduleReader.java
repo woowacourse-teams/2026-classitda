@@ -35,14 +35,15 @@ public class StudentDailyScheduleReader {
             Long studioId,
             Long membershipId,
             LocalDate date,
+            List<Long> classTypeIds,
             boolean attendedOnly
     ) {
         List<ClassSessionDailyProjection> classSessions = classSessionRepository.findDailyForStudent(
                 studioId,
                 date.atStartOfDay(),
                 getRangeEnd(date),
+                classTypeIds,
                 membershipId,
-                date,
                 attendedOnly
         );
 

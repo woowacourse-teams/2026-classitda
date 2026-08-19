@@ -1,6 +1,8 @@
 package com.classitda.classes.application.student.calendar;
 
 import com.classitda.classes.application.student.StudentSessionAccessReader;
+import com.classitda.classes.application.student.pass.StudentOwnedPasses;
+import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import java.time.Clock;
@@ -20,6 +22,7 @@ public class StudentCalendarQueryService {
     private static final int MAX_RANGE_DAYS = 42;
 
     private final StudentSessionAccessReader accessReader;
+    private final StudentOwnedPassesReader ownedPassesReader;
     private final StudentCalendarSummaryReader summaryReader;
     private final Clock clock;
 
@@ -32,6 +35,7 @@ public class StudentCalendarQueryService {
         validateCriteria(from, to);
 
         Long membershipId = accessReader.readMembershipId(memberId, studioId);
+        StudentOwnedPasses ownedPasses = ownedPassesReader.read(membershipId, studioId);
         LocalDateTime now = LocalDateTime.now(clock);
 
         return summaryReader.read(
@@ -39,6 +43,7 @@ public class StudentCalendarQueryService {
                 membershipId,
                 from,
                 to,
+                ownedPasses,
                 now
         );
     }

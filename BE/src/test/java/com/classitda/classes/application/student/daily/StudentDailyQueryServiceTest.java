@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.classitda.classes.application.student.StudentBookingStatus;
 import com.classitda.classes.application.student.StudentBookingStatusResolver;
 import com.classitda.classes.application.student.StudentSessionAccessReader;
+import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionStatus;
@@ -60,6 +61,7 @@ import org.springframework.context.annotation.Primary;
 @Import({
         StudentDailyQueryService.class,
         StudentSessionAccessReader.class,
+        StudentOwnedPassesReader.class,
         StudentDailyScheduleReader.class,
         StudentDailySessionAssembler.class,
         StudentBookingStatusResolver.class,
@@ -647,8 +649,8 @@ class StudentDailyQueryServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("사용할_수_없는_수강권")
-    void 홀딩하거나_소진한_보유_수강권으로는_목록을_조회할_수_없다(
+    @MethodSource("현재_상태와_잔여_횟수")
+    void 이용_기간_안이면_현재_상태와_잔여_횟수와_관계없이_목록을_조회한다(
             MemberPassProductStatus status,
             int remainingCount
     ) {
@@ -692,7 +694,9 @@ class StudentDailyQueryServiceTest {
         );
 
         // then
-        assertThat(responses).isEmpty();
+        assertThat(responses)
+                .extracting(StudentDailySessionView::className)
+                .containsExactly("사용 불가 수강권 종류 수업");
     }
 
     @Test
@@ -947,10 +951,11 @@ class StudentDailyQueryServiceTest {
                         assertThat(exception.getErrorCode()).isEqualTo(errorCode));
     }
 
-    private static Stream<Arguments> 사용할_수_없는_수강권() {
+    private static Stream<Arguments> 현재_상태와_잔여_횟수() {
         return Stream.of(
                 Arguments.of(MemberPassProductStatus.HOLD, 10),
-                Arguments.of(MemberPassProductStatus.ACTIVE, 0)
+                Arguments.of(MemberPassProductStatus.ACTIVE, 0),
+                Arguments.of(MemberPassProductStatus.EXHAUSTED, 0)
         );
     }
 

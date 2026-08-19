@@ -1,7 +1,8 @@
 package com.classitda.passproduct.domain.repository;
 
 import com.classitda.passproduct.domain.MemberPassProduct;
-import java.util.Optional;
+import com.classitda.passproduct.domain.repository.projection.MemberPassProductClassTypeProjection;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -9,17 +10,18 @@ import org.springframework.data.repository.query.Param;
 public interface MemberPassProductRepository extends JpaRepository<MemberPassProduct, Long> {
 
     @Query("""
-            SELECT DISTINCT memberPassProduct
+            SELECT memberPassProduct.id AS memberPassProductId,
+                   passProductClassType.classType.id AS classTypeId,
+                   memberPassProduct.startedAt AS startedAt,
+                   memberPassProduct.expiresAt AS expiresAt
             FROM MemberPassProduct memberPassProduct
-            JOIN FETCH memberPassProduct.passProduct passProduct
-            JOIN FETCH passProduct.passProductClassTypes passProductClassType
-            JOIN FETCH passProductClassType.classType
-            WHERE memberPassProduct.id = :memberPassProductId
-              AND memberPassProduct.membership.id = :membershipId
+            JOIN memberPassProduct.passProduct passProduct
+            JOIN passProduct.passProductClassTypes passProductClassType
+            WHERE memberPassProduct.membership.id = :membershipId
               AND passProduct.studio.id = :studioId
+            ORDER BY memberPassProduct.id, passProductClassType.classType.id
             """)
-    Optional<MemberPassProduct> findOwnedWithProductAndClassTypes(
-            @Param("memberPassProductId") Long memberPassProductId,
+    List<MemberPassProductClassTypeProjection> findAllOwnedWithClassTypeIds(
             @Param("membershipId") Long membershipId,
             @Param("studioId") Long studioId
     );

@@ -1,6 +1,8 @@
 package com.classitda.classes.application.student.daily;
 
 import com.classitda.classes.application.student.StudentSessionAccessReader;
+import com.classitda.classes.application.student.pass.StudentOwnedPasses;
+import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import java.time.Clock;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class StudentDailyQueryService {
 
     private final StudentSessionAccessReader accessReader;
+    private final StudentOwnedPassesReader ownedPassesReader;
     private final StudentDailyScheduleReader scheduleReader;
     private final StudentDailySessionAssembler assembler;
     private final Clock clock;
@@ -30,11 +33,17 @@ public class StudentDailyQueryService {
         LocalDateTime now = LocalDateTime.now(clock);
 
         Long membershipId = accessReader.readMembershipId(memberId, studioId);
+        StudentOwnedPasses ownedPasses = ownedPassesReader.read(membershipId, studioId);
+        List<Long> classTypeIds = ownedPasses.coveredClassTypeIdsOn(date);
+        if (classTypeIds.isEmpty()) {
+            return List.of();
+        }
 
         StudentDailySchedule schedule = scheduleReader.read(
                 studioId,
                 membershipId,
                 date,
+                classTypeIds,
                 date.isBefore(now.toLocalDate())
         );
         if (schedule.isEmpty()) {

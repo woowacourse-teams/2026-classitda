@@ -2,6 +2,8 @@ package com.classitda.classes.domain.repository;
 
 import com.classitda.classes.domain.Waiting;
 import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
+import com.classitda.classes.domain.repository.projection.StudentWaitingCalendarEventProjection;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -39,5 +41,34 @@ public interface WaitingRepository extends JpaRepository<Waiting, Long> {
     List<WaitingSummaryProjection> findSummaries(
             @Param("classSessionIds") List<Long> classSessionIds,
             @Param("membershipId") Long membershipId
+    );
+
+    @Query("""
+            SELECT waiting.classSession.id AS classSessionId,
+                   classType.id AS classTypeId,
+                   waiting.classSession.startAt AS startAt,
+                   waiting.classSession.endAt AS endAt
+            FROM Waiting waiting,
+                 ClassSessionClassType classSessionClassType,
+                 ClassType classType
+            WHERE classSessionClassType.classSessionId = waiting.classSession.id
+              AND classType.id = classSessionClassType.classTypeId
+              AND waiting.membership.id = :membershipId
+              AND waiting.classSession.studioId = :studioId
+              AND classType.studio.id = :studioId
+              AND waiting.classSession.startAt >= :rangeStart
+              AND waiting.classSession.startAt < :rangeEnd
+              AND waiting.classSession.status <>
+                  com.classitda.classes.domain.ClassSessionStatus.CANCELED
+              AND waiting.status = com.classitda.classes.domain.WaitingStatus.WAITING
+            ORDER BY waiting.classSession.startAt ASC,
+                     waiting.classSession.id ASC,
+                     classType.id ASC
+            """)
+    List<StudentWaitingCalendarEventProjection> findCalendarEventsForStudent(
+            @Param("studioId") Long studioId,
+            @Param("membershipId") Long membershipId,
+            @Param("rangeStart") LocalDateTime rangeStart,
+            @Param("rangeEnd") LocalDateTime rangeEnd
     );
 }
