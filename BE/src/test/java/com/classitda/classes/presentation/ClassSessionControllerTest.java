@@ -331,7 +331,7 @@ class ClassSessionControllerTest {
                     "waitingCount": 2,
                     "startAt": "2026-08-17T20:00:00",
                     "endAt": "2026-08-17T21:00:00",
-                    "status": "SCHEDULED_OPEN",
+                    "status": "SCHEDULED_BOOKING_OPEN",
                     "mine": true
                   }
                 ]
@@ -887,7 +887,7 @@ class ClassSessionControllerTest {
                 2,
                 LocalDateTime.of(2026, 8, 17, 20, 0),
                 LocalDateTime.of(2026, 8, 17, 21, 0),
-                InstructorSessionStatus.SCHEDULED_OPEN,
+                InstructorSessionStatus.SCHEDULED_BOOKING_OPEN,
                 true
         );
     }

@@ -216,7 +216,7 @@ class InstructorDailyQueryServiceTest {
                 1,
                 QUERY_DATE.atTime(11, 0),
                 QUERY_DATE.atTime(12, 0),
-                InstructorSessionStatus.SCHEDULED_OPEN,
+                InstructorSessionStatus.SCHEDULED_BOOKING_OPEN,
                 false
         ));
         assertThat(responses)

@@ -449,7 +449,7 @@ public interface ClassSessionControllerApi {
 
                     ### 집계 기준
 
-                    - SCHEDULED_OPEN 또는 SCHEDULED_CLOSED 수업이 하나 이상 있으면 scheduled가 true입니다.
+                    - SCHEDULED_BOOKING_OPEN 또는 SCHEDULED_BOOKING_CLOSED 수업이 하나 이상 있으면 scheduled가 true입니다.
                     - COMPLETED 수업이 하나 이상 있으면 completed가 true입니다.
                     - IN_PROGRESS와 CANCELED는 응답에서 제외합니다.
                     - mineScheduled와 mineCompleted는 요청자가 담당하는 수업이 하나 이상 있을 때 true입니다.

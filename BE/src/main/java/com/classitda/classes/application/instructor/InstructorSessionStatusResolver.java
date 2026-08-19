@@ -25,8 +25,8 @@ public class InstructorSessionStatusResolver {
         }
         if (sessionStatus == ClassSessionStatus.CLOSED
                 || !now.isBefore(startAt.minusMinutes(reservationCloseMinutesBefore))) {
-            return InstructorSessionStatus.SCHEDULED_CLOSED;
+            return InstructorSessionStatus.SCHEDULED_BOOKING_CLOSED;
         }
-        return InstructorSessionStatus.SCHEDULED_OPEN;
+        return InstructorSessionStatus.SCHEDULED_BOOKING_OPEN;
     }
 }

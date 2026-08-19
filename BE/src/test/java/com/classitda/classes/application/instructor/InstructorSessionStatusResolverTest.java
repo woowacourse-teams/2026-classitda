@@ -65,28 +65,28 @@ class InstructorSessionStatusResolverTest {
                         NOW.plusHours(1),
                         NOW.plusHours(2),
                         30,
-                        InstructorSessionStatus.SCHEDULED_OPEN
+                        InstructorSessionStatus.SCHEDULED_BOOKING_OPEN
                 ),
                 Arguments.of(
                         ClassSessionStatus.CLOSED,
                         NOW.plusHours(1),
                         NOW.plusHours(2),
                         30,
-                        InstructorSessionStatus.SCHEDULED_CLOSED
+                        InstructorSessionStatus.SCHEDULED_BOOKING_CLOSED
                 ),
                 Arguments.of(
                         ClassSessionStatus.OPENED,
                         NOW.plusMinutes(30),
                         NOW.plusHours(1),
                         30,
-                        InstructorSessionStatus.SCHEDULED_CLOSED
+                        InstructorSessionStatus.SCHEDULED_BOOKING_CLOSED
                 ),
                 Arguments.of(
                         ClassSessionStatus.OPENED,
                         NOW.plusMinutes(31),
                         NOW.plusHours(1),
                         30,
-                        InstructorSessionStatus.SCHEDULED_OPEN
+                        InstructorSessionStatus.SCHEDULED_BOOKING_OPEN
                 )
         );
     }

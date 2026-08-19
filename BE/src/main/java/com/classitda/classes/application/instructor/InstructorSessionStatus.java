@@ -1,9 +1,21 @@
 package com.classitda.classes.application.instructor;
 
+import com.classitda.classes.domain.BookingWindow;
+import com.classitda.classes.domain.SessionPhase;
+
 public enum InstructorSessionStatus {
-    SCHEDULED_OPEN,
-    SCHEDULED_CLOSED,
+    SCHEDULED_BOOKING_OPEN,
+    SCHEDULED_BOOKING_CLOSED,
     IN_PROGRESS,
     COMPLETED,
-    CANCELED
+    CANCELED;
+
+    public static InstructorSessionStatus from(SessionPhase phase, BookingWindow bookingWindow) {
+        return switch (phase) {
+            case SCHEDULED -> bookingWindow == BookingWindow.OPEN ? SCHEDULED_BOOKING_OPEN : SCHEDULED_BOOKING_CLOSED;
+            case IN_PROGRESS -> IN_PROGRESS;
+            case COMPLETED -> COMPLETED;
+            case CANCELED -> CANCELED;
+        };
+    }
 }
