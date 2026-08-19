@@ -85,9 +85,7 @@ public class Waiting extends BaseEntity {
 
     void expire(LocalDateTime occurredAt) {
         if (occurredAt == null) {
-            throw new ClassException(
-                    ClassErrorCode.WAITING_EXPIRATION_OCCURRED_AT_REQUIRED
-            );
+            throw new ClassException(ClassErrorCode.WAITING_EXPIRATION_OCCURRED_AT_REQUIRED);
         }
 
         requireActive();

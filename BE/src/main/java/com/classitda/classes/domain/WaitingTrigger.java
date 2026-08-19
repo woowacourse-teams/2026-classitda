@@ -6,19 +6,14 @@ import java.time.LocalDateTime;
 
 public sealed interface WaitingTrigger {
 
-    record OfferIssued(
-            LocalDateTime offeredAt,
-            LocalDateTime offerExpiresAt
-    ) implements WaitingTrigger {
+    record OfferIssued(LocalDateTime offeredAt, LocalDateTime offerExpiresAt) implements WaitingTrigger {
 
         public OfferIssued {
             if (offeredAt == null) {
                 throw new ClassException(ClassErrorCode.WAITING_OFFERED_AT_REQUIRED);
             }
             if (offerExpiresAt == null) {
-                throw new ClassException(
-                        ClassErrorCode.WAITING_OFFER_EXPIRES_AT_REQUIRED
-                );
+                throw new ClassException(ClassErrorCode.WAITING_OFFER_EXPIRES_AT_REQUIRED);
             }
         }
     }
@@ -36,9 +31,7 @@ public sealed interface WaitingTrigger {
 
         public ExpirationReached {
             if (occurredAt == null) {
-                throw new ClassException(
-                        ClassErrorCode.WAITING_EXPIRATION_OCCURRED_AT_REQUIRED
-                );
+                throw new ClassException(ClassErrorCode.WAITING_EXPIRATION_OCCURRED_AT_REQUIRED);
             }
         }
     }
