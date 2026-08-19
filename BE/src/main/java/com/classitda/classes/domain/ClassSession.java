@@ -68,6 +68,8 @@ public class ClassSession extends BaseEntity {
     @Column(nullable = false, length = 20)
     private ClassSessionStatus status;
 
+    private LocalDateTime canceledAt;
+
     @Builder
     private ClassSession(
             Long studioId,
@@ -100,7 +102,7 @@ public class ClassSession extends BaseEntity {
         if (now == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_CURRENT_TIME_REQUIRED);
         }
-        if (status == ClassSessionStatus.CANCELED) {
+        if (isCanceled()) {
             return SessionPhase.CANCELED;
         }
         if (!now.isBefore(endAt)) {
@@ -110,6 +112,25 @@ public class ClassSession extends BaseEntity {
             return SessionPhase.IN_PROGRESS;
         }
         return SessionPhase.SCHEDULED;
+    }
+
+    public void cancel(LocalDateTime occurredAt) {
+        if (occurredAt == null) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_CANCEL_OCCURRED_AT_REQUIRED);
+        }
+        if (isCanceled()) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_ALREADY_CANCELED);
+        }
+        if (!occurredAt.isBefore(startAt)) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_ALREADY_STARTED);
+        }
+
+        status = ClassSessionStatus.CANCELED;
+        canceledAt = occurredAt;
+    }
+
+    public boolean isCanceled() {
+        return canceledAt != null || status == ClassSessionStatus.CANCELED;
     }
 
     public void updateDetails(
@@ -159,7 +180,7 @@ public class ClassSession extends BaseEntity {
     }
 
     private void validateUpdatable() {
-        if (status == ClassSessionStatus.CANCELED) {
+        if (isCanceled()) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_CANCELED);
         }
     }

@@ -392,6 +392,77 @@ class ClassSessionTest {
     }
 
     @Test
+    void 수업을_취소하면_취소_시각을_기록한다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        LocalDateTime canceledAt = classSession.getStartAt().minusMinutes(10);
+
+        // when
+        classSession.cancel(canceledAt);
+
+        // then
+        assertThat(classSession.getCanceledAt()).isEqualTo(canceledAt);
+        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.CANCELED);
+        assertThat(classSession.isCanceled()).isTrue();
+        assertThat(classSession.phaseAt(canceledAt)).isEqualTo(SessionPhase.CANCELED);
+    }
+
+    @Test
+    void 수업_취소_시각은_필수다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+
+        // when / then
+        assertClassError(() -> classSession.cancel(null), ClassErrorCode.CLASS_SESSION_CANCEL_OCCURRED_AT_REQUIRED);
+        assertThat(classSession.getCanceledAt()).isNull();
+        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.OPENED);
+    }
+
+    @Test
+    void 이미_취소된_수업은_다시_취소할_수_없다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        LocalDateTime originalCanceledAt = classSession.getStartAt().minusMinutes(10);
+        classSession.cancel(originalCanceledAt);
+
+        // when / then
+        assertClassError(() -> classSession.cancel(originalCanceledAt.plusMinutes(1)), ClassErrorCode.CLASS_SESSION_ALREADY_CANCELED);
+        assertThat(classSession.getCanceledAt()).isEqualTo(originalCanceledAt);
+        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.CANCELED);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 30, 60})
+    void 수업_시작_시각부터는_취소할_수_없다(int minutesAfterStart) {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        LocalDateTime occurredAt = classSession.getStartAt().plusMinutes(minutesAfterStart);
+
+        // when / then
+        assertClassError(() -> classSession.cancel(occurredAt), ClassErrorCode.CLASS_SESSION_ALREADY_STARTED);
+        assertThat(classSession.getCanceledAt()).isNull();
+        assertThat(classSession.getStatus()).isEqualTo(ClassSessionStatus.OPENED);
+    }
+
+    @Test
+    void 취소_시각이_기록된_수업은_상세_정보를_수정할_수_없다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        classSession.cancel(classSession.getStartAt().minusMinutes(10));
+
+        // when / then
+        assertClassError(() -> classSession.updateDetails(
+                "아침 요가",
+                null,
+                ClassForm.INDIVIDUAL,
+                30,
+                1,
+                LocalDateTime.of(2026, 8, 18, 9, 0)
+        ), ClassErrorCode.CLASS_SESSION_CANCELED);
+        assertThat(classSession.getName()).isEqualTo("저녁 요가");
+    }
+
+    @Test
     void 수업_회차와_양수_수업_종류_ID로_연결을_생성할_수_있다() {
         // given
         Long classSessionId = 1L;
