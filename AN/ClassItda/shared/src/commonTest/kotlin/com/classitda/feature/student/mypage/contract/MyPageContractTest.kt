@@ -86,6 +86,24 @@ class MyPageContractTest {
     }
 
     @Test
+    fun `전화번호 변경 action은 닫기 요청 코드 변경 완료를 서로 다르게 구분한다`() {
+        val codeAction = PhoneNumberChangeAction.VerificationCodeChanged("123456")
+        val actions =
+            setOf(
+                PhoneNumberChangeAction.Back,
+                PhoneNumberChangeAction.RequestVerification,
+                codeAction,
+                PhoneNumberChangeAction.Complete,
+            )
+
+        assertEquals(4, actions.size)
+        assertEquals("123456", codeAction.verificationCode)
+        assertIs<PhoneNumberChangeAction.Back>(PhoneNumberChangeAction.Back)
+        assertIs<PhoneNumberChangeAction.RequestVerification>(PhoneNumberChangeAction.RequestVerification)
+        assertIs<PhoneNumberChangeAction.Complete>(PhoneNumberChangeAction.Complete)
+    }
+
+    @Test
     fun `저장 중과 저장 실패는 ProfileEditUiState의 배타적인 상태다`() {
         assertIs<ProfileEditUiState.Saving>(
             ProfileEditUiState.Saving(
