@@ -93,6 +93,20 @@ public class Waiting extends BaseEntity {
         endedAt = occurredAt;
     }
 
+    void accept(LocalDateTime occurredAt) {
+        if (occurredAt == null) {
+            throw new ClassException(ClassErrorCode.WAITING_ACCEPTANCE_OCCURRED_AT_REQUIRED);
+        }
+
+        requireOffered();
+        if (offerExpiresAt == null || !occurredAt.isBefore(offerExpiresAt)) {
+            throw new ClassException(ClassErrorCode.WAITING_OFFER_EXPIRED);
+        }
+
+        status = WaitingStatus.ACCEPTED;
+        endedAt = occurredAt;
+    }
+
     private void requireWaiting() {
         if (status != WaitingStatus.WAITING) {
             throw new ClassException(ClassErrorCode.INVALID_WAITING_TRANSITION);
@@ -101,6 +115,12 @@ public class Waiting extends BaseEntity {
 
     private void requireActive() {
         if (status != WaitingStatus.WAITING && status != WaitingStatus.OFFERED) {
+            throw new ClassException(ClassErrorCode.INVALID_WAITING_TRANSITION);
+        }
+    }
+
+    private void requireOffered() {
+        if (status != WaitingStatus.OFFERED) {
             throw new ClassException(ClassErrorCode.INVALID_WAITING_TRANSITION);
         }
     }

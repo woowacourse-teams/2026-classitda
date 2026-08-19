@@ -366,7 +366,7 @@ CREATE TABLE waiting
     class_session_id BIGINT      NOT NULL,
     sequence         INT         NOT NULL,
     status           VARCHAR(20) NOT NULL,
-    active_flag      TINYINT GENERATED ALWAYS AS (IF(status IN ('CANCELED', 'EXPIRED'), NULL, 1)) STORED,
+    active_flag      TINYINT GENERATED ALWAYS AS (IF(status IN ('WAITING', 'OFFERED'), 1, NULL)) STORED,
     offered_at       DATETIME(6) NULL,
     offer_expires_at DATETIME(6) NULL,
     ended_at         DATETIME(6) NULL,

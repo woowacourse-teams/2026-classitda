@@ -35,4 +35,13 @@ public sealed interface WaitingTrigger {
             }
         }
     }
+
+    record OfferAccepted(LocalDateTime occurredAt) implements WaitingTrigger {
+
+        public OfferAccepted {
+            if (occurredAt == null) {
+                throw new ClassException(ClassErrorCode.WAITING_ACCEPTANCE_OCCURRED_AT_REQUIRED);
+            }
+        }
+    }
 }

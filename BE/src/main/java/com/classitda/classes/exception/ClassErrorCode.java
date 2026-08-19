@@ -100,6 +100,16 @@ public enum ClassErrorCode implements ErrorCode {
             "WAITING-006",
             "대기 만료 시각은 필수입니다.",
             HttpStatus.BAD_REQUEST
+    ),
+    WAITING_ACCEPTANCE_OCCURRED_AT_REQUIRED(
+            "WAITING-007",
+            "대기 제안 수락 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    WAITING_OFFER_EXPIRED(
+            "WAITING-008",
+            "대기 제안이 만료되어 수락할 수 없습니다.",
+            HttpStatus.CONFLICT
     );
 
     private final String code;

@@ -18,6 +18,7 @@ class WaitingTest {
     private static final LocalDateTime OFFER_EXPIRES_AT = OFFERED_AT.plusMinutes(10);
     private static final LocalDateTime CANCELED_AT = OFFERED_AT.plusMinutes(5);
     private static final LocalDateTime EXPIRED_AT = OFFER_EXPIRES_AT;
+    private static final LocalDateTime ACCEPTED_AT = OFFERED_AT.plusMinutes(5);
 
     @Test
     void 대기_중인_회원에게_제안하면_상태와_제안_기한을_함께_변경한다() {
@@ -234,6 +235,72 @@ class WaitingTest {
         assertThat(waiting.getEndedAt()).isNull();
     }
 
+    @Test
+    void 제안을_수락하면_상태와_종료_시각을_함께_변경한다() {
+        // given
+        Waiting waiting = 대기(WaitingStatus.OFFERED, OFFERED_AT, OFFER_EXPIRES_AT);
+
+        // when
+        waiting.accept(ACCEPTED_AT);
+
+        // then
+        assertThat(waiting.getStatus()).isEqualTo(WaitingStatus.ACCEPTED);
+        assertThat(waiting.getEndedAt()).isEqualTo(ACCEPTED_AT);
+        assertThat(waiting.getOfferedAt()).isEqualTo(OFFERED_AT);
+        assertThat(waiting.getOfferExpiresAt()).isEqualTo(OFFER_EXPIRES_AT);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = WaitingStatus.class, names = {"WAITING", "ACCEPTED", "EXPIRED", "CANCELED"})
+    void 제안_중이_아닌_대기는_수락할_수_없다(WaitingStatus currentStatus) {
+        // given
+        LocalDateTime originalEndedAt = currentStatus == WaitingStatus.WAITING
+                ? null
+                : ACCEPTED_AT.minusMinutes(1);
+        Waiting waiting = Waiting.builder()
+                .status(currentStatus)
+                .sequence(1)
+                .endedAt(originalEndedAt)
+                .build();
+
+        // when / then
+        assertThatThrownBy(() -> waiting.accept(ACCEPTED_AT))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(ClassErrorCode.INVALID_WAITING_TRANSITION));
+        assertThat(waiting.getStatus()).isEqualTo(currentStatus);
+        assertThat(waiting.getEndedAt()).isEqualTo(originalEndedAt);
+    }
+
+    @Test
+    void 제안_수락_시각은_필수다() {
+        // given
+        Waiting waiting = 대기(WaitingStatus.OFFERED, OFFERED_AT, OFFER_EXPIRES_AT);
+
+        // when / then
+        assertThatThrownBy(() -> waiting.accept(null))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(ClassErrorCode.WAITING_ACCEPTANCE_OCCURRED_AT_REQUIRED));
+        assertThat(waiting.getStatus()).isEqualTo(WaitingStatus.OFFERED);
+        assertThat(waiting.getEndedAt()).isNull();
+    }
+
+    @ParameterizedTest
+    @MethodSource("수락할_수_없는_시각")
+    void 제안_만료_시각부터는_수락할_수_없다(LocalDateTime invalidAcceptedAt) {
+        // given
+        Waiting waiting = 대기(WaitingStatus.OFFERED, OFFERED_AT, OFFER_EXPIRES_AT);
+
+        // when / then
+        assertThatThrownBy(() -> waiting.accept(invalidAcceptedAt))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(ClassErrorCode.WAITING_OFFER_EXPIRED));
+        assertThat(waiting.getStatus()).isEqualTo(WaitingStatus.OFFERED);
+        assertThat(waiting.getEndedAt()).isNull();
+    }
+
     private Waiting 대기(
             WaitingStatus status,
             LocalDateTime offeredAt,
@@ -249,5 +316,9 @@ class WaitingTest {
 
     private static Stream<LocalDateTime> 유효하지_않은_제안_만료_시각() {
         return Stream.of(OFFERED_AT.minusNanos(1), OFFERED_AT);
+    }
+
+    private static Stream<LocalDateTime> 수락할_수_없는_시각() {
+        return Stream.of(OFFER_EXPIRES_AT, OFFER_EXPIRES_AT.plusNanos(1));
     }
 }

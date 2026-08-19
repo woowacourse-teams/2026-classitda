@@ -14,6 +14,7 @@ class WaitingStateMachineTest {
     private static final LocalDateTime OFFER_EXPIRES_AT = OFFERED_AT.plusMinutes(10);
     private static final LocalDateTime CANCELED_AT = OFFERED_AT.plusMinutes(5);
     private static final LocalDateTime EXPIRED_AT = OFFER_EXPIRES_AT;
+    private static final LocalDateTime ACCEPTED_AT = OFFERED_AT.plusMinutes(5);
 
     private final WaitingStateMachine stateMachine = new WaitingStateMachine();
 
@@ -115,10 +116,42 @@ class WaitingStateMachineTest {
                                 .isEqualTo(ClassErrorCode.WAITING_EXPIRATION_OCCURRED_AT_REQUIRED));
     }
 
+    @Test
+    void 제안_수락_트리거를_대기_수락_전이로_연결한다() {
+        // given
+        Waiting waiting = 제안_중인_대기();
+        WaitingTrigger trigger = new WaitingTrigger.OfferAccepted(ACCEPTED_AT);
+
+        // when
+        stateMachine.handle(waiting, trigger);
+
+        // then
+        assertThat(waiting.getStatus()).isEqualTo(WaitingStatus.ACCEPTED);
+        assertThat(waiting.getEndedAt()).isEqualTo(ACCEPTED_AT);
+    }
+
+    @Test
+    void 제안_수락_트리거의_발생_시각은_필수다() {
+        // when / then
+        assertThatThrownBy(() -> new WaitingTrigger.OfferAccepted(null))
+                .isInstanceOfSatisfying(ClassException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(ClassErrorCode.WAITING_ACCEPTANCE_OCCURRED_AT_REQUIRED));
+    }
+
     private Waiting 대기() {
         return Waiting.builder()
                 .status(WaitingStatus.WAITING)
                 .sequence(1)
+                .build();
+    }
+
+    private Waiting 제안_중인_대기() {
+        return Waiting.builder()
+                .status(WaitingStatus.OFFERED)
+                .sequence(1)
+                .offeredAt(OFFERED_AT)
+                .offerExpiresAt(OFFER_EXPIRES_AT)
                 .build();
     }
 }

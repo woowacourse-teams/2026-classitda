@@ -17,6 +17,8 @@ public final class WaitingStateMachine {
                     waiting.cancel(cancelRequested.occurredAt());
             case WaitingTrigger.ExpirationReached expirationReached ->
                     waiting.expire(expirationReached.occurredAt());
+            case WaitingTrigger.OfferAccepted offerAccepted ->
+                    waiting.accept(offerAccepted.occurredAt());
         }
     }
 }
