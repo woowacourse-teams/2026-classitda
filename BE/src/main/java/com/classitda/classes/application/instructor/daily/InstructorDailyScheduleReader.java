@@ -67,7 +67,7 @@ public class InstructorDailyScheduleReader {
                 .orElseThrow(() -> new StudioException(StudioErrorCode.POLICY_NOT_FOUND));
 
         List<Long> classSessionIds = classSessions.stream()
-                .map(ClassSessionDailyProjection::getClassSessionId)
+                .map(classSession -> classSession.getSession().getId())
                 .toList();
 
         Map<Long, ReservationSummaryProjection> reservationSummaries = reservationRepository

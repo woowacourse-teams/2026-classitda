@@ -49,9 +49,9 @@ public class StudentDailyScheduleReader {
                 attendanceHistoryOnly
         ).stream()
                 .filter(classSession -> ownedPasses.covers(
-                        classSession.getClassForm(),
+                        classSession.getSession().getClassForm(),
                         classSession.getClassTypeId(),
-                        classSession.getStartAt().toLocalDate()
+                        classSession.getSession().getStartAt().toLocalDate()
                 ))
                 .toList();
 
@@ -79,7 +79,7 @@ public class StudentDailyScheduleReader {
                 .orElseThrow(() -> new StudioException(StudioErrorCode.POLICY_NOT_FOUND));
 
         List<Long> classSessionIds = classSessions.stream()
-                .map(ClassSessionDailyProjection::getClassSessionId)
+                .map(classSession -> classSession.getSession().getId())
                 .toList();
 
         Map<Long, ReservationSummaryProjection> reservationSummaries = reservationRepository

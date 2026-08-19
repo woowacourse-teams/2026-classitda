@@ -29,18 +29,11 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     );
 
     @Query("""
-            SELECT DISTINCT classSession.id AS classSessionId,
+            SELECT DISTINCT classSession AS session,
                    classSession.instructorMembership.id AS instructorMembershipId,
                    classSession.instructorMembership.member.name AS instructorName,
-                   classSession.classForm AS classForm,
                    classType.id AS classTypeId,
-                   classType.name AS classTypeName,
-                   classSession.name AS className,
-                   classSession.description AS description,
-                   classSession.capacity AS capacity,
-                   classSession.startAt AS startAt,
-                   classSession.endAt AS endAt,
-                   classSession.status AS sessionStatus
+                   classType.name AS classTypeName
             FROM ClassSession classSession,
                  ClassSessionClassType classSessionClassType,
                  ClassType classType
@@ -78,18 +71,11 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     );
 
     @Query("""
-            SELECT classSession.id AS classSessionId,
+            SELECT classSession AS session,
                    classSession.instructorMembership.id AS instructorMembershipId,
                    classSession.instructorMembership.member.name AS instructorName,
-                   classSession.classForm AS classForm,
                    classType.id AS classTypeId,
-                   classType.name AS classTypeName,
-                   classSession.name AS className,
-                   classSession.description AS description,
-                   classSession.capacity AS capacity,
-                   classSession.startAt AS startAt,
-                   classSession.endAt AS endAt,
-                   classSession.status AS sessionStatus
+                   classType.name AS classTypeName
             FROM ClassSession classSession,
                  ClassSessionClassType classSessionClassType,
                  ClassType classType

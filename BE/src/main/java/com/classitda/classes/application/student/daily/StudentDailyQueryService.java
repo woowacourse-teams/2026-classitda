@@ -59,8 +59,8 @@ public class StudentDailyQueryService {
         return schedule.classSessions().stream()
                 .map(classSession -> assembler.assemble(
                         classSession,
-                        schedule.reservationSummary(classSession.getClassSessionId()),
-                        schedule.waitingSummary(classSession.getClassSessionId()),
+                        schedule.reservationSummary(classSession.getSession().getId()),
+                        schedule.waitingSummary(classSession.getSession().getId()),
                         schedule.reservationCloseMinutesBefore(),
                         now
                 ))

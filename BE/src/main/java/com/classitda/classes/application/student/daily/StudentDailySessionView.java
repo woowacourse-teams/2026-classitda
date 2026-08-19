@@ -2,6 +2,7 @@ package com.classitda.classes.application.student.daily;
 
 import com.classitda.classes.application.student.StudentBookingStatus;
 import com.classitda.classes.domain.ClassForm;
+import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import java.time.LocalDateTime;
 
@@ -30,21 +31,22 @@ public record StudentDailySessionView(
             long waitingCount,
             StudentBookingStatus bookingStatus
     ) {
+        ClassSession session = classSession.getSession();
         return new StudentDailySessionView(
-                classSession.getClassSessionId(),
+                session.getId(),
                 classSession.getInstructorMembershipId(),
                 classSession.getInstructorName(),
-                classSession.getClassForm(),
+                session.getClassForm(),
                 classSession.getClassTypeId(),
                 classSession.getClassTypeName(),
-                classSession.getClassName(),
-                classSession.getDescription(),
-                classSession.getCapacity(),
+                session.getName(),
+                session.getDescription(),
+                session.getCapacity(),
                 reservedCount,
                 remainingCapacity,
                 waitingCount,
-                classSession.getStartAt(),
-                classSession.getEndAt(),
+                session.getStartAt(),
+                session.getEndAt(),
                 bookingStatus
         );
     }

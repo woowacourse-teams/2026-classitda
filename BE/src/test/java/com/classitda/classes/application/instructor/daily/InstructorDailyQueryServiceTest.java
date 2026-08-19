@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
-import com.classitda.classes.application.instructor.InstructorSessionStatusResolver;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionStatus;
@@ -60,7 +59,6 @@ import org.springframework.test.context.TestPropertySource;
         InstructorSessionAccessReader.class,
         InstructorDailyScheduleReader.class,
         InstructorDailySessionAssembler.class,
-        InstructorSessionStatusResolver.class,
         InstructorDailyQueryServiceTest.FixedClockConfig.class
 })
 @MySqlRepositoryTest

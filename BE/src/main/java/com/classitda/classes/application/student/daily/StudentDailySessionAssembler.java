@@ -5,6 +5,7 @@ import com.classitda.classes.application.student.StudentBookingContext.Reservati
 import com.classitda.classes.application.student.StudentBookingContext.WaitingCounts;
 import com.classitda.classes.application.student.StudentBookingStatus;
 import com.classitda.classes.application.student.StudentBookingStatusResolver;
+import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
 import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
@@ -25,15 +26,16 @@ public class StudentDailySessionAssembler {
             int reservationCloseMinutesBefore,
             LocalDateTime now
     ) {
+        ClassSession session = classSession.getSession();
         ReservationCounts reservation = toReservationCounts(reservationSummary);
         WaitingCounts waiting = toWaitingCounts(waitingSummary);
         long remainingCapacity = Math.max(
-                (long) classSession.getCapacity() - reservation.totalCount(), 0
+                (long) session.getCapacity() - reservation.totalCount(), 0
         );
 
         StudentBookingContext bookingContext = new StudentBookingContext(
-                classSession.getSessionStatus(),
-                classSession.getStartAt(),
+                session.getStatus(),
+                session.getStartAt(),
                 reservation,
                 waiting,
                 reservationCloseMinutesBefore,

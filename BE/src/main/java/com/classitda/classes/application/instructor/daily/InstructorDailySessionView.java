@@ -2,6 +2,7 @@ package com.classitda.classes.application.instructor.daily;
 
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.domain.ClassForm;
+import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
 import java.time.LocalDateTime;
 
@@ -30,20 +31,21 @@ public record InstructorDailySessionView(
             InstructorSessionStatus status,
             boolean mine
     ) {
+        ClassSession session = classSession.getSession();
         return new InstructorDailySessionView(
-                classSession.getClassSessionId(),
+                session.getId(),
                 classSession.getInstructorMembershipId(),
                 classSession.getInstructorName(),
-                classSession.getClassForm(),
+                session.getClassForm(),
                 classSession.getClassTypeId(),
                 classSession.getClassTypeName(),
-                classSession.getClassName(),
-                classSession.getDescription(),
-                classSession.getCapacity(),
+                session.getName(),
+                session.getDescription(),
+                session.getCapacity(),
                 reservedCount,
                 waitingCount,
-                classSession.getStartAt(),
-                classSession.getEndAt(),
+                session.getStartAt(),
+                session.getEndAt(),
                 status,
                 mine
         );
