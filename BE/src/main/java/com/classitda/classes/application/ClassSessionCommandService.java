@@ -2,6 +2,7 @@ package com.classitda.classes.application;
 
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
+import com.classitda.classes.domain.ClassSessionDatePlan;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTemplateRepository;
@@ -18,13 +19,9 @@ import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.domain.repository.StudioRolePermissionRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,7 +56,13 @@ public class ClassSessionCommandService {
         validateTemplate(studioId, request.classTemplateId());
         validateClassType(studioId, request.classTypeId());
 
-        List<LocalDate> sessionDates = resolveSessionDates(request);
+        List<LocalDate> sessionDates = ClassSessionDatePlan.of(
+                request.recurring(),
+                request.classDate(),
+                request.recurringDays(),
+                request.repeatStartDate(),
+                request.repeatEndDate()
+        ).dates();
         List<ClassSession> classSessions = createClassSessions(
                 studioId,
                 instructorMembership,
@@ -144,78 +147,6 @@ public class ClassSessionCommandService {
     private void validateClassType(Long studioId, Long classTypeId) {
         classTypeRepository.findByIdAndStudioId(classTypeId, studioId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
-    }
-
-    private List<LocalDate> resolveSessionDates(ClassSessionCreateRequest request) {
-        if (request.recurring() == null) {
-            throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_RECURRENCE);
-        }
-
-        if (request.recurring()) {
-            return resolveRecurringDates(request);
-        }
-
-        return resolveSingleDate(request);
-    }
-
-    private List<LocalDate> resolveSingleDate(ClassSessionCreateRequest request) {
-        if (request.classDate() == null
-                || request.recurringDays() != null
-                || request.repeatStartDate() != null
-                || request.repeatEndDate() != null) {
-            throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_RECURRENCE);
-        }
-
-        return List.of(request.classDate());
-    }
-
-    private List<LocalDate> resolveRecurringDates(ClassSessionCreateRequest request) {
-        if (request.classDate() != null) {
-            throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_RECURRENCE);
-        }
-
-        List<DayOfWeek> recurringDays = request.recurringDays();
-        validateRecurringDays(recurringDays);
-        validateRepeatPeriod(request.repeatStartDate(), request.repeatEndDate());
-
-        Set<DayOfWeek> selectedDays = new HashSet<>(recurringDays);
-        List<LocalDate> sessionDates = new ArrayList<>();
-        LocalDate currentDate = request.repeatStartDate();
-
-        while (true) {
-            if (selectedDays.contains(currentDate.getDayOfWeek())) {
-                sessionDates.add(currentDate);
-            }
-
-            if (currentDate.equals(request.repeatEndDate())) {
-                break;
-            }
-
-            currentDate = currentDate.plusDays(1);
-        }
-
-        if (sessionDates.isEmpty()) {
-            throw new ClassException(ClassErrorCode.CLASS_SESSION_DATES_EMPTY);
-        }
-
-        return sessionDates;
-    }
-
-    private void validateRecurringDays(List<DayOfWeek> recurringDays) {
-        if (recurringDays == null
-                || recurringDays.isEmpty()
-                || recurringDays.stream().anyMatch(dayOfWeek -> dayOfWeek == null)
-                || new HashSet<>(recurringDays).size() != recurringDays.size()) {
-            throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_RECURRING_DAYS);
-        }
-    }
-
-    private void validateRepeatPeriod(LocalDate repeatStartDate, LocalDate repeatEndDate) {
-        if (repeatStartDate == null
-                || repeatEndDate == null
-                || repeatStartDate.isAfter(repeatEndDate)) {
-            throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_REPEAT_PERIOD);
-        }
     }
 
     private List<ClassSession> createClassSessions(
