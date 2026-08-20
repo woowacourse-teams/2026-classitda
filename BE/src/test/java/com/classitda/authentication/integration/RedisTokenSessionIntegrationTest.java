@@ -63,7 +63,7 @@ import tools.jackson.databind.ObjectMapper;
 class RedisTokenSessionIntegrationTest {
 
     private static final Duration SIGNUP_TTL = Duration.ofMinutes(30);
-    private static final Duration ACCESS_TTL = Duration.ofMinutes(15);
+    private static final Duration ACCESS_TTL = Duration.ofHours(1);
     private static final Duration REFRESH_TTL = Duration.ofDays(30);
     private static final long REFRESH_TTL_SECONDS = 2_592_000L;
     private static final String REFRESH_KEY_PREFIX = "auth:refresh:";
@@ -194,7 +194,7 @@ class RedisTokenSessionIntegrationTest {
         Jwt accessJwt = accessDecoder().decode(issued.accessToken());
 
         // then
-        assertThat(issued.accessTokenExpiresIn()).isEqualTo(900L);
+        assertThat(issued.accessTokenExpiresIn()).isEqualTo(3_600L);
         assertThat(issued.refreshTokenExpiresIn()).isEqualTo(REFRESH_TTL_SECONDS);
         assertAccessClaims(accessJwt, 42L);
         String key = refreshKey(issued.refreshToken());
@@ -208,7 +208,7 @@ class RedisTokenSessionIntegrationTest {
     }
 
     @Test
-    void 정상_갱신은_기존_session을_소비하고_새_30일_session과_15분_JWT를_만든다() throws Exception {
+    void 정상_갱신은_기존_session을_소비하고_새_30일_session과_1시간_JWT를_만든다() throws Exception {
         // given
         IssuedLoginTokens loginTokens = loginTokenIssuer.issueLoginTokens(42L);
         String oldKey = refreshKey(loginTokens.refreshToken());
@@ -221,7 +221,7 @@ class RedisTokenSessionIntegrationTest {
 
         // then
         long afterExpiry = Instant.now().plusSeconds(REFRESH_TTL_SECONDS).getEpochSecond();
-        assertThat(response.accessTokenExpiresIn()).isEqualTo(900L);
+        assertThat(response.accessTokenExpiresIn()).isEqualTo(3_600L);
         assertThat(response.refreshTokenExpiresIn()).isEqualTo(REFRESH_TTL_SECONDS);
         assertThat(response.refreshToken())
                 .matches("^[A-Za-z0-9_-]{43}\\.[A-Za-z0-9_-]{43}$")

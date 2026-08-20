@@ -134,7 +134,7 @@ class AuthControllerTest {
         // given
         GoogleLoginRequest request = GoogleLoginRequest.from(ID_TOKEN);
         LoginResponse response = LoginResponse.registered(
-                IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L));
+                IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L));
         given(socialLoginService.loginWithGoogle(request)).willReturn(response);
 
         // when
@@ -151,7 +151,7 @@ class AuthControllerTest {
                         {
                           "status": "REGISTERED",
                           "accessToken": "access-token",
-                          "accessTokenExpiresIn": 900,
+                          "accessTokenExpiresIn": 3600,
                           "refreshToken": "refresh-token",
                           "refreshTokenExpiresIn": 2592000
                         }
@@ -205,7 +205,7 @@ class AuthControllerTest {
         // given
         RefreshTokenRequest request = RefreshTokenRequest.from(REFRESH_TOKEN);
         LoginTokenResponse response = LoginTokenResponse.of(
-                IssuedAccessToken.of("access-token", 900L),
+                IssuedAccessToken.of("access-token", 3_600L),
                 IssuedRefreshToken.of(
                         ROTATED_REFRESH_TOKEN,
                         "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
@@ -224,7 +224,7 @@ class AuthControllerTest {
                 .json("""
                         {
                           "accessToken": "access-token",
-                          "accessTokenExpiresIn": 900,
+                          "accessTokenExpiresIn": 3600,
                           "refreshToken": "%s",
                           "refreshTokenExpiresIn": 2592000
                         }
@@ -746,7 +746,7 @@ class AuthControllerTest {
         // given
         SignupRequest request = SignupRequest.of("홍길동", List.of(1L, 2L));
         SignupResponse response = SignupResponse.from(
-                IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L)
+                IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L)
         );
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
         given(signupService.complete("signup-jti", request)).willReturn(response);
@@ -760,7 +760,7 @@ class AuthControllerTest {
                 .json("""
                         {
                           "accessToken": "access-token",
-                          "accessTokenExpiresIn": 900,
+                          "accessTokenExpiresIn": 3600,
                           "refreshToken": "refresh-token",
                           "refreshTokenExpiresIn": 2592000
                         }
@@ -773,7 +773,7 @@ class AuthControllerTest {
         // given
         SignupRequest expectedRequest = SignupRequest.of("홍길동", List.of(1L, 2L));
         SignupResponse response = SignupResponse.from(
-                IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L)
+                IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L)
         );
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("server-jti", TokenUse.SIGNUP));
         given(signupService.complete("server-jti", expectedRequest)).willReturn(response);

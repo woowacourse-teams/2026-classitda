@@ -64,7 +64,7 @@ class RefreshTokenServiceTest {
     void setUp() {
         TokenProperties tokenProperties = new TokenProperties(
                 Duration.ofMinutes(30),
-                Duration.ofMinutes(15),
+                Duration.ofHours(1),
                 Duration.ofDays(30)
         );
         refreshTokenService = new RefreshTokenService(
@@ -83,7 +83,7 @@ class RefreshTokenServiceTest {
         IssuedRefreshToken generated = generatedRefreshToken();
         givenValidOldSession(oldSession);
         given(loginTokenIssuer.issueAccessToken(MEMBER_ID))
-                .willReturn(IssuedAccessToken.of("access-token", 900L));
+                .willReturn(IssuedAccessToken.of("access-token", 3_600L));
         given(refreshTokenIssuer.issue()).willReturn(generated);
         given(refreshSessionStore.rotate(
                 org.mockito.ArgumentMatchers.eq(OLD_SESSION_ID),
@@ -100,7 +100,7 @@ class RefreshTokenServiceTest {
         // then
         long after = Instant.now().plusSeconds(REFRESH_TTL_SECONDS).getEpochSecond();
         assertThat(response.accessToken()).isEqualTo("access-token");
-        assertThat(response.accessTokenExpiresIn()).isEqualTo(900L);
+        assertThat(response.accessTokenExpiresIn()).isEqualTo(3_600L);
         assertThat(response.refreshToken()).isEqualTo(NEW_TOKEN);
         assertThat(response.refreshTokenExpiresIn()).isEqualTo(REFRESH_TTL_SECONDS);
         InOrder order = inOrder(refreshTokenVerifier, refreshSessionStore, loginTokenIssuer, refreshTokenIssuer);
@@ -213,7 +213,7 @@ class RefreshTokenServiceTest {
         RefreshSession oldSession = activeSession();
         givenValidOldSession(oldSession);
         given(loginTokenIssuer.issueAccessToken(MEMBER_ID))
-                .willReturn(IssuedAccessToken.of("sensitive-access-token", 900L));
+                .willReturn(IssuedAccessToken.of("sensitive-access-token", 3_600L));
         given(refreshTokenIssuer.issue()).willReturn(generatedRefreshToken());
         given(refreshSessionStore.rotate(
                 org.mockito.ArgumentMatchers.eq(OLD_SESSION_ID),
@@ -236,7 +236,7 @@ class RefreshTokenServiceTest {
         RefreshSession oldSession = activeSession();
         givenValidOldSession(oldSession);
         given(loginTokenIssuer.issueAccessToken(MEMBER_ID))
-                .willReturn(IssuedAccessToken.of("access-token", 900L));
+                .willReturn(IssuedAccessToken.of("access-token", 3_600L));
         given(refreshTokenIssuer.issue()).willReturn(generatedRefreshToken());
         given(refreshSessionStore.rotate(
                 org.mockito.ArgumentMatchers.eq(OLD_SESSION_ID),

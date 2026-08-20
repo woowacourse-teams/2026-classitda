@@ -41,7 +41,7 @@ curl -X POST http://localhost:8080/api/auth/local/members/1/tokens \
 ```json
 {
   "accessToken": "eyJhbGciOi...",
-  "accessTokenExpiresIn": 900,
+  "accessTokenExpiresIn": 3600,
   "refreshToken": "eyJhbGciOi...",
   "refreshTokenExpiresIn": 2592000
 }

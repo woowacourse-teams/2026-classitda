@@ -295,7 +295,7 @@ class SignupServiceTest {
     }
 
     private IssuedLoginTokens issuedTokens() {
-        return IssuedLoginTokens.of("access-token-sensitive", 900L, "refresh-token-sensitive", 2592000L);
+        return IssuedLoginTokens.of("access-token-sensitive", 3_600L, "refresh-token-sensitive", 2592000L);
     }
 
     private DataIntegrityViolationException dataIntegrityViolation() {

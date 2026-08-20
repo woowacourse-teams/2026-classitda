@@ -25,7 +25,7 @@ public interface LocalTokenControllerApi {
                     mediaType = "application/json",
                     schema = @Schema(implementation = LoginTokenResponse.class),
                     examples = @ExampleObject(
-                            value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":900,"
+                            value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":3600,"
                                     + "\"refreshToken\":\"refresh-token\","
                                     + "\"refreshTokenExpiresIn\":2592000}"
                     )

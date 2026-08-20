@@ -55,5 +55,5 @@ auth:
     public-key-base64: ${AUTH_JWT_PUBLIC_KEY_BASE64}
   token:
     signup-ttl: PT30M
-    access-ttl: PT15M
+    access-ttl: PT1H
     refresh-ttl: P30D
