@@ -336,50 +336,6 @@ CREATE TABLE member_pass_product
   DEFAULT CHARSET = utf8mb4;
 
 
-CREATE TABLE reservation
-(
-    id                     BIGINT      NOT NULL AUTO_INCREMENT,
-    membership_id          BIGINT      NOT NULL,
-    class_session_id       BIGINT      NOT NULL,
-    member_pass_product_id BIGINT      NULL,
-    status                 VARCHAR(20) NOT NULL,
-    active_flag            TINYINT GENERATED ALWAYS AS (IF(status = 'CANCELED', NULL, 1)) STORED,
-    reserved_at            DATETIME(6) NOT NULL,
-    canceled_at            DATETIME(6) NULL,
-    attended_at            DATETIME(6) NULL,
-    absent_at              DATETIME(6) NULL,
-    created_at             DATETIME(6) NOT NULL,
-    updated_at             DATETIME(6) NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_reservation_active (class_session_id, membership_id, active_flag),
-    CONSTRAINT fk_reservation_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
-    CONSTRAINT fk_reservation_session FOREIGN KEY (class_session_id) REFERENCES class_session (id),
-    CONSTRAINT fk_reservation_member_pass_product FOREIGN KEY (member_pass_product_id) REFERENCES member_pass_product (id)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
-
-
-CREATE TABLE waiting
-(
-    id               BIGINT      NOT NULL AUTO_INCREMENT,
-    membership_id    BIGINT      NOT NULL,
-    class_session_id BIGINT      NOT NULL,
-    sequence         INT         NOT NULL,
-    status           VARCHAR(20) NOT NULL,
-    active_flag      TINYINT GENERATED ALWAYS AS (IF(status IN ('WAITING', 'OFFERED'), 1, NULL)) STORED,
-    offered_at       DATETIME(6) NULL,
-    offer_expires_at DATETIME(6) NULL,
-    ended_at         DATETIME(6) NULL,
-    created_at       DATETIME(6) NOT NULL,
-    updated_at       DATETIME(6) NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_waiting_active (class_session_id, membership_id, active_flag),
-    CONSTRAINT fk_waiting_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
-    CONSTRAINT fk_waiting_session FOREIGN KEY (class_session_id) REFERENCES class_session (id)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
-
-
 CREATE TABLE class_session_enrollment
 (
     id                           BIGINT      NOT NULL AUTO_INCREMENT,

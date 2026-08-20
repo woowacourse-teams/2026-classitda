@@ -7,10 +7,6 @@ import com.classitda.classes.application.instructor.InstructorSessionAccessReade
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassType;
-import com.classitda.classes.domain.Reservation;
-import com.classitda.classes.domain.ReservationStatus;
-import com.classitda.classes.domain.Waiting;
-import com.classitda.classes.domain.WaitingStatus;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
@@ -160,14 +156,6 @@ class InstructorCalendarQueryServiceTest {
                 LocalDate.of(2026, 8, 20).atTime(10, 0)
         );
 
-        StudioMembership studentMembership = 소속을_저장한다(
-                studio,
-                회원을_저장한다("calendar-summary-student"),
-                SystemRole.STUDENT,
-                MembershipStatus.ACTIVE
-        );
-        예약을_저장한다(completedSession, studentMembership);
-        대기를_저장한다(completedSession, studentMembership);
         entityManager.flush();
         entityManager.clear();
         statistics.clear();
@@ -553,30 +541,6 @@ class InstructorCalendarQueryServiceTest {
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())
         );
         return classSession;
-    }
-
-    private void 예약을_저장한다(
-            ClassSession classSession,
-            StudioMembership membership
-    ) {
-        entityManager.persist(Reservation.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .status(ReservationStatus.RESERVED)
-                .reservedAt(NOW.minusDays(1))
-                .build());
-    }
-
-    private void 대기를_저장한다(
-            ClassSession classSession,
-            StudioMembership membership
-    ) {
-        entityManager.persist(Waiting.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .sequence(1)
-                .status(WaitingStatus.WAITING)
-                .build());
     }
 
     private static Stream<Arguments> 잘못된_조회_기간() {

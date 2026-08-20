@@ -7,11 +7,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassType;
-import com.classitda.classes.domain.Reservation;
-import com.classitda.classes.domain.ReservationStatus;
 import com.classitda.classes.domain.SessionPhase;
-import com.classitda.classes.domain.Waiting;
-import com.classitda.classes.domain.WaitingStatus;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
@@ -391,35 +387,6 @@ class ClassSessionQueryServiceTest {
         entityManager.persist(memberPassProduct);
         entityManager.flush();
         return memberPassProduct;
-    }
-
-    private void 예약을_저장한다(
-            ClassSession classSession,
-            StudioMembership membership,
-            ReservationStatus status
-    ) {
-        entityManager.persist(Reservation.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .status(status)
-                .reservedAt(NOW.minusDays(1))
-                .canceledAt(status == ReservationStatus.CANCELED ? NOW.minusHours(1) : null)
-                .build());
-    }
-
-    private void 대기를_저장한다(
-            ClassSession classSession,
-            StudioMembership membership,
-            int sequence,
-            WaitingStatus status
-    ) {
-        entityManager.persist(Waiting.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .sequence(sequence)
-                .status(status)
-                .offeredAt(status == WaitingStatus.OFFERED ? NOW.minusMinutes(5) : null)
-                .build());
     }
 
     private void assertStudioError(Runnable action, StudioErrorCode errorCode) {
