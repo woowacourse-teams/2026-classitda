@@ -52,6 +52,8 @@ jobs:
     timeout-minutes: 10
     environment: production
     steps:
+      - uses: actions/checkout@v4
+
       - name: cloudflared 설치
         env:
           CLOUDFLARED_VERSION: '2026.8.2'
@@ -89,6 +91,11 @@ jobs:
           CFG
           chmod 600 ~/.ssh/config
           ssh -o ConnectTimeout=30 target 'echo 터널 연결 확인'
+
+      - name: compose 파일 전송
+        run: |
+          set -eu
+          scp -F ~/.ssh/config BE/docker/compose.prod.yml target:/opt/classitda/compose.yml
 
       - name: .env 갱신
         env:
