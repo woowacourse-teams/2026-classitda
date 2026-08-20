@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +25,8 @@ public interface StudioControllerApi {
             description = """
                     새 시설을 만든다. 생성자는 해당 시설의 대표 강사로 등록되고,
                     시스템 기본 역할(대표 강사, 일반 강사, 회원)이 함께 생성된다.
-                    """
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "시설 생성 성공"),
@@ -64,7 +66,8 @@ public interface StudioControllerApi {
             summary = "내 시설 목록 조회",
             description = "로그인한 회원이 속한 시설을 id 오름차순으로 조회한다. "
                     + "로그인 후 시설을 고르는 화면에서 쓰이므로 별도 권한이 필요 없고, "
-                    + "개인이 속한 시설은 소수라 페이지네이션을 적용하지 않는다."
+                    + "개인이 속한 시설은 소수라 페이지네이션을 적용하지 않는다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(
@@ -140,7 +143,8 @@ public interface StudioControllerApi {
             description = """
                     시설의 기본 정보를 수정한다. 대표 강사만 수정할 수 있다.
                     전달한 필드만 변경되고, 보내지 않은 필드는 기존 값을 유지한다.
-                    """
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),

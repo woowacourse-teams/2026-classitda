@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
@@ -20,7 +21,8 @@ public interface RoomControllerApi {
 
     @Operation(
             summary = "룸 등록",
-            description = "시설에 룸을 등록한다. 대표 강사만 등록할 수 있고, 같은 시설 안에서 룸 이름은 중복될 수 없다."
+            description = "시설에 룸을 등록한다. 대표 강사만 등록할 수 있고, 같은 시설 안에서 룸 이름은 중복될 수 없다.",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "룸 등록 성공"),
@@ -139,7 +141,8 @@ public interface RoomControllerApi {
             description = """
                     룸의 이름을 수정한다. 대표 강사만 수정할 수 있다.
                     같은 시설 안에서 룸 이름은 중복될 수 없다.
-                    """
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),

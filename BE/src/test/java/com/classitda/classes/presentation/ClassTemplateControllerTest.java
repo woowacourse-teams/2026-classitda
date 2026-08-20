@@ -173,6 +173,42 @@ class ClassTemplateControllerTest {
     }
 
     @Test
+    void 등록_시작_시간에_초가_없으면_COMMON_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/studios/7/class-templates")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"name":"저녁 요가","classForm":"GROUP","durationMinutes":60,
+                        "startTime":"20:00","capacity":12,"classTypeIds":[1]}
+                        """)
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(commandService, never()).save(anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 수정_시작_시간에_초가_없으면_COMMON_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.put()
+                .uri("/api/studios/7/class-templates/11")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"name":"저녁 요가","classForm":"GROUP","durationMinutes":60,
+                        "startTime":"20:00","capacity":12,"classTypeIds":[1]}
+                        """)
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
     void 전체_수정의_필수값이_누락되면_COMMON_001을_반환하고_서비스를_호출하지_않는다() {
         // given
         List<ClassTemplateUpdateRequest> invalidRequests = List.of(
