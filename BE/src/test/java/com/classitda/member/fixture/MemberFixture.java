@@ -8,7 +8,7 @@ public final class MemberFixture {
     }
 
     public static Member 기본_회원() {
-        return 회원("회원", "+821012345678");
+        return 회원("회원", "01012345678");
     }
 
     public static Member 회원(String name, String phoneNumber) {

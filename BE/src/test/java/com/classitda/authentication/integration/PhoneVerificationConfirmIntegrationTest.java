@@ -188,7 +188,7 @@ class PhoneVerificationConfirmIntegrationTest {
     }
 
     private String phoneNumber(int suffix) {
-        return "+8210%08d".formatted(10_000_000 + suffix);
+        return "010%08d".formatted(10_000_000 + suffix);
     }
 
 }

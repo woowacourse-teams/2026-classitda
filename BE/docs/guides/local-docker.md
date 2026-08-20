@@ -61,7 +61,7 @@ curl http://localhost:8080/api/studios/me \
 
 - **모든 API는 `X-API-Version: 1` 헤더가 필요합니다.** 빠뜨리면 `API-001` 오류가 납니다.
 - 휴대전화 인증은 실제 SMS를 보내지 않습니다. 인증번호는 `docker/.env`의 `AUTH_SMS_LOCAL_FIXED_OTP` 값(기본 `123456`)으로 고정되어 있습니다.
-- 전화번호는 `+8210XXXXXXXX` 형식이어야 합니다.
+- 전화번호는 `010XXXXXXXX` 형식이어야 합니다.
 
 ## 회원가입 플로우를 테스트하려면
 

@@ -299,11 +299,11 @@ public interface AuthControllerApi {
             security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @RequestBody(
                     required = true,
-                    description = "+8210으로 시작하는 canonical 휴대전화 번호",
+                    description = "010으로 시작하는 숫자 11자리 휴대전화 번호",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = PhoneVerificationSendRequest.class),
-                            examples = @ExampleObject(value = "{\"phoneNumber\":\"+821012345678\"}")
+                            examples = @ExampleObject(value = "{\"phoneNumber\":\"01012345678\"}")
                     )
             )
     )

@@ -40,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 @MySqlRepositoryTest
 class SignupAccountCreatorTest {
 
-    private static final String PHONE_NUMBER = "+821012345678";
+    private static final String PHONE_NUMBER = "01012345678";
     private static final SignupSession SESSION = new SignupSession(
             OauthProvider.GOOGLE,
             "server-provider-subject",
@@ -279,10 +279,10 @@ class SignupAccountCreatorTest {
     void MySQL_소셜계정_unique_제약은_중복_계정을_거부한다() {
         // given
         Member firstMember = memberRepository.saveAndFlush(
-                MemberFixture.회원("첫회원", "+821033333333")
+                MemberFixture.회원("첫회원", "01033333333")
         );
         Member secondMember = memberRepository.saveAndFlush(
-                MemberFixture.회원("둘째회원", "+821044444444")
+                MemberFixture.회원("둘째회원", "01044444444")
         );
         authAccountRepository.saveAndFlush(AuthAccountFixture.인증_계정(
                 firstMember.getId(),

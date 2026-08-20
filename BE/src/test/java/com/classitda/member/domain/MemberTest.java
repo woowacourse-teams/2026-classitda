@@ -16,7 +16,7 @@ class MemberTest {
         String name = "가".repeat(50);
 
         // when
-        Member member = MemberFixture.회원(name, "+821012345678");
+        Member member = MemberFixture.회원(name, "01012345678");
 
         // then
         assertThat(member.getName()).isEqualTo(name);
@@ -30,12 +30,12 @@ class MemberTest {
         // when / then
         for (String invalidName : invalidNames) {
             assertMemberError(
-                    () -> MemberFixture.회원(invalidName, "+821012345678"),
+                    () -> MemberFixture.회원(invalidName, "01012345678"),
                     MemberErrorCode.MEMBER_NAME_REQUIRED
             );
         }
         assertMemberError(
-                () -> MemberFixture.회원(null, "+821012345678"),
+                () -> MemberFixture.회원(null, "01012345678"),
                 MemberErrorCode.MEMBER_NAME_REQUIRED
         );
     }
@@ -47,15 +47,15 @@ class MemberTest {
 
         // when / then
         assertMemberError(
-                () -> MemberFixture.회원(name, "+821012345678"),
+                () -> MemberFixture.회원(name, "01012345678"),
                 MemberErrorCode.MEMBER_NAME_TOO_LONG
         );
     }
 
     @Test
-    void 회원_휴대전화_번호는_canonical_E164_형식이어야_한다() {
+    void 회원_휴대전화_번호는_010으로_시작하는_숫자_11자리여야_한다() {
         // given
-        String[] invalidPhoneNumbers = {"01012345678", "+8210-1234-5678", "+12025550123"};
+        String[] invalidPhoneNumbers = {"01112345678", "0101234567", "010-1234-5678", "+821012345678"};
 
         // when / then
         for (String invalidPhoneNumber : invalidPhoneNumbers) {

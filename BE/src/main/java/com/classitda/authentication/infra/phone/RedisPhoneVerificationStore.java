@@ -22,7 +22,7 @@ public class RedisPhoneVerificationStore implements PhoneVerificationStore {
     private static final String COOLDOWN_KEY_PREFIX = "signup:phone-cooldown:";
     private static final String VERIFIED_PHONE_KEY_PREFIX = "signup:verified-phone:";
 
-    private static final Pattern CANONICAL_PHONE_NUMBER_PATTERN = Pattern.compile("^\\+8210[0-9]{8}$");
+    private static final Pattern CANONICAL_PHONE_NUMBER_PATTERN = Pattern.compile("^010[0-9]{8}$");
     private static final Pattern OTP_DIGEST_PATTERN = Pattern.compile("^[0-9a-f]{64}$");
 
     private static final RedisScript<Long> SAVE_IF_COOLDOWN_EXPIRED_SCRIPT =

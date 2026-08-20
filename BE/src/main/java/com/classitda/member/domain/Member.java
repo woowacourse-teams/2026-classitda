@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Entity
 public class Member extends BaseEntity {
 
-    private static final String CANONICAL_PHONE_NUMBER_PATTERN = "^\\+8210[0-9]{8}$";
+    private static final String CANONICAL_PHONE_NUMBER_PATTERN = "^010[0-9]{8}$";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
