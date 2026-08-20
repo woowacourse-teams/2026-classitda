@@ -7,6 +7,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withAccepted;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 
@@ -88,7 +89,21 @@ class NcpSensSmsSenderTest {
     }
 
     @Test
-    void NCP_SENS가_오류를_응답하면_문자_발송_실패로_변환한다() {
+    void NCP_SENS가_4xx를_응답하면_문자_발송_실패로_변환한다() {
+        // given
+        server.expect(requestTo(REQUEST_URL))
+                .andRespond(withBadRequest());
+
+        // when
+        Throwable exception = catchThrowable(() -> smsSender.send(RECEIVER_NUMBER, OTP));
+
+        // then
+        assertDeliveryFailed(exception);
+        server.verify();
+    }
+
+    @Test
+    void NCP_SENS가_5xx를_응답하면_문자_발송_실패로_변환한다() {
         // given
         server.expect(requestTo(REQUEST_URL))
                 .andRespond(withServerError());
