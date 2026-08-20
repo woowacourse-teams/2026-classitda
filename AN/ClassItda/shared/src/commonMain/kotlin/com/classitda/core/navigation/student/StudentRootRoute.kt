@@ -18,7 +18,7 @@ import com.classitda.core.navigation.reservation.ReservationNavHost
 import com.classitda.feature.student.StudentBottomTab
 import com.classitda.feature.student.StudentTab
 import com.classitda.feature.student.home.HomeScreen
-import com.classitda.feature.student.mypage.MyPassFlowRoute
+import com.classitda.feature.student.mypage.MyPageDemoNavHost
 import com.classitda.feature.student.myschedule.MyScheduleFlowRoute
 
 @Composable
@@ -61,13 +61,11 @@ fun StudentRootRoute(modifier: Modifier = Modifier) {
 //        }
 
         StudentTab.MYPage -> {
-            Box(modifier = Modifier.fillMaxSize().background(StuColors.Surface)) {
-                MyPassFlowRoute(
-                    modifier = modifier,
-                    onNavigateUp = { selectedTab = StudentTab.HOME },
-                    bottomBar = bottomBar,
-                )
-            }
+            MyPageDemoNavHost(
+                onExternalAction = {},
+                onTabSelected = { selectedTab = it },
+                modifier = modifier,
+            )
         }
     }
 }
