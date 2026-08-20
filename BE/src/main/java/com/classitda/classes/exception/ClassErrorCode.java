@@ -113,6 +113,60 @@ public enum ClassErrorCode implements ErrorCode {
             "WAITING-008",
             "대기 제안이 만료되어 수락할 수 없습니다.",
             HttpStatus.CONFLICT
+    ),
+
+    // CLASS SESSION ENROLLMENT
+    INVALID_ENROLLMENT_TRANSITION(
+            "CLASS_SESSION_ENROLLMENT-001",
+            "현재 수업 신청 상태에서는 요청한 상태 전이를 수행할 수 없습니다.",
+            HttpStatus.CONFLICT
+    ),
+    ENROLLMENT_MEMBERSHIP_REQUIRED(
+            "CLASS_SESSION_ENROLLMENT-002",
+            "수업 신청 회원 소속은 필수입니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    ENROLLMENT_CLASS_SESSION_REQUIRED(
+            "CLASS_SESSION_ENROLLMENT-003",
+            "수업 신청 회차는 필수입니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    ENROLLMENT_MEMBER_PASS_PRODUCT_REQUIRED(
+            "CLASS_SESSION_ENROLLMENT-004",
+            "예약 확정에 사용할 수강권은 필수입니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    ENROLLMENT_OCCURRED_AT_REQUIRED(
+            "CLASS_SESSION_ENROLLMENT-005",
+            "수업 신청 상태 변경 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    ENROLLMENT_OFFER_EXPIRES_AT_REQUIRED(
+            "CLASS_SESSION_ENROLLMENT-006",
+            "대기 제안 만료 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    INVALID_ENROLLMENT_OFFER_DEADLINE(
+            "CLASS_SESSION_ENROLLMENT-007",
+            "대기 제안 만료 시각은 제안 시각 이후여야 합니다.",
+            HttpStatus.BAD_REQUEST
+    ),
+    ENROLLMENT_OFFER_EXPIRED(
+            "CLASS_SESSION_ENROLLMENT-008",
+            "대기 제안이 만료되어 수락할 수 없습니다.",
+            HttpStatus.CONFLICT
+    ),
+
+    // ATTENDANCE
+    INVALID_ATTENDANCE_TRANSITION(
+            "ATTENDANCE-001",
+            "현재 출결 상태에서는 요청한 출결 변경을 수행할 수 없습니다.",
+            HttpStatus.CONFLICT
+    ),
+    ATTENDANCE_OCCURRED_AT_REQUIRED(
+            "ATTENDANCE-002",
+            "출결 처리 시각은 필수입니다.",
+            HttpStatus.BAD_REQUEST
     );
 
     private final String code;

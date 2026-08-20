@@ -380,6 +380,63 @@ CREATE TABLE waiting
   DEFAULT CHARSET = utf8mb4;
 
 
+CREATE TABLE class_session_enrollment
+(
+    id                           BIGINT      NOT NULL AUTO_INCREMENT,
+    membership_id                BIGINT      NOT NULL,
+    class_session_id             BIGINT      NOT NULL,
+    member_pass_product_id       BIGINT      NULL,
+    enrollment_status            VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    enrollment_status_changed_at DATETIME(6) NOT NULL,
+    offer_expires_at              DATETIME(6) NULL,
+    attendance_result             VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    attendance_recorded_at        DATETIME(6) NULL,
+    active_flag                   TINYINT GENERATED ALWAYS AS (
+        IF(enrollment_status IN ('WAITING', 'OFFERED', 'RESERVED'), 1, NULL)
+        ) STORED,
+    created_at                    DATETIME(6) NOT NULL,
+    updated_at                    DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_enrollment_active (class_session_id, membership_id, active_flag),
+    KEY idx_enrollment_queue (class_session_id, enrollment_status, enrollment_status_changed_at, id),
+    KEY idx_enrollment_offer_expiry (enrollment_status, offer_expires_at, id),
+    CONSTRAINT fk_enrollment_membership
+        FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
+    CONSTRAINT fk_enrollment_session
+        FOREIGN KEY (class_session_id) REFERENCES class_session (id),
+    CONSTRAINT fk_enrollment_member_pass_product
+        FOREIGN KEY (member_pass_product_id) REFERENCES member_pass_product (id),
+    CONSTRAINT chk_enrollment_status
+        CHECK (enrollment_status IN ('WAITING', 'OFFERED', 'RESERVED', 'CANCELED', 'EXPIRED')),
+    CONSTRAINT chk_enrollment_offer
+        CHECK (
+            (enrollment_status = 'OFFERED'
+                AND offer_expires_at IS NOT NULL
+                AND offer_expires_at > enrollment_status_changed_at)
+            OR (enrollment_status <> 'OFFERED' AND offer_expires_at IS NULL)
+        ),
+    CONSTRAINT chk_enrollment_pass
+        CHECK (
+            (enrollment_status IN ('WAITING', 'OFFERED', 'EXPIRED')
+                AND member_pass_product_id IS NULL)
+            OR (enrollment_status = 'RESERVED'
+                AND member_pass_product_id IS NOT NULL)
+            OR enrollment_status = 'CANCELED'
+        ),
+    CONSTRAINT chk_enrollment_attendance_result
+        CHECK (attendance_result IN ('NOT_RECORDED', 'ATTENDED', 'ABSENT')),
+    CONSTRAINT chk_enrollment_attendance_recorded_at
+        CHECK (
+            (attendance_result = 'NOT_RECORDED' AND attendance_recorded_at IS NULL)
+            OR (attendance_result IN ('ATTENDED', 'ABSENT')
+                AND attendance_recorded_at IS NOT NULL)
+        ),
+    CONSTRAINT chk_enrollment_attendance_status
+        CHECK (attendance_result = 'NOT_RECORDED' OR enrollment_status = 'RESERVED')
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
 CREATE TABLE notice
 (
     id                   BIGINT       NOT NULL AUTO_INCREMENT,
