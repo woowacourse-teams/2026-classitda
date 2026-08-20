@@ -3,7 +3,7 @@ name: BE DEV CD
 on:
   push:
     branches:
-      - be/dev
+      - main
     paths:
       - 'BE/**'
       - '.github/workflows/be-dev-deploy.yml'
