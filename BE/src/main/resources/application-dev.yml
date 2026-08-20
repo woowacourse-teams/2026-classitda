@@ -17,7 +17,7 @@ spring:
         enabled: ${REDIS_SSL:false}
   sql:
     init:
-      mode: always
+      mode: never
       data-locations: classpath:dev-data.sql
 
 auth:
