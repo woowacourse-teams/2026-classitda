@@ -85,7 +85,7 @@ class StudioMembershipServiceTest {
     @Test
     void 가입하지_않은_사람을_등록하면_회원과_소속을_함께_만든다() {
         // given
-        Member owner = 회원을_저장한다("membership-owner", "+821011110001");
+        Member owner = 회원을_저장한다("membership-owner", "01011110001");
         Studio studio = 시설을_만든다(owner);
         // when
         studioMembershipService.saveStudent(
@@ -106,7 +106,7 @@ class StudioMembershipServiceTest {
     @Test
     void 이미_가입한_사람을_등록하면_회원을_재사용하고_소속만_만든다() {
         // given
-        Member owner = 회원을_저장한다("registered-owner", "+821011110002");
+        Member owner = 회원을_저장한다("registered-owner", "01011110002");
         Studio studio = 시설을_만든다(owner);
         Member registered = 가입한_회원을_저장한다("registered-member", StudioMembershipFixture.기본_전화번호);
         long memberCountBefore = memberRepository.count();
@@ -126,7 +126,7 @@ class StudioMembershipServiceTest {
     @Test
     void 다른_시설이_먼저_등록한_번호는_회원을_재사용하고_등록한_이름을_그대로_쓴다() {
         // given
-        Member owner = 회원을_저장한다("shared-owner", "+821011110003");
+        Member owner = 회원을_저장한다("shared-owner", "01011110003");
         Studio firstStudio = 시설을_만든다(owner);
         Studio secondStudio = 시설을_만든다(owner);
         studioMembershipService.saveStudent(owner.getId(), firstStudio.getId(),
@@ -153,7 +153,7 @@ class StudioMembershipServiceTest {
     @Test
     void 같은_시설에_같은_번호를_다시_등록하면_MEMBERSHIP_004가_발생한다() {
         // given
-        Member owner = 회원을_저장한다("duplicate-owner", "+821011110004");
+        Member owner = 회원을_저장한다("duplicate-owner", "01011110004");
         Studio studio = 시설을_만든다(owner);
         studioMembershipService.saveStudent(
                 owner.getId(), studio.getId(), StudioMembershipFixture.기본_소속_등록_요청());
@@ -169,7 +169,7 @@ class StudioMembershipServiceTest {
     @Test
     void 강사로_등록하면_강사_역할이_붙는다() {
         // given
-        Member owner = 회원을_저장한다("instructor-role-owner", "+821011110005");
+        Member owner = 회원을_저장한다("instructor-role-owner", "01011110005");
         Studio studio = 시설을_만든다(owner);
 
         // when
@@ -189,9 +189,9 @@ class StudioMembershipServiceTest {
     @Test
     void 초대_권한만_있으면_강사를_등록할_수_없다() {
         // given
-        Member owner = 회원을_저장한다("invite-only-owner", "+821011110008");
+        Member owner = 회원을_저장한다("invite-only-owner", "01011110008");
         Studio studio = 시설을_만든다(owner);
-        Member inviter = 소속을_만든다(studio, "inviter", "+821011110009", SystemRole.INSTRUCTOR);
+        Member inviter = 소속을_만든다(studio, "inviter", "01011110009", SystemRole.INSTRUCTOR);
         권한을_부여한다(studio, SystemRole.INSTRUCTOR, PermissionCode.MEMBER_INVITE);
         // when / then
         assertThatThrownBy(() -> studioMembershipService.saveInstructor(
@@ -204,9 +204,9 @@ class StudioMembershipServiceTest {
     @Test
     void 초대_권한만_있어도_회원은_등록할_수_있다() {
         // given
-        Member owner = 회원을_저장한다("invite-student-owner", "+821011110010");
+        Member owner = 회원을_저장한다("invite-student-owner", "01011110010");
         Studio studio = 시설을_만든다(owner);
-        Member inviter = 소속을_만든다(studio, "student-inviter", "+821011110011", SystemRole.INSTRUCTOR);
+        Member inviter = 소속을_만든다(studio, "student-inviter", "01011110011", SystemRole.INSTRUCTOR);
         권한을_부여한다(studio, SystemRole.INSTRUCTOR, PermissionCode.MEMBER_INVITE);
         // when
         studioMembershipService.saveStudent(
@@ -222,9 +222,9 @@ class StudioMembershipServiceTest {
     @Test
     void 권한이_없으면_소속을_등록할_수_없다() {
         // given
-        Member owner = 회원을_저장한다("denied-owner", "+821011110012");
+        Member owner = 회원을_저장한다("denied-owner", "01011110012");
         Studio studio = 시설을_만든다(owner);
-        Member instructor = 소속을_만든다(studio, "denied-instructor", "+821011110013", SystemRole.INSTRUCTOR);
+        Member instructor = 소속을_만든다(studio, "denied-instructor", "01011110013", SystemRole.INSTRUCTOR);
         // when / then
         assertThatThrownBy(() -> studioMembershipService.saveStudent(
                 instructor.getId(), studio.getId(), StudioMembershipFixture.기본_소속_등록_요청()))
@@ -235,7 +235,7 @@ class StudioMembershipServiceTest {
     @Test
     void 없는_시설에는_소속을_등록할_수_없다() {
         // given
-        Member owner = 회원을_저장한다("missing-studio-owner", "+821011110014");
+        Member owner = 회원을_저장한다("missing-studio-owner", "01011110014");
 
         // when / then
         assertThatThrownBy(() -> studioMembershipService.saveStudent(
@@ -247,15 +247,15 @@ class StudioMembershipServiceTest {
     @Test
     void 회원_목록을_아이디_오름차순으로_조회하고_다른_시설은_제외한다() {
         // given
-        Member owner = 회원을_저장한다("list-owner", "+821011110015");
+        Member owner = 회원을_저장한다("list-owner", "01011110015");
         Studio studio = 시설을_만든다(owner);
         Studio otherStudio = 시설을_만든다(owner);
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("첫째", "+821022220001"));
+                StudioMembershipFixture.소속_등록_요청("첫째", "01022220001"));
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("둘째", "+821022220002"));
+                StudioMembershipFixture.소속_등록_요청("둘째", "01022220002"));
         studioMembershipService.saveStudent(owner.getId(), otherStudio.getId(),
-                StudioMembershipFixture.소속_등록_요청("다른시설", "+821022220003"));
+                StudioMembershipFixture.소속_등록_요청("다른시설", "01022220003"));
         entityManager.flush();
         entityManager.clear();
 
@@ -274,14 +274,14 @@ class StudioMembershipServiceTest {
     @Test
     void 회원_목록이_커서로_끊기면_다음_커서를_반환한다() {
         // given
-        Member owner = 회원을_저장한다("cursor-owner", "+821011110016");
+        Member owner = 회원을_저장한다("cursor-owner", "01011110016");
         Studio studio = 시설을_만든다(owner);
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("첫째", "+821033330001"));
+                StudioMembershipFixture.소속_등록_요청("첫째", "01033330001"));
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("둘째", "+821033330002"));
+                StudioMembershipFixture.소속_등록_요청("둘째", "01033330002"));
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("셋째", "+821033330003"));
+                StudioMembershipFixture.소속_등록_요청("셋째", "01033330003"));
         entityManager.flush();
         entityManager.clear();
 
@@ -307,13 +307,13 @@ class StudioMembershipServiceTest {
     @Test
     void 소속_목록은_앱_가입_여부를_함께_반환한다() {
         // given
-        Member owner = 회원을_저장한다("registered-list-owner", "+821011110017");
+        Member owner = 회원을_저장한다("registered-list-owner", "01011110017");
         Studio studio = 시설을_만든다(owner);
-        가입한_회원을_저장한다("app-user", "+821044440001");
+        가입한_회원을_저장한다("app-user", "01044440001");
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("앱사용", "+821044440001"));
+                StudioMembershipFixture.소속_등록_요청("앱사용", "01044440001"));
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("미가입", "+821044440002"));
+                StudioMembershipFixture.소속_등록_요청("미가입", "01044440002"));
         entityManager.flush();
         entityManager.clear();
 
@@ -330,12 +330,12 @@ class StudioMembershipServiceTest {
     @Test
     void 회원_목록과_강사_목록이_서로_섞이지_않는다() {
         // given
-        Member owner = 회원을_저장한다("split-list-owner", "+821011110023");
+        Member owner = 회원을_저장한다("split-list-owner", "01011110023");
         Studio studio = 시설을_만든다(owner);
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("수강생", "+821055550001"));
+                StudioMembershipFixture.소속_등록_요청("수강생", "01055550001"));
         studioMembershipService.saveInstructor(owner.getId(), studio.getId(),
-                StudioMembershipFixture.소속_등록_요청("강사", "+821055550002"));
+                StudioMembershipFixture.소속_등록_요청("강사", "01055550002"));
         entityManager.flush();
         entityManager.clear();
 
@@ -359,7 +359,7 @@ class StudioMembershipServiceTest {
     @Test
     void 소속_단건을_조회한다() {
         // given
-        Member owner = 회원을_저장한다("find-one-owner", "+821011110018");
+        Member owner = 회원을_저장한다("find-one-owner", "01011110018");
         Studio studio = 시설을_만든다(owner);
         studioMembershipService.saveStudent(owner.getId(), studio.getId(),
                 StudioMembershipFixture.기본_소속_등록_요청());
@@ -380,7 +380,7 @@ class StudioMembershipServiceTest {
     @Test
     void 다른_시설의_소속을_조회하면_MEMBERSHIP_005가_발생한다() {
         // given
-        Member owner = 회원을_저장한다("cross-find-owner", "+821011110019");
+        Member owner = 회원을_저장한다("cross-find-owner", "01011110019");
         Studio studio = 시설을_만든다(owner);
         Studio otherStudio = 시설을_만든다(owner);
         studioMembershipService.saveStudent(owner.getId(), otherStudio.getId(),

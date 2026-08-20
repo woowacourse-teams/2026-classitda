@@ -90,7 +90,7 @@ class SignupCompletionIntegrationTest {
     @Test
     void 인증된_가입_요청은_계정을_만들고_가입_상태를_소비한다() {
         // given
-        String phoneNumber = "+821012345678";
+        String phoneNumber = "01012345678";
         VerifiedSignup signup = verifiedSignup(phoneNumber);
 
         // when

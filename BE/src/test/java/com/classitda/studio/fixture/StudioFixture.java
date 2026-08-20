@@ -20,7 +20,7 @@ public class StudioFixture {
     public static Member 아이디가_다른_소유자(String providerId) {
         return Member.builder()
                 .name("김강사-" + providerId)
-                .phoneNumber("+8210%08d".formatted(MEMBER_SEQUENCE.getAndIncrement()))
+                .phoneNumber("010%08d".formatted(MEMBER_SEQUENCE.getAndIncrement()))
                 .build();
     }
 

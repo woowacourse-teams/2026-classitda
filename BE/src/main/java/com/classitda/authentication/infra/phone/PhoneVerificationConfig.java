@@ -1,10 +1,7 @@
 package com.classitda.authentication.infra.phone;
 
 import com.classitda.authentication.application.phone.OtpGenerator;
-import com.classitda.authentication.application.phone.SmsSender;
-import com.classitda.authentication.infra.sms.LocalNoopSmsSender;
 import com.classitda.authentication.infra.sms.SmsProperties;
-import com.classitda.authentication.infra.sms.UnavailableSmsSender;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Locale;
@@ -49,24 +46,12 @@ public class PhoneVerificationConfig {
 
     @Profile("local")
     @Bean
-    public SmsSender localSmsSender() {
-        return new LocalNoopSmsSender();
-    }
-
-    @Profile("local")
-    @Bean
     public OtpGenerator localOtpGenerator(SmsProperties properties) {
         String fixedOtp = properties.fixedOtp();
         if (fixedOtp == null || !FIXED_OTP_PATTERN.matcher(fixedOtp).matches()) {
             throw new IllegalArgumentException("local SMS 고정 인증번호는 숫자 6자리여야 합니다.");
         }
         return properties::fixedOtp;
-    }
-
-    @Profile("!local")
-    @Bean
-    public SmsSender unavailableSmsSender() {
-        return new UnavailableSmsSender();
     }
 
     @Profile("!local")

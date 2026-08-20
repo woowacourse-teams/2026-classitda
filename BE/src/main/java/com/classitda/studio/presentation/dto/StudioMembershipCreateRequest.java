@@ -10,7 +10,7 @@ public record StudioMembershipCreateRequest(
         String name,
 
         @NotBlank(message = "전화번호는 필수입니다.")
-        @Pattern(regexp = "^\\+8210[0-9]{8}$", message = "전화번호 형식이 올바르지 않습니다.")
+        @Pattern(regexp = "^010[0-9]{8}$", message = "전화번호 형식이 올바르지 않습니다.")
         String phoneNumber
 ) {
     public static StudioMembershipCreateRequest of(String name, String phoneNumber) {

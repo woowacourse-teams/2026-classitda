@@ -11,15 +11,16 @@ spring:
     redis:
       repositories:
         enabled: false
+  http:
+    clients:
+      connect-timeout: 3s
+      read-timeout: 5s
 
 springdoc:
   api-docs:
     enabled: true
   swagger-ui:
     enabled: true
-    default-model-rendering: model
-    default-model-expand-depth: 2
-    default-models-expand-depth: -1
 
 logging:
   level:
@@ -44,10 +45,15 @@ auth:
   sms:
     local:
       fixed-otp: ${AUTH_SMS_LOCAL_FIXED_OTP:}
+    sens:
+      service-id: ${NCP_SENS_SERVICE_ID:}
+      access-key: ${NCP_SENS_ACCESS_KEY:}
+      secret-key: ${NCP_SENS_SECRET_KEY:}
+      sender-number: ${NCP_SENS_SENDER_NUMBER:}
   jwt:
     private-key-base64: ${AUTH_JWT_PRIVATE_KEY_BASE64}
     public-key-base64: ${AUTH_JWT_PUBLIC_KEY_BASE64}
   token:
     signup-ttl: PT30M
-    access-ttl: PT15M
+    access-ttl: PT1H
     refresh-ttl: P30D

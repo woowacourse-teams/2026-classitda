@@ -5,13 +5,13 @@ import java.time.ZoneId;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public class TimeConfig {
 
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
+    private static final ZoneId KOREA_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     @Bean
     public Clock clock() {
-        return Clock.system(SERVICE_ZONE_ID);
+        return Clock.system(KOREA_ZONE_ID);
     }
 }

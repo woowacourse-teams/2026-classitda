@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 public enum MemberErrorCode implements ErrorCode {
 
     MEMBER_NAME_REQUIRED("MEMBER-001", "회원 이름은 필수입니다.", HttpStatus.BAD_REQUEST),
-    MEMBER_PHONE_NUMBER_INVALID("MEMBER-002", "휴대전화 번호는 +8210으로 시작하는 E.164 형식이어야 합니다.", HttpStatus.BAD_REQUEST),
+    MEMBER_PHONE_NUMBER_INVALID("MEMBER-002", "휴대전화 번호는 010으로 시작하는 숫자 11자리여야 합니다.", HttpStatus.BAD_REQUEST),
     MEMBER_NAME_TOO_LONG("MEMBER-003", "회원 이름은 50자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
 
     REQUIRED_TERM_AGREEMENT_MISSING("TERM-001", "필수 약관에 모두 동의해야 합니다.", HttpStatus.BAD_REQUEST),

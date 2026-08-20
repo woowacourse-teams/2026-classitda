@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Pattern;
 
 public record PhoneVerificationSendRequest(
         @NotBlank
-        @Pattern(regexp = "^\\+8210[0-9]{8}$")
+        @Pattern(regexp = "^010[0-9]{8}$")
         String phoneNumber
 ) {
 

@@ -89,7 +89,7 @@ class SignupCompletionConcurrencyIntegrationTest {
         // given
         String signupJti = "same-jti-race";
         String providerSubject = "same-jti-sensitive-subject";
-        String phoneNumber = "+821055555555";
+        String phoneNumber = "01055555555";
         prepareDirectState(signupJti, providerSubject, "same-jti@example.com", phoneNumber);
         installTwoRequestBarriers();
 
@@ -110,7 +110,7 @@ class SignupCompletionConcurrencyIntegrationTest {
     @Test
     void 서로_다른_JTI의_같은_전화번호_경합은_PHONE_001과_한_계정만_남긴다() throws Exception {
         // given
-        String phoneNumber = "+821066666666";
+        String phoneNumber = "01066666666";
         prepareDirectState("phone-race-a", "phone-subject-a", "phone-a@example.com", phoneNumber);
         prepareDirectState("phone-race-b", "phone-subject-b", "phone-b@example.com", phoneNumber);
         installTwoRequestBarriers();
@@ -139,8 +139,8 @@ class SignupCompletionConcurrencyIntegrationTest {
     void 서로_다른_JTI의_같은_소셜계정_경합은_한_계정만_남고_두_요청_모두_성공한다() throws Exception {
         // given
         String providerSubject = "social-race-sensitive-subject";
-        prepareDirectState("social-race-a", providerSubject, "social-a@example.com", "+821077777777");
-        prepareDirectState("social-race-b", providerSubject, "social-b@example.com", "+821088888888");
+        prepareDirectState("social-race-a", providerSubject, "social-a@example.com", "01077777777");
+        prepareDirectState("social-race-b", providerSubject, "social-b@example.com", "01088888888");
         installTwoRequestBarriers();
 
         // when

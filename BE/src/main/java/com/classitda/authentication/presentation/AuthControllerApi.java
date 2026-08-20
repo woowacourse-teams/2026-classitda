@@ -61,7 +61,7 @@ public interface AuthControllerApi {
                                             name = "REGISTERED",
                                             summary = "가입된 회원",
                                             value = "{\"status\":\"REGISTERED\",\"accessToken\":\"access-token\","
-                                                    + "\"accessTokenExpiresIn\":900,\"refreshToken\":\"refresh-token\","
+                                                    + "\"accessTokenExpiresIn\":3600,\"refreshToken\":\"refresh-token\","
                                                     + "\"refreshTokenExpiresIn\":2592000}"
                                     ),
                                     @ExampleObject(
@@ -138,7 +138,7 @@ public interface AuthControllerApi {
                             mediaType = "application/json",
                             schema = @Schema(implementation = LoginTokenResponse.class),
                             examples = @ExampleObject(
-                                    value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":900,"
+                                    value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":3600,"
                                             + "\"refreshToken\":\"new-refresh-token\","
                                             + "\"refreshTokenExpiresIn\":2592000}"
                             )
@@ -204,7 +204,7 @@ public interface AuthControllerApi {
                     + "폐기합니다. 세션이 없거나 만료되었거나 제출한 인증 정보와 일치하지 않아도 멱등하게 "
                     + "완료하며 다른 기기의 로그인 세션은 폐기하지 않습니다.\n\n"
                     + "Access Token 차단 목록을 사용하지 "
-                    + "않으므로 이미 발급된 Access Token은 최대 15분 동안 자연 만료 전까지 유효할 수 있습니다.\n\n"
+                    + "않으므로 이미 발급된 Access Token은 최대 1시간 동안 자연 만료 전까지 유효할 수 있습니다.\n\n"
                     + "클라이언트는 서버 응답의 성공 또는 실패 여부와 관계없이 로컬 Access Token, Refresh Token, "
                     + "기기 내 민감정보를 반드시 삭제해야 합니다.",
             security = @SecurityRequirement(name = "bearerAuth"),
@@ -299,11 +299,11 @@ public interface AuthControllerApi {
             security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @RequestBody(
                     required = true,
-                    description = "+8210으로 시작하는 canonical 휴대전화 번호",
+                    description = "010으로 시작하는 숫자 11자리 휴대전화 번호",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = PhoneVerificationSendRequest.class),
-                            examples = @ExampleObject(value = "{\"phoneNumber\":\"+821012345678\"}")
+                            examples = @ExampleObject(value = "{\"phoneNumber\":\"01012345678\"}")
                     )
             )
     )
@@ -562,7 +562,7 @@ public interface AuthControllerApi {
                             mediaType = "application/json",
                             schema = @Schema(implementation = SignupResponse.class),
                             examples = @ExampleObject(
-                                    value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":900,"
+                                    value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":3600,"
                                             + "\"refreshToken\":\"refresh-token\","
                                             + "\"refreshTokenExpiresIn\":2592000}"
                             )

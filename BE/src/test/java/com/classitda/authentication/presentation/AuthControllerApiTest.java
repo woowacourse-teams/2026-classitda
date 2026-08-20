@@ -73,7 +73,7 @@ class AuthControllerApiTest {
                         "Refresh Token",
                         "기기 내 민감정보",
                         "차단 목록을 사용하지 않",
-                        "최대 15분",
+                        "최대 1시간",
                         "멱등"
                 );
         assertThat(documentedText).doesNotContain("tokenHash", "sessionId", "memberId", "auth:refresh:");
@@ -112,7 +112,7 @@ class AuthControllerApiTest {
                     .satisfies(value -> assertThat(value)
                             .contains(
                                     "\"accessToken\"",
-                                    "\"accessTokenExpiresIn\":900",
+                                    "\"accessTokenExpiresIn\":3600",
                                     "\"refreshToken\"",
                                     "\"refreshTokenExpiresIn\":2592000"
                             )

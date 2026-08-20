@@ -9,17 +9,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
-// TODO : 로컬 개발 끝나면 삭제 예정
-@Tag(name = "로컬 인증", description = "로컬 Swagger 테스트 전용 인증 API")
+// TODO: 실제 운영 전환 전에 LocalTokenController와 함께 제거한다.
+@Tag(name = "개발용 인증", description = "개발 환경의 Swagger 테스트용 인증 API")
 public interface LocalTokenControllerApi {
 
     @Operation(
-            summary = "로컬 테스트용 로그인 토큰 발급",
+            summary = "개발용 로그인 토큰 발급",
             description = """
                     일반 인증 절차를 생략하고 입력한 회원 ID로 Access Token과 Refresh Token을 발급합니다.
-                    local 프로필에서만 사용할 수 있습니다.
+                    개발 중인 배포 환경에서만 사용하며 기본 테스트 회원 ID는 1입니다.
 
-                    ### 회원용 수업 목록 테스트 순서
+                    ### local 프로필의 회원용 수업 목록 테스트 순서
 
                     1. 회원 ID 1로 이 API를 호출합니다.
                     2. 응답의 accessToken을 Swagger 상단 Authorize에 Bearer 토큰으로 입력합니다.
@@ -40,7 +40,7 @@ public interface LocalTokenControllerApi {
                     mediaType = "application/json",
                     schema = @Schema(implementation = LoginTokenResponse.class),
                     examples = @ExampleObject(
-                            value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":900,"
+                            value = "{\"accessToken\":\"access-token\",\"accessTokenExpiresIn\":3600,"
                                     + "\"refreshToken\":\"refresh-token\","
                                     + "\"refreshTokenExpiresIn\":2592000}"
                     )

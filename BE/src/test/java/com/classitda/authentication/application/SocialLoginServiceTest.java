@@ -88,7 +88,7 @@ class SocialLoginServiceTest {
         // given
         AuthAccount authAccount = saveAuthAccount(PROVIDER_EMAIL);
         GoogleIdentity identity = GoogleIdentity.of(PROVIDER_SUBJECT, PROVIDER_EMAIL);
-        IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L);
+        IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L);
         given(googleIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
         given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
 
@@ -101,7 +101,7 @@ class SocialLoginServiceTest {
         assertThat(response).isInstanceOfSatisfying(RegisteredLoginResponse.class, registered -> {
             assertThat(registered.status()).isEqualTo(LoginResponse.LoginStatus.REGISTERED);
             assertThat(registered.accessToken()).isEqualTo("access-token");
-            assertThat(registered.accessTokenExpiresIn()).isEqualTo(900L);
+            assertThat(registered.accessTokenExpiresIn()).isEqualTo(3_600L);
             assertThat(registered.refreshToken()).isEqualTo("refresh-token");
             assertThat(registered.refreshTokenExpiresIn()).isEqualTo(2592000L);
         });
@@ -118,7 +118,7 @@ class SocialLoginServiceTest {
         // given
         AuthAccount authAccount = saveAuthAccount(PROVIDER_EMAIL);
         GoogleIdentity identity = GoogleIdentity.of(PROVIDER_SUBJECT, "changed@example.com");
-        IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L);
+        IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L);
         given(googleIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
         given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
 

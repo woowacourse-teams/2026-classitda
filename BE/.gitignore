@@ -41,6 +41,7 @@ out/
 ### Local environment ###
 .env
 .env.*
+!.env.example
 
 .claude
 .codex

@@ -14,3 +14,7 @@ spring:
         - classpath:reset-schema.sql
         - classpath:schema.sql
       data-locations: classpath:local-data.sql
+
+auth:
+  sms:
+    provider: ${AUTH_SMS_PROVIDER:local}
