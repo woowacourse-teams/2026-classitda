@@ -58,7 +58,6 @@ import org.springframework.test.context.TestPropertySource;
 @Import({
         InstructorCalendarQueryService.class,
         InstructorSessionAccessReader.class,
-        InstructorCalendarSummaryReader.class,
         InstructorCalendarQueryServiceTest.FixedClockConfig.class
 })
 @MySqlRepositoryTest

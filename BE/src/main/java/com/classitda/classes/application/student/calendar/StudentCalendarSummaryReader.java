@@ -1,5 +1,6 @@
 package com.classitda.classes.application.student.calendar;
 
+import com.classitda.classes.application.ClassSessionQueryRange;
 import com.classitda.classes.application.student.pass.StudentOwnedPasses;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ReservationStatus;
@@ -24,20 +25,17 @@ public class StudentCalendarSummaryReader {
     List<StudentCalendarSummary> read(
             Long studioId,
             Long membershipId,
-            LocalDate from,
-            LocalDate to,
+            ClassSessionQueryRange range,
             StudentOwnedPasses ownedPasses,
             LocalDateTime now
     ) {
-        LocalDateTime rangeStart = from.atStartOfDay();
-        LocalDateTime rangeEnd = to.plusDays(1).atStartOfDay();
         Map<LocalDate, StudentCalendarSummary> summaries = new TreeMap<>();
 
         reservationRepository.findCalendarEventsForStudent(
                         studioId,
                         membershipId,
-                        rangeStart,
-                        rangeEnd
+                        range.startInclusive(),
+                        range.endExclusive()
                 ).stream()
                 .filter(event -> isCovered(
                         ownedPasses,
@@ -50,8 +48,8 @@ public class StudentCalendarSummaryReader {
         waitingRepository.findCalendarEventsForStudent(
                         studioId,
                         membershipId,
-                        rangeStart,
-                        rangeEnd
+                        range.startInclusive(),
+                        range.endExclusive()
                 ).stream()
                 .filter(event -> isCovered(
                         ownedPasses,
