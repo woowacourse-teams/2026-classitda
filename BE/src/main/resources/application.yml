@@ -41,6 +41,11 @@ auth:
   sms:
     local:
       fixed-otp: ${AUTH_SMS_LOCAL_FIXED_OTP:}
+    sens:
+      service-id: ${NCP_SENS_SERVICE_ID:}
+      access-key: ${NCP_SENS_ACCESS_KEY:}
+      secret-key: ${NCP_SENS_SECRET_KEY:}
+      sender-number: ${NCP_SENS_SENDER_NUMBER:}
   jwt:
     private-key-base64: ${AUTH_JWT_PRIVATE_KEY_BASE64}
     public-key-base64: ${AUTH_JWT_PUBLIC_KEY_BASE64}
