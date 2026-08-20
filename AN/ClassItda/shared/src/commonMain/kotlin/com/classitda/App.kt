@@ -6,6 +6,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.navigation.student.StudentRootRoute
 import com.classitda.di.home.homeModule
+import com.classitda.di.mypage.myPassModule
 import com.classitda.di.myschedule.myScheduleModule
 import com.classitda.di.reservation.reservationModule
 import org.koin.compose.KoinApplication
@@ -17,7 +18,7 @@ fun App() {
     KoinApplication(
         configuration =
             koinConfiguration {
-                modules(homeModule, reservationModule, myScheduleModule)
+                modules(homeModule, reservationModule, myScheduleModule, myPassModule)
             },
     ) {
         AppTheme(theme = ThemeType.STUDENT) {

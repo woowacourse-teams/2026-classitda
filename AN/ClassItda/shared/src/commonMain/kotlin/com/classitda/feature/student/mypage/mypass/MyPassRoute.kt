@@ -9,6 +9,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun MyPassRoute(
     onNavigateBack: () -> Unit,
+    onPassClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel = koinViewModel<MyPassesViewModel>()
@@ -19,6 +20,7 @@ fun MyPassRoute(
         onTabSelected = viewModel::onTabSelected,
         onNavigateBack = onNavigateBack,
         onRetry = viewModel::onRetry,
+        onPassClick = onPassClick,
         modifier = modifier,
     )
 }

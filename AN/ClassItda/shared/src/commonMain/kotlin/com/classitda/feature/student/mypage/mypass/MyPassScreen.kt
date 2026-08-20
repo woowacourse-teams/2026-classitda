@@ -46,6 +46,7 @@ fun MyPassScreen(
     onTabSelected: (MyPassTab) -> Unit,
     onNavigateBack: () -> Unit,
     onRetry: (MyPassTab) -> Unit,
+    onPassClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val tabState =
@@ -70,6 +71,7 @@ fun MyPassScreen(
             tabState = tabState,
             onRetryClick = { onRetry(uiState.selectedTab) },
             onRefresh = { onRetry(uiState.selectedTab) },
+            onPassClick = onPassClick,
             modifier = Modifier.weight(1f),
         )
     }
@@ -80,6 +82,7 @@ private fun MyPassTabContent(
     tabState: MyPassTabState,
     onRetryClick: () -> Unit,
     onRefresh: () -> Unit,
+    onPassClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier.fillMaxSize()) {
@@ -95,6 +98,7 @@ private fun MyPassTabContent(
                         passes = previousPasses,
                         isRefreshing = true,
                         onRefresh = onRefresh,
+                        onPassClick = onPassClick,
                     )
                 } else {
                     MyPassLoadingContent()
@@ -106,6 +110,7 @@ private fun MyPassTabContent(
                     passes = tabState.passes,
                     isRefreshing = false,
                     onRefresh = onRefresh,
+                    onPassClick = onPassClick,
                 )
             }
 
@@ -125,6 +130,7 @@ private fun MyPassRefreshableList(
     passes: List<MyPassCardUiModel>,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
+    onPassClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     PullToRefreshBox(
@@ -132,13 +138,14 @@ private fun MyPassRefreshableList(
         onRefresh = onRefresh,
         modifier = modifier.fillMaxSize(),
     ) {
-        MyPassList(passes = passes)
+        MyPassList(passes = passes, onPassClick = onPassClick)
     }
 }
 
 @Composable
 private fun MyPassList(
     passes: List<MyPassCardUiModel>,
+    onPassClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -147,7 +154,7 @@ private fun MyPassList(
         verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
     ) {
         items(passes, key = { it.id }) { item ->
-            MyPassCard(item = item)
+            MyPassCard(item = item, onClick = { onPassClick(item.id) })
         }
     }
 }
@@ -310,6 +317,7 @@ private fun MyPassScreenPreview() {
                         onTabSelected = {},
                         onNavigateBack = {},
                         onRetry = {},
+                        onPassClick = {},
                     )
                 }
             }
@@ -327,6 +335,7 @@ private fun MyPassScreenLoadingPreview() {
                 onTabSelected = {},
                 onNavigateBack = {},
                 onRetry = {},
+                onPassClick = {},
             )
         }
     }
@@ -342,6 +351,7 @@ private fun MyPassScreenRefreshingPreview() {
                 onTabSelected = {},
                 onNavigateBack = {},
                 onRetry = {},
+                onPassClick = {},
             )
         }
     }
@@ -357,6 +367,7 @@ private fun MyPassScreenErrorPreview() {
                 onTabSelected = {},
                 onNavigateBack = {},
                 onRetry = {},
+                onPassClick = {},
             )
         }
     }

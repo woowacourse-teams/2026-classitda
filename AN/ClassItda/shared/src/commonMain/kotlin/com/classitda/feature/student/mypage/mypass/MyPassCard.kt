@@ -35,6 +35,7 @@ import com.classitda.feature.student.mypage.mypass.model.MyPassStatus
 @Composable
 fun MyPassCard(
     item: MyPassCardUiModel,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val emphasisColor = if (item.status == MyPassStatus.IN_USE) StuColors.TextPrimary else StuColors.TextSecondary
@@ -43,7 +44,7 @@ fun MyPassCard(
         modifier =
             modifier
                 .clip(shape = AppShape.Card)
-                .clickable(onClick = { /* TODO*/ })
+                .clickable(onClick = onClick)
                 .background(StuColors.Surface)
                 .padding(AppSpacing.cardPadding),
     ) {
@@ -233,7 +234,7 @@ private fun MyPassCardPreview() {
             verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
         ) {
             previewItems.forEach { item ->
-                MyPassCard(item = item)
+                MyPassCard(item = item, onClick = {})
             }
         }
     }
