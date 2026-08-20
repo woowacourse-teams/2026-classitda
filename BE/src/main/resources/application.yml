@@ -11,6 +11,10 @@ spring:
     redis:
       repositories:
         enabled: false
+  http:
+    clients:
+      connect-timeout: 3s
+      read-timeout: 5s
 
 springdoc:
   api-docs:
