@@ -57,7 +57,6 @@ import org.springframework.test.context.TestPropertySource;
         InstructorDailyQueryService.class,
         InstructorSessionAccessReader.class,
         InstructorDailyScheduleReader.class,
-        InstructorDailySessionAssembler.class,
         InstructorDailyQueryServiceTest.FixedClockConfig.class
 })
 @MySqlRepositoryTest

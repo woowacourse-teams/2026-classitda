@@ -1,6 +1,11 @@
 package com.classitda.classes.application.instructor.daily;
 
 import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
+import com.classitda.classes.application.instructor.InstructorSessionStatus;
+import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
+import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
+import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import java.time.Clock;
@@ -18,7 +23,6 @@ public class InstructorDailyQueryService {
 
     private final InstructorSessionAccessReader accessReader;
     private final InstructorDailyScheduleReader scheduleReader;
-    private final InstructorDailySessionAssembler assembler;
     private final Clock clock;
 
     public List<InstructorDailySessionView> findAll(
@@ -57,7 +61,7 @@ public class InstructorDailyQueryService {
             LocalDateTime now
     ) {
         return schedule.classSessions().stream()
-                .map(classSession -> assembler.assemble(
+                .map(classSession -> assembleSession(
                         classSession,
                         schedule.reservationSummary(classSession.getSession().getId()),
                         schedule.waitingSummary(classSession.getSession().getId()),
@@ -66,5 +70,30 @@ public class InstructorDailyQueryService {
                         now
                 ))
                 .toList();
+    }
+
+    private InstructorDailySessionView assembleSession(
+            ClassSessionDailyProjection classSession,
+            ReservationSummaryProjection reservationSummary,
+            WaitingSummaryProjection waitingSummary,
+            int reservationCloseMinutesBefore,
+            Long requesterMembershipId,
+            LocalDateTime now
+    ) {
+        long reservedCount = reservationSummary == null ? 0 : reservationSummary.getReservedCount();
+        long waitingCount = waitingSummary == null ? 0 : waitingSummary.getWaitingCount();
+        ClassSession session = classSession.getSession();
+        InstructorSessionStatus status = InstructorSessionStatus.from(
+                session.phaseAt(now),
+                session.bookingWindowAt(now, reservationCloseMinutesBefore)
+        );
+
+        return InstructorDailySessionView.of(
+                classSession,
+                reservedCount,
+                waitingCount,
+                status,
+                requesterMembershipId.equals(classSession.getInstructorMembershipId())
+        );
     }
 }
