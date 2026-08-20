@@ -5,19 +5,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import com.classitda.classes.application.student.BookingAvailability;
-import com.classitda.classes.application.student.StudentAttendanceResult;
 import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.application.student.StudentBookingDecisionPolicy;
 import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
+import com.classitda.classes.domain.AttendanceResult;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.ClassSessionEnrollment;
 import com.classitda.classes.domain.ClassType;
-import com.classitda.classes.domain.Reservation;
-import com.classitda.classes.domain.ReservationStatus;
-import com.classitda.classes.domain.Waiting;
-import com.classitda.classes.domain.WaitingStatus;
+import com.classitda.classes.domain.EnrollmentStatus;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
@@ -43,12 +41,15 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Stream;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -59,7 +60,9 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.TestPropertySource;
 
+@TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @Import({
         StudentDailyQueryService.class,
         StudentSessionAccessReader.class,
@@ -81,6 +84,7 @@ class StudentDailyQueryServiceTest {
     private final ClassSessionRepository classSessionRepository;
     private final ClassTypeRepository classTypeRepository;
     private final EntityManager entityManager;
+    private final Statistics statistics;
 
     @Autowired
     StudentDailyQueryServiceTest(
@@ -88,13 +92,15 @@ class StudentDailyQueryServiceTest {
             ClassSessionClassTypeRepository classSessionClassTypeRepository,
             ClassSessionRepository classSessionRepository,
             ClassTypeRepository classTypeRepository,
-            EntityManager entityManager
+            EntityManager entityManager,
+            EntityManagerFactory entityManagerFactory
     ) {
         this.studentDailyQueryService = studentDailyQueryService;
         this.classSessionClassTypeRepository = classSessionClassTypeRepository;
         this.classSessionRepository = classSessionRepository;
         this.classTypeRepository = classTypeRepository;
         this.entityManager = entityManager;
+        this.statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
     }
 
     @Test
@@ -113,7 +119,8 @@ class StudentDailyQueryServiceTest {
                 studio,
                 회원을_저장한다("daily-first-instructor"),
                 SystemRole.INSTRUCTOR,
-                MembershipStatus.ACTIVE
+                MembershipStatus.ACTIVE,
+                "시설 표시 첫 강사"
         );
         StudioMembership secondInstructor = 소속을_저장한다(
                 studio,
@@ -175,15 +182,27 @@ class StudentDailyQueryServiceTest {
                 SystemRole.STUDENT,
                 MembershipStatus.ACTIVE
         );
-        예약을_저장한다(sameTimeFirst, firstParticipant, ReservationStatus.RESERVED);
-        예약을_저장한다(sameTimeFirst, secondParticipant, ReservationStatus.ATTENDED);
-        예약을_저장한다(sameTimeFirst, thirdParticipant, ReservationStatus.CANCELED);
-        대기를_저장한다(sameTimeFirst, firstParticipant, 1, WaitingStatus.WAITING);
-        대기를_저장한다(sameTimeFirst, secondParticipant, 2, WaitingStatus.OFFERED);
-        대기를_저장한다(sameTimeFirst, thirdParticipant, 3, WaitingStatus.CANCELED);
-        예약을_저장한다(laterSession, firstParticipant, ReservationStatus.RESERVED);
+        StudioMembership fourthParticipant = 소속을_저장한다(
+                studio,
+                회원을_저장한다("daily-fourth-participant"),
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+        StudioMembership fifthParticipant = 소속을_저장한다(
+                studio,
+                회원을_저장한다("daily-fifth-participant"),
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+        신청을_저장한다(sameTimeFirst, firstParticipant, EnrollmentStatus.RESERVED);
+        신청을_저장한다(sameTimeFirst, secondParticipant, EnrollmentStatus.RESERVED);
+        신청을_저장한다(sameTimeFirst, thirdParticipant, EnrollmentStatus.CANCELED);
+        신청을_저장한다(sameTimeFirst, fourthParticipant, EnrollmentStatus.WAITING);
+        신청을_저장한다(sameTimeFirst, fifthParticipant, EnrollmentStatus.OFFERED);
+        신청을_저장한다(laterSession, firstParticipant, EnrollmentStatus.RESERVED);
         entityManager.flush();
         entityManager.clear();
+        statistics.clear();
 
         // when
         List<StudentDailySessionView> responses = studentDailyQueryService.findAll(
@@ -191,25 +210,26 @@ class StudentDailyQueryServiceTest {
                 studio.getId(),
                 QUERY_DATE
         );
+        long queryCount = statistics.getPrepareStatementCount();
 
         // then
         assertThat(responses).containsExactly(
                 new StudentDailySessionView(
                         sameTimeFirst.getId(),
                         firstInstructor.getId(),
-                        firstInstructor.getMember().getName(),
+                        firstInstructor.getName(),
                         ClassForm.GROUP,
                         yoga.getId(),
                         yoga.getName(),
                         "정오 요가 A",
                         "정오 요가 A 안내",
                         3,
-                        2,
-                        1,
+                        3,
+                        0,
                         1,
                         QUERY_DATE.atTime(12, 0),
                         QUERY_DATE.atTime(13, 0),
-                        decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE)
+                        decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.WAITLISTABLE)
                 ),
                 new StudentDailySessionView(
                         sameTimeSecond.getId(),
@@ -226,12 +246,12 @@ class StudentDailyQueryServiceTest {
                         0,
                         QUERY_DATE.atTime(12, 0),
                         QUERY_DATE.atTime(13, 0),
-                        decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE)
+                        decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE)
                 ),
                 new StudentDailySessionView(
                         laterSession.getId(),
                         firstInstructor.getId(),
-                        firstInstructor.getMember().getName(),
+                        firstInstructor.getName(),
                         ClassForm.GROUP,
                         yoga.getId(),
                         yoga.getName(),
@@ -243,12 +263,13 @@ class StudentDailyQueryServiceTest {
                         0,
                         QUERY_DATE.atTime(14, 0),
                         QUERY_DATE.atTime(15, 0),
-                        decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.WAITLISTABLE)
+                        decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.WAITLISTABLE)
                 )
         );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
                 .doesNotContain(sameTypeOtherForm.getId());
+        assertThat(queryCount).isEqualTo(6L);
     }
 
     @Test
@@ -374,11 +395,11 @@ class StudentDailyQueryServiceTest {
                 studio, instructor, pilates, "다른 종류 출석 수업", ClassForm.GROUP, 5,
                 pastDate.atTime(14, 0)
         );
-        예약을_저장한다(attended, memberMembership, ReservationStatus.ATTENDED);
-        예약을_저장한다(reservedOnly, memberMembership, ReservationStatus.RESERVED);
-        예약을_저장한다(absent, memberMembership, ReservationStatus.ABSENT);
-        예약을_저장한다(otherMemberAttended, otherMembership, ReservationStatus.ATTENDED);
-        예약을_저장한다(otherClassType, memberMembership, ReservationStatus.ATTENDED);
+        신청을_저장한다(attended, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ATTENDED);
+        신청을_저장한다(reservedOnly, memberMembership, EnrollmentStatus.RESERVED);
+        신청을_저장한다(absent, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ABSENT);
+        신청을_저장한다(otherMemberAttended, otherMembership, EnrollmentStatus.RESERVED, AttendanceResult.ATTENDED);
+        신청을_저장한다(otherClassType, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ATTENDED);
         entityManager.flush();
         entityManager.clear();
 
@@ -393,9 +414,9 @@ class StudentDailyQueryServiceTest {
         assertThat(responses)
                 .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingDecision)
                 .containsExactly(
-                        tuple(attended.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(reservedOnly.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(absent.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ABSENT, BookingAvailability.CLOSED))
+                        tuple(attended.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(reservedOnly.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(absent.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.ABSENT, BookingAvailability.CLOSED))
                 );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
@@ -471,14 +492,13 @@ class StudentDailyQueryServiceTest {
                 studio, instructor, classType, "예약 가능 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(11, 0)
         );
-        예약을_저장한다(canceled, memberMembership, ReservationStatus.RESERVED);
-        예약을_저장한다(attendancePending, memberMembership, ReservationStatus.RESERVED);
-        대기를_저장한다(attendancePending, memberMembership, 1, WaitingStatus.OFFERED);
-        예약을_저장한다(attended, memberMembership, ReservationStatus.ATTENDED);
-        예약을_저장한다(absent, memberMembership, ReservationStatus.ABSENT);
-        예약을_저장한다(reserved, memberMembership, ReservationStatus.RESERVED);
-        대기를_저장한다(offered, memberMembership, 1, WaitingStatus.OFFERED);
-        대기를_저장한다(waiting, memberMembership, 1, WaitingStatus.WAITING);
+        신청을_저장한다(canceled, memberMembership, EnrollmentStatus.RESERVED);
+        신청을_저장한다(attendancePending, memberMembership, EnrollmentStatus.RESERVED);
+        신청을_저장한다(attended, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ATTENDED);
+        신청을_저장한다(absent, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ABSENT);
+        신청을_저장한다(reserved, memberMembership, EnrollmentStatus.RESERVED);
+        신청을_저장한다(offered, memberMembership, EnrollmentStatus.OFFERED);
+        신청을_저장한다(waiting, memberMembership, EnrollmentStatus.WAITING);
         entityManager.flush();
         entityManager.clear();
 
@@ -493,14 +513,14 @@ class StudentDailyQueryServiceTest {
         assertThat(responses)
                 .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingDecision)
                 .containsExactly(
-                        tuple(attendancePending.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(attended.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(absent.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.ABSENT, BookingAvailability.CLOSED)),
-                        tuple(reserved.getId(), decision(StudentBookingRelation.RESERVED, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(offered.getId(), decision(StudentBookingRelation.OFFERED, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(waiting.getId(), decision(StudentBookingRelation.WAITING, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(closedAtBoundary.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(availableBeforeClose.getId(), decision(StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE))
+                        tuple(attendancePending.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(attended.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(absent.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.ABSENT, BookingAvailability.CLOSED)),
+                        tuple(reserved.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(offered.getId(), decision(StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(waiting.getId(), decision(StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(closedAtBoundary.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(availableBeforeClose.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE))
                 );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
@@ -768,12 +788,22 @@ class StudentDailyQueryServiceTest {
             SystemRole systemRole,
             MembershipStatus status
     ) {
+        return 소속을_저장한다(studio, member, systemRole, status, member.getName());
+    }
+
+    private StudioMembership 소속을_저장한다(
+            Studio studio,
+            Member member,
+            SystemRole systemRole,
+            MembershipStatus status,
+            String name
+    ) {
         StudioRole role = 역할을_조회하거나_저장한다(studio, systemRole);
 
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
-                .name(member.getName())
+                .name(name)
                 .studioRole(role)
                 .status(status)
                 .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))
@@ -906,38 +936,102 @@ class StudentDailyQueryServiceTest {
         return memberPassProduct;
     }
 
-    private void 예약을_저장한다(
+    private void 신청을_저장한다(
             ClassSession classSession,
             StudioMembership membership,
-            ReservationStatus status
+            EnrollmentStatus status
     ) {
-        entityManager.persist(Reservation.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .status(status)
-                .reservedAt(NOW.minusDays(1))
-                .canceledAt(status == ReservationStatus.CANCELED ? NOW.minusHours(1) : null)
-                .build());
+        신청을_저장한다(classSession, membership, status, AttendanceResult.NOT_RECORDED);
     }
 
-    private void 대기를_저장한다(
+    private void 신청을_저장한다(
             ClassSession classSession,
             StudioMembership membership,
-            int sequence,
-            WaitingStatus status
+            EnrollmentStatus status,
+            AttendanceResult attendanceResult
     ) {
-        entityManager.persist(Waiting.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .sequence(sequence)
-                .status(status)
-                .offeredAt(status == WaitingStatus.OFFERED ? NOW.minusMinutes(5) : null)
-                .build());
+        ClassSessionEnrollment enrollment = switch (status) {
+            case RESERVED -> ClassSessionEnrollment.reserved(
+                    membership,
+                    classSession,
+                    수강권을_조회하거나_저장한다(membership, classSession),
+                    NOW.minusDays(1)
+            );
+            case WAITING -> ClassSessionEnrollment.waiting(membership, classSession, NOW.minusDays(1));
+            case OFFERED -> {
+                ClassSessionEnrollment offered = ClassSessionEnrollment.waiting(
+                        membership,
+                        classSession,
+                        NOW.minusDays(1)
+                );
+                offered.offer(NOW.minusMinutes(5), NOW.plusMinutes(5));
+                yield offered;
+            }
+            case CANCELED -> {
+                ClassSessionEnrollment canceled = ClassSessionEnrollment.waiting(
+                        membership,
+                        classSession,
+                        NOW.minusDays(1)
+                );
+                canceled.cancelWaiting(NOW.minusHours(1));
+                yield canceled;
+            }
+            case EXPIRED -> {
+                ClassSessionEnrollment expired = ClassSessionEnrollment.waiting(
+                        membership,
+                        classSession,
+                        NOW.minusDays(1)
+                );
+                expired.expire(NOW.minusHours(1));
+                yield expired;
+            }
+        };
+        if (attendanceResult == AttendanceResult.ATTENDED) {
+            enrollment.markAttended(classSession.getEndAt());
+        } else if (attendanceResult == AttendanceResult.ABSENT) {
+            enrollment.markAbsent(classSession.getEndAt());
+        }
+        entityManager.persist(enrollment);
+    }
+
+    private MemberPassProduct 수강권을_조회하거나_저장한다(
+            StudioMembership membership,
+            ClassSession classSession
+    ) {
+        List<MemberPassProduct> ownedPasses = entityManager.createQuery("""
+                        SELECT memberPassProduct
+                        FROM MemberPassProduct memberPassProduct
+                        WHERE memberPassProduct.membership.id = :membershipId
+                        ORDER BY memberPassProduct.id
+                        """, MemberPassProduct.class)
+                .setParameter("membershipId", membership.getId())
+                .setMaxResults(1)
+                .getResultList();
+        if (!ownedPasses.isEmpty()) {
+            return ownedPasses.getFirst();
+        }
+
+        Long classTypeId = classSessionClassTypeRepository.findByClassSessionId(classSession.getId())
+                .orElseThrow()
+                .getClassTypeId();
+        PassProduct passProduct = 수강권을_저장한다(
+                membership.getStudio(),
+                classSession.getClassForm(),
+                List.of(classTypeRepository.getReferenceById(classTypeId))
+        );
+        return 보유_수강권을_저장한다(
+                membership,
+                passProduct,
+                MemberPassProductStatus.ACTIVE,
+                10,
+                QUERY_DATE.minusYears(1),
+                QUERY_DATE.plusYears(1)
+        );
     }
 
     private static StudentBookingDecision decision(
             StudentBookingRelation bookingRelation,
-            StudentAttendanceResult attendanceResult,
+            AttendanceResult attendanceResult,
             BookingAvailability availability
     ) {
         return new StudentBookingDecision(bookingRelation, attendanceResult, availability);

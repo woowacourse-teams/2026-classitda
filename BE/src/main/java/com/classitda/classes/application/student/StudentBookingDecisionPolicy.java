@@ -1,53 +1,36 @@
 package com.classitda.classes.application.student;
 
 import com.classitda.classes.domain.BookingWindow;
-import com.classitda.classes.domain.ReservationStatus;
-import com.classitda.classes.domain.WaitingStatus;
+import com.classitda.classes.domain.AttendanceResult;
+import com.classitda.classes.domain.EnrollmentStatus;
 import org.springframework.stereotype.Component;
 
 @Component
 public class StudentBookingDecisionPolicy {
 
     public StudentBookingDecision decide(StudentSessionFacts facts) {
-        StudentAttendanceResult attendanceResult = resolveAttendanceResult(facts);
+        AttendanceResult attendanceResult = facts.attendanceResult();
         StudentBookingRelation bookingRelation = resolveBookingRelation(facts, attendanceResult);
         return new StudentBookingDecision(bookingRelation, attendanceResult, resolveAvailability(facts));
     }
 
-    private StudentAttendanceResult resolveAttendanceResult(StudentSessionFacts facts) {
-        return facts.ownReservationStatus()
-                .map(status -> resolveAttendanceResult(status, facts))
-                .orElse(StudentAttendanceResult.NOT_RECORDED);
-    }
-
-    private StudentAttendanceResult resolveAttendanceResult(ReservationStatus status, StudentSessionFacts facts) {
-        return switch (status) {
-            case ATTENDED -> StudentAttendanceResult.ATTENDED;
-            case ABSENT -> StudentAttendanceResult.ABSENT;
-            case RESERVED -> facts.now().isBefore(facts.startAt())
-                    ? StudentAttendanceResult.NOT_RECORDED
-                    : StudentAttendanceResult.ATTENDED;
-            case CANCELED -> StudentAttendanceResult.NOT_RECORDED;
-        };
-    }
-
-    private StudentBookingRelation resolveBookingRelation(StudentSessionFacts facts, StudentAttendanceResult attendanceResult) {
-        if (attendanceResult != StudentAttendanceResult.NOT_RECORDED) {
+    private StudentBookingRelation resolveBookingRelation(StudentSessionFacts facts, AttendanceResult attendanceResult) {
+        if (!facts.now().isBefore(facts.startAt())
+                || attendanceResult != AttendanceResult.NOT_RECORDED) {
             return StudentBookingRelation.NONE;
         }
-        if (facts.ownReservationStatus().filter(status -> status == ReservationStatus.RESERVED).isPresent()) {
-            return StudentBookingRelation.RESERVED;
-        }
-        return facts.ownWaitingStatus()
-                .map(this::resolveWaitingRelation)
+
+        return facts.ownEnrollmentStatus()
+                .map(this::resolveEnrollmentRelation)
                 .orElse(StudentBookingRelation.NONE);
     }
 
-    private StudentBookingRelation resolveWaitingRelation(WaitingStatus status) {
+    private StudentBookingRelation resolveEnrollmentRelation(EnrollmentStatus status) {
         return switch (status) {
+            case RESERVED -> StudentBookingRelation.RESERVED;
             case WAITING -> StudentBookingRelation.WAITING;
             case OFFERED -> StudentBookingRelation.OFFERED;
-            case ACCEPTED, EXPIRED, CANCELED -> StudentBookingRelation.NONE;
+            case EXPIRED, CANCELED -> StudentBookingRelation.NONE;
         };
     }
 
@@ -56,6 +39,7 @@ public class StudentBookingDecisionPolicy {
         if (facts.bookingWindow() == BookingWindow.CLOSED) {
             return BookingAvailability.CLOSED;
         }
+
         return facts.remainingCapacity() > 0
                 ? BookingAvailability.RESERVABLE
                 : BookingAvailability.WAITLISTABLE;

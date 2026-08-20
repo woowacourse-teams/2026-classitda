@@ -1,8 +1,10 @@
 package com.classitda.classes.application.student;
 
+import com.classitda.classes.domain.AttendanceResult;
+
 public record StudentBookingDecision(
         StudentBookingRelation bookingRelation,
-        StudentAttendanceResult attendanceResult,
+        AttendanceResult attendanceResult,
         BookingAvailability availability
 ) {
 }

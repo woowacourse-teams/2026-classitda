@@ -18,16 +18,16 @@ public class StudentSessionAccessReader {
     private final StudioRepository studioRepository;
 
     public Long readMembershipId(Long memberId, Long studioId) {
-        Studio studio = getStudio(studioId);
+        Studio studio = studioRepository.findById(studioId)
+                .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
+
         StudioMembership membership = getActiveMembership(studio.getId(), memberId);
-        validateStudent(membership);
+
+        if (!membership.isStudent()) {
+            throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
+        }
 
         return membership.getId();
-    }
-
-    private Studio getStudio(Long studioId) {
-        return studioRepository.findById(studioId)
-                .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
     }
 
     private StudioMembership getActiveMembership(Long studioId, Long memberId) {
@@ -41,11 +41,4 @@ public class StudentSessionAccessReader {
 
         return membership;
     }
-
-    private void validateStudent(StudioMembership membership) {
-        if (!membership.isStudent()) {
-            throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
-        }
-    }
-
 }

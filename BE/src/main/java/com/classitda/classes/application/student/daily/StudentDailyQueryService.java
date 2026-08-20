@@ -22,45 +22,32 @@ public class StudentDailyQueryService {
     private final StudentDailySessionAssembler assembler;
     private final Clock clock;
 
-    public List<StudentDailySessionView> findAll(
-            Long memberId,
-            Long studioId,
-            LocalDate date
-    ) {
-        LocalDateTime now = LocalDateTime.now(clock);
-
+    public List<StudentDailySessionView> findAll(Long memberId, Long studioId, LocalDate date) {
         Long membershipId = accessReader.readMembershipId(memberId, studioId);
         StudentOwnedPasses ownedPasses = ownedPassesReader.read(membershipId, studioId);
         List<Long> classTypeIds = ownedPasses.coveredClassTypeIdsOn(date);
+
         if (classTypeIds.isEmpty()) {
             return List.of();
         }
 
-        boolean attendanceHistoryOnly = date.isBefore(now.toLocalDate());
+        LocalDateTime now = LocalDateTime.now(clock);
+        boolean enrollmentHistoryOnly = date.isBefore(now.toLocalDate());
         StudentDailySchedule schedule = scheduleReader.read(
                 studioId,
                 membershipId,
                 date,
                 classTypeIds,
                 ownedPasses,
-                attendanceHistoryOnly
+                enrollmentHistoryOnly
         );
         if (schedule.isEmpty()) {
             return List.of();
         }
 
-        return assemble(schedule, now);
-    }
-
-    private List<StudentDailySessionView> assemble(
-            StudentDailySchedule schedule,
-            LocalDateTime now
-    ) {
         return schedule.classSessions().stream()
                 .map(classSession -> assembler.assemble(
                         classSession,
-                        schedule.reservationSummary(classSession.getSession().getId()),
-                        schedule.waitingSummary(classSession.getSession().getId()),
                         schedule.reservationCloseMinutesBefore(),
                         now
                 ))

@@ -20,6 +20,8 @@ Accepted (2026-08-20)
 
 출결은 `ClassSessionEnrollment`에 포함되는 `Attendance` 값 객체로 분리하고 `NOT_RECORDED`, `ATTENDED`, `ABSENT` 결과를 관리해요. 제안 수락은 같은 신청 행의 `OFFERED`에서 `RESERVED`로 전이하며, 출결이 기록되어도 신청 상태는 `RESERVED`로 유지해요.
 
+일별 조회는 저장된 `AttendanceResult`를 그대로 사용해요. 수업 시작 시각이 지났다는 이유만으로 조회 중에 `ATTENDED`를 추론하지 않으며, 시작된 수업의 예약 관계 표시는 `NONE`으로 닫아요.
+
 ## Alternatives
 
 - `Reservation`과 `Waiting`을 유지하고 Application Service에서 함께 검증 — 두 테이블을 가로지르는 모순과 제안 수락의 원자성을 모든 쓰기 경로가 반복해서 책임져야 해요.

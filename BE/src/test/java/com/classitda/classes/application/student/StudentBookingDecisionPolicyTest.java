@@ -2,9 +2,9 @@ package com.classitda.classes.application.student;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.classitda.classes.domain.AttendanceResult;
 import com.classitda.classes.domain.BookingWindow;
-import com.classitda.classes.domain.ReservationStatus;
-import com.classitda.classes.domain.WaitingStatus;
+import com.classitda.classes.domain.EnrollmentStatus;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -22,7 +22,7 @@ class StudentBookingDecisionPolicyTest {
     @MethodSource("bookingDecisionContexts")
     void 회원_수업_상태를_예약_관계와_출결_결과와_예약_가능_여부로_결정한다(
             StudentBookingRelation expectedBookingRelation,
-            StudentAttendanceResult expectedAttendanceResult,
+            AttendanceResult expectedAttendanceResult,
             BookingAvailability expectedAvailability,
             StudentSessionFacts facts
     ) {
@@ -36,44 +36,44 @@ class StudentBookingDecisionPolicyTest {
     private static Stream<Arguments> bookingDecisionContexts() {
         return Stream.of(
                 Arguments.of(
-                        StudentBookingRelation.NONE, StudentAttendanceResult.ABSENT, BookingAvailability.CLOSED,
-                        facts(BookingWindow.CLOSED, NOW.minusHours(2), ReservationStatus.ABSENT, null, 1)
+                        StudentBookingRelation.NONE, AttendanceResult.ABSENT, BookingAvailability.CLOSED,
+                        facts(BookingWindow.CLOSED, NOW.minusHours(2), EnrollmentStatus.RESERVED, AttendanceResult.ABSENT, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED,
-                        facts(BookingWindow.CLOSED, NOW.minusHours(2), ReservationStatus.ATTENDED, null, 1)
+                        StudentBookingRelation.NONE, AttendanceResult.ATTENDED, BookingAvailability.CLOSED,
+                        facts(BookingWindow.CLOSED, NOW.minusHours(2), EnrollmentStatus.RESERVED, AttendanceResult.ATTENDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED,
-                        facts(BookingWindow.CLOSED, NOW.minusHours(2), ReservationStatus.RESERVED, null, 1)
+                        StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        facts(BookingWindow.CLOSED, NOW.minusHours(2), EnrollmentStatus.RESERVED, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.NONE, StudentAttendanceResult.ATTENDED, BookingAvailability.CLOSED,
-                        facts(BookingWindow.CLOSED, NOW, ReservationStatus.RESERVED, null, 1)
+                        StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        facts(BookingWindow.CLOSED, NOW, EnrollmentStatus.RESERVED, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.RESERVED, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
-                        facts(BookingWindow.CLOSED, NOW.plusHours(1), ReservationStatus.RESERVED, WaitingStatus.OFFERED, 1)
+                        StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        facts(BookingWindow.CLOSED, NOW.plusHours(1), EnrollmentStatus.RESERVED, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.OFFERED, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
-                        facts(BookingWindow.CLOSED, NOW.plusHours(1), null, WaitingStatus.OFFERED, 1)
+                        StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        facts(BookingWindow.CLOSED, NOW.plusHours(1), EnrollmentStatus.OFFERED, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.WAITING, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
-                        facts(BookingWindow.CLOSED, NOW.plusHours(1), null, WaitingStatus.WAITING, 1)
+                        StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        facts(BookingWindow.CLOSED, NOW.plusHours(1), EnrollmentStatus.WAITING, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
-                        facts(BookingWindow.CLOSED, NOW.plusMinutes(30), null, null, 1)
+                        StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        facts(BookingWindow.CLOSED, NOW.plusMinutes(30), null, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE,
-                        facts(BookingWindow.OPEN, NOW.plusHours(1), null, null, 1)
+                        StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE,
+                        facts(BookingWindow.OPEN, NOW.plusHours(1), null, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.NONE, StudentAttendanceResult.NOT_RECORDED, BookingAvailability.WAITLISTABLE,
-                        facts(BookingWindow.OPEN, NOW.plusHours(1), null, null, 0)
+                        StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.WAITLISTABLE,
+                        facts(BookingWindow.OPEN, NOW.plusHours(1), null, AttendanceResult.NOT_RECORDED, 0)
                 )
         );
     }
@@ -81,15 +81,15 @@ class StudentBookingDecisionPolicyTest {
     private static StudentSessionFacts facts(
             BookingWindow bookingWindow,
             LocalDateTime startAt,
-            ReservationStatus ownReservationStatus,
-            WaitingStatus ownWaitingStatus,
+            EnrollmentStatus ownEnrollmentStatus,
+            AttendanceResult attendanceResult,
             long remainingCapacity
     ) {
         return new StudentSessionFacts(
                 bookingWindow,
                 startAt,
-                Optional.ofNullable(ownReservationStatus),
-                Optional.ofNullable(ownWaitingStatus),
+                Optional.ofNullable(ownEnrollmentStatus),
+                attendanceResult,
                 remainingCapacity,
                 NOW
         );

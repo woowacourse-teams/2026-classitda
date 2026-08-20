@@ -17,7 +17,6 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarS
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
 import com.classitda.classes.application.student.BookingAvailability;
-import com.classitda.classes.application.student.StudentAttendanceResult;
 import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
@@ -25,6 +24,7 @@ import com.classitda.classes.application.student.calendar.StudentCalendarSummary
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.application.student.daily.StudentDailySessionView;
 import com.classitda.classes.domain.ClassForm;
+import com.classitda.classes.domain.AttendanceResult;
 import com.classitda.classes.domain.SessionPhase;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
@@ -875,7 +875,7 @@ class ClassSessionControllerTest {
                 LocalDateTime.of(2026, 8, 17, 21, 0),
                 new StudentBookingDecision(
                         StudentBookingRelation.NONE,
-                        StudentAttendanceResult.NOT_RECORDED,
+                        AttendanceResult.NOT_RECORDED,
                         BookingAvailability.RESERVABLE
                 )
         );
