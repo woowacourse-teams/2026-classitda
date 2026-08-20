@@ -2,8 +2,7 @@ package com.classitda.feature.student.mypage.mypass.util
 
 import com.classitda.domain.model.mypage.MyPass
 import com.classitda.feature.student.mypage.mypass.model.MyPassCardUiModel
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.number
+import com.classitda.feature.student.mypage.util.formatDateDot
 import com.classitda.domain.model.mypage.MyPassStatus as DomainMyPassStatus
 import com.classitda.feature.student.mypage.mypass.model.MyPassStatus as UiMyPassStatus
 
@@ -35,6 +34,3 @@ private fun DomainMyPassStatus.toUiModel(): UiMyPassStatus =
         DomainMyPassStatus.EXPIRED -> UiMyPassStatus.EXPIRED
         DomainMyPassStatus.TERMINATED -> UiMyPassStatus.TERMINATED
     }
-
-private fun formatDateDot(date: LocalDate): String =
-    "${date.year}.${date.month.number.toString().padStart(2, '0')}.${date.day.toString().padStart(2, '0')}"

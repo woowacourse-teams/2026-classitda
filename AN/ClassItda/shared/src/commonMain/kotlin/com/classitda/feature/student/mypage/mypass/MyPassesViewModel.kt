@@ -2,6 +2,7 @@ package com.classitda.feature.student.mypage.mypass
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.domain.model.mypage.MyPass
 import com.classitda.domain.repository.mypage.MyPassRepository
 import com.classitda.feature.student.mypage.mypass.model.MyPassTab
 import com.classitda.feature.student.mypage.mypass.model.MyPassTabState
@@ -19,6 +20,9 @@ class MyPassesViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MyPassUiState())
     val uiState: StateFlow<MyPassUiState> = _uiState.asStateFlow()
+
+    // TODO: repository가 사용중/만료·종료 API로 나뉘면 이 캐시는 필요 없어진다.
+    private var cachedPasses: List<MyPass>? = null
 
     init {
         loadInUsePasses()
@@ -41,49 +45,54 @@ class MyPassesViewModel(
 
     fun onRetry(tab: MyPassTab) {
         when (tab) {
-            MyPassTab.IN_USE -> loadInUsePasses()
-            MyPassTab.EXPIRED -> loadExpiredPasses()
+            MyPassTab.IN_USE -> loadInUsePasses(forceRefresh = true)
+            MyPassTab.EXPIRED -> loadExpiredPasses(forceRefresh = true)
         }
     }
 
-    // TODO: repository가 사용중/만료·종료 API로 나뉘면 각각 전용 조회 메서드를 호출하도록 교체
-    private fun loadInUsePasses() {
-        val current = _uiState.value.inUse
-        if (current is MyPassTabState.Loading) return
-        val previousPasses = (current as? MyPassTabState.Content)?.passes
+    private fun loadInUsePasses(forceRefresh: Boolean = false) {
+        loadTab(
+            forceRefresh = forceRefresh,
+            currentState = _uiState.value.inUse,
+            filter = { it.status == DomainMyPassStatus.IN_USE },
+            updateState = { state -> _uiState.update { it.copy(inUse = state) } },
+        )
+    }
 
-        _uiState.update { it.copy(inUse = MyPassTabState.Loading(previousPasses)) }
+    private fun loadExpiredPasses(forceRefresh: Boolean = false) {
+        loadTab(
+            forceRefresh = forceRefresh,
+            currentState = _uiState.value.expired,
+            filter = { it.status != DomainMyPassStatus.IN_USE },
+            updateState = { state -> _uiState.update { it.copy(expired = state) } },
+        )
+    }
+
+    private fun loadTab(
+        forceRefresh: Boolean,
+        currentState: MyPassTabState,
+        filter: (MyPass) -> Boolean,
+        updateState: (MyPassTabState) -> Unit,
+    ) {
+        if (currentState is MyPassTabState.Loading) return
+        val previousPasses = (currentState as? MyPassTabState.Content)?.passes
+
+        updateState(MyPassTabState.Loading(previousPasses))
         viewModelScope.launch {
-            runCatching { repository.getMyPasses() }
+            runCatching { fetchPasses(forceRefresh) }
                 .onSuccess { passes ->
-                    val inUsePasses =
-                        passes
-                            .filter { it.status == DomainMyPassStatus.IN_USE }
-                            .map { it.toUiModel() }
-                    _uiState.update { it.copy(inUse = MyPassTabState.Content(inUsePasses)) }
+                    updateState(MyPassTabState.Content(passes.filter(filter).map { it.toUiModel() }))
                 }.onFailure { error ->
-                    _uiState.update { it.copy(inUse = MyPassTabState.Error(error.message)) }
+                    updateState(MyPassTabState.Error(error.message))
                 }
         }
     }
 
-    private fun loadExpiredPasses() {
-        val current = _uiState.value.expired
-        if (current is MyPassTabState.Loading) return
-        val previousPasses = (current as? MyPassTabState.Content)?.passes
-
-        _uiState.update { it.copy(expired = MyPassTabState.Loading(previousPasses)) }
-        viewModelScope.launch {
-            runCatching { repository.getMyPasses() }
-                .onSuccess { passes ->
-                    val expiredPasses =
-                        passes
-                            .filter { it.status != DomainMyPassStatus.IN_USE }
-                            .map { it.toUiModel() }
-                    _uiState.update { it.copy(expired = MyPassTabState.Content(expiredPasses)) }
-                }.onFailure { error ->
-                    _uiState.update { it.copy(expired = MyPassTabState.Error(error.message)) }
-                }
-        }
+    // 사용중/만료·종료 탭이 같은 목록을 나눠 보여줄 뿐이라, 강제 새로고침이 아니면 캐시를 공유해
+    // 탭을 처음 전환할 때마다 동일한 데이터를 중복 조회하지 않도록 한다.
+    private suspend fun fetchPasses(forceRefresh: Boolean): List<MyPass> {
+        val cached = cachedPasses
+        if (!forceRefresh && cached != null) return cached
+        return repository.getMyPasses().also { cachedPasses = it }
     }
 }
