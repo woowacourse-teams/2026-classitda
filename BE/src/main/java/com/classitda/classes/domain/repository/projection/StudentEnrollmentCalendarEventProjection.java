@@ -1,12 +1,10 @@
 package com.classitda.classes.domain.repository.projection;
 
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ReservationStatus;
+import com.classitda.classes.domain.EnrollmentStatus;
 import java.time.LocalDateTime;
 
-public interface StudentReservationCalendarEventProjection {
-
-    Long getClassSessionId();
+public interface StudentEnrollmentCalendarEventProjection {
 
     ClassForm getClassForm();
 
@@ -14,5 +12,5 @@ public interface StudentReservationCalendarEventProjection {
 
     LocalDateTime getStartAt();
 
-    ReservationStatus getReservationStatus();
+    EnrollmentStatus getEnrollmentStatus();
 }

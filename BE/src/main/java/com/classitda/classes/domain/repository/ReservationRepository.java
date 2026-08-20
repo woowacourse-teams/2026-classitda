@@ -2,8 +2,6 @@ package com.classitda.classes.domain.repository;
 
 import com.classitda.classes.domain.Reservation;
 import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
-import com.classitda.classes.domain.repository.projection.StudentReservationCalendarEventProjection;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -43,36 +41,4 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             @Param("membershipId") Long membershipId
     );
 
-    @Query("""
-            SELECT reservation.classSession.id AS classSessionId,
-                   reservation.classSession.classForm AS classForm,
-                   classType.id AS classTypeId,
-                   reservation.classSession.startAt AS startAt,
-                   reservation.status AS reservationStatus
-            FROM Reservation reservation,
-                 ClassSessionClassType classSessionClassType,
-                 ClassType classType
-            WHERE classSessionClassType.classSessionId = reservation.classSession.id
-              AND classType.id = classSessionClassType.classTypeId
-              AND reservation.membership.id = :membershipId
-              AND reservation.classSession.studioId = :studioId
-              AND classType.studio.id = :studioId
-              AND reservation.classSession.startAt >= :rangeStart
-              AND reservation.classSession.startAt < :rangeEnd
-              AND reservation.classSession.canceledAt IS NULL
-              AND reservation.status IN (
-                  com.classitda.classes.domain.ReservationStatus.RESERVED,
-                  com.classitda.classes.domain.ReservationStatus.ATTENDED,
-                  com.classitda.classes.domain.ReservationStatus.ABSENT
-              )
-            ORDER BY reservation.classSession.startAt ASC,
-                     reservation.classSession.id ASC,
-                     classType.id ASC
-            """)
-    List<StudentReservationCalendarEventProjection> findCalendarEventsForStudent(
-            @Param("studioId") Long studioId,
-            @Param("membershipId") Long membershipId,
-            @Param("rangeStart") LocalDateTime rangeStart,
-            @Param("rangeEnd") LocalDateTime rangeEnd
-    );
 }

@@ -73,12 +73,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
             @PathVariable Long studioId,
             @Valid @ModelAttribute StudentCalendarListRequest request
     ) {
-        return studentCalendarQueryService.findAll(
-                        memberId,
-                        studioId,
-                        request.from(),
-                        request.to()
-                ).stream()
+        return studentCalendarQueryService.findAll(memberId, studioId, request.from(), request.to()).stream()
                 .map(StudentCalendarResponse::from)
                 .toList();
     }

@@ -22,24 +22,12 @@ public class StudentCalendarQueryService {
     private final StudentCalendarSummaryReader summaryReader;
     private final Clock clock;
 
-    public List<StudentCalendarSummary> findAll(
-            Long memberId,
-            Long studioId,
-            LocalDate from,
-            LocalDate to
-    ) {
+    public List<StudentCalendarSummary> findAll(Long memberId, Long studioId, LocalDate from, LocalDate to) {
         ClassSessionQueryRange range = ClassSessionQueryRange.calendar(from, to);
 
         Long membershipId = accessReader.readMembershipId(memberId, studioId);
         StudentOwnedPasses ownedPasses = ownedPassesReader.read(membershipId, studioId);
-        LocalDateTime now = LocalDateTime.now(clock);
 
-        return summaryReader.read(
-                studioId,
-                membershipId,
-                range,
-                ownedPasses,
-                now
-        );
+        return summaryReader.read(studioId, membershipId, range, ownedPasses, LocalDateTime.now(clock));
     }
 }

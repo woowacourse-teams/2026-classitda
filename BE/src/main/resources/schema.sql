@@ -400,6 +400,7 @@ CREATE TABLE class_session_enrollment
     UNIQUE KEY uk_enrollment_active (class_session_id, membership_id, active_flag),
     KEY idx_enrollment_queue (class_session_id, enrollment_status, enrollment_status_changed_at, id),
     KEY idx_enrollment_offer_expiry (enrollment_status, offer_expires_at, id),
+    KEY idx_enrollment_member_calendar (membership_id, enrollment_status, class_session_id),
     CONSTRAINT fk_enrollment_membership
         FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
     CONSTRAINT fk_enrollment_session

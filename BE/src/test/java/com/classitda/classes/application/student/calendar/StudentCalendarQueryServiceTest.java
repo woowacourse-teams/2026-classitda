@@ -5,13 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
+import com.classitda.classes.domain.AttendanceResult;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.ClassSessionEnrollment;
 import com.classitda.classes.domain.ClassType;
-import com.classitda.classes.domain.Reservation;
-import com.classitda.classes.domain.ReservationStatus;
-import com.classitda.classes.domain.Waiting;
-import com.classitda.classes.domain.WaitingStatus;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
@@ -130,10 +128,6 @@ class StudentCalendarQueryServiceTest {
                 studio, instructorMembership, yoga, "수강 완료", ClassForm.GROUP,
                 LocalDate.of(2026, 8, 16).atTime(9, 0)
         );
-        ClassSession futureAttendedSession = 수업을_저장한다(
-                studio, instructorMembership, yoga, "종료 전 출석 상태", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 19).atTime(9, 0)
-        );
         ClassSession endedReservedSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "출석 처리 전 종료 수업", ClassForm.GROUP,
                 LocalDate.of(2026, 8, 15).atTime(9, 0)
@@ -156,7 +150,7 @@ class StudentCalendarQueryServiceTest {
         );
         ClassSession offeredSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "빈자리 제안", ClassForm.GROUP,
-                LocalDate.of(2026, 8, 18).atTime(13, 0)
+                LocalDate.of(2026, 8, 19).atTime(13, 0)
         );
         ClassSession canceledSession = 수업을_저장한다(
                 studio, instructorMembership, yoga, "취소 수업", ClassForm.GROUP,
@@ -184,20 +178,18 @@ class StudentCalendarQueryServiceTest {
                 LocalDate.of(2026, 8, 20).atTime(11, 0)
         );
 
-        예약을_저장한다(attendedSession, studentMembership, memberPassProduct, ReservationStatus.ATTENDED);
-        예약을_저장한다(futureAttendedSession, studentMembership, memberPassProduct, ReservationStatus.ATTENDED);
-        예약을_저장한다(endedReservedSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
-        예약을_저장한다(absentSession, studentMembership, memberPassProduct, ReservationStatus.ABSENT);
-        대기를_저장한다(startedWaitingSession, studentMembership, WaitingStatus.WAITING);
-        예약을_저장한다(reservedSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
-        대기를_저장한다(waitingSession, studentMembership, WaitingStatus.WAITING);
-        대기를_저장한다(offeredSession, studentMembership, WaitingStatus.OFFERED);
-        예약을_저장한다(canceledSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
-        대기를_저장한다(canceledSession, studentMembership, WaitingStatus.WAITING);
-        예약을_저장한다(otherClassTypeSession, studentMembership, pilatesPass, ReservationStatus.RESERVED);
-        예약을_저장한다(otherClassFormSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
-        예약을_저장한다(otherMemberSession, otherStudentMembership, null, ReservationStatus.RESERVED);
-        예약을_저장한다(outOfRangeSession, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
+        예약_신청을_저장한다(attendedSession, studentMembership, memberPassProduct, AttendanceResult.ATTENDED);
+        예약_신청을_저장한다(endedReservedSession, studentMembership, memberPassProduct);
+        예약_신청을_저장한다(absentSession, studentMembership, memberPassProduct, AttendanceResult.ABSENT);
+        대기_신청을_저장한다(startedWaitingSession, studentMembership);
+        예약_신청을_저장한다(reservedSession, studentMembership, memberPassProduct);
+        대기_신청을_저장한다(waitingSession, studentMembership);
+        제안_신청을_저장한다(offeredSession, studentMembership);
+        예약_신청을_저장한다(canceledSession, studentMembership, memberPassProduct);
+        예약_신청을_저장한다(otherClassTypeSession, studentMembership, pilatesPass);
+        예약_신청을_저장한다(otherClassFormSession, studentMembership, memberPassProduct);
+        대기_신청을_저장한다(otherMemberSession, otherStudentMembership);
+        예약_신청을_저장한다(outOfRangeSession, studentMembership, memberPassProduct);
         entityManager.flush();
         entityManager.clear();
         statistics.clear();
@@ -213,12 +205,12 @@ class StudentCalendarQueryServiceTest {
 
         // then
         assertThat(summaries).containsExactly(
-                new StudentCalendarSummary(LocalDate.of(2026, 8, 15), true, false, false),
-                new StudentCalendarSummary(LocalDate.of(2026, 8, 16), true, false, false),
-                new StudentCalendarSummary(LocalDate.of(2026, 8, 17), true, false, false),
-                new StudentCalendarSummary(LocalDate.of(2026, 8, 18), false, true, true)
+                StudentCalendarSummary.of(LocalDate.of(2026, 8, 15), true, false, false),
+                StudentCalendarSummary.of(LocalDate.of(2026, 8, 16), true, false, false),
+                StudentCalendarSummary.of(LocalDate.of(2026, 8, 17), true, false, false),
+                StudentCalendarSummary.of(LocalDate.of(2026, 8, 18), false, true, true)
         );
-        assertThat(queryCount).isEqualTo(6L);
+        assertThat(queryCount).isEqualTo(5L);
     }
 
     @Test
@@ -254,9 +246,9 @@ class StudentCalendarQueryServiceTest {
                 studio, instructorMembership, classType, "수강권 기간 후", ClassForm.GROUP,
                 LocalDate.of(2026, 8, 19).atTime(11, 0)
         );
-        예약을_저장한다(before, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
-        예약을_저장한다(within, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
-        예약을_저장한다(after, studentMembership, memberPassProduct, ReservationStatus.RESERVED);
+        예약_신청을_저장한다(before, studentMembership, memberPassProduct);
+        예약_신청을_저장한다(within, studentMembership, memberPassProduct);
+        예약_신청을_저장한다(after, studentMembership, memberPassProduct);
         entityManager.flush();
         entityManager.clear();
 
@@ -270,7 +262,7 @@ class StudentCalendarQueryServiceTest {
 
         // then
         assertThat(summaries).containsExactly(
-                new StudentCalendarSummary(LocalDate.of(2026, 8, 18), false, true, false)
+                StudentCalendarSummary.of(LocalDate.of(2026, 8, 18), false, true, false)
         );
     }
 
@@ -307,7 +299,7 @@ class StudentCalendarQueryServiceTest {
 
         // then
         assertThat(summaries).isEmpty();
-        assertThat(queryCount).isEqualTo(6L);
+        assertThat(queryCount).isEqualTo(5L);
     }
 
     @ParameterizedTest
@@ -448,34 +440,51 @@ class StudentCalendarQueryServiceTest {
         return classSession;
     }
 
-    private void 예약을_저장한다(
+    private void 예약_신청을_저장한다(
+            ClassSession classSession,
+            StudioMembership membership,
+            MemberPassProduct memberPassProduct
+    ) {
+        예약_신청을_저장한다(
+                classSession,
+                membership,
+                memberPassProduct,
+                AttendanceResult.NOT_RECORDED
+        );
+    }
+
+    private void 예약_신청을_저장한다(
             ClassSession classSession,
             StudioMembership membership,
             MemberPassProduct memberPassProduct,
-            ReservationStatus status
+            AttendanceResult attendanceResult
     ) {
-        entityManager.persist(Reservation.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .memberPassProduct(memberPassProduct)
-                .status(status)
-                .reservedAt(NOW.minusDays(1))
-                .canceledAt(status == ReservationStatus.CANCELED ? NOW.minusHours(1) : null)
-                .build());
+        ClassSessionEnrollment enrollment = ClassSessionEnrollment.reserved(
+                membership,
+                classSession,
+                memberPassProduct,
+                NOW.minusDays(1)
+        );
+        if (attendanceResult == AttendanceResult.ATTENDED) {
+            enrollment.markAttended(classSession.getEndAt());
+        } else if (attendanceResult == AttendanceResult.ABSENT) {
+            enrollment.markAbsent(classSession.getEndAt());
+        }
+        entityManager.persist(enrollment);
     }
 
-    private void 대기를_저장한다(
-            ClassSession classSession,
-            StudioMembership membership,
-            WaitingStatus status
-    ) {
-        entityManager.persist(Waiting.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .sequence(1)
-                .status(status)
-                .offeredAt(status == WaitingStatus.OFFERED ? NOW.minusMinutes(5) : null)
-                .build());
+    private void 대기_신청을_저장한다(ClassSession classSession, StudioMembership membership) {
+        entityManager.persist(ClassSessionEnrollment.waiting(membership, classSession, NOW.minusDays(1)));
+    }
+
+    private void 제안_신청을_저장한다(ClassSession classSession, StudioMembership membership) {
+        ClassSessionEnrollment enrollment = ClassSessionEnrollment.waiting(
+                membership,
+                classSession,
+                NOW.minusDays(1)
+        );
+        enrollment.offer(NOW.minusMinutes(5), NOW.plusMinutes(5));
+        entityManager.persist(enrollment);
     }
 
     private static Stream<Arguments> 잘못된_조회_조건() {

@@ -2,11 +2,9 @@ package com.classitda.classes.application.student.calendar;
 
 import com.classitda.classes.application.ClassSessionQueryRange;
 import com.classitda.classes.application.student.pass.StudentOwnedPasses;
-import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ReservationStatus;
-import com.classitda.classes.domain.repository.ReservationRepository;
-import com.classitda.classes.domain.repository.WaitingRepository;
-import com.classitda.classes.domain.repository.projection.StudentReservationCalendarEventProjection;
+import com.classitda.classes.domain.EnrollmentStatus;
+import com.classitda.classes.domain.repository.ClassSessionEnrollmentRepository;
+import com.classitda.classes.domain.repository.projection.StudentEnrollmentCalendarEventProjection;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,8 +17,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class StudentCalendarSummaryReader {
 
-    private final ReservationRepository reservationRepository;
-    private final WaitingRepository waitingRepository;
+    private final ClassSessionEnrollmentRepository enrollmentRepository;
 
     List<StudentCalendarSummary> read(
             Long studioId,
@@ -30,75 +27,44 @@ public class StudentCalendarSummaryReader {
             LocalDateTime now
     ) {
         Map<LocalDate, StudentCalendarSummary> summaries = new TreeMap<>();
+        var events = enrollmentRepository.findCalendarEventsForStudent(
+                studioId,
+                membershipId,
+                range.startInclusive(),
+                range.endExclusive()
+        );
 
-        reservationRepository.findCalendarEventsForStudent(
-                        studioId,
-                        membershipId,
-                        range.startInclusive(),
-                        range.endExclusive()
-                ).stream()
-                .filter(event -> isCovered(
-                        ownedPasses,
-                        event.getClassForm(),
-                        event.getClassTypeId(),
-                        event.getStartAt()
-                ))
-                .forEach(event -> addReservationSummary(summaries, event, now));
-
-        waitingRepository.findCalendarEventsForStudent(
-                        studioId,
-                        membershipId,
-                        range.startInclusive(),
-                        range.endExclusive()
-                ).stream()
-                .filter(event -> isCovered(
-                        ownedPasses,
-                        event.getClassForm(),
-                        event.getClassTypeId(),
-                        event.getStartAt()
-                ))
-                .filter(event -> now.isBefore(event.getStartAt()))
-                .forEach(event -> merge(
-                        summaries,
-                        new StudentCalendarSummary(event.getStartAt().toLocalDate(), false, false, true)
-                ));
+        for (var event : events) {
+            if (!ownedPasses.covers(event.getClassForm(), event.getClassTypeId(), event.getStartAt().toLocalDate())) {
+                continue;
+            }
+            addSummary(summaries, event, now);
+        }
 
         return List.copyOf(summaries.values());
     }
 
-    private boolean isCovered(
-            StudentOwnedPasses ownedPasses,
-            ClassForm classForm,
-            Long classTypeId,
-            LocalDateTime startAt
-    ) {
-        return ownedPasses.covers(classForm, classTypeId, startAt.toLocalDate());
-    }
-
-    private void addReservationSummary(
+    private void addSummary(
             Map<LocalDate, StudentCalendarSummary> summaries,
-            StudentReservationCalendarEventProjection event,
+            StudentEnrollmentCalendarEventProjection event,
             LocalDateTime now
     ) {
-        LocalDate date = event.getStartAt().toLocalDate();
-        if (!now.isBefore(event.getStartAt())) {
-            merge(summaries, new StudentCalendarSummary(date, true, false, false));
+        boolean started = !now.isBefore(event.getStartAt());
+
+        boolean pastReservation = event.getEnrollmentStatus() == EnrollmentStatus.RESERVED && started;
+        boolean reserved = event.getEnrollmentStatus() == EnrollmentStatus.RESERVED && !started;
+        boolean waiting = event.getEnrollmentStatus() == EnrollmentStatus.WAITING && !started;
+
+        if (!pastReservation && !reserved && !waiting) {
             return;
         }
-        if (event.getReservationStatus() == ReservationStatus.RESERVED) {
-            merge(summaries, new StudentCalendarSummary(date, false, true, false));
-        }
-    }
 
-    private void merge(
-            Map<LocalDate, StudentCalendarSummary> summaries,
-            StudentCalendarSummary added
-    ) {
-        summaries.merge(added.date(), added, (existing, next) -> new StudentCalendarSummary(
-                existing.date(),
-                existing.pastReservation() || next.pastReservation(),
-                existing.reserved() || next.reserved(),
-                existing.waiting() || next.waiting()
-        ));
+        StudentCalendarSummary summary = StudentCalendarSummary.of(
+                event.getStartAt().toLocalDate(),
+                pastReservation,
+                reserved,
+                waiting
+        );
+        summaries.merge(summary.date(), summary, StudentCalendarSummary::merge);
     }
 }

@@ -903,13 +903,13 @@ class ClassSessionControllerTest {
 
     private static List<StudentCalendarSummary> 학생용_수업_달력_응답() {
         return List.of(
-                new StudentCalendarSummary(
+                StudentCalendarSummary.of(
                         LocalDate.of(2026, 8, 16),
                         true,
                         false,
                         false
                 ),
-                new StudentCalendarSummary(
+                StudentCalendarSummary.of(
                         LocalDate.of(2026, 8, 18),
                         false,
                         true,

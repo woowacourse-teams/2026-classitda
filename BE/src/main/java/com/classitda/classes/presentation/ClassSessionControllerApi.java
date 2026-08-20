@@ -250,12 +250,12 @@ public interface ClassSessionControllerApi {
                     - 같은 시설의 활성 학생 역할(STUDENT)만 조회할 수 있습니다.
                     - 로그인 회원이 같은 시설에서 보유한 모든 수강권의 수업 형태(ClassForm)와 수업 종류(ClassType)를 기준으로 집계합니다.
                     - 조회일이 수강권 이용 기간 안이면 현재 상태와 잔여 횟수와 관계없이 ClassForm과 ClassType이 모두 일치하는 회차를 집계합니다.
-                    - 시작 시각이 지난 본인의 RESERVED, ATTENDED, ABSENT 예약은 지난 예약 내역으로 집계합니다.
+                    - 시작 시각이 지난 본인의 RESERVED 신청은 지난 예약 내역으로 집계합니다.
                     - 조건에 맞는 보유 수강권이 없으면 빈 배열을 반환합니다.
 
                     ### 상태 요약
 
-                    - pastReservation은 시작 시각이 지난 본인의 RESERVED, ATTENDED, ABSENT 예약이 하나 이상 있으면 true입니다.
+                    - pastReservation은 시작 시각이 지난 본인의 RESERVED 신청이 하나 이상 있으면 true입니다.
                     - reserved는 시작 전인 본인의 RESERVED 예약이 하나 이상 있으면 true입니다.
                     - waiting은 시작 전인 수업에 본인의 WAITING 대기가 하나 이상 있으면 true입니다.
                     - 한 날짜에 여러 상태가 있으면 여러 필드가 동시에 true일 수 있습니다.
