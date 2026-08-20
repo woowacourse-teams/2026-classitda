@@ -1,6 +1,8 @@
 package com.classitda.classes.presentation.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.classitda.classes.domain.ClassForm;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +28,8 @@ public record ClassTemplateCreateRequest(
         Integer durationMinutes,
 
         @NotNull(message = "시작 시간은 필수입니다.")
+        @JsonFormat(pattern = "HH:mm:ss")
+        @Schema(type = "string", format = "time", example = "20:00:00")
         LocalTime startTime,
 
         Set<@NotNull(message = "반복 요일에는 null을 포함할 수 없습니다.") DayOfWeek> recurringDays,

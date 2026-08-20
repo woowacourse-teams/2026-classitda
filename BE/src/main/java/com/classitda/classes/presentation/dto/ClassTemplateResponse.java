@@ -1,7 +1,9 @@
 package com.classitda.classes.presentation.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassTemplate;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.util.List;
@@ -12,6 +14,8 @@ public record ClassTemplateResponse(
         String description,
         ClassForm classForm,
         int durationMinutes,
+        @JsonFormat(pattern = "HH:mm:ss")
+        @Schema(type = "string", format = "time", example = "20:00:00")
         LocalTime startTime,
         List<DayOfWeek> recurringDays,
         int capacity,
