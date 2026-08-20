@@ -85,7 +85,7 @@ jobs:
             IdentityFile ~/.ssh/id_deploy
             StrictHostKeyChecking yes
             UserKnownHostsFile ~/.ssh/known_hosts
-            ProxyCommand cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET --loglevel debug
+            ProxyCommand cloudflared --loglevel debug access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET
           CFG
           chmod 600 ~/.ssh/config
           echo "CF_ID 길이=${#CF_ID}"
@@ -97,6 +97,22 @@ jobs:
           echo "SSH_HOST 길이=${#SSH_HOST}"
           echo "known_hosts 줄 수=$(wc -l < ~/.ssh/known_hosts)"
           cloudflared --version
+
+          echo "===== 러너에서 엣지 직접 호출 ====="
+          echo "-- 토큰 없이 --"
+          curl -s -o /tmp/no.html -D /tmp/no.hdr "https://$SSH_HOST" || true
+          head -1 /tmp/no.hdr; echo "본문 $(wc -c < /tmp/no.html) 바이트"
+          grep -i "cf-mitigated\|cf-ray\|server:" /tmp/no.hdr || true
+
+          echo "-- 토큰 있이 --"
+          curl -s -o /tmp/tk.html -D /tmp/tk.hdr "https://$SSH_HOST" \
+            -H "CF-Access-Client-Id: $CF_ID" \
+            -H "CF-Access-Client-Secret: $CF_SECRET" || true
+          head -1 /tmp/tk.hdr; echo "본문 $(wc -c < /tmp/tk.html) 바이트"
+          grep -i "cf-mitigated\|cf-ray\|server:" /tmp/tk.hdr || true
+          head -c 300 /tmp/tk.html; echo
+
+          echo "===== SSH ====="
           ssh -v -o ConnectTimeout=30 target 'echo 터널 연결 확인'
 
       - name: .env 갱신
