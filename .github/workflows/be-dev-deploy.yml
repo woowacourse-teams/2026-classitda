@@ -3,7 +3,7 @@ name: BE DEV CD
 on:
   push:
     branches:
-      - main
+      - be/dev
     paths:
       - 'BE/**'
       - '.github/workflows/be-dev-deploy.yml'
@@ -53,14 +53,10 @@ jobs:
     environment: production
     steps:
       - name: cloudflared 설치
-        env:
-          CLOUDFLARED_VERSION: '2026.8.2'
-          CLOUDFLARED_SHA256: 'fcfb02b575a52ca1af2e3267af4e1517bcdeb30ac48c834c69abaed3c0576ad2'
         run: |
           set -eu
           curl -fsSL -o cloudflared \
-            "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-amd64"
-          echo "${CLOUDFLARED_SHA256}  cloudflared" | sha256sum -c -
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
           chmod +x cloudflared
           sudo mv cloudflared /usr/local/bin/
 
@@ -83,8 +79,8 @@ jobs:
             HostName $SSH_HOST
             User ubuntu
             IdentityFile ~/.ssh/id_deploy
-            StrictHostKeyChecking yes
-            UserKnownHostsFile ~/.ssh/known_hosts
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
             ProxyCommand cloudflared --loglevel debug access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET
           CFG
           chmod 600 ~/.ssh/config
