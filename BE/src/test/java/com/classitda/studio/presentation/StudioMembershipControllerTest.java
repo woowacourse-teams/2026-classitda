@@ -182,7 +182,7 @@ class StudioMembershipControllerTest {
                           "items": [{
                             "id": 1,
                             "name": "김철수",
-                            "phoneNumber": "+821012345678",
+                            "phoneNumber": "01012345678",
                             "studioRole": {"id": 3, "name": "회원", "instructor": false},
                             "registered": false,
                             "status": "ACTIVE",

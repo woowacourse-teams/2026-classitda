@@ -134,7 +134,7 @@ class AuthControllerTest {
         // given
         GoogleLoginRequest request = GoogleLoginRequest.from(ID_TOKEN);
         LoginResponse response = LoginResponse.registered(
-                IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L));
+                IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L));
         given(socialLoginService.loginWithGoogle(request)).willReturn(response);
 
         // when
@@ -151,7 +151,7 @@ class AuthControllerTest {
                         {
                           "status": "REGISTERED",
                           "accessToken": "access-token",
-                          "accessTokenExpiresIn": 900,
+                          "accessTokenExpiresIn": 3600,
                           "refreshToken": "refresh-token",
                           "refreshTokenExpiresIn": 2592000
                         }
@@ -205,7 +205,7 @@ class AuthControllerTest {
         // given
         RefreshTokenRequest request = RefreshTokenRequest.from(REFRESH_TOKEN);
         LoginTokenResponse response = LoginTokenResponse.of(
-                IssuedAccessToken.of("access-token", 900L),
+                IssuedAccessToken.of("access-token", 3_600L),
                 IssuedRefreshToken.of(
                         ROTATED_REFRESH_TOKEN,
                         "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC",
@@ -224,7 +224,7 @@ class AuthControllerTest {
                 .json("""
                         {
                           "accessToken": "access-token",
-                          "accessTokenExpiresIn": 900,
+                          "accessTokenExpiresIn": 3600,
                           "refreshToken": "%s",
                           "refreshTokenExpiresIn": 2592000
                         }
@@ -492,7 +492,7 @@ class AuthControllerTest {
     @Test
     void 가입_토큰으로_휴대전화_인증번호를_발송하면_201과_엄격한_응답을_반환한다() {
         // given
-        PhoneVerificationSendRequest request = PhoneVerificationSendRequest.from("+821012345678");
+        PhoneVerificationSendRequest request = PhoneVerificationSendRequest.from("01012345678");
         PhoneVerificationResponse applicationResult = PhoneVerificationResponse.of("verification-id", 180L, 60L);
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
         given(phoneVerificationService.send("signup-jti", request.phoneNumber())).willReturn(applicationResult);
@@ -522,7 +522,7 @@ class AuthControllerTest {
     void 올바르지_않은_휴대전화_번호들은_COMMON_001을_반환한다() {
         // given
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
-        String[] invalidPhoneNumbers = {" ", "01012345678", "+8210-1234-5678", "+8210 1234 5678", "+12025550123"};
+        String[] invalidPhoneNumbers = {" ", "01112345678", "0101234567", "010-1234-5678", "+821012345678"};
 
         // when / then
         for (String invalidPhoneNumber : invalidPhoneNumbers) {
@@ -547,7 +547,7 @@ class AuthControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/auth/phone-verifications")
                 .header("Authorization", "Bearer signup-token")
-                .body(PhoneVerificationSendRequest.from("+821012345678"))
+                .body(PhoneVerificationSendRequest.from("01012345678"))
                 .exchange();
 
         // then
@@ -561,7 +561,7 @@ class AuthControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/auth/phone-verifications")
                 .header("X-API-Version", "1")
-                .body(PhoneVerificationSendRequest.from("+821012345678"))
+                .body(PhoneVerificationSendRequest.from("01012345678"))
                 .exchange();
 
         // then
@@ -579,7 +579,7 @@ class AuthControllerTest {
                 .uri("/api/auth/phone-verifications")
                 .header("X-API-Version", "1")
                 .header("Authorization", "Bearer access-token")
-                .body(PhoneVerificationSendRequest.from("+821012345678"))
+                .body(PhoneVerificationSendRequest.from("01012345678"))
                 .exchange();
 
         // then
@@ -746,7 +746,7 @@ class AuthControllerTest {
         // given
         SignupRequest request = SignupRequest.of("홍길동", List.of(1L, 2L));
         SignupResponse response = SignupResponse.from(
-                IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L)
+                IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L)
         );
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
         given(signupService.complete("signup-jti", request)).willReturn(response);
@@ -760,7 +760,7 @@ class AuthControllerTest {
                 .json("""
                         {
                           "accessToken": "access-token",
-                          "accessTokenExpiresIn": 900,
+                          "accessTokenExpiresIn": 3600,
                           "refreshToken": "refresh-token",
                           "refreshTokenExpiresIn": 2592000
                         }
@@ -773,7 +773,7 @@ class AuthControllerTest {
         // given
         SignupRequest expectedRequest = SignupRequest.of("홍길동", List.of(1L, 2L));
         SignupResponse response = SignupResponse.from(
-                IssuedLoginTokens.of("access-token", 900L, "refresh-token", 2592000L)
+                IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L)
         );
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("server-jti", TokenUse.SIGNUP));
         given(signupService.complete("server-jti", expectedRequest)).willReturn(response);
@@ -782,7 +782,7 @@ class AuthControllerTest {
                   "name": "홍길동",
                   "agreedTermIds": [1, 2],
                   "signupJti": "client-jti",
-                  "phoneNumber": "+821099999999",
+                  "phoneNumber": "01099999999",
                   "provider": "GOOGLE",
                   "providerSubject": "client-subject",
                   "providerEmail": "client@example.com"

@@ -23,7 +23,7 @@ class JwtTokenContractTest {
         JwtDecoder jwtDecoder = jwtSupport.decoder(new SignupSessionJwtValidator(signupSessionStore));
 
         // when
-        String token = jwtTokenEncoder.encode(TokenUse.ACCESS, "42", "access-jti", Duration.ofMinutes(15));
+        String token = jwtTokenEncoder.encode(TokenUse.ACCESS, "42", "access-jti", Duration.ofHours(1));
         Jwt jwt = jwtDecoder.decode(token);
         AbstractOAuth2TokenAuthenticationToken<Jwt> authentication =
                 new JwtAuthenticationConverter().convert(jwt);
@@ -36,7 +36,7 @@ class JwtTokenContractTest {
         assertThat(jwt.getClaimAsString(JwtContract.TOKEN_USE_CLAIM)).isEqualTo(TokenUse.ACCESS.name());
         assertThat(jwt.getIssuedAt()).isNotNull();
         assertThat(jwt.getExpiresAt()).isNotNull();
-        assertThat(Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt())).isEqualTo(Duration.ofMinutes(15));
+        assertThat(Duration.between(jwt.getIssuedAt(), jwt.getExpiresAt())).isEqualTo(Duration.ofHours(1));
         assertThat(authentication.getName()).isEqualTo("42");
         assertThat(authentication.getAuthorities())
                 .extracting("authority")

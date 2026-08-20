@@ -4,14 +4,12 @@ import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
 import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-// TODO : 로컬 개발 끝나면 삭제 예정
-@Profile("local")
+// TODO: 실제 운영 전환 전에 이 개발용 Controller와 SecurityConfig의 permitAll 규칙을 함께 제거한다.
 @RequiredArgsConstructor
 @RequestMapping("/api/auth/local")
 @RestController

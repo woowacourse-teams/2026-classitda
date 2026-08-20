@@ -39,7 +39,7 @@ class SignupServiceTest {
     private static final String SIGNUP_JTI = "signup-jti-sensitive";
     private static final String PROVIDER_SUBJECT = "provider-subject-sensitive";
     private static final String PROVIDER_EMAIL = "provider-email-sensitive@example.com";
-    private static final String PHONE_NUMBER = "+821012345678";
+    private static final String PHONE_NUMBER = "01012345678";
     private static final SignupRequest REQUEST = SignupRequest.of("민감한회원이름", List.of(1L, 2L));
     private static final SignupSession SESSION = new SignupSession(
             OauthProvider.GOOGLE,
@@ -295,7 +295,7 @@ class SignupServiceTest {
     }
 
     private IssuedLoginTokens issuedTokens() {
-        return IssuedLoginTokens.of("access-token-sensitive", 900L, "refresh-token-sensitive", 2592000L);
+        return IssuedLoginTokens.of("access-token-sensitive", 3_600L, "refresh-token-sensitive", 2592000L);
     }
 
     private DataIntegrityViolationException dataIntegrityViolation() {

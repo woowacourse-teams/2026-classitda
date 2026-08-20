@@ -102,6 +102,10 @@ jobs:
           AUTH_JWT_PRIVATE_KEY_BASE64: ${{ secrets.AUTH_JWT_PRIVATE_KEY_BASE64 }}
           AUTH_JWT_PUBLIC_KEY_BASE64: ${{ secrets.AUTH_JWT_PUBLIC_KEY_BASE64 }}
           AUTH_PHONE_KEY_HMAC_SECRET_BASE64: ${{ secrets.AUTH_PHONE_KEY_HMAC_SECRET_BASE64 }}
+          NCP_SENS_SERVICE_ID: ${{ secrets.NCP_SENS_SERVICE_ID }}
+          NCP_SENS_ACCESS_KEY: ${{ secrets.NCP_SENS_ACCESS_KEY }}
+          NCP_SENS_SECRET_KEY: ${{ secrets.NCP_SENS_SECRET_KEY }}
+          NCP_SENS_SENDER_NUMBER: ${{ secrets.NCP_SENS_SENDER_NUMBER }}
         run: |
           set -eu
           umask 077
@@ -116,6 +120,10 @@ jobs:
             echo "AUTH_JWT_PRIVATE_KEY_BASE64=$AUTH_JWT_PRIVATE_KEY_BASE64"
             echo "AUTH_JWT_PUBLIC_KEY_BASE64=$AUTH_JWT_PUBLIC_KEY_BASE64"
             echo "AUTH_PHONE_KEY_HMAC_SECRET_BASE64=$AUTH_PHONE_KEY_HMAC_SECRET_BASE64"
+            echo "NCP_SENS_SERVICE_ID=$NCP_SENS_SERVICE_ID"
+            echo "NCP_SENS_ACCESS_KEY=$NCP_SENS_ACCESS_KEY"
+            echo "NCP_SENS_SECRET_KEY=$NCP_SENS_SECRET_KEY"
+            echo "NCP_SENS_SENDER_NUMBER=$NCP_SENS_SENDER_NUMBER"
           } > env.tmp
           scp -F ~/.ssh/config env.tmp target:/opt/classitda/.env.new
           ssh -F ~/.ssh/config target 'set -eu; umask 077; cd /opt/classitda; [ -f .env ] && cp .env .env.prev && chmod 600 .env.prev || true; chmod 600 .env.new; mv .env.new .env'
