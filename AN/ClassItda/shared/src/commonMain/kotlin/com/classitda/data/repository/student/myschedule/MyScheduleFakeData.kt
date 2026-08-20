@@ -67,6 +67,32 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
         )
     val waitlistAppliedAt = Instant.parse("2026-08-11T07:20:00Z")
 
+    val approvalWaitlistId = WaitlistId("waitlist-upcoming-approval-required")
+    val approvalWaitlistSession =
+        createSession(
+            id = "session-upcoming-approval-required",
+            title = "바렐 필라테스",
+            startsAt = "2026-08-21T03:00:00Z",
+            endsAt = "2026-08-21T04:00:00Z",
+            instructorName = "김하늘 강사",
+            facilityName = "바렐룸",
+            memo = "수업 시작 10분 전까지 도착해 주세요.",
+        )
+    val approvalWaitlistAppliedAt = Instant.parse("2026-08-10T07:20:00Z")
+
+    val positionOneWaitlistId = WaitlistId("waitlist-upcoming-position-one")
+    val positionOneWaitlistSession =
+        createSession(
+            id = "session-upcoming-position-one",
+            title = "바렐 필라테스",
+            startsAt = "2026-08-21T04:00:00Z",
+            endsAt = "2026-08-21T05:00:00Z",
+            instructorName = "김하늘 강사",
+            facilityName = "바렐룸",
+            memo = "수업 시작 10분 전까지 도착해 주세요.",
+        )
+    val positionOneWaitlistAppliedAt = Instant.parse("2026-08-11T06:20:00Z")
+
     val absentReservationId = ReservationId("reservation-history-absent")
     val absentSession =
         createSession(
@@ -103,6 +129,18 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
             memo = "편안한 복장으로 참여해 주세요.",
         )
 
+    val classCancelledReservationId = ReservationId("reservation-history-class-cancelled")
+    val classCancelledSession =
+        createSession(
+            id = "session-history-class-cancelled",
+            title = "체어 밸런스",
+            startsAt = "2026-07-26T01:00:00Z",
+            endsAt = "2026-07-26T01:50:00Z",
+            instructorName = "이지은 강사",
+            facilityName = "하타룸",
+            memo = null,
+        )
+
     return FakeMyScheduleRepository(
         upcomingSchedules =
             listOf(
@@ -116,6 +154,18 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
                     session = waitlistSession,
                     appliedAt = waitlistAppliedAt,
                     currentPosition = 2,
+                ),
+                UpcomingSchedule.Waitlisted(
+                    waitlistId = approvalWaitlistId,
+                    session = approvalWaitlistSession,
+                    appliedAt = approvalWaitlistAppliedAt,
+                    currentPosition = 0,
+                ),
+                UpcomingSchedule.Waitlisted(
+                    waitlistId = positionOneWaitlistId,
+                    session = positionOneWaitlistSession,
+                    appliedAt = positionOneWaitlistAppliedAt,
+                    currentPosition = 1,
                 ),
             ),
         usageHistory =
@@ -134,6 +184,11 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
                     reservationId = cancelledReservationId,
                     session = cancelledSession,
                     status = UsageHistoryStatus.RESERVATION_CANCELLED,
+                ),
+                UsageHistoryEntry(
+                    reservationId = classCancelledReservationId,
+                    session = classCancelledSession,
+                    status = UsageHistoryStatus.CLASS_CANCELLED,
                 ),
             ),
         reservationDetails =
@@ -161,6 +216,11 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
                     session = cancelledSession,
                     cancelledAt = Instant.parse("2026-07-25T04:20:00Z"),
                 ),
+                ReservationDetail.ClassCancelled(
+                    reservationId = classCancelledReservationId,
+                    session = classCancelledSession,
+                    cancelledAt = Instant.parse("2026-07-24T04:20:00Z"),
+                ),
             ),
         waitlistDetails =
             listOf(
@@ -169,6 +229,22 @@ internal fun createDefaultMyScheduleFakeRepository(): FakeMyScheduleRepository {
                     session = waitlistSession,
                     appliedAt = waitlistAppliedAt,
                     currentPosition = 2,
+                    pass = passAvailability,
+                    cancellation = WaitlistCancellationAvailability.Available,
+                ),
+                WaitlistDetail(
+                    waitlistId = approvalWaitlistId,
+                    session = approvalWaitlistSession,
+                    appliedAt = approvalWaitlistAppliedAt,
+                    currentPosition = 0,
+                    pass = passAvailability,
+                    cancellation = WaitlistCancellationAvailability.Available,
+                ),
+                WaitlistDetail(
+                    waitlistId = positionOneWaitlistId,
+                    session = positionOneWaitlistSession,
+                    appliedAt = positionOneWaitlistAppliedAt,
+                    currentPosition = 1,
                     pass = passAvailability,
                     cancellation = WaitlistCancellationAvailability.Available,
                 ),

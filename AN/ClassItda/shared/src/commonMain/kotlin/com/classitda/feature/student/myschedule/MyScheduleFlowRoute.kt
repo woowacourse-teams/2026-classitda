@@ -81,7 +81,7 @@ internal fun MyScheduleFlowRoute(
                             ReservationDetailDestination(reservationId = reservationId.value),
                         )
                     },
-                    onOpenWaitlist = { waitlistId ->
+                    onOpenWaitlist = { waitlistId, _ ->
                         navController.navigate(
                             WaitlistDetailDestination(waitlistId = waitlistId.value),
                         )

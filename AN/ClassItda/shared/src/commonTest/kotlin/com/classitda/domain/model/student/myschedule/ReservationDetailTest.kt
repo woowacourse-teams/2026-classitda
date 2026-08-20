@@ -25,6 +25,11 @@ class ReservationDetailTest {
                     session = session,
                     cancelledAt = Instant.parse("2026-08-02T01:00:00Z"),
                 ),
+                ReservationDetail.ClassCancelled(
+                    reservationId = reservationId,
+                    session = session,
+                    cancelledAt = Instant.parse("2026-08-03T01:00:00Z"),
+                ),
                 ReservationDetail.Attended(
                     reservationId = reservationId,
                     session = session,

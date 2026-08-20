@@ -194,6 +194,7 @@ internal class ReservationDetailViewModel(
 
             MyScheduleFailureReason.CONFLICT,
             MyScheduleFailureReason.CANCELLATION_NOT_ALLOWED,
+            MyScheduleFailureReason.APPROVAL_NOT_ALLOWED,
             MyScheduleFailureReason.UNKNOWN,
             -> {
                 ReservationDetailErrorUiModel.UNKNOWN
@@ -215,6 +216,7 @@ internal class ReservationDetailViewModel(
             }
 
             MyScheduleFailureReason.NOT_FOUND,
+            MyScheduleFailureReason.APPROVAL_NOT_ALLOWED,
             MyScheduleFailureReason.UNKNOWN,
             -> {
                 ReservationCancellationErrorUiModel.UNKNOWN

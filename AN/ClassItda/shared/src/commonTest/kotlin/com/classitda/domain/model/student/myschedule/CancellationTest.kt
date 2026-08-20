@@ -48,18 +48,17 @@ class CancellationTest {
     }
 
     @Test
-    fun `현재 대기 순번이 1이면 대기 상세를 생성할 수 있다`() {
+    fun `현재 대기 순번이 0과 1이면 대기 상세를 생성할 수 있다`() {
+        assertEquals(0, createWaitlistDetail(currentPosition = 0).currentPosition)
         val detail = createWaitlistDetail(currentPosition = 1)
 
         assertEquals(1, detail.currentPosition)
     }
 
     @Test
-    fun `현재 대기 순번이 0 또는 음수이면 대기 상세를 생성할 수 없다`() {
-        listOf(0, -1).forEach { currentPosition ->
-            assertFailsWith<IllegalArgumentException> {
-                createWaitlistDetail(currentPosition = currentPosition)
-            }
+    fun `현재 대기 순번이 음수이면 대기 상세를 생성할 수 없다`() {
+        assertFailsWith<IllegalArgumentException> {
+            createWaitlistDetail(currentPosition = -1)
         }
     }
 

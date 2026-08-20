@@ -66,6 +66,14 @@ internal object ReservationDetailPreviewFixture {
             cancelledAtLabel = "2026.08.01 (토) 오후 3:25",
         )
 
+    val classCancelled =
+        ReservationDetailUiModel.ClassCancelled(
+            reservationId = ReservationId("preview-reservation-class-cancelled"),
+            title = "체어 밸런스",
+            classInfo = confirmedClassInfo,
+            cancelledAtLabel = "2026.08.01 (토) 오후 3:25",
+        )
+
     val cancellationCompleted =
         ReservationCancellationResultUiModel(
             reservationId = ReservationId("preview-reservation-cancellation-result"),

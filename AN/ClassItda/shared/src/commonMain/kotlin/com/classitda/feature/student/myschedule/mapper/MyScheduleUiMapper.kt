@@ -103,6 +103,15 @@ internal class MyScheduleUiMapper(
                 )
             }
 
+            is ReservationDetail.ClassCancelled -> {
+                ReservationDetailUiModel.ClassCancelled(
+                    reservationId = detail.reservationId,
+                    title = detail.session.title,
+                    classInfo = detail.session.toReservationClassInfo(useLongDate = false),
+                    cancelledAtLabel = detail.session.formatInstant(detail.cancelledAt),
+                )
+            }
+
             is ReservationDetail.Attended -> {
                 ReservationDetailUiModel.Attended(
                     reservationId = detail.reservationId,
@@ -179,6 +188,7 @@ internal class MyScheduleUiMapper(
             is UpcomingSchedule.Waitlisted -> {
                 UpcomingScheduleCardUiModel.Waitlisted(
                     waitlistId = schedule.waitlistId,
+                    currentPosition = schedule.currentPosition,
                     timeRangeLabel = timeRangeLabel,
                     title = schedule.session.title,
                     instructorName = schedule.session.instructor.name,
@@ -321,6 +331,7 @@ internal class MyScheduleUiMapper(
         when (this) {
             UsageHistoryStatus.ATTENDED -> UsageHistoryStatusUiModel.ATTENDED
             UsageHistoryStatus.ABSENT -> UsageHistoryStatusUiModel.ABSENT
+            UsageHistoryStatus.CLASS_CANCELLED -> UsageHistoryStatusUiModel.CLASS_CANCELLED
             UsageHistoryStatus.RESERVATION_CANCELLED -> UsageHistoryStatusUiModel.RESERVATION_CANCELLED
         }
 

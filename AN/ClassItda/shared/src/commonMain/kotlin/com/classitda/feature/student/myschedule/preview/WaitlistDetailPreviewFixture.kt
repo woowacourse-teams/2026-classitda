@@ -33,6 +33,12 @@ internal object WaitlistDetailPreviewFixture {
             cancellation = WaitlistCancellationAvailabilityUiModel.Available,
         )
 
+    val approvalRequired =
+        pending.copy(
+            waitlistId = WaitlistId("preview-waitlist-approval-required"),
+            currentPosition = 0,
+        )
+
     object Boundary {
         private const val LONG_TITLE =
             "초보자부터 숙련자까지 함께하는 리포머 코어 밸런스 집중 수업"

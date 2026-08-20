@@ -14,8 +14,21 @@ data class WaitlistDetailUiModel(
     init {
         require(title.isNotBlank()) { "수업명 표시는 비어 있을 수 없습니다." }
         require(appliedAtLabel.isNotBlank()) { "대기 일시 표시는 비어 있을 수 없습니다." }
-        require(currentPosition >= 1) { "현재 대기 순번은 1 이상이어야 합니다." }
+        require(currentPosition >= 0) { "현재 대기 순번은 0 이상이어야 합니다." }
     }
+
+    val status: WaitlistDetailStatusUiModel
+        get() =
+            if (currentPosition == 0) {
+                WaitlistDetailStatusUiModel.APPROVAL_REQUIRED
+            } else {
+                WaitlistDetailStatusUiModel.WAITLISTED
+            }
+}
+
+enum class WaitlistDetailStatusUiModel {
+    APPROVAL_REQUIRED,
+    WAITLISTED,
 }
 
 data class WaitlistClassInfoUiModel(
@@ -71,13 +84,23 @@ sealed interface WaitlistDetailUiState {
     data class Content(
         val detail: WaitlistDetailUiModel,
         val cancellationDialog: WaitlistCancellationDialogUiState? = null,
+        val approvalDialog: WaitlistApprovalDialogUiState? = null,
     ) : WaitlistDetailUiState {
         init {
+            require(cancellationDialog == null || approvalDialog == null) {
+                "대기 취소와 승인 확인 창은 동시에 표시할 수 없습니다."
+            }
             require(
                 cancellationDialog == null ||
                     detail.cancellation is WaitlistCancellationAvailabilityUiModel.Available,
             ) {
                 "대기 취소 확인 창은 취소 가능한 대기 상세에서만 표시할 수 있습니다."
+            }
+            require(
+                approvalDialog == null ||
+                    detail.status == WaitlistDetailStatusUiModel.APPROVAL_REQUIRED,
+            ) {
+                "승인 확인 창은 승인 필요한 대기 상세에서만 표시할 수 있습니다."
             }
         }
     }
@@ -85,6 +108,8 @@ sealed interface WaitlistDetailUiState {
     data class CancellationCompleted(
         val result: WaitlistCancellationResultUiModel,
     ) : WaitlistDetailUiState
+
+    data object ApprovalCompleted : WaitlistDetailUiState
 
     data class Error(
         val error: WaitlistDetailErrorUiModel,
@@ -104,13 +129,27 @@ sealed interface WaitlistDetailAction {
         val waitlistId: WaitlistId,
     ) : WaitlistDetailAction
 
+    data class ApproveWaitlist(
+        val waitlistId: WaitlistId,
+    ) : WaitlistDetailAction
+
     data object DismissCancellation : WaitlistDetailAction
+
+    data object DismissApproval : WaitlistDetailAction
 
     data class ConfirmCancellation(
         val waitlistId: WaitlistId,
     ) : WaitlistDetailAction
 
     data class RetryCancellation(
+        val waitlistId: WaitlistId,
+    ) : WaitlistDetailAction
+
+    data class ConfirmApproval(
+        val waitlistId: WaitlistId,
+    ) : WaitlistDetailAction
+
+    data class RetryApproval(
         val waitlistId: WaitlistId,
     ) : WaitlistDetailAction
 }
@@ -129,6 +168,23 @@ enum class WaitlistCancellationErrorUiModel {
     NETWORK,
     CONFLICT,
     CANCELLATION_NOT_ALLOWED,
+    UNKNOWN,
+}
+
+sealed interface WaitlistApprovalDialogUiState {
+    data object Waiting : WaitlistApprovalDialogUiState
+
+    data object Submitting : WaitlistApprovalDialogUiState
+
+    data class Failed(
+        val error: WaitlistApprovalErrorUiModel,
+    ) : WaitlistApprovalDialogUiState
+}
+
+enum class WaitlistApprovalErrorUiModel {
+    NETWORK,
+    CONFLICT,
+    APPROVAL_NOT_ALLOWED,
     UNKNOWN,
 }
 
@@ -154,9 +210,19 @@ data class WaitlistCancellationResultUiModel(
 internal val WaitlistCancellationDialogUiState.canDismiss: Boolean
     get() = this !is WaitlistCancellationDialogUiState.Submitting
 
+internal val WaitlistApprovalDialogUiState.canDismiss: Boolean
+    get() = this !is WaitlistApprovalDialogUiState.Submitting
+
 internal fun WaitlistDetailUiModel.cancellationActionOrNull(): WaitlistDetailAction.CancelWaitlist? =
     if (cancellation is WaitlistCancellationAvailabilityUiModel.Available) {
         WaitlistDetailAction.CancelWaitlist(waitlistId)
+    } else {
+        null
+    }
+
+internal fun WaitlistDetailUiModel.approvalActionOrNull(): WaitlistDetailAction.ApproveWaitlist? =
+    if (status == WaitlistDetailStatusUiModel.APPROVAL_REQUIRED) {
+        WaitlistDetailAction.ApproveWaitlist(waitlistId)
     } else {
         null
     }

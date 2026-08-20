@@ -1,6 +1,7 @@
 package com.classitda.feature.student.myschedule
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.classitda.domain.model.student.myschedule.WaitlistId
@@ -22,11 +23,20 @@ internal fun WaitlistDetailRoute(
         )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(state) {
+        if (state is WaitlistDetailUiState.ApprovalCompleted) {
+            onReturnToList()
+        }
+    }
+
     WaitlistDetailScreen(
         state = state,
         onAction = viewModel::onAction,
         onBack =
-            if (state is WaitlistDetailUiState.CancellationCompleted) {
+            if (
+                state is WaitlistDetailUiState.CancellationCompleted ||
+                state is WaitlistDetailUiState.ApprovalCompleted
+            ) {
                 onReturnToList
             } else {
                 onBack

@@ -34,15 +34,40 @@ class MyScheduleListUiModelTest {
     }
 
     @Test
-    fun `이용 내역 상태는 출석 결석 예약 취소를 모두 구분한다`() {
+    fun `이용 내역 상태는 출석 결석 수업 취소 예약 취소를 모두 구분한다`() {
         assertContentEquals(
             listOf(
                 UsageHistoryStatusUiModel.ATTENDED,
                 UsageHistoryStatusUiModel.ABSENT,
+                UsageHistoryStatusUiModel.CLASS_CANCELLED,
                 UsageHistoryStatusUiModel.RESERVATION_CANCELLED,
             ),
             UsageHistoryStatusUiModel.entries,
         )
+    }
+
+    @Test
+    fun `대기 카드 순번은 0과 1을 보존하고 음수를 거부한다`() {
+        assertEquals(
+            0,
+            createWaitlisted(WaitlistId("waitlist-zero"), currentPosition = 0).currentPosition,
+        )
+        assertEquals(
+            UpcomingScheduleStatusUiModel.APPROVAL_REQUIRED,
+            createWaitlisted(WaitlistId("waitlist-zero"), currentPosition = 0).status,
+        )
+        assertEquals(
+            1,
+            createWaitlisted(WaitlistId("waitlist-one"), currentPosition = 1).currentPosition,
+        )
+        assertEquals(
+            UpcomingScheduleStatusUiModel.WAITLISTED,
+            createWaitlisted(WaitlistId("waitlist-one"), currentPosition = 1).status,
+        )
+
+        assertFailsWith<IllegalArgumentException> {
+            createWaitlisted(WaitlistId("waitlist-negative"), currentPosition = -1)
+        }
     }
 
     @Test
@@ -75,9 +100,13 @@ class MyScheduleListUiModelTest {
             instructorName = "이지은 강사",
         )
 
-    private fun createWaitlisted(waitlistId: WaitlistId): UpcomingScheduleCardUiModel.Waitlisted =
+    private fun createWaitlisted(
+        waitlistId: WaitlistId,
+        currentPosition: Int = 1,
+    ): UpcomingScheduleCardUiModel.Waitlisted =
         UpcomingScheduleCardUiModel.Waitlisted(
             waitlistId = waitlistId,
+            currentPosition = currentPosition,
             timeRangeLabel = "오전 11:00 ~ 오후 12:50",
             title = "엄청나게 긴 글자의 수업",
             instructorName = "이지은 강사",

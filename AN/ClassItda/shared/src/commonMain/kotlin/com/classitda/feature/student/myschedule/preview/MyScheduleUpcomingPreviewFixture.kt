@@ -19,9 +19,30 @@ internal object MyScheduleUpcomingPreviewFixture {
     val waitlisted =
         UpcomingScheduleCardUiModel.Waitlisted(
             waitlistId = WaitlistId("preview-waitlist-f01"),
+            currentPosition = 1,
             timeRangeLabel = "오전 11:00 ~ 오후 12:50",
             title = "엄청나게 어마어마하게 긴 글자의 수업을 가진 필라테스",
             instructorName = "박소연 대표 강사",
+        )
+
+    val approvalRequired =
+        waitlisted.copy(
+            waitlistId = WaitlistId("preview-waitlist-approval-required"),
+            currentPosition = 0,
+        )
+
+    val waitlistedPosition2 =
+        waitlisted.copy(
+            waitlistId = WaitlistId("preview-waitlist-position-2"),
+            currentPosition = 2,
+        )
+
+    val approvedFromWaitlist =
+        UpcomingScheduleCardUiModel.ConfirmedReservation(
+            reservationId = ReservationId("preview-reservation-approved-from-waitlist"),
+            timeRangeLabel = approvalRequired.timeRangeLabel,
+            title = approvalRequired.title,
+            instructorName = approvalRequired.instructorName,
         )
 
     val sections =
@@ -32,7 +53,19 @@ internal object MyScheduleUpcomingPreviewFixture {
             ),
             UpcomingDateSectionUiModel(
                 dateLabel = "8월 9일 일요일",
-                items = listOf(waitlisted),
+                items = listOf(approvalRequired, waitlisted, waitlistedPosition2),
+            ),
+        )
+
+    val sectionsAfterApproval =
+        listOf(
+            UpcomingDateSectionUiModel(
+                dateLabel = "8월 8일 토요일",
+                items = listOf(confirmedReservation),
+            ),
+            UpcomingDateSectionUiModel(
+                dateLabel = "8월 9일 일요일",
+                items = listOf(approvedFromWaitlist, waitlisted, waitlistedPosition2),
             ),
         )
 

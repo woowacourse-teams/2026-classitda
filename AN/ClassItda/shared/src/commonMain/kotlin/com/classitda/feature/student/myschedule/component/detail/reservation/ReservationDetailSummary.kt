@@ -22,6 +22,7 @@ import classitda.shared.generated.resources.my_schedule_cancelled_at
 import classitda.shared.generated.resources.my_schedule_reserved_at
 import classitda.shared.generated.resources.my_schedule_status_absent
 import classitda.shared.generated.resources.my_schedule_status_attended
+import classitda.shared.generated.resources.my_schedule_status_class_canceled
 import classitda.shared.generated.resources.my_schedule_status_completed_mark
 import classitda.shared.generated.resources.my_schedule_status_confirmed
 import classitda.shared.generated.resources.my_schedule_status_confirmed_mark
@@ -119,6 +120,14 @@ private fun ReservationDetailUiModel.statusPresentation(): ReservationDetailStat
             )
         }
 
+        is ReservationDetailUiModel.ClassCancelled -> {
+            ReservationDetailStatusPresentation(
+                label = Res.string.my_schedule_status_class_canceled,
+                mark = Res.string.my_schedule_status_completed_mark,
+                color = StuColors.TextSecondary,
+            )
+        }
+
         is ReservationDetailUiModel.Attended -> {
             ReservationDetailStatusPresentation(
                 label = Res.string.my_schedule_status_attended,
@@ -140,6 +149,7 @@ private fun ReservationDetailUiModel.primaryTimeLabel(): StringResource =
     when (this) {
         is ReservationDetailUiModel.Confirmed -> Res.string.my_schedule_reserved_at
         is ReservationDetailUiModel.Cancelled -> Res.string.my_schedule_cancelled_at
+        is ReservationDetailUiModel.ClassCancelled -> Res.string.my_schedule_cancelled_at
         is ReservationDetailUiModel.Attended -> Res.string.my_schedule_attendance_time
         is ReservationDetailUiModel.Absent -> Res.string.my_schedule_attendance_time
     }
@@ -148,6 +158,7 @@ private fun ReservationDetailUiModel.primaryTimeValue(): String =
     when (this) {
         is ReservationDetailUiModel.Confirmed -> reservedAtLabel
         is ReservationDetailUiModel.Cancelled -> cancelledAtLabel
+        is ReservationDetailUiModel.ClassCancelled -> cancelledAtLabel
         is ReservationDetailUiModel.Attended -> checkedInAtLabel
         is ReservationDetailUiModel.Absent -> attendanceTimePlaceholder
     }
@@ -188,5 +199,18 @@ private fun ReservationDetailSummaryPreview_F09Attended_Student() {
 private fun ReservationDetailSummaryPreview_F10Absent_Student() {
     AppTheme(theme = ThemeType.STUDENT) {
         ReservationDetailSummary(model = ReservationDetailPreviewFixture.absent)
+    }
+}
+
+@Preview(
+    name = "Reservation detail summary / Class cancelled / Student",
+    group = "Component/MySchedule",
+    showBackground = true,
+    widthDp = 390,
+)
+@Composable
+private fun ReservationDetailSummaryPreview_ClassCancelled_Student() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationDetailSummary(model = ReservationDetailPreviewFixture.classCancelled)
     }
 }

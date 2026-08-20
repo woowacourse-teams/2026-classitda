@@ -35,6 +35,17 @@ sealed interface ReservationDetailUiModel {
         }
     }
 
+    data class ClassCancelled(
+        override val reservationId: ReservationId,
+        override val title: String,
+        override val classInfo: ReservationClassInfoUiModel,
+        val cancelledAtLabel: String,
+    ) : ReservationDetailUiModel {
+        init {
+            require(cancelledAtLabel.isNotBlank()) { "수업 취소 일시 표시는 비어 있을 수 없습니다." }
+        }
+    }
+
     data class Attended(
         override val reservationId: ReservationId,
         override val title: String,
@@ -225,6 +236,10 @@ internal fun ReservationDetailUiModel.cancellationActionOrNull(): ReservationDet
         }
 
         is ReservationDetailUiModel.Cancelled -> {
+            null
+        }
+
+        is ReservationDetailUiModel.ClassCancelled -> {
             null
         }
 

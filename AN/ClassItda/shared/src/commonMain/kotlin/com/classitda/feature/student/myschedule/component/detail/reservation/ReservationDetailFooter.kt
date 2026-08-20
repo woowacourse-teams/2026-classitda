@@ -19,6 +19,7 @@ import classitda.shared.generated.resources.my_schedule_cancel_reservation
 import classitda.shared.generated.resources.my_schedule_class_detail_absent_result
 import classitda.shared.generated.resources.my_schedule_class_detail_attended_result
 import classitda.shared.generated.resources.my_schedule_class_detail_center_cancellation_policy
+import classitda.shared.generated.resources.my_schedule_class_detail_class_cancellation_notice
 import classitda.shared.generated.resources.my_schedule_class_detail_history_condition
 import classitda.shared.generated.resources.my_schedule_class_detail_notice
 import classitda.shared.generated.resources.my_schedule_class_detail_reservation_cancellation_deadline
@@ -56,6 +57,16 @@ internal fun ReservationDetailFooter(
         }
 
         is ReservationDetailUiModel.Cancelled -> {}
+
+        is ReservationDetailUiModel.ClassCancelled -> {
+            ReservationDetailNotice(
+                notices =
+                    listOf(
+                        stringResource(Res.string.my_schedule_class_detail_class_cancellation_notice),
+                    ),
+            )
+            ReservationCancellationAction(onCancelReservation = null)
+        }
 
         is ReservationDetailUiModel.Attended -> {
             ReservationDetailNotice(

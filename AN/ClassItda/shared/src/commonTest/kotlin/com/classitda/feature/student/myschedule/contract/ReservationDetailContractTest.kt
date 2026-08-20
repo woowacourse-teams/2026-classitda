@@ -14,11 +14,13 @@ class ReservationDetailContractTest {
     fun `예약 상세 네 상태는 하나의 Content 상태 안에서 서로 다른 타입으로 유지된다`() {
         val confirmedState = ReservationDetailUiState.Content(createConfirmed())
         val cancelledState = ReservationDetailUiState.Content(createCancelled())
+        val classCancelledState = ReservationDetailUiState.Content(createClassCancelled())
         val attendedState = ReservationDetailUiState.Content(createAttended())
         val absentState = ReservationDetailUiState.Content(createAbsent())
 
         assertIs<ReservationDetailUiModel.Confirmed>(confirmedState.detail)
         assertIs<ReservationDetailUiModel.Cancelled>(cancelledState.detail)
+        assertIs<ReservationDetailUiModel.ClassCancelled>(classCancelledState.detail)
         assertIs<ReservationDetailUiModel.Attended>(attendedState.detail)
         assertIs<ReservationDetailUiModel.Absent>(absentState.detail)
     }
@@ -50,8 +52,20 @@ class ReservationDetailContractTest {
             action,
         )
         assertNull(createCancelled().cancellationActionOrNull())
+        assertNull(createClassCancelled().cancellationActionOrNull())
         assertNull(createAttended().cancellationActionOrNull())
         assertNull(createAbsent().cancellationActionOrNull())
+    }
+
+    @Test
+    fun `수업 취소 상세는 예약 취소 상세와 분리되고 사용자 취소 Action을 제공하지 않는다`() {
+        val classCancelled = createClassCancelled()
+        val reservationCancelled = createCancelled()
+
+        assertIs<ReservationDetailUiModel.ClassCancelled>(classCancelled)
+        assertIs<ReservationDetailUiModel.Cancelled>(reservationCancelled)
+        assertNull(classCancelled.cancellationActionOrNull())
+        assertNull(reservationCancelled.cancellationActionOrNull())
     }
 
     @Test
@@ -161,6 +175,14 @@ class ReservationDetailContractTest {
     private fun createCancelled(): ReservationDetailUiModel.Cancelled =
         ReservationDetailUiModel.Cancelled(
             reservationId = ReservationId("reservation-cancelled"),
+            title = "체어 밸런스",
+            classInfo = createClassInfo(),
+            cancelledAtLabel = "2026.08.01 (토) 오후 3:25",
+        )
+
+    private fun createClassCancelled(): ReservationDetailUiModel.ClassCancelled =
+        ReservationDetailUiModel.ClassCancelled(
+            reservationId = ReservationId("reservation-class-cancelled"),
             title = "체어 밸런스",
             classInfo = createClassInfo(),
             cancelledAtLabel = "2026.08.01 (토) 오후 3:25",

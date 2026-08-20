@@ -20,6 +20,12 @@ sealed interface ReservationDetail {
         val cancelledAt: Instant,
     ) : ReservationDetail
 
+    data class ClassCancelled(
+        override val reservationId: ReservationId,
+        override val session: ClassSession,
+        val cancelledAt: Instant,
+    ) : ReservationDetail
+
     data class Attended(
         override val reservationId: ReservationId,
         override val session: ClassSession,

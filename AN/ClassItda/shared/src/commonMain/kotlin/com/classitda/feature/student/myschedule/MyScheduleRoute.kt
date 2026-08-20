@@ -12,7 +12,7 @@ import org.koin.compose.viewmodel.koinViewModel
 internal fun MyScheduleRoute(
     viewModelKey: String,
     onOpenReservation: (ReservationId) -> Unit,
-    onOpenWaitlist: (WaitlistId) -> Unit,
+    onOpenWaitlist: (WaitlistId, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val viewModel = koinViewModel<MyScheduleViewModel>(key = viewModelKey)

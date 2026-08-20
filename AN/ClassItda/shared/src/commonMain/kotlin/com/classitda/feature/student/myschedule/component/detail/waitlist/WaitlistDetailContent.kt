@@ -30,6 +30,7 @@ import classitda.shared.generated.resources.ic_calendar_today
 import classitda.shared.generated.resources.ic_chat_bubble_outline
 import classitda.shared.generated.resources.ic_confirmation_number
 import classitda.shared.generated.resources.ic_schedule
+import classitda.shared.generated.resources.my_schedule_approve_waitlist
 import classitda.shared.generated.resources.my_schedule_bullet
 import classitda.shared.generated.resources.my_schedule_cancel_waitlist
 import classitda.shared.generated.resources.my_schedule_class_detail_date
@@ -43,6 +44,7 @@ import classitda.shared.generated.resources.my_schedule_pass_cancellable
 import classitda.shared.generated.resources.my_schedule_pass_reservable
 import classitda.shared.generated.resources.my_schedule_pass_total_remaining
 import classitda.shared.generated.resources.my_schedule_separator
+import classitda.shared.generated.resources.my_schedule_status_approval_required
 import classitda.shared.generated.resources.my_schedule_status_waitlist
 import classitda.shared.generated.resources.my_schedule_used_ticket
 import classitda.shared.generated.resources.my_schedule_waitlist_applied_at
@@ -55,7 +57,9 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.feature.student.myschedule.component.common.MySchedulePrimaryButton
 import com.classitda.feature.student.myschedule.component.common.MyScheduleWarningButton
+import com.classitda.feature.student.myschedule.contract.WaitlistDetailStatusUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistDetailUiModel
 import com.classitda.feature.student.myschedule.preview.WaitlistDetailPreviewFixture
 import org.jetbrains.compose.resources.DrawableResource
@@ -66,6 +70,7 @@ import org.jetbrains.compose.resources.stringResource
 internal fun WaitlistDetailContent(
     model: WaitlistDetailUiModel,
     onCancelWaitlist: (() -> Unit)?,
+    onApproveWaitlist: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
 ) {
@@ -88,6 +93,7 @@ internal fun WaitlistDetailContent(
         item {
             WaitlistDetailFooter(
                 onCancelWaitlist = onCancelWaitlist,
+                onApproveWaitlist = onApproveWaitlist,
             )
         }
     }
@@ -125,7 +131,18 @@ private fun WaitlistDetailSummary(model: WaitlistDetailUiModel) {
                         color = StuColors.Orange,
                     )
                     Text(
-                        text = stringResource(Res.string.my_schedule_status_waitlist),
+                        text =
+                            stringResource(
+                                when (model.status) {
+                                    WaitlistDetailStatusUiModel.APPROVAL_REQUIRED -> {
+                                        Res.string.my_schedule_status_approval_required
+                                    }
+
+                                    WaitlistDetailStatusUiModel.WAITLISTED -> {
+                                        Res.string.my_schedule_status_waitlist
+                                    }
+                                },
+                            ),
                         style = appTypography().titleMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = StuColors.Orange,
                     )
@@ -284,7 +301,10 @@ private fun WaitlistInstructorSection(model: WaitlistDetailUiModel) {
 }
 
 @Composable
-private fun WaitlistDetailFooter(onCancelWaitlist: (() -> Unit)?) {
+private fun WaitlistDetailFooter(
+    onCancelWaitlist: (() -> Unit)?,
+    onApproveWaitlist: (() -> Unit)?,
+) {
     Column(
         modifier =
             Modifier
@@ -310,6 +330,12 @@ private fun WaitlistDetailFooter(onCancelWaitlist: (() -> Unit)?) {
             modifier = Modifier.padding(top = AppSpacing.xxl),
             enabled = onCancelWaitlist != null,
         )
+        onApproveWaitlist?.let { onApprove ->
+            MySchedulePrimaryButton(
+                text = stringResource(Res.string.my_schedule_approve_waitlist),
+                onClick = onApprove,
+            )
+        }
     }
 }
 
@@ -423,6 +449,26 @@ private fun WaitlistDetailContentPreview_F06Pending_Student_Default() {
         WaitlistDetailContent(
             model = WaitlistDetailPreviewFixture.pending,
             onCancelWaitlist = {},
+            onApproveWaitlist = null,
+        )
+    }
+}
+
+@Preview(
+    name = "F06 approval required / Student / Default",
+    group = "Component/MySchedule/WaitlistDetail",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 788,
+)
+@Composable
+private fun WaitlistDetailContentPreview_F06ApprovalRequired_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        WaitlistDetailContent(
+            model = WaitlistDetailPreviewFixture.approvalRequired,
+            onCancelWaitlist = {},
+            onApproveWaitlist = {},
         )
     }
 }

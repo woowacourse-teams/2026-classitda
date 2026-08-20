@@ -25,8 +25,10 @@ import com.classitda.domain.model.student.myschedule.WaitlistId
 import com.classitda.feature.student.myschedule.contract.ReservationCancellationAvailabilityUiModel
 import com.classitda.feature.student.myschedule.contract.ReservationDetailUiModel
 import com.classitda.feature.student.myschedule.contract.UpcomingScheduleCardUiModel
+import com.classitda.feature.student.myschedule.contract.UpcomingScheduleStatusUiModel
 import com.classitda.feature.student.myschedule.contract.UsageHistoryStatusUiModel
 import com.classitda.feature.student.myschedule.contract.WaitlistCancellationAvailabilityUiModel
+import com.classitda.feature.student.myschedule.contract.WaitlistDetailStatusUiModel
 import kotlinx.datetime.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -90,6 +92,52 @@ class MyScheduleUiMapperTest {
             WaitlistId("waitlist-august-9"),
             assertIs<UpcomingScheduleCardUiModel.Waitlisted>(sections.last().items.single()).waitlistId,
         )
+        assertEquals(
+            2,
+            assertIs<UpcomingScheduleCardUiModel.Waitlisted>(sections.last().items.single()).currentPosition,
+        )
+    }
+
+    @Test
+    fun `대기 순번 0 1 2는 카드 상태와 WaitlistId를 함께 보존한다`() {
+        val schedules =
+            listOf(0, 1, 2).map { currentPosition ->
+                createWaitlisted(
+                    id = "waitlist-position-$currentPosition",
+                    session =
+                        createSession(
+                            id = "session-position-$currentPosition",
+                            startsAt = "2026-08-08T02:00:00Z",
+                            endsAt = "2026-08-08T03:50:00Z",
+                        ),
+                    currentPosition = currentPosition,
+                )
+            }
+
+        val waitlistedCards =
+            mapper
+                .mapUpcomingSchedules(schedules)
+                .single()
+                .items
+                .map { assertIs<UpcomingScheduleCardUiModel.Waitlisted>(it) }
+                .sortedBy { it.currentPosition }
+
+        assertContentEquals(
+            listOf(
+                WaitlistId("waitlist-position-0"),
+                WaitlistId("waitlist-position-1"),
+                WaitlistId("waitlist-position-2"),
+            ),
+            waitlistedCards.map { it.waitlistId },
+        )
+        assertContentEquals(
+            listOf(
+                UpcomingScheduleStatusUiModel.APPROVAL_REQUIRED,
+                UpcomingScheduleStatusUiModel.WAITLISTED,
+                UpcomingScheduleStatusUiModel.WAITLISTED,
+            ),
+            waitlistedCards.map { it.status },
+        )
     }
 
     @Test
@@ -145,6 +193,25 @@ class MyScheduleUiMapperTest {
                 .single()
                 .status,
         )
+
+        val classCancelled =
+            mapper.mapUsageHistory(
+                listOf(
+                    createHistory(
+                        id = "reservation-class-cancelled",
+                        status = UsageHistoryStatus.CLASS_CANCELLED,
+                        session = createAugustFourthSession(),
+                    ),
+                ),
+            )
+        assertEquals(
+            UsageHistoryStatusUiModel.CLASS_CANCELLED,
+            classCancelled
+                .single()
+                .items
+                .single()
+                .status,
+        )
     }
 
     @Test
@@ -194,11 +261,24 @@ class MyScheduleUiMapperTest {
                     ),
                 cancellationDeadlineHoursBeforeStart = 4,
             )
+        val classCancelled =
+            mapper.mapReservationDetail(
+                detail =
+                    ReservationDetail.ClassCancelled(
+                        reservationId = ReservationId("reservation-class-cancelled"),
+                        session = session,
+                        cancelledAt = Instant.parse("2026-08-01T06:25:00Z"),
+                    ),
+                cancellationDeadlineHoursBeforeStart = 4,
+            )
 
         assertIs<ReservationDetailUiModel.Confirmed>(confirmed)
         assertIs<ReservationDetailUiModel.Cancelled>(cancelled)
+        assertIs<ReservationDetailUiModel.ClassCancelled>(classCancelled)
         assertIs<ReservationDetailUiModel.Attended>(attended)
         assertIs<ReservationDetailUiModel.Absent>(absent)
+        assertEquals("2026.08.01 (토) 오후 3:25", classCancelled.cancelledAtLabel)
+        assertEquals("2026.08.01 (토) 오후 3:25", cancelled.cancelledAtLabel)
         assertEquals("2026.08.04 (화)", confirmed.classInfo.dateLabel)
         assertEquals("2026년 8월 4일 화요일", attended.classInfo.dateLabel)
         assertEquals("2026.08.04 (화) 오후 6:20", attended.checkedInAtLabel)
@@ -254,7 +334,17 @@ class MyScheduleUiMapperTest {
         assertEquals("2026.08.04 (화)", uiModel.classInfo.dateLabel)
         assertEquals("오후 6:30 ~ 7:20", uiModel.classInfo.timeRangeLabel)
         assertEquals(2, uiModel.currentPosition)
+        assertEquals(WaitlistDetailStatusUiModel.WAITLISTED, uiModel.status)
         assertIs<WaitlistCancellationAvailabilityUiModel.Available>(uiModel.cancellation)
+
+        val approvalRequired = mapper.mapWaitlistDetail(detail.copy(currentPosition = 0))
+        val stillWaitlisted = mapper.mapWaitlistDetail(detail.copy(currentPosition = 1))
+
+        assertEquals(0, approvalRequired.currentPosition)
+        assertEquals(WaitlistDetailStatusUiModel.APPROVAL_REQUIRED, approvalRequired.status)
+        assertEquals(1, stillWaitlisted.currentPosition)
+        assertEquals(WaitlistDetailStatusUiModel.WAITLISTED, stillWaitlisted.status)
+        assertEquals(detail.waitlistId, stillWaitlisted.waitlistId)
     }
 
     @Test
@@ -304,12 +394,13 @@ class MyScheduleUiMapperTest {
     private fun createWaitlisted(
         id: String,
         session: ClassSession,
+        currentPosition: Int = 2,
     ): UpcomingSchedule.Waitlisted =
         UpcomingSchedule.Waitlisted(
             waitlistId = WaitlistId(id),
             session = session,
             appliedAt = Instant.parse("2026-08-03T12:20:00Z"),
-            currentPosition = 2,
+            currentPosition = currentPosition,
         )
 
     private fun createHistory(

@@ -48,7 +48,7 @@ fun MyScheduleScreen(
     state: MyScheduleUiState,
     onAction: (MyScheduleAction) -> Unit,
     onOpenReservation: (ReservationId) -> Unit,
-    onOpenWaitlist: (WaitlistId) -> Unit,
+    onOpenWaitlist: (WaitlistId, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val upcomingListState = rememberLazyListState()
@@ -97,7 +97,7 @@ private fun UpcomingTabContent(
     listState: LazyListState,
     onAction: (MyScheduleAction) -> Unit,
     onOpenReservation: (ReservationId) -> Unit,
-    onOpenWaitlist: (WaitlistId) -> Unit,
+    onOpenWaitlist: (WaitlistId, Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -229,7 +229,27 @@ private fun MyScheduleScreenPreview_F01Content_Student_Default() {
             state = MyScheduleUpcomingPreviewFixture.state,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
+        )
+    }
+}
+
+@Preview(
+    name = "Approval completed · Student · Default",
+    group = "Screen/MySchedule/StateChange",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun MyScheduleScreenPreview_ApprovalCompleted_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        MyScheduleScreen(
+            state = MyScheduleListStatePreviewFixture.approvalCompleted,
+            onAction = {},
+            onOpenReservation = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -264,7 +284,7 @@ private fun MyScheduleScreenPreview_F02Content_Student_Default() {
             state = MyScheduleUsageHistoryPreviewFixture.state,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -302,7 +322,7 @@ private fun MyScheduleScreenPreview_Loading_Student() {
             state = MyScheduleListStatePreviewFixture.upcomingLoading,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -321,7 +341,7 @@ private fun MyScheduleScreenPreview_EmptyUpcoming_Student() {
             state = MyScheduleListStatePreviewFixture.upcomingEmpty,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -340,7 +360,7 @@ private fun MyScheduleScreenPreview_EmptyHistory_Student() {
             state = MyScheduleListStatePreviewFixture.historyEmpty,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -359,7 +379,7 @@ private fun MyScheduleScreenPreview_InitialError_Student() {
             state = MyScheduleListStatePreviewFixture.upcomingError,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -378,7 +398,7 @@ private fun MyScheduleScreenPreview_RefreshingContent_Student() {
             state = MyScheduleListStatePreviewFixture.upcomingRefreshing,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -397,7 +417,7 @@ private fun MyScheduleScreenPreview_RefreshError_Student() {
             state = MyScheduleListStatePreviewFixture.refreshFailed,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -417,7 +437,7 @@ private fun MyScheduleScreenPreview_LongContent_Student_LargeFont() {
             state = MyScheduleListStatePreviewFixture.longContent,
             onAction = {},
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }
@@ -467,8 +487,8 @@ private fun MyScheduleInteractionHarness(initialState: MyScheduleUiState) {
                 onOpenReservation = { id ->
                     lastEvent = "OpenReservation(id=${id.value})"
                 },
-                onOpenWaitlist = { id ->
-                    lastEvent = "OpenWaitlist(id=${id.value})"
+                onOpenWaitlist = { id, currentPosition ->
+                    lastEvent = "OpenWaitlist(id=${id.value}, position=$currentPosition)"
                 },
             )
         }

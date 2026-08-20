@@ -26,6 +26,7 @@ class MyScheduleResultTest {
                 MyScheduleFailureReason.NOT_FOUND,
                 MyScheduleFailureReason.CONFLICT,
                 MyScheduleFailureReason.CANCELLATION_NOT_ALLOWED,
+                MyScheduleFailureReason.APPROVAL_NOT_ALLOWED,
                 MyScheduleFailureReason.UNKNOWN,
             ),
             MyScheduleFailureReason.entries,

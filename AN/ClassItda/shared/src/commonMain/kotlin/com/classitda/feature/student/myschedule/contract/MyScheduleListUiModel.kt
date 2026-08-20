@@ -17,10 +17,28 @@ sealed interface UpcomingScheduleCardUiModel {
 
     data class Waitlisted(
         val waitlistId: WaitlistId,
+        val currentPosition: Int,
         override val timeRangeLabel: String,
         override val title: String,
         override val instructorName: String,
-    ) : UpcomingScheduleCardUiModel
+    ) : UpcomingScheduleCardUiModel {
+        init {
+            require(currentPosition >= 0) { "대기 순번은 0 이상이어야 합니다." }
+        }
+
+        val status: UpcomingScheduleStatusUiModel
+            get() =
+                if (currentPosition == 0) {
+                    UpcomingScheduleStatusUiModel.APPROVAL_REQUIRED
+                } else {
+                    UpcomingScheduleStatusUiModel.WAITLISTED
+                }
+    }
+}
+
+enum class UpcomingScheduleStatusUiModel {
+    APPROVAL_REQUIRED,
+    WAITLISTED,
 }
 
 data class UpcomingDateSectionUiModel(
@@ -44,6 +62,7 @@ data class UsageHistoryCardUiModel(
 enum class UsageHistoryStatusUiModel {
     ATTENDED,
     ABSENT,
+    CLASS_CANCELLED,
     RESERVATION_CANCELLED,
 }
 

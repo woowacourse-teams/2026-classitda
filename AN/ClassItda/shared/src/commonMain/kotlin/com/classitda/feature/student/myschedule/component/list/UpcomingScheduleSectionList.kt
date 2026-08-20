@@ -29,7 +29,7 @@ import com.classitda.feature.student.myschedule.preview.MyScheduleUpcomingPrevie
 internal fun UpcomingScheduleSectionList(
     sections: List<UpcomingDateSectionUiModel>,
     onOpenReservation: (ReservationId) -> Unit,
-    onOpenWaitlist: (WaitlistId) -> Unit,
+    onOpenWaitlist: (WaitlistId, Int) -> Unit,
     state: LazyListState = rememberLazyListState(),
     modifier: Modifier = Modifier,
 ) {
@@ -89,7 +89,7 @@ internal fun UpcomingScheduleSectionList(
                             }
 
                             is UpcomingScheduleCardUiModel.Waitlisted -> {
-                                onOpenWaitlist(item.waitlistId)
+                                onOpenWaitlist(item.waitlistId, item.currentPosition)
                             }
                         }
                     },
@@ -119,7 +119,7 @@ private fun UpcomingScheduleSectionListPreview_Content_Student_Default() {
         UpcomingScheduleSectionList(
             sections = MyScheduleUpcomingPreviewFixture.sections,
             onOpenReservation = {},
-            onOpenWaitlist = {},
+            onOpenWaitlist = { _, _ -> },
         )
     }
 }

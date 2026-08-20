@@ -265,6 +265,21 @@ private fun ReservationDetailScreenPreview_Cancelled_Student_Default() {
 }
 
 @Preview(
+    name = "Class cancelled · Student · Default",
+    group = "Screen/MySchedule/ReservationDetail",
+    showBackground = true,
+    locale = "ko",
+    widthDp = 390,
+    heightDp = 907,
+)
+@Composable
+private fun ReservationDetailScreenPreview_ClassCancelled_Student_Default() {
+    AppTheme(theme = ThemeType.STUDENT) {
+        ReservationDetailPreview(model = ReservationDetailPreviewFixture.classCancelled)
+    }
+}
+
+@Preview(
     name = "F09 attended · Student · Default",
     group = "Screen/MySchedule/ReservationDetail",
     showBackground = true,

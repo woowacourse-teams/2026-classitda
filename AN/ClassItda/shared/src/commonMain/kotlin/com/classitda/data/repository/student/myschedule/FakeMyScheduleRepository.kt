@@ -1,6 +1,7 @@
 package com.classitda.data.repository.student.myschedule
 
 import com.classitda.domain.model.student.myschedule.PassRestoration
+import com.classitda.domain.model.student.myschedule.ReservationCancellationAvailability
 import com.classitda.domain.model.student.myschedule.ReservationCancellationReceipt
 import com.classitda.domain.model.student.myschedule.ReservationDetail
 import com.classitda.domain.model.student.myschedule.ReservationId
@@ -22,6 +23,7 @@ internal data class FakeMyScheduleFailures(
     val waitlistDetail: MyScheduleFailureReason? = null,
     val reservationCancellation: MyScheduleFailureReason? = null,
     val waitlistCancellation: MyScheduleFailureReason? = null,
+    val waitlistApproval: MyScheduleFailureReason? = null,
 )
 
 internal class FakeMyScheduleRepository(
@@ -56,6 +58,9 @@ internal class FakeMyScheduleRepository(
         private set
 
     var lastWaitlistCancellationRequestId: WaitlistId? = null
+        private set
+
+    var lastWaitlistApprovalRequestId: WaitlistId? = null
         private set
 
     val upcomingSchedulesSnapshot: List<UpcomingSchedule>
@@ -167,6 +172,45 @@ internal class FakeMyScheduleRepository(
                 positionAtCancellation = detail.currentPosition,
             ),
         )
+    }
+
+    override suspend fun approveWaitlist(waitlistId: WaitlistId): MyScheduleResult<Unit> {
+        lastWaitlistApprovalRequestId = waitlistId
+        failures.waitlistApproval.toFailureOrNull()?.let { return it }
+
+        val detail =
+            storedWaitlistDetails[waitlistId]
+                ?: return MyScheduleResult.Failure(MyScheduleFailureReason.NOT_FOUND)
+        val upcomingWaitlist =
+            storedUpcomingSchedules
+                .filterIsInstance<UpcomingSchedule.Waitlisted>()
+                .find { schedule -> schedule.waitlistId == waitlistId }
+                ?: return MyScheduleResult.Failure(MyScheduleFailureReason.NOT_FOUND)
+        if (detail.currentPosition != 0 || upcomingWaitlist.currentPosition != 0) {
+            return MyScheduleResult.Failure(MyScheduleFailureReason.APPROVAL_NOT_ALLOWED)
+        }
+
+        val reservationId = ReservationId("reservation-approved-${waitlistId.value}")
+        storedUpcomingSchedules.removeAll { schedule ->
+            schedule is UpcomingSchedule.Waitlisted && schedule.waitlistId == waitlistId
+        }
+        storedUpcomingSchedules +=
+            UpcomingSchedule.ConfirmedReservation(
+                reservationId = reservationId,
+                session = upcomingWaitlist.session,
+                reservedAt = cancelledAt,
+            )
+        storedWaitlistDetails.remove(waitlistId)
+        storedReservationDetails[reservationId] =
+            ReservationDetail.Confirmed(
+                reservationId = reservationId,
+                session = upcomingWaitlist.session,
+                reservedAt = cancelledAt,
+                pass = detail.pass,
+                cancellation = ReservationCancellationAvailability.Available(restoredPassUses = 0),
+            )
+
+        return MyScheduleResult.Success(Unit)
     }
 
     private fun MyScheduleFailureReason?.toFailureOrNull(): MyScheduleResult.Failure? =
