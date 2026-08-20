@@ -85,10 +85,19 @@ jobs:
             IdentityFile ~/.ssh/id_deploy
             StrictHostKeyChecking yes
             UserKnownHostsFile ~/.ssh/known_hosts
-            ProxyCommand cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET
+            ProxyCommand cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET --loglevel debug
           CFG
           chmod 600 ~/.ssh/config
-          ssh -o ConnectTimeout=30 target 'echo 터널 연결 확인'
+          echo "CF_ID 길이=${#CF_ID}"
+          case "$CF_ID" in
+            *.access) echo "CF_ID 접미어=.access 있음" ;;
+            *) echo "CF_ID 접미어=없음" ;;
+          esac
+          echo "CF_SECRET 길이=${#CF_SECRET}"
+          echo "SSH_HOST 길이=${#SSH_HOST}"
+          echo "known_hosts 줄 수=$(wc -l < ~/.ssh/known_hosts)"
+          cloudflared --version
+          ssh -v -o ConnectTimeout=30 target 'echo 터널 연결 확인'
 
       - name: .env 갱신
         env:
