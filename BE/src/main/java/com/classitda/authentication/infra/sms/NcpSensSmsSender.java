@@ -17,7 +17,7 @@ public class NcpSensSmsSender implements SmsSender {
 
     public static final String BASE_URL = "https://sens.apigw.ntruss.com";
 
-    private static final String MESSAGE_TEMPLATE = "[클래스잇다] 인증번호는 %s입니다.\n 3분 안에 입력해 주세요.";
+    private static final String MESSAGE_TEMPLATE = "[클래스잇다] 인증번호는 %s입니다.\n3분 안에 입력해주세요.";
 
     private final RestClient restClient;
     private final NcpSensProperties properties;

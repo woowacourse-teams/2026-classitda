@@ -72,7 +72,7 @@ class NcpSensSmsSenderTest {
                           "contentType": "COMM",
                           "countryCode": "82",
                           "from": "01012345678",
-                          "content": "[클래스잇다] 인증번호는 123456입니다.\\n 3분 안에 입력해 주세요.",
+                          "content": "[클래스잇다] 인증번호는 123456입니다.\\n3분 안에 입력해주세요.",
                           "messages": [
                             {"to": "01087654321"}
                           ]
