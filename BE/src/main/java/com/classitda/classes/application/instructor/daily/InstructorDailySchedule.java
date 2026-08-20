@@ -1,31 +1,18 @@
 package com.classitda.classes.application.instructor.daily;
 
-import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
-import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
-import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
+import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
 import java.util.List;
-import java.util.Map;
 
 record InstructorDailySchedule(
-        List<ClassSessionDailyProjection> classSessions,
-        Map<Long, ReservationSummaryProjection> reservationSummaries,
-        Map<Long, WaitingSummaryProjection> waitingSummaries,
+        List<InstructorDailySessionProjection> classSessions,
         int reservationCloseMinutesBefore
 ) {
 
     static InstructorDailySchedule empty() {
-        return new InstructorDailySchedule(List.of(), Map.of(), Map.of(), 0);
+        return new InstructorDailySchedule(List.of(), 0);
     }
 
     boolean isEmpty() {
         return classSessions.isEmpty();
-    }
-
-    ReservationSummaryProjection reservationSummary(Long classSessionId) {
-        return reservationSummaries.get(classSessionId);
-    }
-
-    WaitingSummaryProjection waitingSummary(Long classSessionId) {
-        return waitingSummaries.get(classSessionId);
     }
 }

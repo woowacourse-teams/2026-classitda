@@ -31,7 +31,7 @@ public record InstructorDailySessionResponse(
         @Schema(description = "수업 정원", minimum = "1", example = "12")
         int capacity,
 
-        @Schema(description = "취소되지 않은 현재 예약 인원", minimum = "0", example = "8")
+        @Schema(description = "RESERVED와 OFFERED 상태가 점유한 현재 좌석 수", minimum = "0", example = "8")
         long reservedCount,
 
         @Schema(description = "WAITING 상태인 현재 대기 인원", minimum = "0", example = "2")

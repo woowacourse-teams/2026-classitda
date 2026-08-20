@@ -3,7 +3,7 @@ package com.classitda.classes.application.instructor.daily;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
+import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
 import java.time.LocalDateTime;
 
 public record InstructorDailySessionView(
@@ -25,16 +25,14 @@ public record InstructorDailySessionView(
 ) {
 
     static InstructorDailySessionView of(
-            ClassSessionDailyProjection classSession,
-            long reservedCount,
-            long waitingCount,
+            InstructorDailySessionProjection classSession,
             InstructorSessionStatus status,
             boolean mine
     ) {
         ClassSession session = classSession.getSession();
         return new InstructorDailySessionView(
                 session.getId(),
-                classSession.getInstructorMembershipId(),
+                session.getInstructorMembership().getId(),
                 classSession.getInstructorName(),
                 session.getClassForm(),
                 classSession.getClassTypeId(),
@@ -42,8 +40,8 @@ public record InstructorDailySessionView(
                 session.getName(),
                 session.getDescription(),
                 session.getCapacity(),
-                reservedCount,
-                waitingCount,
+                classSession.getReservedCount(),
+                classSession.getWaitingCount(),
                 session.getStartAt(),
                 session.getEndAt(),
                 status,

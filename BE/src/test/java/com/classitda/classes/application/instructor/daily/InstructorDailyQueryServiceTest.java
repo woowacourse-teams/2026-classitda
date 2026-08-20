@@ -7,19 +7,19 @@ import com.classitda.classes.application.instructor.InstructorSessionAccessReade
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.ClassSessionEnrollment;
 import com.classitda.classes.domain.ClassType;
-import com.classitda.classes.domain.Reservation;
-import com.classitda.classes.domain.ReservationStatus;
-import com.classitda.classes.domain.Waiting;
-import com.classitda.classes.domain.WaitingStatus;
+import com.classitda.classes.domain.EnrollmentStatus;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
-import com.classitda.common.exception.ClassitdaException;
-import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.member.domain.Member;
+import com.classitda.passproduct.domain.MemberPassProduct;
+import com.classitda.passproduct.domain.MemberPassProductStatus;
+import com.classitda.passproduct.domain.PassProduct;
+import com.classitda.passproduct.domain.PassProductPeriodUnit;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
 import com.classitda.studio.domain.PermissionCode;
@@ -111,7 +111,8 @@ class InstructorDailyQueryServiceTest {
                 studio,
                 회원을_저장한다("instructor-daily-first"),
                 SystemRole.INSTRUCTOR,
-                MembershipStatus.ACTIVE
+                MembershipStatus.ACTIVE,
+                "시설 표시 강사"
         );
         StudioMembership secondInstructor = 소속을_저장한다(
                 studio,
@@ -169,11 +170,23 @@ class InstructorDailyQueryServiceTest {
                 SystemRole.STUDENT,
                 MembershipStatus.ACTIVE
         );
-        예약을_저장한다(earlySession, firstStudent, ReservationStatus.RESERVED);
-        예약을_저장한다(earlySession, secondStudent, ReservationStatus.ATTENDED);
-        예약을_저장한다(earlySession, thirdStudent, ReservationStatus.CANCELED);
-        대기를_저장한다(earlySession, firstStudent, 1, WaitingStatus.WAITING);
-        대기를_저장한다(earlySession, secondStudent, 2, WaitingStatus.OFFERED);
+        StudioMembership fourthStudent = 소속을_저장한다(
+                studio,
+                회원을_저장한다("instructor-count-fourth-student"),
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+        StudioMembership fifthStudent = 소속을_저장한다(
+                studio,
+                회원을_저장한다("instructor-count-fifth-student"),
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+        신청을_저장한다(earlySession, firstStudent, EnrollmentStatus.RESERVED);
+        신청을_저장한다(earlySession, secondStudent, EnrollmentStatus.RESERVED);
+        신청을_저장한다(earlySession, thirdStudent, EnrollmentStatus.CANCELED);
+        신청을_저장한다(earlySession, fourthStudent, EnrollmentStatus.WAITING);
+        신청을_저장한다(earlySession, fifthStudent, EnrollmentStatus.OFFERED);
         entityManager.flush();
         entityManager.clear();
         statistics.clear();
@@ -197,14 +210,14 @@ class InstructorDailyQueryServiceTest {
         assertThat(responses.getFirst()).isEqualTo(new InstructorDailySessionView(
                 earlySession.getId(),
                 firstInstructor.getId(),
-                firstInstructor.getMember().getName(),
+                firstInstructor.getName(),
                 ClassForm.GROUP,
                 classType.getId(),
                 classType.getName(),
                 "오전 필라테스",
                 "오전 필라테스 안내",
                 12,
-                2,
+                3,
                 1,
                 QUERY_DATE.atTime(11, 0),
                 QUERY_DATE.atTime(12, 0),
@@ -214,7 +227,7 @@ class InstructorDailyQueryServiceTest {
         assertThat(responses)
                 .extracting(InstructorDailySessionView::mine)
                 .containsExactly(false, true, false);
-        assertThat(queryCount).isEqualTo(7L);
+        assertThat(queryCount).isEqualTo(5L);
     }
 
     @Test
@@ -439,26 +452,6 @@ class InstructorDailyQueryServiceTest {
         assertThat(responses).isEmpty();
     }
 
-    @Test
-    void 조회일이_없거나_다음_날을_계산할_수_없으면_잘못된_입력으로_처리한다() {
-        // given
-        Member owner = 회원을_저장한다("invalid-date-owner");
-        Studio studio = 시설을_저장한다(owner, "잘못된 날짜 시설");
-        소속을_저장한다(studio, owner, SystemRole.OWNER, MembershipStatus.ACTIVE);
-        entityManager.flush();
-        entityManager.clear();
-
-        // when / then
-        assertCommonError(
-                () -> queryService.findAll(owner.getId(), studio.getId(), null),
-                CommonErrorCode.INVALID_INPUT
-        );
-        assertCommonError(
-                () -> queryService.findAll(owner.getId(), studio.getId(), LocalDate.MAX),
-                CommonErrorCode.INVALID_INPUT
-        );
-    }
-
     private Member 회원을_저장한다(String id) {
         Member member = StudioFixture.아이디가_다른_소유자(id);
         entityManager.persist(member);
@@ -484,8 +477,18 @@ class InstructorDailyQueryServiceTest {
             SystemRole systemRole,
             MembershipStatus status
     ) {
+        return 소속을_저장한다(studio, member, systemRole, status, member.getName());
+    }
+
+    private StudioMembership 소속을_저장한다(
+            Studio studio,
+            Member member,
+            SystemRole systemRole,
+            MembershipStatus status,
+            String name
+    ) {
         StudioRole role = 역할을_조회하거나_저장한다(studio, systemRole);
-        return 소속을_저장한다(studio, member, role, status);
+        return 소속을_저장한다(studio, member, role, status, name);
     }
 
     private StudioMembership 소속을_저장한다(
@@ -494,10 +497,20 @@ class InstructorDailyQueryServiceTest {
             StudioRole role,
             MembershipStatus status
     ) {
+        return 소속을_저장한다(studio, member, role, status, member.getName());
+    }
+
+    private StudioMembership 소속을_저장한다(
+            Studio studio,
+            Member member,
+            StudioRole role,
+            MembershipStatus status,
+            String name
+    ) {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
-                .name(member.getName())
+                .name(name)
                 .studioRole(role)
                 .status(status)
                 .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))
@@ -591,44 +604,98 @@ class InstructorDailyQueryServiceTest {
         entityManager.flush();
     }
 
-    private void 예약을_저장한다(
+    private void 신청을_저장한다(
             ClassSession classSession,
             StudioMembership membership,
-            ReservationStatus status
+            EnrollmentStatus status
     ) {
-        entityManager.persist(Reservation.builder()
-                .membership(membership)
-                .classSession(classSession)
-                .status(status)
-                .reservedAt(NOW.minusDays(1))
-                .canceledAt(status == ReservationStatus.CANCELED ? NOW.minusHours(1) : null)
-                .build());
+        ClassSessionEnrollment enrollment = switch (status) {
+            case RESERVED -> ClassSessionEnrollment.reserved(
+                    membership,
+                    classSession,
+                    수강권을_조회하거나_저장한다(membership, classSession),
+                    NOW.minusDays(1)
+            );
+            case WAITING -> ClassSessionEnrollment.waiting(membership, classSession, NOW.minusDays(1));
+            case OFFERED -> {
+                ClassSessionEnrollment offered = ClassSessionEnrollment.waiting(
+                        membership,
+                        classSession,
+                        NOW.minusDays(1)
+                );
+                offered.offer(NOW.minusMinutes(5), NOW.plusMinutes(5));
+                yield offered;
+            }
+            case CANCELED -> {
+                ClassSessionEnrollment canceled = ClassSessionEnrollment.waiting(
+                        membership,
+                        classSession,
+                        NOW.minusDays(1)
+                );
+                canceled.cancelWaiting(NOW.minusHours(1));
+                yield canceled;
+            }
+            case EXPIRED -> {
+                ClassSessionEnrollment expired = ClassSessionEnrollment.waiting(
+                        membership,
+                        classSession,
+                        NOW.minusDays(1)
+                );
+                expired.expire(NOW.minusHours(1));
+                yield expired;
+            }
+        };
+        entityManager.persist(enrollment);
     }
 
-    private void 대기를_저장한다(
-            ClassSession classSession,
+    private MemberPassProduct 수강권을_조회하거나_저장한다(
             StudioMembership membership,
-            int sequence,
-            WaitingStatus status
+            ClassSession classSession
     ) {
-        entityManager.persist(Waiting.builder()
+        List<MemberPassProduct> ownedPasses = entityManager.createQuery("""
+                        SELECT memberPassProduct
+                        FROM MemberPassProduct memberPassProduct
+                        WHERE memberPassProduct.membership.id = :membershipId
+                        ORDER BY memberPassProduct.id
+                        """, MemberPassProduct.class)
+                .setParameter("membershipId", membership.getId())
+                .setMaxResults(1)
+                .getResultList();
+        if (!ownedPasses.isEmpty()) {
+            return ownedPasses.getFirst();
+        }
+
+        Long classTypeId = classSessionClassTypeRepository.findByClassSessionId(classSession.getId())
+                .orElseThrow()
+                .getClassTypeId();
+        PassProduct passProduct = PassProduct.builder()
+                .studio(membership.getStudio())
+                .name("강사 일별 조회 테스트 수강권")
+                .classForm(classSession.getClassForm())
+                .classTypes(List.of(classTypeRepository.getReferenceById(classTypeId)))
+                .totalCount(10)
+                .validPeriodAmount(3)
+                .validPeriodUnit(PassProductPeriodUnit.MONTH)
+                .totalHoldDays(7)
+                .build();
+        entityManager.persist(passProduct);
+
+        MemberPassProduct memberPassProduct = MemberPassProduct.builder()
                 .membership(membership)
-                .classSession(classSession)
-                .sequence(sequence)
-                .status(status)
-                .offeredAt(status == WaitingStatus.OFFERED ? NOW.minusMinutes(5) : null)
-                .build());
+                .passProduct(passProduct)
+                .remainingCount(10)
+                .remainingHoldDays(7)
+                .status(MemberPassProductStatus.ACTIVE)
+                .startedAt(QUERY_DATE.minusYears(1))
+                .expiresAt(QUERY_DATE.plusYears(1))
+                .build();
+        entityManager.persist(memberPassProduct);
+        return memberPassProduct;
     }
 
     private void assertStudioError(Runnable action, StudioErrorCode errorCode) {
         assertThatThrownBy(action::run)
                 .isInstanceOfSatisfying(StudioException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(errorCode));
-    }
-
-    private void assertCommonError(Runnable action, CommonErrorCode errorCode) {
-        assertThatThrownBy(action::run)
-                .isInstanceOfSatisfying(ClassitdaException.class, exception ->
                         assertThat(exception.getErrorCode()).isEqualTo(errorCode));
     }
 

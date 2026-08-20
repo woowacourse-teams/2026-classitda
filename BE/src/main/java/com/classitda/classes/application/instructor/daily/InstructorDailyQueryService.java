@@ -3,11 +3,7 @@ package com.classitda.classes.application.instructor.daily;
 import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
-import com.classitda.classes.domain.repository.projection.ReservationSummaryProjection;
-import com.classitda.classes.domain.repository.projection.WaitingSummaryProjection;
-import com.classitda.common.exception.ClassitdaException;
-import com.classitda.common.exception.CommonErrorCode;
+import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,46 +21,18 @@ public class InstructorDailyQueryService {
     private final InstructorDailyScheduleReader scheduleReader;
     private final Clock clock;
 
-    public List<InstructorDailySessionView> findAll(
-            Long memberId,
-            Long studioId,
-            LocalDate date
-    ) {
-        validateDate(date);
-
+    public List<InstructorDailySessionView> findAll(Long memberId, Long studioId, LocalDate date) {
         Long requesterMembershipId = accessReader.readRequesterMembershipId(memberId, studioId);
-        InstructorDailySchedule schedule = scheduleReader.read(
-                studioId,
-                requesterMembershipId,
-                date
-        );
+        InstructorDailySchedule schedule = scheduleReader.read(studioId, date);
+
         if (schedule.isEmpty()) {
             return List.of();
         }
 
-        return assemble(
-                schedule,
-                requesterMembershipId,
-                LocalDateTime.now(clock)
-        );
-    }
-
-    private void validateDate(LocalDate date) {
-        if (date == null) {
-            throw new ClassitdaException(CommonErrorCode.INVALID_INPUT);
-        }
-    }
-
-    private List<InstructorDailySessionView> assemble(
-            InstructorDailySchedule schedule,
-            Long requesterMembershipId,
-            LocalDateTime now
-    ) {
+        LocalDateTime now = LocalDateTime.now(clock);
         return schedule.classSessions().stream()
                 .map(classSession -> assembleSession(
                         classSession,
-                        schedule.reservationSummary(classSession.getSession().getId()),
-                        schedule.waitingSummary(classSession.getSession().getId()),
                         schedule.reservationCloseMinutesBefore(),
                         requesterMembershipId,
                         now
@@ -73,15 +41,11 @@ public class InstructorDailyQueryService {
     }
 
     private InstructorDailySessionView assembleSession(
-            ClassSessionDailyProjection classSession,
-            ReservationSummaryProjection reservationSummary,
-            WaitingSummaryProjection waitingSummary,
+            InstructorDailySessionProjection classSession,
             int reservationCloseMinutesBefore,
             Long requesterMembershipId,
             LocalDateTime now
     ) {
-        long reservedCount = reservationSummary == null ? 0 : reservationSummary.getReservedCount();
-        long waitingCount = waitingSummary == null ? 0 : waitingSummary.getWaitingCount();
         ClassSession session = classSession.getSession();
         InstructorSessionStatus status = InstructorSessionStatus.from(
                 session.phaseAt(now),
@@ -90,10 +54,8 @@ public class InstructorDailyQueryService {
 
         return InstructorDailySessionView.of(
                 classSession,
-                reservedCount,
-                waitingCount,
                 status,
-                requesterMembershipId.equals(classSession.getInstructorMembershipId())
+                requesterMembershipId.equals(session.getInstructorMembership().getId())
         );
     }
 }

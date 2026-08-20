@@ -3,6 +3,7 @@ package com.classitda.classes.domain.repository;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionCalendarSummaryProjection;
 import com.classitda.classes.domain.repository.projection.ClassSessionDailyProjection;
+import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -72,22 +73,44 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
 
     @Query("""
             SELECT classSession AS session,
-                   classSession.instructorMembership.id AS instructorMembershipId,
-                   classSession.instructorMembership.member.name AS instructorName,
+                   classSession.instructorMembership.name AS instructorName,
                    classType.id AS classTypeId,
-                   classType.name AS classTypeName
-            FROM ClassSession classSession,
-                 ClassSessionClassType classSessionClassType,
-                 ClassType classType
-            WHERE classSessionClassType.classSessionId = classSession.id
-              AND classType.id = classSessionClassType.classTypeId
-              AND classSession.studioId = :studioId
+                   classType.name AS classTypeName,
+                   SUM(
+                       CASE WHEN enrollment.state.status IN (
+                            com.classitda.classes.domain.EnrollmentStatus.RESERVED,
+                            com.classitda.classes.domain.EnrollmentStatus.OFFERED
+                       )
+                            THEN 1 ELSE 0 END
+                   ) AS reservedCount,
+                   SUM(
+                       CASE WHEN enrollment.state.status =
+                            com.classitda.classes.domain.EnrollmentStatus.WAITING
+                            THEN 1 ELSE 0 END
+                   ) AS waitingCount
+            FROM ClassSession classSession
+            JOIN ClassSessionClassType classSessionClassType
+              ON classSessionClassType.classSessionId = classSession.id
+            JOIN ClassType classType
+              ON classType.id = classSessionClassType.classTypeId
+            LEFT JOIN ClassSessionEnrollment enrollment
+              ON enrollment.classSession.id = classSession.id
+             AND enrollment.state.status IN (
+                 com.classitda.classes.domain.EnrollmentStatus.WAITING,
+                 com.classitda.classes.domain.EnrollmentStatus.OFFERED,
+                 com.classitda.classes.domain.EnrollmentStatus.RESERVED
+             )
+            WHERE classSession.studioId = :studioId
               AND classType.studio.id = :studioId
               AND classSession.startAt >= :rangeStart
               AND classSession.startAt < :rangeEnd
+            GROUP BY classSession,
+                     classSession.instructorMembership.name,
+                     classType.id,
+                     classType.name
             ORDER BY classSession.startAt ASC, classSession.id ASC
             """)
-    List<ClassSessionDailyProjection> findDailyForInstructor(
+    List<InstructorDailySessionProjection> findDailyForInstructor(
             @Param("studioId") Long studioId,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd
