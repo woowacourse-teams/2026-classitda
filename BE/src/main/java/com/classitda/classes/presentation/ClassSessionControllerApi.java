@@ -149,19 +149,40 @@ public interface ClassSessionControllerApi {
 
                     ### 예약 상태
 
-                    - 예약 가능, 대기 가능, 예약 완료, 대기 중, 빈자리 예약 제안, 마감, 예약 불가, 출석, 결석을 구분합니다.
-                    - 시작 시각이 지난 RESERVED 예약은 강사가 출석을 누르지 않았더라도 ATTENDED로 반환하고, 명시적으로 결석 처리된 예약은 ABSENT로 반환합니다.
-                    - 과거 날짜에는 본인이 예약했던 수업만 반환하며, 응답 상태는 ATTENDED 또는 ABSENT입니다. 취소된 수업 회차는 반환하지 않습니다.
+                    - 클라이언트는 출결 결과, 본인의 활성 신청 관계, 예약 가능 상태 순서로 우선해서 표시 상태를 결정합니다.
+                    - bookingRelation은 수업 시작 여부나 출결 기록 여부와 관계없이 실제 신청 관계를 반환합니다. 출석·결석 후에도 RESERVED를 유지합니다.
+                    - 출결은 저장된 AttendanceResult를 반환합니다.
+                    - 출결 기능 구현 후에는 수업 시작 시 RESERVED + NOT_RECORDED 신청을 시스템이 ATTENDED로 자동 저장하고, 강사가 ABSENT로 변경할 수 있습니다.
+                    - 과거 날짜에는 본인이 예약했던 수업만 반환하며 ATTENDED, ABSENT, NOT_RECORDED를 구분합니다. 취소된 수업 회차는 반환하지 않습니다.
                     - 표시 상태와 잔여석은 조회 시점의 정보이며 실제 예약 요청에서 다시 검증합니다.
+
+                    ### 응답 상태 조합
+
+                    | bookingRelation | attendanceResult | availability | 클라이언트 처리 상태 |
+                    |---|---|---|---|
+                    | RESERVED | ATTENDED | 모든 값 | 출석 |
+                    | RESERVED | ABSENT | 모든 값 | 결석 |
+                    | OFFERED | NOT_RECORDED | 모든 값 | 빈자리 예약 제안 |
+                    | WAITING | NOT_RECORDED | 모든 값 | 대기 중 |
+                    | RESERVED | NOT_RECORDED | 모든 값 | 예약 완료. 수업 시작 후 자동 출석 처리 전이면 출결 미기록 |
+                    | NONE | NOT_RECORDED | RESERVABLE | 예약 가능 |
+                    | NONE | NOT_RECORDED | WAITLISTABLE | 대기 가능 |
+                    | NONE | NOT_RECORDED | CLOSED | 예약 마감 또는 오늘 진행·종료된 미신청 수업 |
+
+                    - 표의 '모든 값'은 availability를 화면 상태 결정에 사용하지 않는다는 뜻입니다.
+                    - bookingRelation이 RESERVED, WAITING, OFFERED이면 availability보다 신청 관계를 우선해서 표시합니다.
+                    - 정상적인 출결 기록은 수업 시작 이후이므로 availability가 CLOSED지만, 클라이언트는 출결 결과를 우선해서 표시합니다.
+                    - 과거 날짜에는 본인의 RESERVED 신청만 조회하므로 NONE + NOT_RECORDED + CLOSED 조합을 반환하지 않습니다.
+                    - NONE + NOT_RECORDED + CLOSED는 startAt이 미래면 예약 마감, startAt에 도달했거나 지났으면 오늘 진행·종료된 미신청 수업입니다.
+                    - ATTENDED와 ABSENT는 RESERVED와만 조합되며, WAITING과 OFFERED는 NOT_RECORDED와만 조합됩니다.
+
+                    ※ 예약 불가(BLOCKED) 상태는 홀딩 기능 및 수강권 기능 구현 후 추가할 예정입니다.
 
                     ### local Swagger 테스트 데이터
 
                     - 회원 ID: 1
                     - 시설 ID: 1
                     - 조회 날짜: 로컬 애플리케이션을 시작한 날짜의 다음 날
-                    - 시작일의 2일 후에는 예약 가능한 회차 112를 조회할 수 있습니다.
-                    - 시작일의 3일 후에는 예약 완료 회차 113, 4일 후에는 대기 중 회차 114를 조회할 수 있습니다.
-                    - 시작일의 5일 후에는 예약 완료 회차 115와 대기 중 회차 116을 함께 조회할 수 있습니다.
                     """
     )
     @ApiResponses({
@@ -267,9 +288,6 @@ public interface ClassSessionControllerApi {
                     - 시설 ID: 1
                     - from: 로컬 애플리케이션을 시작한 날짜의 5일 전
                     - to: 로컬 애플리케이션을 시작한 날짜의 5일 후
-                    - 5일 전, 3일 전, 전날은 pastReservation=true입니다.
-                    - 다음 날, 3일 후, 5일 후는 reserved=true입니다.
-                    - 다음 날, 4일 후, 5일 후는 waiting=true입니다.
                     """
     )
     @ApiResponses({
@@ -363,7 +381,6 @@ public interface ClassSessionControllerApi {
                     - 회원 ID: 3 (강사)
                     - 시설 ID: 1
                     - 조회 날짜: 로컬 애플리케이션을 시작한 날짜의 다음 날
-                    - 회차 101~106은 mine=true, 회차 107은 mine=false로 반환됩니다.
                     """
     )
     @ApiResponses({
@@ -460,8 +477,6 @@ public interface ClassSessionControllerApi {
                     - 시설 ID: 1
                     - from: 로컬 애플리케이션을 시작한 날짜의 전날
                     - to: 로컬 애플리케이션을 시작한 날짜의 다음 날
-                    - 전날은 completed=true, mineCompleted=true입니다.
-                    - 다음 날은 scheduled=true, mineScheduled=true입니다.
                     """
     )
     @ApiResponses({

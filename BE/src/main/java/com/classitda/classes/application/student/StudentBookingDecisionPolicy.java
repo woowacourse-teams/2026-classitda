@@ -10,16 +10,11 @@ public class StudentBookingDecisionPolicy {
 
     public StudentBookingDecision decide(StudentSessionFacts facts) {
         AttendanceResult attendanceResult = facts.attendanceResult();
-        StudentBookingRelation bookingRelation = resolveBookingRelation(facts, attendanceResult);
+        StudentBookingRelation bookingRelation = resolveBookingRelation(facts);
         return new StudentBookingDecision(bookingRelation, attendanceResult, resolveAvailability(facts));
     }
 
-    private StudentBookingRelation resolveBookingRelation(StudentSessionFacts facts, AttendanceResult attendanceResult) {
-        if (!facts.now().isBefore(facts.startAt())
-                || attendanceResult != AttendanceResult.NOT_RECORDED) {
-            return StudentBookingRelation.NONE;
-        }
-
+    private StudentBookingRelation resolveBookingRelation(StudentSessionFacts facts) {
         return facts.ownEnrollmentStatus()
                 .map(this::resolveEnrollmentRelation)
                 .orElse(StudentBookingRelation.NONE);

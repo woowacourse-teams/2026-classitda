@@ -28,11 +28,9 @@ public class StudentDailySessionAssembler {
 
         StudentSessionFacts facts = new StudentSessionFacts(
                 session.bookingWindowAt(now, reservationCloseMinutesBefore),
-                session.getStartAt(),
                 classSession.getOwnEnrollmentStatus(),
                 classSession.getOwnAttendanceResult().orElse(AttendanceResult.NOT_RECORDED),
-                remainingCapacity,
-                now
+                remainingCapacity
         );
         StudentBookingDecision bookingDecision = bookingDecisionPolicy.decide(facts);
 

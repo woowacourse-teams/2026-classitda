@@ -414,9 +414,9 @@ class StudentDailyQueryServiceTest {
         assertThat(responses)
                 .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingDecision)
                 .containsExactly(
-                        tuple(attended.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(reservedOnly.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(absent.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.ABSENT, BookingAvailability.CLOSED))
+                        tuple(attended.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(reservedOnly.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(absent.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, BookingAvailability.CLOSED))
                 );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
@@ -472,6 +472,10 @@ class StudentDailyQueryServiceTest {
                 studio, instructor, classType, "결석 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(8, 50)
         );
+        ClassSession startedWithoutEnrollment = 수업_회차를_저장한다(
+                studio, instructor, classType, "시작한 미신청 수업", ClassForm.GROUP, 5,
+                QUERY_DATE.atTime(9, 0)
+        );
         ClassSession reserved = 수업_회차를_저장한다(
                 studio, instructor, classType, "예약 수업", ClassForm.GROUP, 5,
                 QUERY_DATE.atTime(10, 10)
@@ -513,9 +517,10 @@ class StudentDailyQueryServiceTest {
         assertThat(responses)
                 .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingDecision)
                 .containsExactly(
-                        tuple(attendancePending.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(attended.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(absent.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.ABSENT, BookingAvailability.CLOSED)),
+                        tuple(attendancePending.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(attended.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(absent.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, BookingAvailability.CLOSED)),
+                        tuple(startedWithoutEnrollment.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
                         tuple(reserved.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
                         tuple(offered.getId(), decision(StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
                         tuple(waiting.getId(), decision(StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
