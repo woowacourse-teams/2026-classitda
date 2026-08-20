@@ -1,0 +1,181 @@
+name: BE DEV CD
+
+on:
+  push:
+    branches:
+      - be/dev
+    paths:
+      - 'BE/**'
+      - '.github/workflows/be-dev-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 이미지 빌드 및 푸시
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 빌드 및 푸시
+        uses: docker/build-push-action@v6
+        with:
+          context: BE
+          file: BE/docker/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_IMAGE }}:dev
+            ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: 개발 서버 배포
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - name: cloudflared 설치
+        env:
+          CLOUDFLARED_VERSION: '2026.8.2'
+          CLOUDFLARED_SHA256: 'fcfb02b575a52ca1af2e3267af4e1517bcdeb30ac48c834c69abaed3c0576ad2'
+        run: |
+          set -eu
+          curl -fsSL -o cloudflared \
+            "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-amd64"
+          echo "${CLOUDFLARED_SHA256}  cloudflared" | sha256sum -c -
+          chmod +x cloudflared
+          sudo mv cloudflared /usr/local/bin/
+
+      - name: SSH 설정
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          CF_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -eu
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CFG
+          Host target
+            HostName $SSH_HOST
+            User ubuntu
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking yes
+            UserKnownHostsFile ~/.ssh/known_hosts
+            ProxyCommand cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET
+          CFG
+          chmod 600 ~/.ssh/config
+          ssh -o ConnectTimeout=30 target 'echo 터널 연결 확인'
+
+      - name: .env 갱신
+        env:
+          APP_IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          GOOGLE_OAUTH_WEB_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_WEB_CLIENT_ID }}
+          AUTH_JWT_PRIVATE_KEY_BASE64: ${{ secrets.AUTH_JWT_PRIVATE_KEY_BASE64 }}
+          AUTH_JWT_PUBLIC_KEY_BASE64: ${{ secrets.AUTH_JWT_PUBLIC_KEY_BASE64 }}
+          AUTH_PHONE_KEY_HMAC_SECRET_BASE64: ${{ secrets.AUTH_PHONE_KEY_HMAC_SECRET_BASE64 }}
+          NCP_SENS_SERVICE_ID: ${{ secrets.NCP_SENS_SERVICE_ID }}
+          NCP_SENS_ACCESS_KEY: ${{ secrets.NCP_SENS_ACCESS_KEY }}
+          NCP_SENS_SECRET_KEY: ${{ secrets.NCP_SENS_SECRET_KEY }}
+          NCP_SENS_SENDER_NUMBER: ${{ secrets.NCP_SENS_SENDER_NUMBER }}
+        run: |
+          set -eu
+          umask 077
+          {
+            echo "APP_IMAGE=$APP_IMAGE"
+            echo "DB_HOST=$DB_HOST"
+            echo "DB_USERNAME=$DB_USERNAME"
+            echo "DB_PASSWORD=$DB_PASSWORD"
+            echo "REDIS_HOST=$REDIS_HOST"
+            echo "REDIS_PASSWORD=$(printf '%s' "$REDIS_PASSWORD" | tr -d '[:space:]')"
+            echo "GOOGLE_OAUTH_WEB_CLIENT_ID=$GOOGLE_OAUTH_WEB_CLIENT_ID"
+            echo "AUTH_JWT_PRIVATE_KEY_BASE64=$AUTH_JWT_PRIVATE_KEY_BASE64"
+            echo "AUTH_JWT_PUBLIC_KEY_BASE64=$AUTH_JWT_PUBLIC_KEY_BASE64"
+            echo "AUTH_PHONE_KEY_HMAC_SECRET_BASE64=$AUTH_PHONE_KEY_HMAC_SECRET_BASE64"
+            echo "NCP_SENS_SERVICE_ID=$NCP_SENS_SERVICE_ID"
+            echo "NCP_SENS_ACCESS_KEY=$NCP_SENS_ACCESS_KEY"
+            echo "NCP_SENS_SECRET_KEY=$NCP_SENS_SECRET_KEY"
+            echo "NCP_SENS_SENDER_NUMBER=$NCP_SENS_SENDER_NUMBER"
+          } > env.tmp
+          scp -F ~/.ssh/config env.tmp target:/opt/classitda/.env.new
+          ssh -F ~/.ssh/config target 'set -eu; umask 077; cd /opt/classitda; [ -f .env ] && cp .env .env.prev && chmod 600 .env.prev || true; chmod 600 .env.new; mv .env.new .env'
+          rm -f env.tmp
+
+      - name: 배포
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
+        run: |
+          set -eu
+          ssh -F ~/.ssh/config target "APP_IMAGE='$IMAGE' bash -s" <<'REMOTE'
+          set -eu
+          cd /opt/classitda
+
+          PREVIOUS=$(docker inspect --format '{{.Config.Image}}' classitda-dev-app 2>/dev/null || true)
+          echo "이전 이미지: ${PREVIOUS:-없음}"
+
+          wait_healthy() {
+            for _ in $(seq 1 30); do
+              status=$(docker inspect -f '{{.State.Health.Status}}' classitda-dev-app 2>/dev/null || echo none)
+              [ "$status" = healthy ] && return 0
+              sleep 5
+            done
+            return 1
+          }
+
+          docker compose -f compose.dev.yml up -d --pull always app
+
+          if wait_healthy; then
+            echo "배포 성공: $APP_IMAGE"
+            docker image prune -f
+            exit 0
+          fi
+
+          echo "===== 헬스체크 실패 — 앱 로그 ====="
+          docker compose -f compose.dev.yml logs --tail=100 app
+
+          if [ -z "$PREVIOUS" ]; then
+            echo "롤백할 이전 이미지가 없습니다."
+            exit 1
+          fi
+
+          echo "===== 롤백: $PREVIOUS ====="
+          if [ -f .env.prev ]; then
+            echo ".env 도 이전 값으로 되돌립니다."
+            cp .env.prev .env
+          fi
+          APP_IMAGE="$PREVIOUS" docker compose -f compose.dev.yml up -d app
+          if wait_healthy; then
+            echo "롤백 완료. 배포는 실패로 처리합니다."
+          else
+            echo "롤백도 실패했습니다. 수동 개입이 필요합니다."
+          fi
+          exit 1
+          REMOTE
