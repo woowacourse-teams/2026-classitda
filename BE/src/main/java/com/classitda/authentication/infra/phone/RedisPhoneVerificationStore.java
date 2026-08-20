@@ -153,7 +153,8 @@ public class RedisPhoneVerificationStore implements PhoneVerificationStore {
                 DELETE_IF_ACTIVE_SCRIPT,
                 List.of(
                         verificationKey(state.verificationId()),
-                        activeKey(state.signupJti(), phoneHmac)),
+                        activeKey(state.signupJti(), phoneHmac),
+                        cooldownKey(state.signupJti(), phoneHmac)),
                 state.verificationId());
 
         if (result == null) {

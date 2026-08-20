@@ -2,7 +2,9 @@ package com.classitda.authentication.integration;
 
 import static com.classitda.support.AuthenticationIntegrationTestConfiguration.FIXED_OTP;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 
 import com.classitda.authentication.application.phone.OtpGenerator;
 import com.classitda.authentication.application.phone.PhoneVerificationService;
@@ -92,10 +94,33 @@ class PhoneVerificationSendIntegrationTest {
     }
 
     @Test
+    void 문자_발송에_실패하면_인증_상태와_재발송_제한을_삭제한다() {
+        // given
+        String signupJti = "delivery-failed-signup";
+        String phoneNumber = phoneNumber(2);
+        AuthException deliveryFailure = new AuthException(AuthErrorCode.PHONE_DELIVERY_FAILED);
+        willThrow(deliveryFailure)
+                .willDoNothing()
+                .given(smsSender)
+                .send(phoneNumber, FIXED_OTP);
+
+        // when
+        Throwable exception = catchThrowable(() -> phoneVerificationService.send(signupJti, phoneNumber));
+
+        // then
+        assertThat(exception).isSameAs(deliveryFailure);
+        assertThat(keys("signup:phone-verification:*")).isEmpty();
+        assertThat(keys("signup:phone-active:" + signupJti + ":*")).isEmpty();
+        assertThat(keys("signup:phone-cooldown:" + signupJti + ":*")).isEmpty();
+
+        assertThat(phoneVerificationService.send(signupJti, phoneNumber)).isNotNull();
+    }
+
+    @Test
     void 동시_발송은_한_건만_성공한다() throws Exception {
         // given
         int requestCount = 10;
-        String phoneNumber = phoneNumber(2);
+        String phoneNumber = phoneNumber(3);
 
         ExecutorService executor = Executors.newFixedThreadPool(requestCount);
         CountDownLatch ready = new CountDownLatch(requestCount);
