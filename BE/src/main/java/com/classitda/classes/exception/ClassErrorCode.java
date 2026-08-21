@@ -33,7 +33,25 @@ public enum ClassErrorCode implements ErrorCode {
     INVALID_CLASS_SESSION_CAPACITY("CLASS_SESSION-005", "정원은 1명 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
     CLASS_SESSION_STUDIO_REQUIRED("CLASS_SESSION-006", "수업 시설은 필수입니다.", HttpStatus.BAD_REQUEST),
     CLASS_SESSION_INSTRUCTOR_REQUIRED("CLASS_SESSION-007", "담당 강사는 필수입니다.", HttpStatus.BAD_REQUEST),
-    CLASS_SESSION_STATUS_REQUIRED("CLASS_SESSION-008", "수업 상태는 필수입니다.", HttpStatus.BAD_REQUEST);
+    CLASS_SESSION_STATUS_REQUIRED("CLASS_SESSION-008", "수업 상태는 필수입니다.", HttpStatus.BAD_REQUEST),
+    CLASS_SESSION_NOT_FOUND("CLASS_SESSION-009", "수업을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    // CLASS GUEST
+    INVALID_CLASS_GUEST_NAME("CLASS_GUEST-001", "비회원 이름은 1자 이상 50자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
+    CLASS_GUEST_STUDIO_REQUIRED("CLASS_GUEST-002", "비회원 시설은 필수입니다.", HttpStatus.BAD_REQUEST),
+
+    // RESERVATION
+    RESERVATION_ATTENDEE_REQUIRED("RESERVATION-001", "회원 또는 비회원 중 한 명을 지정해야 합니다.", HttpStatus.BAD_REQUEST),
+    RESERVATION_ATTENDEE_AMBIGUOUS("RESERVATION-002", "회원과 비회원을 동시에 지정할 수 없습니다.", HttpStatus.BAD_REQUEST),
+    RESERVATION_SESSION_REQUIRED("RESERVATION-003", "예약할 수업은 필수입니다.", HttpStatus.BAD_REQUEST),
+    RESERVATION_NOT_FOUND("RESERVATION-004", "예약을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    RESERVATION_ALREADY_CANCELED("RESERVATION-005", "이미 취소된 예약입니다.", HttpStatus.CONFLICT),
+    RESERVATION_DUPLICATED("RESERVATION-006", "이미 이 수업에 예약되어 있습니다.", HttpStatus.CONFLICT),
+    RESERVATION_TIME_OVERLAPPED("RESERVATION-007", "같은 시간에 진행되는 다른 수업에 이미 예약되어 있습니다.", HttpStatus.CONFLICT),
+    RESERVATION_CAPACITY_EXCEEDED("RESERVATION-008", "수업 정원이 가득 찼습니다.", HttpStatus.CONFLICT),
+    RESERVATION_SESSION_NOT_MANAGEABLE("RESERVATION-009", "담당 강사만 이 수업의 예약을 관리할 수 있습니다.", HttpStatus.FORBIDDEN),
+    RESERVATION_SESSION_CLOSED("RESERVATION-010", "이미 종료되었거나 취소된 수업입니다.", HttpStatus.CONFLICT),
+    RESERVATION_INSTRUCTOR_NOT_ALLOWED("RESERVATION-011", "강사는 수업 참여자로 등록할 수 없습니다.", HttpStatus.BAD_REQUEST);
 
     private final String code;
     private final String message;

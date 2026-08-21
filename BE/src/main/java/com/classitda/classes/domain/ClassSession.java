@@ -99,6 +99,18 @@ public class ClassSession extends BaseEntity {
         this.status = status;
     }
 
+    public boolean isInstructedBy(Long membershipId) {
+        return instructorMembership.getId().equals(membershipId);
+    }
+
+    public boolean isCanceled() {
+        return status == ClassSessionStatus.CANCELED;
+    }
+
+    public boolean hasEnded(LocalDateTime now) {
+        return endAt.isBefore(now);
+    }
+
     private void validateStudioId(Long studioId) {
         if (studioId == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_STUDIO_REQUIRED);
