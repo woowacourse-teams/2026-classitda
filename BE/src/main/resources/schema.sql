@@ -335,10 +335,28 @@ CREATE TABLE member_pass_product
   DEFAULT CHARSET = utf8mb4;
 
 
+-- 시설에 계정 없이 참여하는 비회원이다. 강사가 이름만 입력해 등록한다.
+CREATE TABLE class_guest
+(
+    id           BIGINT      NOT NULL AUTO_INCREMENT,
+    studio_id    BIGINT      NOT NULL,
+    name         VARCHAR(50) NOT NULL,
+    phone_number VARCHAR(20) NULL,
+    created_at   DATETIME(6) NOT NULL,
+    updated_at   DATETIME(6) NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_class_guest_studio FOREIGN KEY (studio_id) REFERENCES studio (id)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4;
+
+
+-- 참여자는 회원(membership_id)이거나 비회원(class_guest_id)이며 둘 중 하나만 채운다.
+-- membership_id 가 NULL 인 비회원 예약은 uk_reservation_active 의 적용을 받지 않는다.
 CREATE TABLE reservation
 (
     id                     BIGINT      NOT NULL AUTO_INCREMENT,
-    membership_id          BIGINT      NOT NULL,
+    membership_id          BIGINT      NULL,
+    class_guest_id         BIGINT      NULL,
     class_session_id       BIGINT      NOT NULL,
     member_pass_product_id BIGINT      NULL,
     status                 VARCHAR(20) NOT NULL,
@@ -349,7 +367,12 @@ CREATE TABLE reservation
     updated_at             DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_reservation_active (class_session_id, membership_id, active_flag),
+    CONSTRAINT ck_reservation_attendee CHECK (
+        (membership_id IS NOT NULL AND class_guest_id IS NULL)
+            OR (membership_id IS NULL AND class_guest_id IS NOT NULL)
+        ),
     CONSTRAINT fk_reservation_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
+    CONSTRAINT fk_reservation_class_guest FOREIGN KEY (class_guest_id) REFERENCES class_guest (id),
     CONSTRAINT fk_reservation_session FOREIGN KEY (class_session_id) REFERENCES class_session (id),
     CONSTRAINT fk_reservation_member_pass_product FOREIGN KEY (member_pass_product_id) REFERENCES member_pass_product (id)
 ) ENGINE = InnoDB
