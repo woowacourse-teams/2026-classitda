@@ -156,6 +156,11 @@ public enum ClassErrorCode implements ErrorCode {
             "대기 제안이 만료되어 수락할 수 없습니다.",
             HttpStatus.CONFLICT
     ),
+    CLASS_SESSION_ENROLLMENT_NOT_FOUND(
+            "CLASS_SESSION_ENROLLMENT-009",
+            "수업 신청을 찾을 수 없습니다.",
+            HttpStatus.NOT_FOUND
+    ),
 
     // ATTENDANCE
     INVALID_ATTENDANCE_TRANSITION(
