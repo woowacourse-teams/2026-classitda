@@ -119,6 +119,8 @@ Accepted (YYYY-MM-DD)
 | [0010](0010-use-managed-database-and-cache.md) | 데이터 계층 위치 | MySQL과 Redis를 RDS·ElastiCache로 분리하고 EC2에는 앱만 둬요 |
 | [0011](0011-include-nginx-config-in-deploy-pipeline.md) | nginx 운영 방식 (`Proposed`) | `api.conf`를 저장소에 두고 배포가 nginx까지 다루자는 제안이에요 |
 | [0012](0012-extend-access-token-lifetime.md) | Access Token 수명과 상태 경계 | Access Token은 1시간 stateless JWT로, Refresh Session은 Redis로 관리해요 |
+| [0013](0013-defer-class-session-concurrency-lock.md) | 비관적 락 적용 유예 | 현재 수업 생성에는 비관적 락을 적용하지 않고 일정 변경 경로가 늘어날 때 다시 결정해요 |
+| [0014](0014-unify-class-session-enrollment.md) | 수업 신청 생명주기 통합 | 예약과 대기를 한 신청 모델로 관리하고 출결 결과를 분리해요 |
 
 ## 다른 문서와의 관계
 

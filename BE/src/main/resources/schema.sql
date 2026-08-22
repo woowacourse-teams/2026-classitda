@@ -253,12 +253,13 @@ CREATE TABLE class_session
     capacity                 INT         NOT NULL,
     start_at                 DATETIME(6) NOT NULL,
     end_at                   DATETIME(6) NOT NULL,
-    status                   VARCHAR(20) NOT NULL,
-    active_flag              TINYINT GENERATED ALWAYS AS (IF(status = 'CANCELED', NULL, 1)) STORED,
+    canceled_at              DATETIME(6) NULL,
+    active_flag              TINYINT GENERATED ALWAYS AS (IF(canceled_at IS NOT NULL, NULL, 1)) STORED,
     created_at               DATETIME(6) NOT NULL,
     updated_at               DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_session_instructor_active (instructor_membership_id, start_at, active_flag),
+    KEY idx_session_studio_start (studio_id, start_at, id),
     CONSTRAINT fk_session_studio FOREIGN KEY (studio_id) REFERENCES studio (id),
     CONSTRAINT fk_session_instructor FOREIGN KEY (instructor_membership_id) REFERENCES studio_membership (id)
 ) ENGINE = InnoDB
@@ -273,7 +274,7 @@ CREATE TABLE class_session_class_type
     created_at       DATETIME(6) NOT NULL,
     updated_at       DATETIME(6) NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_session_class_type (class_session_id, class_type_id),
+    UNIQUE KEY uk_session_class_type_session (class_session_id),
     CONSTRAINT fk_session_class_type_session
         FOREIGN KEY (class_session_id) REFERENCES class_session (id) ON DELETE CASCADE,
     CONSTRAINT fk_session_class_type_type
@@ -335,42 +336,60 @@ CREATE TABLE member_pass_product
   DEFAULT CHARSET = utf8mb4;
 
 
-CREATE TABLE reservation
+CREATE TABLE class_session_enrollment
 (
-    id                     BIGINT      NOT NULL AUTO_INCREMENT,
-    membership_id          BIGINT      NOT NULL,
-    class_session_id       BIGINT      NOT NULL,
-    member_pass_product_id BIGINT      NULL,
-    status                 VARCHAR(20) NOT NULL,
-    active_flag            TINYINT GENERATED ALWAYS AS (IF(status = 'CANCELED', NULL, 1)) STORED,
-    reserved_at            DATETIME(6) NOT NULL,
-    canceled_at            DATETIME(6) NULL,
-    created_at             DATETIME(6) NOT NULL,
-    updated_at             DATETIME(6) NULL,
+    id                           BIGINT      NOT NULL AUTO_INCREMENT,
+    membership_id                BIGINT      NOT NULL,
+    class_session_id             BIGINT      NOT NULL,
+    member_pass_product_id       BIGINT      NULL,
+    enrollment_status            VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    enrollment_status_changed_at DATETIME(6) NOT NULL,
+    offer_expires_at              DATETIME(6) NULL,
+    attendance_result             VARCHAR(20) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    attendance_recorded_at        DATETIME(6) NULL,
+    active_flag                   TINYINT GENERATED ALWAYS AS (
+        IF(enrollment_status IN ('WAITING', 'OFFERED', 'RESERVED'), 1, NULL)
+        ) STORED,
+    created_at                    DATETIME(6) NOT NULL,
+    updated_at                    DATETIME(6) NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_reservation_active (class_session_id, membership_id, active_flag),
-    CONSTRAINT fk_reservation_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
-    CONSTRAINT fk_reservation_session FOREIGN KEY (class_session_id) REFERENCES class_session (id),
-    CONSTRAINT fk_reservation_member_pass_product FOREIGN KEY (member_pass_product_id) REFERENCES member_pass_product (id)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4;
-
-
-CREATE TABLE waiting
-(
-    id               BIGINT      NOT NULL AUTO_INCREMENT,
-    membership_id    BIGINT      NOT NULL,
-    class_session_id BIGINT      NOT NULL,
-    sequence         INT         NOT NULL,
-    status           VARCHAR(20) NOT NULL,
-    active_flag      TINYINT GENERATED ALWAYS AS (IF(status IN ('CANCELED', 'EXPIRED'), NULL, 1)) STORED,
-    offered_at       DATETIME(6) NULL,
-    created_at       DATETIME(6) NOT NULL,
-    updated_at       DATETIME(6) NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_waiting_active (class_session_id, membership_id, active_flag),
-    CONSTRAINT fk_waiting_membership FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
-    CONSTRAINT fk_waiting_session FOREIGN KEY (class_session_id) REFERENCES class_session (id)
+    UNIQUE KEY uk_enrollment_active (class_session_id, membership_id, active_flag),
+    KEY idx_enrollment_queue (class_session_id, enrollment_status, enrollment_status_changed_at, id),
+    KEY idx_enrollment_offer_expiry (enrollment_status, offer_expires_at, id),
+    KEY idx_enrollment_member_calendar (membership_id, enrollment_status, class_session_id),
+    CONSTRAINT fk_enrollment_membership
+        FOREIGN KEY (membership_id) REFERENCES studio_membership (id),
+    CONSTRAINT fk_enrollment_session
+        FOREIGN KEY (class_session_id) REFERENCES class_session (id),
+    CONSTRAINT fk_enrollment_member_pass_product
+        FOREIGN KEY (member_pass_product_id) REFERENCES member_pass_product (id),
+    CONSTRAINT chk_enrollment_status
+        CHECK (enrollment_status IN ('WAITING', 'OFFERED', 'RESERVED', 'CANCELED', 'EXPIRED')),
+    CONSTRAINT chk_enrollment_offer
+        CHECK (
+            (enrollment_status = 'OFFERED'
+                AND offer_expires_at IS NOT NULL
+                AND offer_expires_at > enrollment_status_changed_at)
+            OR (enrollment_status <> 'OFFERED' AND offer_expires_at IS NULL)
+        ),
+    CONSTRAINT chk_enrollment_pass
+        CHECK (
+            (enrollment_status IN ('WAITING', 'OFFERED', 'EXPIRED')
+                AND member_pass_product_id IS NULL)
+            OR (enrollment_status = 'RESERVED'
+                AND member_pass_product_id IS NOT NULL)
+            OR enrollment_status = 'CANCELED'
+        ),
+    CONSTRAINT chk_enrollment_attendance_result
+        CHECK (attendance_result IN ('NOT_RECORDED', 'ATTENDED', 'ABSENT')),
+    CONSTRAINT chk_enrollment_attendance_recorded_at
+        CHECK (
+            (attendance_result = 'NOT_RECORDED' AND attendance_recorded_at IS NULL)
+            OR (attendance_result IN ('ATTENDED', 'ABSENT')
+                AND attendance_recorded_at IS NOT NULL)
+        ),
+    CONSTRAINT chk_enrollment_attendance_status
+        CHECK (attendance_result = 'NOT_RECORDED' OR enrollment_status = 'RESERVED')
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 

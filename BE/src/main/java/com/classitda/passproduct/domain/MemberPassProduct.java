@@ -55,4 +55,15 @@ public class MemberPassProduct extends BaseEntity {
 
     @Column(nullable = false)
     private LocalDate expiresAt;
+
+    public boolean isUsable() {
+        return status == MemberPassProductStatus.ACTIVE
+                && (remainingCount == null || remainingCount > 0);
+    }
+
+    public boolean isValidOn(LocalDate date) {
+        return date != null
+                && !date.isBefore(startedAt)
+                && !date.isAfter(expiresAt);
+    }
 }

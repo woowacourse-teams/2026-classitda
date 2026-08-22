@@ -12,6 +12,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface StudioMembershipRepository extends JpaRepository<StudioMembership, Long> {
 
+    Optional<StudioMembership> findByIdAndStudioId(Long membershipId, Long studioId);
+
     Optional<StudioMembership> findByStudioIdAndMemberId(Long studioId, Long memberId);
 
     boolean existsByStudioIdAndMemberId(Long studioId, Long memberId);

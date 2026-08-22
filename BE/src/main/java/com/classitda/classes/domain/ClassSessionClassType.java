@@ -1,5 +1,7 @@
 package com.classitda.classes.domain;
 
+import com.classitda.classes.exception.ClassErrorCode;
+import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,7 +32,19 @@ public class ClassSessionClassType extends BaseEntity {
 
     @Builder
     private ClassSessionClassType(Long classSessionId, Long classTypeId) {
+        validateClassTypeId(classTypeId);
         this.classSessionId = classSessionId;
         this.classTypeId = classTypeId;
+    }
+
+    public void updateClassTypeId(Long classTypeId) {
+        validateClassTypeId(classTypeId);
+        this.classTypeId = classTypeId;
+    }
+
+    private void validateClassTypeId(Long classTypeId) {
+        if (classTypeId == null || classTypeId < 1) {
+            throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_CLASS_TYPE_ID);
+        }
     }
 }

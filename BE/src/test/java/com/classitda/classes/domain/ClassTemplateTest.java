@@ -81,6 +81,24 @@ class ClassTemplateTest {
     }
 
     @Test
+    void 진행_시간이_1440분이면_수업_템플릿을_생성할_수_있다() {
+        // when
+        ClassTemplate classTemplate = 수업_템플릿을_생성한다(
+                1L,
+                "저녁 요가",
+                null,
+                ClassForm.GROUP,
+                1_440,
+                LocalTime.of(20, 0),
+                Set.of(),
+                12
+        );
+
+        // then
+        assertThat(classTemplate.getDurationMinutes()).isEqualTo(1_440);
+    }
+
+    @Test
     void 이름이_100자면_수업_템플릿을_생성할_수_있다() {
         // given
         String name = "가".repeat(100);
@@ -165,8 +183,8 @@ class ClassTemplateTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, -1})
-    void 진행_시간이_1분_미만이면_003_예외가_발생한다(int durationMinutes) {
+    @ValueSource(ints = {0, -1, 1_441})
+    void 진행_시간이_유효한_범위를_벗어나면_003_예외가_발생한다(int durationMinutes) {
         // given
         LocalTime startTime = LocalTime.of(20, 0);
 

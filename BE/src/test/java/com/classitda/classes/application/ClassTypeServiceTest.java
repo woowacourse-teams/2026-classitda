@@ -7,7 +7,6 @@ import static org.assertj.core.groups.Tuple.tuple;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassTemplate;
 import com.classitda.classes.domain.ClassTemplateClassType;
 import com.classitda.classes.domain.ClassType;
@@ -748,7 +747,6 @@ class ClassTypeServiceTest {
                         .durationMinutes(60)
                         .capacity(10)
                         .startAt(LocalDateTime.of(2026, 8, 17, 20, 0))
-                        .status(ClassSessionStatus.OPENED)
                         .build();
                 entityManager.persist(session);
                 entityManager.flush();

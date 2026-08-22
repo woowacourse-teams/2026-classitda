@@ -29,6 +29,7 @@ import lombok.NoArgsConstructor;
 public class ClassSession extends BaseEntity {
 
     private static final int MAX_NAME_LENGTH = 100;
+    private static final int MAX_DURATION_MINUTES = 24 * 60;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -63,9 +64,7 @@ public class ClassSession extends BaseEntity {
     @Column(nullable = false)
     private LocalDateTime endAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private ClassSessionStatus status;
+    private LocalDateTime canceledAt;
 
     @Builder
     private ClassSession(
@@ -76,17 +75,11 @@ public class ClassSession extends BaseEntity {
             ClassForm classForm,
             int durationMinutes,
             int capacity,
-            LocalDateTime startAt,
-            ClassSessionStatus status
+            LocalDateTime startAt
     ) {
         validateStudioId(studioId);
         validateInstructorMembership(instructorMembership);
-        validateName(name);
-        validateClassForm(classForm);
-        validateDurationMinutes(durationMinutes);
-        validateCapacity(capacity);
-        validateStartAt(startAt);
-        validateStatus(status);
+        validateDetails(name, classForm, durationMinutes, capacity, startAt);
         this.studioId = studioId;
         this.instructorMembership = instructorMembership;
         this.name = name;
@@ -96,7 +89,71 @@ public class ClassSession extends BaseEntity {
         this.capacity = capacity;
         this.startAt = startAt;
         this.endAt = calculateEndAt(startAt, durationMinutes);
-        this.status = status;
+    }
+
+    public SessionPhase phaseAt(LocalDateTime now) {
+        if (now == null) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_CURRENT_TIME_REQUIRED);
+        }
+        if (isCanceled()) {
+            return SessionPhase.CANCELED;
+        }
+        if (!now.isBefore(endAt)) {
+            return SessionPhase.COMPLETED;
+        }
+        if (!now.isBefore(startAt)) {
+            return SessionPhase.IN_PROGRESS;
+        }
+        return SessionPhase.SCHEDULED;
+    }
+
+    public LocalDateTime bookingCloseAt(int reservationCloseMinutesBefore) {
+        return startAt.minusMinutes(reservationCloseMinutesBefore);
+    }
+
+    public BookingWindow bookingWindowAt(LocalDateTime now, int reservationCloseMinutesBefore) {
+        if (isCanceled()) {
+            return BookingWindow.CLOSED;
+        }
+        return now.isBefore(bookingCloseAt(reservationCloseMinutesBefore)) ? BookingWindow.OPEN : BookingWindow.CLOSED;
+    }
+
+    public void cancel(LocalDateTime occurredAt) {
+        if (occurredAt == null) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_CANCEL_OCCURRED_AT_REQUIRED);
+        }
+        if (isCanceled()) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_ALREADY_CANCELED);
+        }
+        if (!occurredAt.isBefore(startAt)) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_ALREADY_STARTED);
+        }
+
+        canceledAt = occurredAt;
+    }
+
+    public boolean isCanceled() {
+        return canceledAt != null;
+    }
+
+    public void updateDetails(
+            String name,
+            String description,
+            ClassForm classForm,
+            int durationMinutes,
+            int capacity,
+            LocalDateTime startAt
+    ) {
+        validateUpdatable();
+        validateDetails(name, classForm, durationMinutes, capacity, startAt);
+        LocalDateTime calculatedEndAt = calculateEndAt(startAt, durationMinutes);
+        this.name = name;
+        this.description = description;
+        this.classForm = classForm;
+        this.durationMinutes = durationMinutes;
+        this.capacity = capacity;
+        this.startAt = startAt;
+        this.endAt = calculatedEndAt;
     }
 
     private void validateStudioId(Long studioId) {
@@ -108,6 +165,26 @@ public class ClassSession extends BaseEntity {
     private void validateInstructorMembership(StudioMembership instructorMembership) {
         if (instructorMembership == null) {
             throw new ClassException(ClassErrorCode.CLASS_SESSION_INSTRUCTOR_REQUIRED);
+        }
+    }
+
+    private void validateDetails(
+            String name,
+            ClassForm classForm,
+            int durationMinutes,
+            int capacity,
+            LocalDateTime startAt
+    ) {
+        validateName(name);
+        validateClassForm(classForm);
+        validateDurationMinutes(durationMinutes);
+        validateCapacity(capacity);
+        validateStartAt(startAt);
+    }
+
+    private void validateUpdatable() {
+        if (isCanceled()) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_CANCELED);
         }
     }
 
@@ -124,7 +201,7 @@ public class ClassSession extends BaseEntity {
     }
 
     private void validateDurationMinutes(int durationMinutes) {
-        if (durationMinutes < 1) {
+        if (durationMinutes < 1 || durationMinutes > MAX_DURATION_MINUTES) {
             throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_DURATION_MINUTES);
         }
     }
@@ -138,12 +215,6 @@ public class ClassSession extends BaseEntity {
     private void validateStartAt(LocalDateTime startAt) {
         if (startAt == null) {
             throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_START_AT);
-        }
-    }
-
-    private void validateStatus(ClassSessionStatus status) {
-        if (status == null) {
-            throw new ClassException(ClassErrorCode.CLASS_SESSION_STATUS_REQUIRED);
         }
     }
 

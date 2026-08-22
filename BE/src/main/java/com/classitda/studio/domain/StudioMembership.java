@@ -82,4 +82,8 @@ public class StudioMembership extends BaseEntity {
             throw new StudioException(StudioErrorCode.INVALID_MEMBERSHIP_NAME);
         }
     }
+
+    public boolean isStudent() {
+        return studioRole.getSystemRole() == SystemRole.STUDENT;
+    }
 }

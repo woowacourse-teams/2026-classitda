@@ -1,8 +1,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 DROP TABLE IF EXISTS notice;
-DROP TABLE IF EXISTS waiting;
-DROP TABLE IF EXISTS reservation;
+DROP TABLE IF EXISTS class_session_enrollment;
 DROP TABLE IF EXISTS member_pass_product;
 DROP TABLE IF EXISTS pass_product_class_type;
 DROP TABLE IF EXISTS pass_product;

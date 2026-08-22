@@ -33,6 +33,7 @@ import lombok.NoArgsConstructor;
 public class ClassTemplate extends BaseEntity {
 
     private static final int MAX_NAME_LENGTH = 100;
+    private static final int MAX_DURATION_MINUTES = 24 * 60;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -148,7 +149,7 @@ public class ClassTemplate extends BaseEntity {
     }
 
     private void validateDurationMinutes(int durationMinutes) {
-        if (durationMinutes < 1) {
+        if (durationMinutes < 1 || durationMinutes > MAX_DURATION_MINUTES) {
             throw new ClassException(ClassErrorCode.INVALID_DURATION_MINUTES);
         }
     }

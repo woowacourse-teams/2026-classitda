@@ -9,7 +9,6 @@ import static org.mockito.Mockito.reset;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
-import com.classitda.classes.domain.ClassSessionStatus;
 import com.classitda.classes.domain.ClassTemplate;
 import com.classitda.classes.domain.ClassTemplateClassType;
 import com.classitda.classes.domain.ClassType;
@@ -493,7 +492,6 @@ class ClassTemplateCommandServiceTest {
                 .durationMinutes(60)
                 .capacity(12)
                 .startAt(LocalDateTime.of(2026, 8, 17, 20, 0))
-                .status(ClassSessionStatus.OPENED)
                 .build();
         entityManager.persist(session);
         entityManager.flush();
@@ -522,7 +520,7 @@ class ClassTemplateCommandServiceTest {
         ClassSession preservedSession = entityManager.find(ClassSession.class, sessionId);
         assertThat(preservedSession).isNotNull();
         assertThat(preservedSession.getName()).isEqualTo("독립 수업 회차");
-        assertThat(preservedSession.getStatus()).isEqualTo(ClassSessionStatus.OPENED);
+        assertThat(preservedSession.isCanceled()).isFalse();
         assertThat(테이블_행_수를_조회한다("class_session_class_type", "class_session_id", sessionId)).isEqualTo(1);
     }
 

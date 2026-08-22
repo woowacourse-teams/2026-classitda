@@ -1,8 +1,9 @@
 package com.classitda.classes.domain;
 
-public enum ReservationStatus {
+public enum EnrollmentStatus {
+    WAITING,
+    OFFERED,
     RESERVED,
     CANCELED,
-    ATTENDED,
-    NO_SHOW
+    EXPIRED
 }
