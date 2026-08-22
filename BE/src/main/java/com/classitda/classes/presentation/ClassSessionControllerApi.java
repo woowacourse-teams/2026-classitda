@@ -151,6 +151,8 @@ public interface ClassSessionControllerApi {
 
                     - 클라이언트는 출결 결과, 본인의 활성 신청 관계, 예약 가능 상태 순서로 우선해서 표시 상태를 결정합니다.
                     - bookingRelation은 수업 시작 여부나 출결 기록 여부와 관계없이 실제 신청 관계를 반환합니다. 출석·결석 후에도 RESERVED를 유지합니다.
+                    - enrollmentId는 bookingRelation이 RESERVED, WAITING, OFFERED일 때 해당 신청 ID이며, NONE이면 null입니다.
+                    - enrollmentId가 있으면 학생 신청 상세 조회 API의 enrollmentId로 사용할 수 있습니다.
                     - 출결은 저장된 AttendanceResult를 반환합니다.
                     - 출결 기능 구현 후에는 수업 시작 시 RESERVED + NOT_RECORDED 신청을 시스템이 ATTENDED로 자동 저장하고, 강사가 ABSENT로 변경할 수 있습니다.
                     - 과거 날짜에는 본인이 예약했던 수업만 반환하며 ATTENDED, ABSENT, NOT_RECORDED를 구분합니다. 취소된 수업 회차는 반환하지 않습니다.

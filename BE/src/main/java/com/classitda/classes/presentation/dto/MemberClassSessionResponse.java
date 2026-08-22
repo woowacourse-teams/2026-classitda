@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 public record MemberClassSessionResponse(
         Long id,
 
+        @Schema(description = "회원의 활성 수업 신청 ID. 신청 관계가 NONE이면 null입니다.", example = "19")
+        Long enrollmentId,
+
         @Schema(description = "담당 강사의 시설 소속 ID", example = "12")
         Long instructorMembershipId,
 
@@ -61,6 +64,7 @@ public record MemberClassSessionResponse(
     public static MemberClassSessionResponse from(StudentDailySessionView session) {
         return new MemberClassSessionResponse(
                 session.id(),
+                session.enrollmentId(),
                 session.instructorMembershipId(),
                 session.instructorName(),
                 session.classForm(),

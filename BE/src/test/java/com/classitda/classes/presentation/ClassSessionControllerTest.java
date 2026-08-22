@@ -156,6 +156,7 @@ class ClassSessionControllerTest {
                 [
                   {
                     "id": 11,
+                    "enrollmentId": null,
                     "instructorMembershipId": 12,
                     "instructorName": "김강사",
                     "classForm": "GROUP",
@@ -860,6 +861,7 @@ class ClassSessionControllerTest {
     private static StudentDailySessionView 회원용_일별_수업_뷰() {
         return new StudentDailySessionView(
                 11L,
+                null,
                 12L,
                 "김강사",
                 ClassForm.GROUP,

@@ -216,6 +216,7 @@ class StudentDailyQueryServiceTest {
         assertThat(responses).containsExactly(
                 new StudentDailySessionView(
                         sameTimeFirst.getId(),
+                        null,
                         firstInstructor.getId(),
                         firstInstructor.getName(),
                         ClassForm.GROUP,
@@ -233,6 +234,7 @@ class StudentDailyQueryServiceTest {
                 ),
                 new StudentDailySessionView(
                         sameTimeSecond.getId(),
+                        null,
                         secondInstructor.getId(),
                         secondInstructor.getMember().getName(),
                         ClassForm.GROUP,
@@ -250,6 +252,7 @@ class StudentDailyQueryServiceTest {
                 ),
                 new StudentDailySessionView(
                         laterSession.getId(),
+                        null,
                         firstInstructor.getId(),
                         firstInstructor.getName(),
                         ClassForm.GROUP,
@@ -497,12 +500,24 @@ class StudentDailyQueryServiceTest {
                 QUERY_DATE.atTime(11, 0)
         );
         신청을_저장한다(canceled, memberMembership, EnrollmentStatus.RESERVED);
-        신청을_저장한다(attendancePending, memberMembership, EnrollmentStatus.RESERVED);
-        신청을_저장한다(attended, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ATTENDED);
-        신청을_저장한다(absent, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ABSENT);
-        신청을_저장한다(reserved, memberMembership, EnrollmentStatus.RESERVED);
-        신청을_저장한다(offered, memberMembership, EnrollmentStatus.OFFERED);
-        신청을_저장한다(waiting, memberMembership, EnrollmentStatus.WAITING);
+        ClassSessionEnrollment attendancePendingEnrollment = 신청을_저장한다(
+                attendancePending, memberMembership, EnrollmentStatus.RESERVED
+        );
+        ClassSessionEnrollment attendedEnrollment = 신청을_저장한다(
+                attended, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ATTENDED
+        );
+        ClassSessionEnrollment absentEnrollment = 신청을_저장한다(
+                absent, memberMembership, EnrollmentStatus.RESERVED, AttendanceResult.ABSENT
+        );
+        ClassSessionEnrollment reservedEnrollment = 신청을_저장한다(
+                reserved, memberMembership, EnrollmentStatus.RESERVED
+        );
+        ClassSessionEnrollment offeredEnrollment = 신청을_저장한다(
+                offered, memberMembership, EnrollmentStatus.OFFERED
+        );
+        ClassSessionEnrollment waitingEnrollment = 신청을_저장한다(
+                waiting, memberMembership, EnrollmentStatus.WAITING
+        );
         entityManager.flush();
         entityManager.clear();
 
@@ -515,17 +530,21 @@ class StudentDailyQueryServiceTest {
 
         // then
         assertThat(responses)
-                .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingDecision)
+                .extracting(
+                        StudentDailySessionView::id,
+                        StudentDailySessionView::enrollmentId,
+                        StudentDailySessionView::bookingDecision
+                )
                 .containsExactly(
-                        tuple(attendancePending.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(attended.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(absent.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, BookingAvailability.CLOSED)),
-                        tuple(startedWithoutEnrollment.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(reserved.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(offered.getId(), decision(StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(waiting.getId(), decision(StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(closedAtBoundary.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(availableBeforeClose.getId(), decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE))
+                        tuple(attendancePending.getId(), attendancePendingEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(attended.getId(), attendedEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
+                        tuple(absent.getId(), absentEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, BookingAvailability.CLOSED)),
+                        tuple(startedWithoutEnrollment.getId(), null, decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(reserved.getId(), reservedEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(offered.getId(), offeredEnrollment.getId(), decision(StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(waiting.getId(), waitingEnrollment.getId(), decision(StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(closedAtBoundary.getId(), null, decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(availableBeforeClose.getId(), null, decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE))
                 );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
@@ -941,15 +960,15 @@ class StudentDailyQueryServiceTest {
         return memberPassProduct;
     }
 
-    private void 신청을_저장한다(
+    private ClassSessionEnrollment 신청을_저장한다(
             ClassSession classSession,
             StudioMembership membership,
             EnrollmentStatus status
     ) {
-        신청을_저장한다(classSession, membership, status, AttendanceResult.NOT_RECORDED);
+        return 신청을_저장한다(classSession, membership, status, AttendanceResult.NOT_RECORDED);
     }
 
-    private void 신청을_저장한다(
+    private ClassSessionEnrollment 신청을_저장한다(
             ClassSession classSession,
             StudioMembership membership,
             EnrollmentStatus status,
@@ -997,6 +1016,7 @@ class StudentDailyQueryServiceTest {
             enrollment.markAbsent(classSession.getEndAt());
         }
         entityManager.persist(enrollment);
+        return enrollment;
     }
 
     private MemberPassProduct 수강권을_조회하거나_저장한다(

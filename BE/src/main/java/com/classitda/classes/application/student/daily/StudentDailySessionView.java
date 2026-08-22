@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 public record StudentDailySessionView(
         Long id,
+        Long enrollmentId,
         Long instructorMembershipId,
         String instructorName,
         ClassForm classForm,
@@ -34,6 +35,7 @@ public record StudentDailySessionView(
         ClassSession session = classSession.getSession();
         return new StudentDailySessionView(
                 session.getId(),
+                classSession.getOwnEnrollmentId().orElse(null),
                 session.getInstructorMembership().getId(),
                 classSession.getInstructorName(),
                 session.getClassForm(),

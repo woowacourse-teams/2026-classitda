@@ -19,6 +19,8 @@ public interface StudentDailySessionProjection {
 
     long getWaitingCount();
 
+    Optional<Long> getOwnEnrollmentId();
+
     Optional<EnrollmentStatus> getOwnEnrollmentStatus();
 
     Optional<AttendanceResult> getOwnAttendanceResult();

@@ -46,6 +46,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
                             com.classitda.classes.domain.EnrollmentStatus.WAITING
                             THEN 1 ELSE 0 END
                    ) AS waitingCount,
+                   ownEnrollment.id AS ownEnrollmentId,
                    ownEnrollment.state.status AS ownEnrollmentStatus,
                    ownEnrollment.attendance.result AS ownAttendanceResult
             FROM ClassSession classSession
@@ -83,6 +84,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
                      classSession.instructorMembership.name,
                      classType.id,
                      classType.name,
+                     ownEnrollment.id,
                      ownEnrollment.state.status,
                      ownEnrollment.attendance.result
             ORDER BY classSession.startAt ASC, classSession.id ASC
