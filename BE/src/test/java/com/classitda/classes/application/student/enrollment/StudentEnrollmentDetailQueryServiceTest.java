@@ -29,6 +29,7 @@ import jakarta.persistence.EntityManagerFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import org.hibernate.SessionFactory;
@@ -149,7 +150,7 @@ class StudentEnrollmentDetailQueryServiceTest {
         sessionCanceledSession.cancel(sessionCanceledAt);
         entityManager.flush();
 
-        LocalDateTime reservedCreatedAt = reserved.getCreatedAt();
+        LocalDateTime reservedCreatedAt = reserved.getCreatedAt().truncatedTo(ChronoUnit.MICROS);
         Long memberId = context.studentMembership().getMember().getId();
         Long studioId = context.studio().getId();
         entityManager.clear();
