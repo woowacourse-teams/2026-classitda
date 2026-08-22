@@ -37,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").hasAuthority(TokenUse.ACCESS.authority())
                         .requestMatchers("/api/studios/*/class-types/**").hasAuthority(TokenUse.ACCESS.authority())
                         .requestMatchers("/api/studios/*/class-sessions/**").hasAuthority(TokenUse.ACCESS.authority())
+                        .requestMatchers("/api/studios/*/class-session-enrollments/**").hasAuthority(TokenUse.ACCESS.authority())
                         .requestMatchers(HttpMethod.GET, "/api/studios/**").permitAll()
                         .requestMatchers("/api/studios/**").hasAuthority(TokenUse.ACCESS.authority())
                         .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
