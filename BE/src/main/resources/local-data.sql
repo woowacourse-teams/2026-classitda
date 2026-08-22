@@ -75,11 +75,12 @@ VALUES (42, 1, 1, 7, 7, 'ACTIVE', DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY), DATE_
 -- 김회원(ID 1)은 2일 전 회차 121~122에서 RESERVED + 결석·출결 미기록을 비교한다.
 -- 김회원(ID 1)은 다음 날 회차 117과 123에서 만석·여유 좌석이 있는 제안을 비교한다.
 -- 정회원(ID 5)은 회차 123의 제안을 받았지만 모든 수강권 잔여 횟수가 0인 보조 경우다.
+-- 신청 ID 29는 취소된 회차 106에 연결되어 학생 신청 상세에서 SESSION_CANCELED를 확인한다.
 -- 김회원의 다음 날 학생 Daily 기대 조합은 다음과 같다.
 -- 101·105·118·119·120: NONE + RESERVABLE (118~120의 종료 이력은 활성 관계에서 제외)
--- 102: NONE + WAITLISTABLE, 103: RESERVED + RESERVABLE, 104: WAITING + WAITLISTABLE
--- 117: OFFERED + WAITLISTABLE, reservedCount=2, remainingCapacity=0, waitingCount=1
--- 123: OFFERED + RESERVABLE, reservedCount=2, remainingCapacity=1, waitingCount=0
+-- 102: NONE + WAITLISTABLE, 103: RESERVED + availability=null, 104: WAITING + availability=null
+-- 117: OFFERED + availability=null, reservedCount=2, remainingCapacity=0, waitingCount=1
+-- 123: OFFERED + availability=null, reservedCount=2, remainingCapacity=1, waitingCount=0
 INSERT INTO class_session (id, studio_id, instructor_membership_id, name, description, class_form, duration_minutes, capacity, start_at, end_at, canceled_at, created_at, updated_at)
 VALUES (101, 1, 3, '리포머 베이직', '편한 복장과 개인 수건을 준비해 주세요.', 'GROUP', 50, 4, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '09:30:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '10:20:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
        (102, 1, 3, '리포머 대기 가능', '정원이 가득 차면 대기 신청할 수 있는 수업입니다.', 'GROUP', 50, 1, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '11:00:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '11:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
@@ -170,4 +171,5 @@ VALUES (1, 4, 101, 43, 'RESERVED', CURRENT_TIMESTAMP(6), NULL, 'NOT_RECORDED', N
        (25, 1, 121, 42, 'RESERVED', TIMESTAMP(DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), '14:00:00'), NULL, 'ABSENT', TIMESTAMP(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), '14:55:00'), CURRENT_TIMESTAMP(6), NULL),
        (26, 1, 122, 42, 'RESERVED', TIMESTAMP(DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), '16:00:00'), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
        (27, 1, 123, NULL, 'OFFERED', CURRENT_TIMESTAMP(6), DATE_ADD(CURRENT_TIMESTAMP(6), INTERVAL 10 MINUTE), 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
-       (28, 5, 123, NULL, 'OFFERED', CURRENT_TIMESTAMP(6), DATE_ADD(CURRENT_TIMESTAMP(6), INTERVAL 10 MINUTE), 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL);
+       (28, 5, 123, NULL, 'OFFERED', CURRENT_TIMESTAMP(6), DATE_ADD(CURRENT_TIMESTAMP(6), INTERVAL 10 MINUTE), 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
+       (29, 1, 106, 42, 'RESERVED', CURRENT_TIMESTAMP(6), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL);

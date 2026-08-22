@@ -51,6 +51,7 @@ public interface StudentEnrollmentControllerApi {
                     | 6 | 출석 완료(ATTENDED) |
                     | 25 | 결석(ABSENT) |
                     | 22 | 예약 취소(RESERVATION_CANCELED) |
+                    | 29 | 수업 취소(SESSION_CANCELED) |
                     | 23 | 대기 취소 이력이므로 404 |
                     | 24 | 제안 만료 이력이므로 404 |
                     | 1 | 다른 회원의 신청이므로 404 |
