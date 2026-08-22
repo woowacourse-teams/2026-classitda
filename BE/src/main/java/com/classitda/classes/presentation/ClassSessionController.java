@@ -103,8 +103,8 @@ public class ClassSessionController implements ClassSessionControllerApi {
     }
 
     @Override
-    @GetMapping(path = "/student/{classSessionId}", version = "1")
-    public ClassSessionDetailResponse findOneForStudent(
+    @GetMapping(path = "/{classSessionId}", version = "1")
+    public ClassSessionDetailResponse findOne(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long classSessionId

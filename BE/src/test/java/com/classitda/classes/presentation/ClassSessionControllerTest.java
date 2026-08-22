@@ -109,13 +109,13 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 학생용_수업_회차_상세를_조회하면_200과_회원용_상세_정보를_반환한다() {
+    void 수업_회차_상세를_조회하면_200과_공용_상세_정보를_반환한다() {
         // given
         ClassSessionDetailResponse response = 수업_회차_상세_응답();
         when(queryService.findOne(1L, 7L, 11L)).thenReturn(response);
 
         // when
-        RestTestClient.ResponseSpec result = 학생용_수업_회차_상세를_조회한다(7L, 11L, "1");
+        RestTestClient.ResponseSpec result = 수업_회차_상세를_조회한다(7L, 11L, "1");
 
         // then
         result.expectStatus().isOk().expectBody().json("""
@@ -499,10 +499,10 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 학생용_상세_조회에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
+    void 상세_조회에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/student/11")
+                .uri("/api/studios/7/class-sessions/11")
                 .exchange();
 
         // then
@@ -511,9 +511,9 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 학생용_상세_조회에서_지원하지_않는_버전이면_API_002를_반환하고_조회_서비스를_호출하지_않는다() {
+    void 상세_조회에서_지원하지_않는_버전이면_API_002를_반환하고_조회_서비스를_호출하지_않는다() {
         // when
-        RestTestClient.ResponseSpec result = 학생용_수업_회차_상세를_조회한다(7L, 11L, "2");
+        RestTestClient.ResponseSpec result = 수업_회차_상세를_조회한다(7L, 11L, "2");
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
@@ -521,10 +521,10 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 기존_상세_조회_경로는_노출하지_않는다() {
+    void 학생용_기존_상세_조회_경로는_노출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/11")
+                .uri("/api/studios/7/class-sessions/student/11")
                 .header("X-API-Version", "1")
                 .exchange();
 
@@ -545,7 +545,7 @@ class ClassSessionControllerTest {
         when(queryService.findOne(1L, 7L, 11L)).thenThrow(exception);
 
         // when
-        RestTestClient.ResponseSpec result = 학생용_수업_회차_상세를_조회한다(7L, 11L, "1");
+        RestTestClient.ResponseSpec result = 수업_회차_상세를_조회한다(7L, 11L, "1");
 
         // then
         오류를_검증한다(result, status, code, message);
@@ -628,14 +628,14 @@ class ClassSessionControllerTest {
                 .exchange();
     }
 
-    private RestTestClient.ResponseSpec 학생용_수업_회차_상세를_조회한다(
+    private RestTestClient.ResponseSpec 수업_회차_상세를_조회한다(
             Long studioId,
             Long classSessionId,
             String version
     ) {
         return client.get()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/student/{classSessionId}",
+                        "/api/studios/{studioId}/class-sessions/{classSessionId}",
                         studioId,
                         classSessionId
                 )

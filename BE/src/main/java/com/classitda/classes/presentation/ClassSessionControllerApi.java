@@ -552,11 +552,11 @@ public interface ClassSessionControllerApi {
     );
 
     @Operation(
-            summary = "학생용 수업 회차 상세 조회",
+            summary = "수업 회차 상세 조회",
             description = """
                     ### 조회 대상
 
-                    - 학생 화면에 공개되는 수업 정보를 조회합니다.
+                    - 시설 소속 사용자에게 공개되는 수업 정보를 조회합니다.
                     - 시설 대표와 같은 시설의 활성 회원, 강사, 관리자가 조회할 수 있습니다.
                     - 회원, 강사, 관리자에게 동일한 수업 회차 정보를 반환합니다.
 
@@ -575,7 +575,7 @@ public interface ClassSessionControllerApi {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "회원에게 공개되는 수업 회차 상세 정보를 반환합니다.",
+                    description = "시설 소속 사용자에게 공개되는 수업 회차 상세 정보를 반환합니다.",
                     content = @Content(schema = @Schema(implementation = ClassSessionDetailResponse.class))
             ),
             @ApiResponse(
@@ -627,7 +627,7 @@ public interface ClassSessionControllerApi {
                     )
             )
     })
-    ClassSessionDetailResponse findOneForStudent(
+    ClassSessionDetailResponse findOne(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")

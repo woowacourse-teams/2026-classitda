@@ -54,8 +54,8 @@ class ClassSessionSecurityTest {
     private static final String STUDENT_CALENDAR_URI =
             "/api/studios/7/class-sessions/student/calendar"
                     + "?from=2026-08-15&to=2026-08-19";
-    private static final String STUDENT_DETAIL_URI =
-            "/api/studios/7/class-sessions/student/11";
+    private static final String DETAIL_URI =
+            "/api/studios/7/class-sessions/11";
     private static final String INSTRUCTOR_CALENDAR_URI =
             "/api/studios/7/class-sessions/instructor/calendar?from=2026-08-15&to=2026-08-19";
 
@@ -191,10 +191,10 @@ class ClassSessionSecurityTest {
     }
 
     @Test
-    void 인증이_없으면_학생용_수업_회차_상세를_조회할_수_없다() {
+    void 인증이_없으면_수업_회차_상세를_조회할_수_없다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri(STUDENT_DETAIL_URI)
+                .uri(DETAIL_URI)
                 .header("X-API-Version", "1")
                 .exchange();
 
@@ -204,13 +204,13 @@ class ClassSessionSecurityTest {
     }
 
     @Test
-    void 가입_토큰으로는_학생용_수업_회차_상세를_조회할_수_없다() {
+    void 가입_토큰으로는_수업_회차_상세를_조회할_수_없다() {
         // given
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
 
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri(STUDENT_DETAIL_URI)
+                .uri(DETAIL_URI)
                 .header("X-API-Version", "1")
                 .header("Authorization", "Bearer signup-token")
                 .exchange();
@@ -221,13 +221,13 @@ class ClassSessionSecurityTest {
     }
 
     @Test
-    void 액세스_토큰으로_학생용_수업_회차_상세를_조회할_수_있다() {
+    void 액세스_토큰으로_수업_회차_상세를_조회할_수_있다() {
         // given
         given(jwtDecoder.decode("access-token")).willReturn(jwt("1", TokenUse.ACCESS));
 
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri(STUDENT_DETAIL_URI)
+                .uri(DETAIL_URI)
                 .header("X-API-Version", "1")
                 .header("Authorization", "Bearer access-token")
                 .exchange();
