@@ -27,29 +27,29 @@ class StudentBookingDecisionPolicyTest {
 
         assertThat(decision.bookingRelation()).isEqualTo(expectedBookingRelation);
         assertThat(decision.attendanceResult()).isEqualTo(expectedAttendanceResult);
-        assertThat(decision.availability()).isEqualTo(expectedAvailability);
+        assertThat(decision.availability()).isEqualTo(Optional.ofNullable(expectedAvailability));
     }
 
     private static Stream<Arguments> bookingDecisionContexts() {
         return Stream.of(
                 Arguments.of(
-                        StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, BookingAvailability.CLOSED,
+                        StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, null,
                         facts(BookingWindow.CLOSED, EnrollmentStatus.RESERVED, AttendanceResult.ABSENT, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, null,
                         facts(BookingWindow.CLOSED, EnrollmentStatus.RESERVED, AttendanceResult.ATTENDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, null,
                         facts(BookingWindow.CLOSED, EnrollmentStatus.RESERVED, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, null,
                         facts(BookingWindow.CLOSED, EnrollmentStatus.OFFERED, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(
-                        StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED,
+                        StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, null,
                         facts(BookingWindow.CLOSED, EnrollmentStatus.WAITING, AttendanceResult.NOT_RECORDED, 1)
                 ),
                 Arguments.of(

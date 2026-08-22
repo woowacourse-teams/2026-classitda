@@ -1,8 +1,9 @@
 package com.classitda.classes.application.student;
 
-import com.classitda.classes.domain.BookingWindow;
 import com.classitda.classes.domain.AttendanceResult;
+import com.classitda.classes.domain.BookingWindow;
 import com.classitda.classes.domain.EnrollmentStatus;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,7 +12,15 @@ public class StudentBookingDecisionPolicy {
     public StudentBookingDecision decide(StudentSessionFacts facts) {
         AttendanceResult attendanceResult = facts.attendanceResult();
         StudentBookingRelation bookingRelation = resolveBookingRelation(facts);
-        return new StudentBookingDecision(bookingRelation, attendanceResult, resolveAvailability(facts));
+
+        Optional<BookingAvailability> availability;
+        if (bookingRelation == StudentBookingRelation.NONE) {
+            availability = Optional.of(resolveAvailability(facts));
+        } else {
+            availability = Optional.empty();
+        }
+
+        return new StudentBookingDecision(bookingRelation, attendanceResult, availability);
     }
 
     private StudentBookingRelation resolveBookingRelation(StudentSessionFacts facts) {

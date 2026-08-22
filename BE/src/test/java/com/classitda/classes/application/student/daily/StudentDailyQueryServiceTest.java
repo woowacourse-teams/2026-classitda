@@ -47,6 +47,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
@@ -417,9 +418,9 @@ class StudentDailyQueryServiceTest {
         assertThat(responses)
                 .extracting(StudentDailySessionView::id, StudentDailySessionView::bookingDecision)
                 .containsExactly(
-                        tuple(attended.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(reservedOnly.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(absent.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, BookingAvailability.CLOSED))
+                        tuple(attended.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, null)),
+                        tuple(reservedOnly.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, null)),
+                        tuple(absent.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, null))
                 );
         assertThat(responses)
                 .extracting(StudentDailySessionView::id)
@@ -536,13 +537,13 @@ class StudentDailyQueryServiceTest {
                         StudentDailySessionView::bookingDecision
                 )
                 .containsExactly(
-                        tuple(attendancePending.getId(), attendancePendingEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(attended.getId(), attendedEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, BookingAvailability.CLOSED)),
-                        tuple(absent.getId(), absentEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, BookingAvailability.CLOSED)),
+                        tuple(attendancePending.getId(), attendancePendingEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, null)),
+                        tuple(attended.getId(), attendedEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ATTENDED, null)),
+                        tuple(absent.getId(), absentEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.ABSENT, null)),
                         tuple(startedWithoutEnrollment.getId(), null, decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(reserved.getId(), reservedEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(offered.getId(), offeredEnrollment.getId(), decision(StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
-                        tuple(waiting.getId(), waitingEnrollment.getId(), decision(StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
+                        tuple(reserved.getId(), reservedEnrollment.getId(), decision(StudentBookingRelation.RESERVED, AttendanceResult.NOT_RECORDED, null)),
+                        tuple(offered.getId(), offeredEnrollment.getId(), decision(StudentBookingRelation.OFFERED, AttendanceResult.NOT_RECORDED, null)),
+                        tuple(waiting.getId(), waitingEnrollment.getId(), decision(StudentBookingRelation.WAITING, AttendanceResult.NOT_RECORDED, null)),
                         tuple(closedAtBoundary.getId(), null, decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.CLOSED)),
                         tuple(availableBeforeClose.getId(), null, decision(StudentBookingRelation.NONE, AttendanceResult.NOT_RECORDED, BookingAvailability.RESERVABLE))
                 );
@@ -1059,7 +1060,7 @@ class StudentDailyQueryServiceTest {
             AttendanceResult attendanceResult,
             BookingAvailability availability
     ) {
-        return new StudentBookingDecision(bookingRelation, attendanceResult, availability);
+        return new StudentBookingDecision(bookingRelation, attendanceResult, Optional.ofNullable(availability));
     }
 
     private void assertStudioError(Runnable action, StudioErrorCode errorCode) {

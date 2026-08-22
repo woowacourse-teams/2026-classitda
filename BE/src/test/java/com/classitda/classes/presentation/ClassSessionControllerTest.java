@@ -16,7 +16,6 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarQ
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarSummary;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
-import com.classitda.classes.application.student.BookingAvailability;
 import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
@@ -41,6 +40,7 @@ import com.classitda.studio.exception.StudioException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -156,7 +156,7 @@ class ClassSessionControllerTest {
                 [
                   {
                     "id": 11,
-                    "enrollmentId": null,
+                    "enrollmentId": 19,
                     "instructorMembershipId": 12,
                     "instructorName": "김강사",
                     "classForm": "GROUP",
@@ -169,9 +169,9 @@ class ClassSessionControllerTest {
                     "waitingCount": 2,
                     "startAt": "2026-08-17T20:00:00",
                     "endAt": "2026-08-17T21:00:00",
-                    "bookingRelation": "NONE",
+                    "bookingRelation": "RESERVED",
                     "attendanceResult": "NOT_RECORDED",
-                    "availability": "RESERVABLE"
+                    "availability": null
                   }
                 ]
                 """, JsonCompareMode.STRICT);
@@ -861,7 +861,7 @@ class ClassSessionControllerTest {
     private static StudentDailySessionView 회원용_일별_수업_뷰() {
         return new StudentDailySessionView(
                 11L,
-                null,
+                19L,
                 12L,
                 "김강사",
                 ClassForm.GROUP,
@@ -876,9 +876,9 @@ class ClassSessionControllerTest {
                 LocalDateTime.of(2026, 8, 17, 20, 0),
                 LocalDateTime.of(2026, 8, 17, 21, 0),
                 new StudentBookingDecision(
-                        StudentBookingRelation.NONE,
+                        StudentBookingRelation.RESERVED,
                         AttendanceResult.NOT_RECORDED,
-                        BookingAvailability.RESERVABLE
+                        Optional.empty()
                 )
         );
     }

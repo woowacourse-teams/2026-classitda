@@ -153,6 +153,7 @@ public interface ClassSessionControllerApi {
                     - bookingRelation은 수업 시작 여부나 출결 기록 여부와 관계없이 실제 신청 관계를 반환합니다. 출석·결석 후에도 RESERVED를 유지합니다.
                     - enrollmentId는 bookingRelation이 RESERVED, WAITING, OFFERED일 때 해당 신청 ID이며, NONE이면 null입니다.
                     - enrollmentId가 있으면 학생 신청 상세 조회 API의 enrollmentId로 사용할 수 있습니다.
+                    - availability는 bookingRelation이 NONE일 때만 예약 가능 상태를 반환하며, 활성 신청이 있으면 null입니다.
                     - 출결은 저장된 AttendanceResult를 반환합니다.
                     - 출결 기능 구현 후에는 수업 시작 시 RESERVED + NOT_RECORDED 신청을 시스템이 ATTENDED로 자동 저장하고, 강사가 ABSENT로 변경할 수 있습니다.
                     - 과거 날짜에는 본인이 예약했던 수업만 반환하며 ATTENDED, ABSENT, NOT_RECORDED를 구분합니다. 취소된 수업 회차는 반환하지 않습니다.
@@ -162,18 +163,17 @@ public interface ClassSessionControllerApi {
 
                     | bookingRelation | attendanceResult | availability | 클라이언트 처리 상태 |
                     |---|---|---|---|
-                    | RESERVED | ATTENDED | 모든 값 | 출석 |
-                    | RESERVED | ABSENT | 모든 값 | 결석 |
-                    | OFFERED | NOT_RECORDED | 모든 값 | 빈자리 예약 제안 |
-                    | WAITING | NOT_RECORDED | 모든 값 | 대기 중 |
-                    | RESERVED | NOT_RECORDED | 모든 값 | 예약 완료. 수업 시작 후 자동 출석 처리 전이면 출결 미기록 |
+                    | RESERVED | ATTENDED | null | 출석 |
+                    | RESERVED | ABSENT | null | 결석 |
+                    | OFFERED | NOT_RECORDED | null | 빈자리 예약 제안 |
+                    | WAITING | NOT_RECORDED | null | 대기 중 |
+                    | RESERVED | NOT_RECORDED | null | 예약 완료. 수업 시작 후 자동 출석 처리 전이면 출결 미기록 |
                     | NONE | NOT_RECORDED | RESERVABLE | 예약 가능 |
                     | NONE | NOT_RECORDED | WAITLISTABLE | 대기 가능 |
                     | NONE | NOT_RECORDED | CLOSED | 예약 마감 또는 오늘 진행·종료된 미신청 수업 |
 
-                    - 표의 '모든 값'은 availability를 화면 상태 결정에 사용하지 않는다는 뜻입니다.
-                    - bookingRelation이 RESERVED, WAITING, OFFERED이면 availability보다 신청 관계를 우선해서 표시합니다.
-                    - 정상적인 출결 기록은 수업 시작 이후이므로 availability가 CLOSED지만, 클라이언트는 출결 결과를 우선해서 표시합니다.
+                    - bookingRelation이 RESERVED, WAITING, OFFERED이면 availability는 적용 대상이 아니므로 null입니다.
+                    - 정상적인 출결 기록은 수업 시작 이후이지만 RESERVED 관계가 있으므로 availability는 null입니다.
                     - 과거 날짜에는 본인의 RESERVED 신청만 조회하므로 NONE + NOT_RECORDED + CLOSED 조합을 반환하지 않습니다.
                     - NONE + NOT_RECORDED + CLOSED는 startAt이 미래면 예약 마감, startAt에 도달했거나 지났으면 오늘 진행·종료된 미신청 수업입니다.
                     - ATTENDED와 ABSENT는 RESERVED와만 조합되며, WAITING과 OFFERED는 NOT_RECORDED와만 조합됩니다.

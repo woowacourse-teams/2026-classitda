@@ -57,7 +57,11 @@ public record MemberClassSessionResponse(
         @Schema(description = "회원의 출결 결과", example = "NOT_RECORDED")
         AttendanceResult attendanceResult,
 
-        @Schema(description = "회원에게 허용되는 예약 유형", example = "RESERVABLE")
+        @Schema(
+                description = "신청 관계가 NONE일 때 회원에게 허용되는 예약 유형. 활성 신청이 있으면 null입니다.",
+                example = "RESERVABLE",
+                nullable = true
+        )
         BookingAvailability availability
 ) {
 
@@ -79,7 +83,7 @@ public record MemberClassSessionResponse(
                 session.endAt(),
                 session.bookingDecision().bookingRelation(),
                 session.bookingDecision().attendanceResult(),
-                session.bookingDecision().availability()
+                session.bookingDecision().availability().orElse(null)
         );
     }
 }
