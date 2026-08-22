@@ -52,7 +52,6 @@ class StudioControllerTest {
     @Test
     void 시설을_생성하면_201과_시설_정보를_반환한다() {
         // given
-        StudioCreateRequest request = StudioFixture.기본_시설_생성_요청();
         StudioResponse response = StudioResponse.from(StudioFixture.기본_시설(StudioFixture.기본_소유자()));
         when(studioService.save(anyLong(), any(StudioCreateRequest.class))).thenReturn(response);
 
@@ -61,7 +60,15 @@ class StudioControllerTest {
                 .uri("/api/studios")
                 .header("X-API-Version", "1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
+                .body("""
+                        {
+                          "name": "클래스잇다 스튜디오",
+                          "address": "서울시 강남구 테헤란로 1",
+                          "phoneNumber": "0212345678",
+                          "openTime": "09:00:00",
+                          "closeTime": "22:00:00"
+                        }
+                        """)
                 .exchange();
 
         // then
@@ -70,6 +77,32 @@ class StudioControllerTest {
                 .json("""
                         {"name":"클래스잇다 스튜디오","address":"서울시 강남구 테헤란로 1","openTime":"09:00:00","closeTime":"22:00:00"}
                         """, JsonCompareMode.LENIENT);
+    }
+
+    @Test
+    void 운영시간에_초가_없으면_COMMON_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/studios")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                          "name": "클래스잇다 스튜디오",
+                          "address": "서울시 강남구 테헤란로 1",
+                          "phoneNumber": "0212345678",
+                          "openTime": "09:00",
+                          "closeTime": "22:00:00"
+                        }
+                        """)
+                .exchange();
+
+        // then
+        result.expectStatus().isBadRequest()
+                .expectBody()
+                .json("""
+                        {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
+                        """, JsonCompareMode.STRICT);
     }
 
     @Test

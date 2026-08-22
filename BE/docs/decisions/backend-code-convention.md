@@ -336,6 +336,6 @@ LocalDate classDate;
 
 ### 8.4 Swagger UI 표시
 
-- 요청 본문은 필드 설명을 API에서 바로 확인할 수 있도록 `Model` 표시를 기본으로 사용한다.
-- 별도로 표시되는 전체 `Schemas` 영역이 API 이해에 불필요하게 중복된다면 숨긴다.
+- 재사용 가능한 요청 및 응답 모델은 `components/schemas`로 정의한다.
+- Swagger UI 하단의 전체 `Schemas` 영역은 기본 설정대로 표시한다.
 - Swagger UI 전역 설정을 변경할 때는 다른 API 문서의 가독성에 미치는 영향도 확인한다.

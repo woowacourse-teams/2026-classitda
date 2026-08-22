@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
@@ -23,7 +24,8 @@ public interface StudioPolicyControllerApi {
                     시설의 운영 정책을 등록한다. 대표 강사만 등록할 수 있다.
                     시설당 정책은 하나만 존재하며, 이미 등록되어 있으면 등록할 수 없다.
                     모든 시간은 수업 시작 시각 기준으로 몇 분 전인지를 뜻하며, 값이 클수록 이른 시각이다.
-                    """
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "운영 정책 등록 성공"),
@@ -132,7 +134,8 @@ public interface StudioPolicyControllerApi {
             description = """
                     시설의 운영 정책을 수정한다. 대표 강사만 수정할 수 있다.
                     전달한 필드만 변경되고, 보내지 않은 필드는 기존 값을 유지한다.
-                    """
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "수정 성공"),

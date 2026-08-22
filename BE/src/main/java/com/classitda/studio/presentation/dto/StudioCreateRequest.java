@@ -1,7 +1,9 @@
 package com.classitda.studio.presentation.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.domain.Studio;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -21,9 +23,13 @@ public record StudioCreateRequest(
         String phoneNumber,
 
         @NotNull(message = "운영 시작 시간은 필수입니다.")
+        @JsonFormat(pattern = "HH:mm:ss")
+        @Schema(type = "string", format = "time", example = "09:00:00")
         LocalTime openTime,
 
         @NotNull(message = "운영 종료 시간은 필수입니다.")
+        @JsonFormat(pattern = "HH:mm:ss")
+        @Schema(type = "string", format = "time", example = "22:00:00")
         LocalTime closeTime,
 
         @Size(max = 500, message = "이미지 주소는 500자를 넘을 수 없습니다.")
