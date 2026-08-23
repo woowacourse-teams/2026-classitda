@@ -4,31 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.di.home.homeModule
 import com.classitda.di.instructor.mypage.instructorMyPageDemoModule
 import com.classitda.di.instructor.mypage.instructorMyPageModule
-import com.classitda.di.mypage.myPageModule
-import com.classitda.di.myschedule.myScheduleModule
-import com.classitda.di.reservation.reservationModule
-import com.classitda.feature.instructor.mypage.InstructorMyPageRoute
+import com.classitda.feature.instructor.mypage.InstructorMyPageNavHost
 import org.koin.compose.KoinApplication
 import org.koin.dsl.koinConfiguration
 
 @Composable
 @Preview
 fun App() {
-    // Student entry point is intentionally kept commented while instructor smoke-check is active.
-    // KoinApplication(
-    //     configuration =
-    //         koinConfiguration {
-    //             modules(homeModule, reservationModule, myScheduleModule, myPageModule)
-    //         },
-    // ) {
-    //     AppTheme(theme = ThemeType.STUDENT) {
-    //         StudentRootRoute()
-    //     }
-    // }
-
     KoinApplication(
         configuration =
             koinConfiguration {
@@ -36,13 +20,7 @@ fun App() {
             },
     ) {
         AppTheme(theme = ThemeType.INSTRUCTOR) {
-            InstructorMyPageRoute(
-                onBack = {},
-                onOpenProfile = {},
-                onOpenMemberManagement = {},
-                onOpenFacilityManagement = {},
-                onOpenPrivacyPolicy = {},
-            )
+            InstructorMyPageNavHost()
         }
     }
 }
