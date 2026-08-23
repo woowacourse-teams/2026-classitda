@@ -1,0 +1,735 @@
+package com.classitda.feature.instructor.mypage
+
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.error
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_arrow_back
+import classitda.shared.generated.resources.ic_camera
+import classitda.shared.generated.resources.ic_location_on
+import classitda.shared.generated.resources.instructor_facility_registration_address
+import classitda.shared.generated.resources.instructor_facility_registration_address_error
+import classitda.shared.generated.resources.instructor_facility_registration_address_placeholder
+import classitda.shared.generated.resources.instructor_facility_registration_address_search
+import classitda.shared.generated.resources.instructor_facility_registration_back
+import classitda.shared.generated.resources.instructor_facility_registration_description
+import classitda.shared.generated.resources.instructor_facility_registration_description_placeholder
+import classitda.shared.generated.resources.instructor_facility_registration_detail_address
+import classitda.shared.generated.resources.instructor_facility_registration_detail_address_placeholder
+import classitda.shared.generated.resources.instructor_facility_registration_error
+import classitda.shared.generated.resources.instructor_facility_registration_image_count
+import classitda.shared.generated.resources.instructor_facility_registration_image_label
+import classitda.shared.generated.resources.instructor_facility_registration_image_optional
+import classitda.shared.generated.resources.instructor_facility_registration_intro_description
+import classitda.shared.generated.resources.instructor_facility_registration_intro_title
+import classitda.shared.generated.resources.instructor_facility_registration_name
+import classitda.shared.generated.resources.instructor_facility_registration_name_error
+import classitda.shared.generated.resources.instructor_facility_registration_name_placeholder
+import classitda.shared.generated.resources.instructor_facility_registration_phone
+import classitda.shared.generated.resources.instructor_facility_registration_phone_error
+import classitda.shared.generated.resources.instructor_facility_registration_phone_placeholder
+import classitda.shared.generated.resources.instructor_facility_registration_register
+import classitda.shared.generated.resources.instructor_facility_registration_retry
+import classitda.shared.generated.resources.instructor_facility_registration_step
+import classitda.shared.generated.resources.instructor_facility_registration_submitting
+import classitda.shared.generated.resources.instructor_facility_registration_success
+import classitda.shared.generated.resources.instructor_facility_registration_title
+import coil3.compose.SubcomposeAsyncImage
+import com.classitda.core.designsystem.AppShape
+import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
+import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
+import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
+import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
+import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField
+import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
+
+@Composable
+fun FacilityRegistrationScreen(
+    uiState: FacilityRegistrationUiState,
+    onAction: (FacilityRegistrationAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isSubmitting = uiState is FacilityRegistrationUiState.Submitting
+    val draft =
+        when (uiState) {
+            is FacilityRegistrationUiState.Editing -> uiState.draft
+            is FacilityRegistrationUiState.Error -> uiState.draft
+            else -> FacilityRegistrationDraft()
+        }
+    val fieldErrors =
+        (uiState as? FacilityRegistrationUiState.Editing)?.fieldErrors.orEmpty()
+    val canSubmit = (uiState as? FacilityRegistrationUiState.Editing)?.canSubmit == true
+
+    Scaffold(
+        modifier = modifier,
+        containerColor = InsColors.Background,
+        topBar = {
+            FacilityRegistrationTopBar(
+                onBack = { if (!isSubmitting) onAction(FacilityRegistrationAction.Back) },
+            )
+        },
+        bottomBar = {
+            FacilityRegistrationBottomBar(
+                isSubmitting = isSubmitting,
+                isFailed = uiState is FacilityRegistrationUiState.Error,
+                enabled = canSubmit,
+                onSubmit = {
+                    onAction(
+                        if (uiState is FacilityRegistrationUiState.Error) {
+                            FacilityRegistrationAction.Retry
+                        } else {
+                            FacilityRegistrationAction.Submit
+                        },
+                    )
+                },
+            )
+        },
+    ) { innerPadding ->
+        when (uiState) {
+            FacilityRegistrationUiState.Submitting -> {
+                FacilityRegistrationStatus(
+                    message = stringResource(Res.string.instructor_facility_registration_submitting),
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+
+            is FacilityRegistrationUiState.Success -> {
+                FacilityRegistrationStatus(
+                    message = stringResource(Res.string.instructor_facility_registration_success),
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+
+            else -> {
+                FacilityRegistrationForm(
+                    draft = draft,
+                    fieldErrors = fieldErrors,
+                    isSubmitting = false,
+                    errorMessage =
+                        if (uiState is FacilityRegistrationUiState.Error) {
+                            stringResource(Res.string.instructor_facility_registration_error)
+                        } else {
+                            null
+                        },
+                    onAction = onAction,
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FacilityRegistrationTopBar(onBack: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center,
+    ) {
+        IconButton(
+            onClick = onBack,
+            modifier = Modifier.align(Alignment.CenterStart),
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_arrow_back),
+                contentDescription = stringResource(Res.string.instructor_facility_registration_back),
+                tint = InsColors.TextPrimary,
+            )
+        }
+        Text(
+            text = stringResource(Res.string.instructor_facility_registration_title),
+            modifier = Modifier.semantics { heading() },
+            style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = InsColors.TextPrimary,
+        )
+    }
+}
+
+@Composable
+private fun FacilityRegistrationForm(
+    draft: FacilityRegistrationDraft,
+    fieldErrors: Set<FacilityRegistrationField>,
+    isSubmitting: Boolean,
+    errorMessage: String?,
+    onAction: (FacilityRegistrationAction) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val focusManager = LocalFocusManager.current
+    val nameError = FacilityRegistrationField.NAME in fieldErrors
+    val addressError = FacilityRegistrationField.ADDRESS in fieldErrors
+    val detailAddressError = FacilityRegistrationField.DETAIL_ADDRESS in fieldErrors
+    val phoneError = FacilityRegistrationField.PHONE_NUMBER in fieldErrors
+    val descriptionError = FacilityRegistrationField.DESCRIPTION in fieldErrors
+
+    Column(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.xxl),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xxl),
+    ) {
+        Text(
+            text = stringResource(Res.string.instructor_facility_registration_step),
+            style = appTypography().headlineMedium.copy(fontWeight = FontWeight.Bold),
+            color = InsColors.Purple,
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+            Text(
+                text = stringResource(Res.string.instructor_facility_registration_intro_title),
+                style = appTypography().headlineLarge.copy(fontWeight = FontWeight.Bold),
+                color = InsColors.TextPrimary,
+            )
+            Text(
+                text = stringResource(Res.string.instructor_facility_registration_intro_description),
+                style = appTypography().bodyLarge,
+                color = InsColors.TextSecondary,
+            )
+        }
+        FacilityImageSection(
+            images = draft.images,
+            enabled = !isSubmitting,
+            onRequestImages = { onAction(FacilityRegistrationAction.RequestImages) },
+        )
+        FacilityTextField(
+            label = stringResource(Res.string.instructor_facility_registration_name),
+            value = draft.name,
+            placeholder = stringResource(Res.string.instructor_facility_registration_name_placeholder),
+            isError = nameError,
+            errorMessage =
+                if (nameError) {
+                    stringResource(
+                        Res.string.instructor_facility_registration_name_error,
+                    )
+                } else {
+                    null
+                },
+            enabled = !isSubmitting,
+            onValueChange = { onAction(FacilityRegistrationAction.NameChanged(it)) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+            FacilityTextField(
+                label = stringResource(Res.string.instructor_facility_registration_address),
+                value = draft.address,
+                placeholder = stringResource(Res.string.instructor_facility_registration_address_placeholder),
+                isError = addressError,
+                errorMessage =
+                    if (addressError) {
+                        stringResource(
+                            Res.string.instructor_facility_registration_address_error,
+                        )
+                    } else {
+                        null
+                    },
+                enabled = !isSubmitting,
+                onValueChange = { onAction(FacilityRegistrationAction.AddressChanged(it)) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            TextButton(
+                onClick = { onAction(FacilityRegistrationAction.RequestAddressSearch) },
+                enabled = !isSubmitting,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_location_on),
+                    contentDescription = null,
+                    tint = InsColors.Purple,
+                    modifier = Modifier.size(AppSpacing.lg),
+                )
+                Text(
+                    text = stringResource(Res.string.instructor_facility_registration_address_search),
+                    modifier = Modifier.padding(start = AppSpacing.xs),
+                    color = InsColors.Purple,
+                )
+            }
+        }
+        FacilityTextField(
+            label = stringResource(Res.string.instructor_facility_registration_detail_address),
+            value = draft.detailAddress,
+            placeholder = stringResource(Res.string.instructor_facility_registration_detail_address_placeholder),
+            isError = detailAddressError,
+            errorMessage = null,
+            enabled = !isSubmitting,
+            onValueChange = { onAction(FacilityRegistrationAction.DetailAddressChanged(it)) },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+        )
+        FacilityTextField(
+            label = stringResource(Res.string.instructor_facility_registration_phone),
+            value = draft.phoneNumber,
+            placeholder = stringResource(Res.string.instructor_facility_registration_phone_placeholder),
+            isError = phoneError,
+            errorMessage =
+                if (phoneError) {
+                    stringResource(
+                        Res.string.instructor_facility_registration_phone_error,
+                    )
+                } else {
+                    null
+                },
+            enabled = !isSubmitting,
+            onValueChange = { onAction(FacilityRegistrationAction.PhoneNumberChanged(it)) },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+        )
+        FacilityTextField(
+            label = stringResource(Res.string.instructor_facility_registration_description),
+            value = draft.description,
+            placeholder = stringResource(Res.string.instructor_facility_registration_description_placeholder),
+            isError = descriptionError,
+            errorMessage = null,
+            enabled = !isSubmitting,
+            onValueChange = { onAction(FacilityRegistrationAction.DescriptionChanged(it)) },
+            singleLine = false,
+            minLines = 4,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
+        )
+        errorMessage?.let { message ->
+            Text(
+                text = message,
+                modifier =
+                    Modifier.semantics {
+                        error(message)
+                        liveRegion = LiveRegionMode.Assertive
+                    },
+                style = appTypography().bodySmall,
+                color = InsColors.Red,
+            )
+            TextButton(onClick = { onAction(FacilityRegistrationAction.Retry) }) {
+                Text(stringResource(Res.string.instructor_facility_registration_retry))
+            }
+        }
+    }
+}
+
+@Composable
+private fun FacilityImageSection(
+    images: List<FacilityImageDraft>,
+    enabled: Boolean,
+    onRequestImages: () -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(Res.string.instructor_facility_registration_image_label),
+                style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = InsColors.TextPrimary,
+            )
+            Text(
+                text = stringResource(Res.string.instructor_facility_registration_image_optional),
+                style = appTypography().titleLarge,
+                color = InsColors.TextTertiary,
+            )
+        }
+        Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
+        ) {
+            if (images.size < FacilityRegistrationDraft.MAX_IMAGE_COUNT) {
+                FacilityImageTile(
+                    image = null,
+                    count = images.size,
+                    enabled = enabled,
+                    onClick = onRequestImages,
+                )
+            }
+            images.take(FacilityRegistrationDraft.MAX_IMAGE_COUNT).forEach { image ->
+                FacilityImageTile(
+                    image = image,
+                    count = null,
+                    enabled = false,
+                    onClick = {},
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FacilityImageTile(
+    image: FacilityImageDraft?,
+    count: Int?,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val tileModifier =
+        Modifier
+            .size(AppSpacing.xxxl * 3)
+            .clip(AppShape.Card)
+            .then(
+                if (image == null) {
+                    Modifier.border(BorderStroke(AppSpacing.xs / 2, InsColors.DividerStrong), AppShape.Card)
+                } else {
+                    Modifier
+                },
+            ).clickableIf(enabled, onClick)
+    if (image == null) {
+        Column(
+            modifier = tileModifier.background(InsColors.SurfaceVariant),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_camera),
+                contentDescription = stringResource(Res.string.instructor_facility_registration_image_label),
+                tint = InsColors.TextTertiary,
+                modifier = Modifier.size(AppSpacing.xxxl),
+            )
+            Text(
+                text = stringResource(Res.string.instructor_facility_registration_image_count, count ?: 0),
+                style = appTypography().bodyLarge,
+                color = InsColors.TextTertiary,
+            )
+        }
+    } else {
+        SubcomposeAsyncImage(
+            model = image.previewReference,
+            contentDescription = null,
+            modifier = tileModifier,
+            loading = { RegistrationFacilityImageFallback(Modifier.fillMaxSize()) },
+            error = { RegistrationFacilityImageFallback(Modifier.fillMaxSize()) },
+        )
+    }
+}
+
+@Composable
+private fun FacilityTextField(
+    label: String,
+    value: String,
+    placeholder: String,
+    isError: Boolean,
+    errorMessage: String?,
+    enabled: Boolean,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+        Text(
+            text = label,
+            style = appTypography().titleMedium.copy(fontWeight = FontWeight.Bold),
+            color = InsColors.TextPrimary,
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier =
+                modifier.fillMaxWidth().semantics {
+                    if (isError && errorMessage != null) error(errorMessage)
+                },
+            enabled = enabled,
+            placeholder = { Text(placeholder, color = InsColors.TextTertiary) },
+            textStyle = appTypography().bodyLarge.copy(color = InsColors.TextPrimary),
+            singleLine = singleLine,
+            minLines = minLines,
+            isError = isError,
+            shape = AppShape.Card,
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            colors = facilityFieldColors(),
+        )
+        errorMessage?.let { FacilityFieldError(it) }
+    }
+}
+
+@Composable
+private fun RegistrationFacilityImageFallback(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(InsColors.Gray200),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(Res.drawable.ic_camera),
+            contentDescription = null,
+            tint = InsColors.TextTertiary,
+            modifier = Modifier.size(AppSpacing.xxxl),
+        )
+    }
+}
+
+@Composable
+private fun FacilityFieldError(message: String) {
+    Text(
+        text = message,
+        style = appTypography().bodySmall,
+        color = InsColors.Red,
+    )
+}
+
+@Composable
+private fun facilityFieldColors() =
+    OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = InsColors.SurfaceVariant,
+        unfocusedContainerColor = InsColors.SurfaceVariant,
+        disabledContainerColor = InsColors.SurfaceVariant,
+        focusedBorderColor = InsColors.TextPrimary,
+        unfocusedBorderColor = InsColors.Divider,
+        disabledBorderColor = InsColors.Divider,
+        errorBorderColor = InsColors.Red,
+        cursorColor = InsColors.TextPrimary,
+        errorCursorColor = InsColors.Red,
+    )
+
+@Composable
+private fun FacilityRegistrationBottomBar(
+    isSubmitting: Boolean,
+    isFailed: Boolean,
+    enabled: Boolean,
+    onSubmit: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding(),
+        color = InsColors.Background,
+    ) {
+        Button(
+            onClick = onSubmit,
+            enabled = if (isFailed) !isSubmitting else enabled && !isSubmitting,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+            shape = AppShape.Card,
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = InsColors.Primary,
+                    contentColor = InsColors.White,
+                    disabledContainerColor = InsColors.SurfaceVariant,
+                    disabledContentColor = InsColors.TextTertiary,
+                ),
+        ) {
+            if (isSubmitting) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(AppSpacing.lg),
+                    color = InsColors.TextTertiary,
+                    strokeWidth = AppSpacing.xs / 2,
+                )
+                Text(
+                    text = stringResource(Res.string.instructor_facility_registration_submitting),
+                    modifier = Modifier.padding(start = AppSpacing.xs),
+                )
+            } else {
+                Text(
+                    text = stringResource(Res.string.instructor_facility_registration_register),
+                    style = appTypography().bodyLarge.copy(fontWeight = FontWeight.Bold),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FacilityRegistrationStatus(
+    message: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxSize().semantics { liveRegion = LiveRegionMode.Polite },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        CircularProgressIndicator(color = InsColors.Purple)
+        Text(
+            text = message,
+            modifier = Modifier.padding(top = AppSpacing.lg),
+            style = appTypography().bodyMedium,
+            color = InsColors.TextSecondary,
+        )
+    }
+}
+
+private fun Modifier.clickableIf(
+    enabled: Boolean,
+    onClick: () -> Unit,
+): Modifier =
+    if (enabled) {
+        clickable(onClick = onClick)
+    } else {
+        this
+    }
+
+private val emptyFacilityRegistrationState =
+    FacilityRegistrationUiState.Editing(
+        draft = FacilityRegistrationDraft(),
+        canSubmit = false,
+    )
+
+private val filledFacilityRegistrationState =
+    FacilityRegistrationUiState.Editing(
+        draft =
+            FacilityRegistrationDraft(
+                name = "더 에이치 휘트니스 강남점",
+                address = "서울 강남구 테헤란로 123",
+                detailAddress = "2층",
+                phoneNumber = "0212345678",
+                description = "회원들이 편하게 운동할 수 있는 시설입니다.",
+            ),
+        canSubmit = true,
+    )
+
+private val fiveImageFacilityRegistrationState =
+    FacilityRegistrationUiState.Editing(
+        draft =
+            filledFacilityRegistrationState.draft.copy(
+                images =
+                    (1..FacilityRegistrationDraft.MAX_IMAGE_COUNT).map {
+                        FacilityImageDraft("image-$it", "fixture-image-$it")
+                    },
+            ),
+        canSubmit = true,
+    )
+
+@Preview(
+    name = "Empty form · Instructor",
+    group = "Screen/FacilityRegistration",
+    widthDp = 390,
+    heightDp = 1043,
+)
+@Composable
+private fun FacilityRegistrationScreenPreview_Empty() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        FacilityRegistrationScreen(emptyFacilityRegistrationState, onAction = {})
+    }
+}
+
+@Preview(
+    name = "Filled form · Instructor",
+    group = "Screen/FacilityRegistration",
+    widthDp = 390,
+    heightDp = 1043,
+)
+@Composable
+private fun FacilityRegistrationScreenPreview_Filled() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        FacilityRegistrationScreen(filledFacilityRegistrationState, onAction = {})
+    }
+}
+
+@Preview(
+    name = "Five images · Instructor",
+    group = "Screen/FacilityRegistration",
+    widthDp = 390,
+    heightDp = 1043,
+)
+@Composable
+private fun FacilityRegistrationScreenPreview_FiveImages() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        FacilityRegistrationScreen(fiveImageFacilityRegistrationState, onAction = {})
+    }
+}
+
+@Preview(
+    name = "Field errors · Instructor",
+    group = "Screen/FacilityRegistration",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun FacilityRegistrationScreenPreview_Errors() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        FacilityRegistrationScreen(
+            FacilityRegistrationUiState.Editing(
+                draft = FacilityRegistrationDraft(name = "", phoneNumber = "010"),
+                canSubmit = false,
+                fieldErrors =
+                    setOf(
+                        FacilityRegistrationField.NAME,
+                        FacilityRegistrationField.ADDRESS,
+                        FacilityRegistrationField.PHONE_NUMBER,
+                    ),
+            ),
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Submitting · Instructor",
+    group = "Screen/FacilityRegistration",
+)
+@Composable
+private fun FacilityRegistrationScreenPreview_Submitting() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        FacilityRegistrationScreen(FacilityRegistrationUiState.Submitting, onAction = {})
+    }
+}
+
+@Preview(
+    name = "Submit failed · Instructor",
+    group = "Screen/FacilityRegistration",
+)
+@Composable
+private fun FacilityRegistrationScreenPreview_Failed() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        FacilityRegistrationScreen(
+            FacilityRegistrationUiState.Error(
+                draft = filledFacilityRegistrationState.draft,
+                reason = com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiError.NETWORK,
+            ),
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Large text and keyboard boundary · Instructor",
+    group = "Screen/FacilityRegistration",
+    widthDp = 320,
+    heightDp = 560,
+    fontScale = 1.5f,
+)
+@Composable
+private fun FacilityRegistrationScreenPreview_LargeText() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        FacilityRegistrationScreen(filledFacilityRegistrationState, onAction = {})
+    }
+}
