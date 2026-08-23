@@ -887,6 +887,22 @@ private fun PhoneNumberChangeScreenPreview_CodeEntry_Student_ConfirmEnabled() {
 }
 
 @Preview(
+    name = "Code entry · Instructor · Confirm enabled",
+    group = "Screen/PhoneNumberChange",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun PhoneNumberChangeScreenPreview_CodeEntry_Instructor_ConfirmEnabled() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        PhoneNumberChangeScreen(
+            uiState = PhoneNumberChangePreviewFixture.codeEntryReady,
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
     name = "Verifying · Student · Disabled",
     group = "Screen/PhoneNumberChange",
     widthDp = 390,
