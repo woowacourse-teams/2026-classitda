@@ -11,6 +11,9 @@ import com.classitda.domain.repository.auth.signup.SignupRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 internal class SignupViewModel(
@@ -18,6 +21,7 @@ internal class SignupViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignupUiState())
     val uiState: StateFlow<SignupUiState> = _uiState.asStateFlow()
+    private var verificationTimerJob: Job? = null
 
     fun onAction(action: SignupAction) {
         when (action) {
@@ -109,10 +113,33 @@ internal class SignupViewModel(
                         isLoading = false,
                         isVerificationSent = true,
                         verificationId = challenge.id,
+                        verificationRemainingSeconds = challenge.expiresInSeconds,
+                        resendRemainingSeconds = challenge.resendAfterSeconds,
                     )
                 }
+                startVerificationTimer()
             }.onFailure { error -> showError(error) }
         }
+    }
+
+    private fun startVerificationTimer() {
+        verificationTimerJob?.cancel()
+        verificationTimerJob = viewModelScope.launch {
+            while (isActive && (_uiState.value.verificationRemainingSeconds > 0 || _uiState.value.resendRemainingSeconds > 0)) {
+                delay(1_000)
+                update {
+                    copy(
+                        verificationRemainingSeconds = (verificationRemainingSeconds - 1).coerceAtLeast(0),
+                        resendRemainingSeconds = (resendRemainingSeconds - 1).coerceAtLeast(0),
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        verificationTimerJob?.cancel()
+        super.onCleared()
     }
 
     private fun confirmVerification() {

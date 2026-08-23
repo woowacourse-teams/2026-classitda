@@ -16,6 +16,8 @@ data class SignupUiState(
     val phoneNumber: String = "",
     val verificationCode: String = "",
     val isVerificationSent: Boolean = false,
+    val verificationRemainingSeconds: Long = 0,
+    val resendRemainingSeconds: Long = 0,
     val allTermsAgreed: Boolean = false,
     val termsAgreed: Boolean = false,
     val privacyPolicyAgreed: Boolean = false,
