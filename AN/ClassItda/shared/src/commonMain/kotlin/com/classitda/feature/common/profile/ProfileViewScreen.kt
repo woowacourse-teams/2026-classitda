@@ -1,4 +1,4 @@
-package com.classitda.feature.student.mypage
+package com.classitda.feature.common.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -53,15 +54,13 @@ import classitda.shared.generated.resources.profile_view_withdrawal
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
-import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.student.mypage.MemberId
-import com.classitda.domain.model.student.mypage.MemberProfile
-import com.classitda.domain.repository.student.mypage.MyPageFailureReason
-import com.classitda.feature.student.mypage.contract.ProfileViewAction
-import com.classitda.feature.student.mypage.contract.ProfileViewUiState
-import com.classitda.feature.student.mypage.preview.MyPageProfileBoundaryFixture
+import com.classitda.feature.common.profile.contract.MemberProfileUiModel
+import com.classitda.feature.common.profile.contract.ProfileUiError
+import com.classitda.feature.common.profile.contract.ProfileViewAction
+import com.classitda.feature.common.profile.contract.ProfileViewUiState
+import com.classitda.feature.common.profile.preview.ProfileBoundaryPreviewFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -73,7 +72,7 @@ fun ProfileViewScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = StuColors.Background,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ProfileViewTopBar(
                 onBack = { onAction(ProfileViewAction.Back) },
@@ -126,7 +125,7 @@ private fun ProfileViewTopBar(
                 painter = painterResource(Res.drawable.ic_arrow_back),
                 contentDescription = stringResource(Res.string.profile_view_back),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = StuColors.TextPrimary,
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
         Text(
@@ -136,14 +135,14 @@ private fun ProfileViewTopBar(
                     .weight(1f)
                     .semantics { heading() },
             style = typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         IconButton(onClick = onEdit) {
             Icon(
                 painter = painterResource(Res.drawable.ic_edit),
                 contentDescription = stringResource(Res.string.profile_view_edit),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = StuColors.TextPrimary,
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -151,7 +150,7 @@ private fun ProfileViewTopBar(
 
 @Composable
 private fun ProfileViewContent(
-    profile: MemberProfile,
+    profile: MemberProfileUiModel,
     onLogout: () -> Unit,
     onWithdrawal: () -> Unit,
     modifier: Modifier = Modifier,
@@ -177,7 +176,7 @@ private fun ProfileViewContent(
         Spacer(modifier = Modifier.height(AppSpacing.xl))
         ReadOnlyProfileField(
             label = stringResource(Res.string.profile_view_phone_number),
-            value = profile.phoneNumber,
+            value = profile.phoneNumberLabel,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xl))
         ReadOnlyProfileField(
@@ -189,7 +188,7 @@ private fun ProfileViewContent(
             Text(
                 text = stringResource(Res.string.profile_view_logout),
                 style = typography.bodyMedium,
-                color = StuColors.TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
         Spacer(modifier = Modifier.height(AppSpacing.xxxl * 5))
@@ -197,7 +196,7 @@ private fun ProfileViewContent(
             Text(
                 text = stringResource(Res.string.profile_view_withdrawal),
                 style = typography.bodyMedium,
-                color = StuColors.Red,
+                color = MaterialTheme.colorScheme.error,
             )
         }
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
@@ -213,7 +212,7 @@ private fun ProfileAvatar(name: String) {
             Modifier
                 .size(AppSpacing.xxxl * 3)
                 .background(
-                    color = StuColors.SurfaceVariant,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = CircleShape,
                 ),
         contentAlignment = Alignment.Center,
@@ -221,7 +220,7 @@ private fun ProfileAvatar(name: String) {
         Text(
             text = name.first { !it.isWhitespace() }.toString(),
             style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -241,7 +240,7 @@ private fun ReadOnlyProfileField(
         Text(
             text = label,
             style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Surface(
             modifier =
@@ -249,11 +248,11 @@ private fun ReadOnlyProfileField(
                     .fillMaxWidth()
                     .semantics(mergeDescendants = true) {},
             shape = AppShape.Card,
-            color = StuColors.SurfaceVariant,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = StuColors.Divider,
+                    color = MaterialTheme.colorScheme.outlineVariant,
                 ),
         ) {
             Text(
@@ -262,9 +261,9 @@ private fun ReadOnlyProfileField(
                 style = typography.bodyLarge,
                 color =
                     if (isPrimary) {
-                        StuColors.TextPrimary
+                        MaterialTheme.colorScheme.onSurface
                     } else {
-                        StuColors.TextSecondary
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     },
             )
         }
@@ -280,12 +279,12 @@ private fun ProfileViewLoadingContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(color = StuColors.Green)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = stringResource(Res.string.profile_view_loading),
             style = typography.bodyMedium,
-            color = StuColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -309,7 +308,7 @@ private fun ProfileViewErrorContent(
             text = stringResource(Res.string.profile_view_error_title),
             modifier = Modifier.fillMaxWidth(),
             style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -317,7 +316,7 @@ private fun ProfileViewErrorContent(
             text = stringResource(Res.string.profile_view_error_description),
             modifier = Modifier.fillMaxWidth(),
             style = typography.bodyMedium,
-            color = StuColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
@@ -337,18 +336,17 @@ private fun ProfileViewAction.previewLabel(): String =
     }
 
 private object ProfileViewPreviewFixture {
-    private val profile =
-        MemberProfile(
-            id = MemberId("member-profile-view-preview"),
-            name = "김민지",
-            phoneNumber = "010-1234-5678",
-            email = "class12345@gmail.com",
-            profileImageUrl = null,
+    val content =
+        ProfileViewUiState.Content(
+            MemberProfileUiModel(
+                name = "김민지",
+                phoneNumberLabel = "010-1234-5678",
+                email = "class12345@gmail.com",
+                profileImageUrl = null,
+            ),
         )
-
-    val content = ProfileViewUiState.Content(profile)
     val loading = ProfileViewUiState.Loading
-    val error = ProfileViewUiState.Error(MyPageFailureReason.NETWORK)
+    val error = ProfileViewUiState.Error(ProfileUiError.NETWORK)
 }
 
 @Preview(
@@ -360,6 +358,22 @@ private object ProfileViewPreviewFixture {
 @Composable
 private fun ProfileViewScreenPreview_Content_Student_Default() {
     AppTheme(theme = ThemeType.STUDENT) {
+        ProfileViewScreen(
+            uiState = ProfileViewPreviewFixture.content,
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Content · Instructor · Default",
+    group = "Screen/ProfileView",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun ProfileViewScreenPreview_Content_Instructor_Default() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
         ProfileViewScreen(
             uiState = ProfileViewPreviewFixture.content,
             onAction = {},
@@ -441,7 +455,7 @@ private fun ProfileViewScreenPreview_Actions_Student_Interactive() {
 private fun ProfileViewScreenPreview_Boundary_LongContent_LargeFont_SmallScreen() {
     AppTheme(theme = ThemeType.STUDENT) {
         ProfileViewScreen(
-            uiState = MyPageProfileBoundaryFixture.profileViewState,
+            uiState = ProfileBoundaryPreviewFixture.profileViewState,
             onAction = {},
         )
     }

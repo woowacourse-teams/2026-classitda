@@ -4,8 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.classitda.feature.student.mypage.contract.ProfileEditAction
-import com.classitda.feature.student.mypage.contract.ProfileEditUiState
+import com.classitda.feature.common.profile.ProfileEditScreen
+import com.classitda.feature.common.profile.contract.ProfileEditAction
+import com.classitda.feature.common.profile.contract.ProfileEditUiState
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -48,8 +49,8 @@ internal fun ProfileEditRoute(
 
 private fun ProfileEditUiState.profilePhoneNumber(): String =
     when (this) {
-        is ProfileEditUiState.Editing -> profile.phoneNumber
-        is ProfileEditUiState.Saving -> profile.phoneNumber
-        is ProfileEditUiState.SaveFailed -> profile.phoneNumber
+        is ProfileEditUiState.Editing -> phoneNumber
+        is ProfileEditUiState.Saving -> phoneNumber
+        is ProfileEditUiState.SaveFailed -> phoneNumber
         else -> ""
     }

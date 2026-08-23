@@ -3,10 +3,12 @@ package com.classitda.feature.student.mypage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.student.mypage.MemberProfile
+import com.classitda.domain.repository.student.mypage.MyPageFailureReason
 import com.classitda.domain.repository.student.mypage.MyPageRepository
 import com.classitda.domain.repository.student.mypage.MyPageResult
-import com.classitda.feature.student.mypage.contract.ProfileEditAction
-import com.classitda.feature.student.mypage.contract.ProfileEditUiState
+import com.classitda.feature.common.profile.contract.ProfileEditAction
+import com.classitda.feature.common.profile.contract.ProfileEditUiState
+import com.classitda.feature.common.profile.contract.ProfileUiError
 import com.classitda.feature.student.mypage.mapper.MyPageUiMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,7 @@ internal class ProfileEditViewModel(
     val uiState: StateFlow<ProfileEditUiState> = _uiState.asStateFlow()
 
     private var isLoading = false
+    private var currentProfile: MemberProfile? = null
 
     init {
         loadProfile()
@@ -50,7 +53,7 @@ internal class ProfileEditViewModel(
             _uiState.value =
                 when (val result = repository.getProfile()) {
                     is MyPageResult.Success -> result.value.toEditingState()
-                    is MyPageResult.Failure -> ProfileEditUiState.Error(result.reason)
+                    is MyPageResult.Failure -> ProfileEditUiState.Error(result.reason.toProfileUiError())
                 }
             isLoading = false
         }
@@ -58,35 +61,39 @@ internal class ProfileEditViewModel(
 
     private fun changeName(name: String) {
         val state = _uiState.value
-        val profile =
+        val profile = currentProfile ?: return
+        val uiModel =
             when (state) {
                 is ProfileEditUiState.Editing -> state.profile
                 is ProfileEditUiState.SaveFailed -> state.profile
                 else -> return
             }
+        val phoneNumber =
+            when (state) {
+                is ProfileEditUiState.Editing -> state.phoneNumber
+                is ProfileEditUiState.SaveFailed -> state.phoneNumber
+            }
         _uiState.value =
             ProfileEditUiState.Editing(
-                profile = profile,
+                profile = uiModel,
+                phoneNumber = phoneNumber,
                 draftName = name,
                 canSave = name.isNotBlank() && name != profile.name,
-                uiModel = mapper.mapProfile(profile),
             )
     }
 
     private fun saveName() {
         val state = _uiState.value
-        val profile: MemberProfile
+        val profile = currentProfile ?: return
         val draftName: String
         val canSave: Boolean
         when (state) {
             is ProfileEditUiState.Editing -> {
-                profile = state.profile
                 draftName = state.draftName
                 canSave = state.canSave
             }
 
             is ProfileEditUiState.SaveFailed -> {
-                profile = state.profile
                 draftName = state.draftName
                 canSave = draftName.isNotBlank() && draftName != profile.name
             }
@@ -99,9 +106,9 @@ internal class ProfileEditViewModel(
 
         _uiState.value =
             ProfileEditUiState.Saving(
-                profile = profile,
+                profile = mapper.mapProfile(profile),
+                phoneNumber = profile.phoneNumber,
                 draftName = draftName,
-                uiModel = mapper.mapProfile(profile),
             )
         viewModelScope.launch {
             _uiState.value =
@@ -112,21 +119,32 @@ internal class ProfileEditViewModel(
 
                     is MyPageResult.Failure -> {
                         ProfileEditUiState.SaveFailed(
-                            profile = profile,
+                            profile = mapper.mapProfile(profile),
+                            phoneNumber = profile.phoneNumber,
                             draftName = draftName,
-                            reason = result.reason,
-                            uiModel = mapper.mapProfile(profile),
+                            reason = result.reason.toProfileUiError(),
                         )
                     }
                 }
         }
     }
 
-    private fun MemberProfile.toEditingState(): ProfileEditUiState.Editing =
-        ProfileEditUiState.Editing(
-            profile = this,
+    private fun MemberProfile.toEditingState(): ProfileEditUiState.Editing {
+        currentProfile = this
+        return ProfileEditUiState.Editing(
+            profile = mapper.mapProfile(this),
+            phoneNumber = phoneNumber,
             draftName = name,
             canSave = false,
-            uiModel = mapper.mapProfile(this),
         )
+    }
 }
+
+private fun MyPageFailureReason.toProfileUiError(): ProfileUiError =
+    when (this) {
+        MyPageFailureReason.NETWORK -> ProfileUiError.NETWORK
+        MyPageFailureReason.NOT_FOUND -> ProfileUiError.NOT_FOUND
+        MyPageFailureReason.CONFLICT -> ProfileUiError.CONFLICT
+        MyPageFailureReason.INVALID_REQUEST -> ProfileUiError.INVALID_REQUEST
+        else -> ProfileUiError.UNKNOWN
+    }

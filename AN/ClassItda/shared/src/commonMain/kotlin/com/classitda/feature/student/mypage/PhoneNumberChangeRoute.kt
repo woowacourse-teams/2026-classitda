@@ -4,7 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.classitda.feature.student.mypage.contract.PhoneNumberChangeAction
+import com.classitda.feature.common.profile.PhoneNumberChangeScreen
+import com.classitda.feature.common.profile.contract.PhoneNumberChangeAction
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

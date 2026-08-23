@@ -35,7 +35,7 @@ class MyPageUiMapperTest {
 
         val model = mapper.mapProfile(profile)
 
-        assertEquals(MemberId("member-1"), model.id)
+        assertEquals("홍길동", model.name)
         assertEquals("010-1234-5678", model.phoneNumberLabel)
         assertEquals("hong@example.com", model.email)
     }

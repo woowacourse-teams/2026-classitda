@@ -1,18 +1,22 @@
-package com.classitda.feature.student.mypage.contract
+package com.classitda.feature.common.profile.contract
 
-import com.classitda.domain.model.student.mypage.MemberProfile
-import com.classitda.domain.repository.student.mypage.MyPageFailureReason
+enum class ProfileUiError {
+    NETWORK,
+    NOT_FOUND,
+    CONFLICT,
+    INVALID_REQUEST,
+    UNKNOWN,
+}
 
 sealed interface ProfileViewUiState {
     data object Loading : ProfileViewUiState
 
     data class Content(
-        val profile: MemberProfile,
-        val uiModel: MemberProfileUiModel? = null,
+        val profile: MemberProfileUiModel,
     ) : ProfileViewUiState
 
     data class Error(
-        val reason: MyPageFailureReason,
+        val reason: ProfileUiError,
     ) : ProfileViewUiState
 }
 
@@ -32,27 +36,27 @@ sealed interface ProfileEditUiState {
     data object Loading : ProfileEditUiState
 
     data class Editing(
-        val profile: MemberProfile,
+        val profile: MemberProfileUiModel,
+        val phoneNumber: String,
         val draftName: String,
         val canSave: Boolean,
-        val uiModel: MemberProfileUiModel? = null,
     ) : ProfileEditUiState
 
     data class Saving(
-        val profile: MemberProfile,
+        val profile: MemberProfileUiModel,
+        val phoneNumber: String,
         val draftName: String,
-        val uiModel: MemberProfileUiModel? = null,
     ) : ProfileEditUiState
 
     data class SaveFailed(
-        val profile: MemberProfile,
+        val profile: MemberProfileUiModel,
+        val phoneNumber: String,
         val draftName: String,
-        val reason: MyPageFailureReason,
-        val uiModel: MemberProfileUiModel? = null,
+        val reason: ProfileUiError,
     ) : ProfileEditUiState
 
     data class Error(
-        val reason: MyPageFailureReason,
+        val reason: ProfileUiError,
     ) : ProfileEditUiState
 }
 
