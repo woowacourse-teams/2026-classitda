@@ -83,7 +83,9 @@ private fun parseFragment(fragment: String): Map<String, String> =
         }.toMap()
 
 @OptIn(ExperimentalForeignApi::class)
-private class IosPresentationContextProvider : NSObject(), platform.AuthenticationServices.ASWebAuthenticationPresentationContextProvidingProtocol {
+private class IosPresentationContextProvider :
+    NSObject(),
+    platform.AuthenticationServices.ASWebAuthenticationPresentationContextProvidingProtocol {
     override fun presentationAnchorForWebAuthenticationSession(session: ASWebAuthenticationSession): UIWindow =
         UIApplication.sharedApplication.keyWindow ?: UIWindow()
 }
