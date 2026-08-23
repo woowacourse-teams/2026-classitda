@@ -176,6 +176,14 @@
     <string name="instructor_my_page_retry">다시 시도</string>
     <string name="instructor_my_page_harness_last_action">최근 이벤트: %1$s</string>
     <string name="instructor_my_page_harness_no_action">없음</string>
+    <string name="instructor_my_page_harness_content">콘텐츠</string>
+    <string name="instructor_my_page_harness_loading">로딩</string>
+    <string name="instructor_my_page_harness_error">오류</string>
+    <string name="instructor_my_page_harness_action_open_profile">프로필 열기</string>
+    <string name="instructor_my_page_harness_action_open_members">회원 관리 열기</string>
+    <string name="instructor_my_page_harness_action_open_facilities">시설 관리 열기</string>
+    <string name="instructor_my_page_harness_action_open_privacy">개인정보처리방침 열기</string>
+    <string name="instructor_my_page_harness_action_retry">다시 시도</string>
     <string name="my_page_contact_email">문의: %1$s</string>
     <string name="my_page_contact_email_address">contact@classitda.com</string>
     <string name="profile_view_title">내 정보</string>

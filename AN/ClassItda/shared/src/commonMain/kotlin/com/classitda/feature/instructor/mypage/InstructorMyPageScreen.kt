@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,10 +24,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_forward
@@ -44,8 +46,11 @@ import classitda.shared.generated.resources.my_page_privacy_policy
 import coil3.compose.SubcomposeAsyncImage
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.appTypography
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
+import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiError
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiModel
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiState
 import org.jetbrains.compose.resources.painterResource
@@ -60,7 +65,7 @@ fun InstructorMyPageScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = InsColors.Background,
         bottomBar = bottomBar,
     ) { innerPadding ->
         when (uiState) {
@@ -111,8 +116,8 @@ private fun InstructorMyPageContent(
                         end = AppSpacing.screenPadding,
                         bottom = AppSpacing.xxl,
                     ).semantics { heading() },
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onBackground,
+            style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = InsColors.TextPrimary,
         )
 
         ProfileSummary(
@@ -162,26 +167,30 @@ private fun ProfileSummary(
         ) {
             Text(
                 text = profile.name,
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface,
+                style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
+                color = InsColors.TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = profile.phoneNumberLabel,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = appTypography().bodyLarge,
+                color = InsColors.TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         Text(
             text = stringResource(Res.string.instructor_my_page_edit_profile),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = appTypography().titleMedium,
+            color = InsColors.TextSecondary,
         )
         Spacer(modifier = Modifier.width(AppSpacing.sm))
         Icon(
             painter = painterResource(Res.drawable.ic_arrow_forward),
             contentDescription = null,
             modifier = Modifier.size(AppSpacing.lg),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = InsColors.TextSecondary,
         )
     }
 }
@@ -196,7 +205,7 @@ private fun InstructorAvatar(
             .size(AppSpacing.xxxl + AppSpacing.xxl)
             .clip(CircleShape)
             .background(
-                color = MaterialTheme.colorScheme.primaryContainer,
+                color = InsColors.PurpleLight,
                 shape = CircleShape,
             )
 
@@ -208,7 +217,7 @@ private fun InstructorAvatar(
     } else {
         SubcomposeAsyncImage(
             model = profile.profileImageUrl,
-            contentDescription = profile.name,
+            contentDescription = null,
             modifier = avatarModifier,
             loading = {
                 AvatarFallback(fallback = profile.avatarFallback)
@@ -231,8 +240,8 @@ private fun AvatarFallback(
     ) {
         Text(
             text = fallback,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            style = appTypography().headlineMedium,
+            color = InsColors.TextPrimary,
         )
     }
 }
@@ -257,14 +266,14 @@ private fun InstructorMyPageMenuRow(
         Text(
             text = title,
             modifier = Modifier.weight(1f),
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = MaterialTheme.colorScheme.onSurface,
+            style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = InsColors.TextPrimary,
         )
         Icon(
             painter = painterResource(Res.drawable.ic_arrow_forward),
             contentDescription = null,
             modifier = Modifier.size(AppSpacing.lg),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = InsColors.TextSecondary,
         )
     }
 }
@@ -272,18 +281,21 @@ private fun InstructorMyPageMenuRow(
 @Composable
 private fun InstructorMyPageLoading(modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .semantics { liveRegion = LiveRegionMode.Polite },
         contentAlignment = Alignment.Center,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
         ) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            CircularProgressIndicator(color = InsColors.Purple)
             Text(
                 text = stringResource(Res.string.instructor_my_page_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = appTypography().bodyMedium,
+                color = InsColors.TextSecondary,
             )
         }
     }
@@ -295,7 +307,10 @@ private fun InstructorMyPageError(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.fillMaxSize(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .semantics { liveRegion = LiveRegionMode.Assertive },
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -305,18 +320,18 @@ private fun InstructorMyPageError(
         ) {
             Text(
                 text = stringResource(Res.string.instructor_my_page_error_title),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
+                style = appTypography().titleLarge,
+                color = InsColors.TextPrimary,
             )
             Text(
                 text = stringResource(Res.string.instructor_my_page_error_description),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = appTypography().bodyMedium,
+                color = InsColors.TextSecondary,
             )
             TextButton(onClick = onRetry) {
                 Text(
                     text = stringResource(Res.string.instructor_my_page_retry),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = InsColors.Purple,
                 )
             }
         }
@@ -340,6 +355,80 @@ private fun InstructorMyPageScreenPreview_Content_Instructor_Default() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         InstructorMyPageScreen(
             uiState = InstructorMyPageUiState.Content(profile = instructorMyPagePreviewProfile),
+            onAction = {},
+        )
+    }
+}
+
+private val instructorMyPageLongTextPreviewProfile =
+    InstructorMyPageUiModel(
+        name = "이지은 필라테스 스튜디오 대표 강사",
+        phoneNumberLabel = "010-****-5678 (대한민국 국가번호 포함)",
+        profileImageUrl = null,
+        avatarFallback = "이",
+    )
+
+@Preview(
+    name = "Content · Instructor · Long text",
+    group = "Screen/InstructorMyPage",
+    widthDp = 320,
+    heightDp = 568,
+    fontScale = 1.5f,
+)
+@Composable
+private fun InstructorMyPageScreenPreview_Content_Instructor_LongText() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorMyPageScreen(
+            uiState = InstructorMyPageUiState.Content(instructorMyPageLongTextPreviewProfile),
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Content · Instructor · Small height",
+    group = "Screen/InstructorMyPage",
+    widthDp = 320,
+    heightDp = 360,
+    fontScale = 1.5f,
+)
+@Composable
+private fun InstructorMyPageScreenPreview_Content_Instructor_SmallHeight() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorMyPageScreen(
+            uiState = InstructorMyPageUiState.Content(instructorMyPageLongTextPreviewProfile),
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Loading · Instructor",
+    group = "Screen/InstructorMyPage",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun InstructorMyPageScreenPreview_Loading_Instructor() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorMyPageScreen(
+            uiState = InstructorMyPageUiState.Loading,
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Error · Instructor",
+    group = "Screen/InstructorMyPage",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun InstructorMyPageScreenPreview_Error_Instructor() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorMyPageScreen(
+            uiState = InstructorMyPageUiState.Error(InstructorMyPageUiError.NETWORK),
             onAction = {},
         )
     }
