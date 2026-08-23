@@ -32,7 +32,7 @@ fun App() {
             if (showSignup) {
                 SignupRoute(onSignupCompleted = { showSignup = false })
             } else {
-                StudentRootRoute()
+                StudentRootRoute(onLogout = { showSignup = true })
             }
         }
     }
