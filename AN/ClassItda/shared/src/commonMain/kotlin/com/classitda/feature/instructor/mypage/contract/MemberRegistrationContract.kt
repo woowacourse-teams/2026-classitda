@@ -14,7 +14,10 @@ sealed interface MemberRegistrationUiState {
         val draft: MemberRegistrationDraft,
     ) : MemberRegistrationUiState
 
-    data object Submitting : MemberRegistrationUiState
+    /** Draft is retained while the confirmation dialog is submitting. */
+    data class Submitting(
+        val draft: MemberRegistrationDraft,
+    ) : MemberRegistrationUiState
 
     data class Success(
         val memberId: InstructorMemberId,

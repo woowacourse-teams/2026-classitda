@@ -42,7 +42,6 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.instructor_member_registration_back
 import classitda.shared.generated.resources.instructor_member_registration_card_title
-import classitda.shared.generated.resources.instructor_member_registration_error
 import classitda.shared.generated.resources.instructor_member_registration_intro_description
 import classitda.shared.generated.resources.instructor_member_registration_intro_title
 import classitda.shared.generated.resources.instructor_member_registration_name
@@ -53,7 +52,6 @@ import classitda.shared.generated.resources.instructor_member_registration_phone
 import classitda.shared.generated.resources.instructor_member_registration_phone_placeholder
 import classitda.shared.generated.resources.instructor_member_registration_register
 import classitda.shared.generated.resources.instructor_member_registration_required
-import classitda.shared.generated.resources.instructor_member_registration_submitting
 import classitda.shared.generated.resources.instructor_member_registration_success
 import classitda.shared.generated.resources.instructor_member_registration_title
 import com.classitda.core.designsystem.AppShape
@@ -78,7 +76,7 @@ fun MemberRegistrationScreen(
     val canSubmit =
         when (uiState) {
             is MemberRegistrationUiState.Editing -> uiState.canSubmit
-            is MemberRegistrationUiState.Error -> true
+            is MemberRegistrationUiState.Error -> false
             else -> false
         }
     Scaffold(
@@ -97,50 +95,56 @@ fun MemberRegistrationScreen(
             )
         },
     ) { innerPadding ->
-        when (uiState) {
-            is MemberRegistrationUiState.Editing -> {
-                MemberRegistrationForm(
-                    draft = uiState.draft,
-                    fieldErrors = uiState.fieldErrors,
-                    errorMessage = null,
-                    onAction = onAction,
-                    modifier = Modifier.padding(innerPadding),
-                )
-            }
+        Box(
+            modifier = Modifier.padding(innerPadding).fillMaxSize(),
+        ) {
+            when (uiState) {
+                is MemberRegistrationUiState.Editing -> {
+                    MemberRegistrationForm(
+                        draft = uiState.draft,
+                        fieldErrors = uiState.fieldErrors,
+                        errorMessage = null,
+                        onAction = onAction,
+                    )
+                }
 
-            is MemberRegistrationUiState.Error -> {
-                MemberRegistrationForm(
-                    draft = uiState.draft,
-                    fieldErrors = emptySet(),
-                    errorMessage = stringResource(Res.string.instructor_member_registration_error),
-                    onAction = onAction,
-                    modifier = Modifier.padding(innerPadding),
-                )
-            }
+                is MemberRegistrationUiState.Error -> {
+                    MemberRegistrationForm(
+                        draft = uiState.draft,
+                        fieldErrors = emptySet(),
+                        errorMessage = null,
+                        onAction = onAction,
+                    )
+                }
 
-            is MemberRegistrationUiState.Confirmation -> {
-                MemberRegistrationForm(
-                    draft = uiState.draft,
-                    fieldErrors = emptySet(),
-                    errorMessage = null,
-                    onAction = onAction,
-                    modifier = Modifier.padding(innerPadding),
-                )
-            }
+                is MemberRegistrationUiState.Confirmation -> {
+                    MemberRegistrationForm(
+                        draft = uiState.draft,
+                        fieldErrors = emptySet(),
+                        errorMessage = null,
+                        onAction = onAction,
+                    )
+                }
 
-            MemberRegistrationUiState.Submitting -> {
-                MemberRegistrationStatusContent(
-                    message = stringResource(Res.string.instructor_member_registration_submitting),
-                    modifier = Modifier.padding(innerPadding),
-                )
-            }
+                is MemberRegistrationUiState.Submitting -> {
+                    MemberRegistrationForm(
+                        draft = uiState.draft,
+                        fieldErrors = emptySet(),
+                        errorMessage = null,
+                        onAction = onAction,
+                    )
+                }
 
-            is MemberRegistrationUiState.Success -> {
-                MemberRegistrationStatusContent(
-                    message = stringResource(Res.string.instructor_member_registration_success),
-                    modifier = Modifier.padding(innerPadding),
-                )
+                is MemberRegistrationUiState.Success -> {
+                    MemberRegistrationStatusContent(
+                        message = stringResource(Res.string.instructor_member_registration_success),
+                    )
+                }
             }
+            MemberRegistrationConfirmDialog(
+                state = uiState,
+                onAction = onAction,
+            )
         }
     }
 }

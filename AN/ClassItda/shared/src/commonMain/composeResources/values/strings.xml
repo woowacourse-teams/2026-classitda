@@ -229,6 +229,14 @@
     <string name="instructor_member_registration_submitting">회원을 등록하는 중입니다.</string>
     <string name="instructor_member_registration_success">회원 등록이 완료되었습니다.</string>
     <string name="instructor_member_registration_error">회원 등록에 실패했습니다. 입력 내용을 확인한 뒤 다시 시도해 주세요.</string>
+    <string name="instructor_member_registration_confirm_title">회원 등록 확인</string>
+    <string name="instructor_member_registration_confirm_pane_title">회원 등록 확인 대화상자</string>
+    <string name="instructor_member_registration_confirm_message">입력한 정보로 회원을 등록하시겠습니까?</string>
+    <string name="instructor_member_registration_confirm_cancel">취소</string>
+    <string name="instructor_member_registration_confirm_register">등록하기</string>
+    <string name="instructor_member_registration_confirm_retry">다시 시도</string>
+    <string name="instructor_member_registration_confirm_submitting">등록 중</string>
+    <string name="instructor_member_registration_confirm_error">회원 등록에 실패했습니다. 다시 시도해 주세요.</string>
     <string name="instructor_member_registration_harness_default">기본</string>
     <string name="instructor_member_registration_harness_input">입력 중</string>
     <string name="instructor_member_registration_harness_errors">필드 오류</string>

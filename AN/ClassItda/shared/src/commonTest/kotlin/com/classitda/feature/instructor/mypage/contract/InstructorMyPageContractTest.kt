@@ -45,6 +45,7 @@ class InstructorMyPageContractTest {
     fun memberRegistrationStatesCarryDraftAcrossConfirmationAndFailure() {
         val draft = MemberRegistrationDraft(name = "Member", phoneNumber = "01012345678")
         val confirmation: MemberRegistrationUiState = MemberRegistrationUiState.Confirmation(draft)
+        val submitting: MemberRegistrationUiState = MemberRegistrationUiState.Submitting(draft)
         val failure: MemberRegistrationUiState =
             MemberRegistrationUiState.Error(
                 draft = draft,
@@ -52,6 +53,7 @@ class InstructorMyPageContractTest {
             )
 
         assertEquals(draft, assertIs<MemberRegistrationUiState.Confirmation>(confirmation).draft)
+        assertEquals(draft, assertIs<MemberRegistrationUiState.Submitting>(submitting).draft)
         assertEquals(draft, assertIs<MemberRegistrationUiState.Error>(failure).draft)
     }
 

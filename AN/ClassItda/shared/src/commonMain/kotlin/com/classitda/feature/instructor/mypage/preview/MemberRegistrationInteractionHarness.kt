@@ -21,6 +21,7 @@ import classitda.shared.generated.resources.instructor_member_registration_harne
 import classitda.shared.generated.resources.instructor_member_registration_harness_default
 import classitda.shared.generated.resources.instructor_member_registration_harness_disabled
 import classitda.shared.generated.resources.instructor_member_registration_harness_errors
+import classitda.shared.generated.resources.instructor_member_registration_harness_failed
 import classitda.shared.generated.resources.instructor_member_registration_harness_input
 import classitda.shared.generated.resources.instructor_member_registration_harness_last_action
 import classitda.shared.generated.resources.instructor_member_registration_harness_name_changed
@@ -28,6 +29,8 @@ import classitda.shared.generated.resources.instructor_member_registration_harne
 import classitda.shared.generated.resources.instructor_member_registration_harness_open_confirmation
 import classitda.shared.generated.resources.instructor_member_registration_harness_other_action
 import classitda.shared.generated.resources.instructor_member_registration_harness_phone_changed
+import classitda.shared.generated.resources.instructor_member_registration_harness_submitting
+import classitda.shared.generated.resources.instructor_member_registration_harness_waiting
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
@@ -74,8 +77,24 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
                         uiState = editingState(nextDraft)
                     }
 
+                    MemberRegistrationAction.OpenConfirmation -> {
+                        val draft = uiState.draftOrEmpty()
+                        if (draft.name.isNotBlank() && draft.phoneNumber.isNotBlank()) {
+                            uiState = MemberRegistrationUiState.Confirmation(draft)
+                        }
+                    }
+
+                    MemberRegistrationAction.ConfirmRegistration -> {
+                        val draft = uiState.draftOrEmpty()
+                        uiState = MemberRegistrationUiState.Submitting(draft)
+                    }
+
+                    MemberRegistrationAction.CancelConfirmation -> {
+                        uiState = editingState(uiState.draftOrEmpty())
+                    }
+
                     MemberRegistrationAction.Retry -> {
-                        uiState = editingState(emptyDraft)
+                        uiState = MemberRegistrationUiState.Confirmation(uiState.draftOrEmpty())
                     }
 
                     else -> {}
@@ -124,6 +143,37 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
             TextButton(onClick = { uiState = editingState(MemberRegistrationDraft()) }) {
                 Text(stringResource(Res.string.instructor_member_registration_harness_disabled))
             }
+            TextButton(
+                onClick = {
+                    uiState =
+                        MemberRegistrationUiState.Confirmation(
+                            MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678"),
+                        )
+                },
+            ) {
+                Text(stringResource(Res.string.instructor_member_registration_harness_waiting))
+            }
+            TextButton(
+                onClick = {
+                    uiState =
+                        MemberRegistrationUiState.Submitting(
+                            MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678"),
+                        )
+                },
+            ) {
+                Text(stringResource(Res.string.instructor_member_registration_harness_submitting))
+            }
+            TextButton(
+                onClick = {
+                    uiState =
+                        MemberRegistrationUiState.Error(
+                            draft = MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678"),
+                            reason = com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiError.NETWORK,
+                        )
+                },
+            ) {
+                Text(stringResource(Res.string.instructor_member_registration_harness_failed))
+            }
         }
         val lastActionText =
             when (val action = actions.lastOrNull()) {
@@ -171,6 +221,7 @@ private fun MemberRegistrationUiState.draftOrEmpty(): MemberRegistrationDraft =
         is MemberRegistrationUiState.Editing -> draft
         is MemberRegistrationUiState.Error -> draft
         is MemberRegistrationUiState.Confirmation -> draft
+        is MemberRegistrationUiState.Submitting -> draft
         else -> MemberRegistrationDraft()
     }
 
