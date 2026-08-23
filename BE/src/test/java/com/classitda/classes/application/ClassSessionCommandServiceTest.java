@@ -17,6 +17,7 @@ import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.member.domain.Member;
 import com.classitda.member.domain.repository.MemberRepository;
 import com.classitda.studio.domain.MembershipStatus;
@@ -689,6 +690,345 @@ class ClassSessionCommandServiceTest {
         }
     }
 
+    @Test
+    void 개별_수업_회차의_정보와_수업_종류를_수정하고_종료_시각을_다시_계산한다() {
+        // given
+        Member owner = 회원을_저장한다("update-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "수정 시설");
+        ClassType oldClassType = 수업_종류를_저장한다(context.studio(), "기존 요가");
+        ClassType newClassType = 수업_종류를_저장한다(context.studio(), "변경 필라테스");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                oldClassType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "기존 수업"
+        );
+        Long originalInstructorMembershipId = classSession.getInstructorMembership().getId();
+        ClassSessionUpdateRequest request = ClassSessionFixture
+                .기본_수업_회차_수정_요청(newClassType.getId());
+
+        // when
+        commandService.update(
+                owner.getId(), context.studio().getId(), classSession.getId(), request);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassSession updated = classSessionRepository.findById(classSession.getId()).orElseThrow();
+        assertThat(updated.getInstructorMembership().getId()).isEqualTo(originalInstructorMembershipId);
+        assertThat(updated.getName()).isEqualTo("수정된 개인 수업");
+        assertThat(updated.getDescription()).isEqualTo("수정된 수업 안내");
+        assertThat(updated.getClassForm()).isEqualTo(ClassForm.INDIVIDUAL);
+        assertThat(updated.getCapacity()).isEqualTo(1);
+        assertThat(updated.getDurationMinutes()).isEqualTo(50);
+        assertThat(updated.getStartAt()).isEqualTo(LocalDateTime.of(2026, 8, 18, 19, 30));
+        assertThat(updated.getEndAt()).isEqualTo(LocalDateTime.of(2026, 8, 18, 20, 20));
+        assertThat(classSessionClassTypeRepository.findByClassSessionId(classSession.getId()))
+                .get()
+                .extracting(ClassSessionClassType::getClassTypeId)
+                .isEqualTo(newClassType.getId());
+        assertThat(classSessionRepository.count()).isEqualTo(1);
+    }
+
+    @Test
+    void 전달하지_않은_수업_회차_필드는_유지하고_전달한_필드만_수정한다() {
+        // given
+        Member owner = 회원을_저장한다("partial-update-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "부분 수정 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "부분 수정 요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "기존 수업",
+                "기존 수업 안내"
+        );
+        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+                null,
+                null,
+                "이름만 수정",
+                null,
+                90,
+                null,
+                null
+        );
+
+        // when
+        commandService.update(
+                owner.getId(), context.studio().getId(), classSession.getId(), request);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassSession updated = classSessionRepository.findById(classSession.getId()).orElseThrow();
+        assertThat(updated.getName()).isEqualTo("이름만 수정");
+        assertThat(updated.getDescription()).isEqualTo("기존 수업 안내");
+        assertThat(updated.getClassForm()).isEqualTo(ClassForm.GROUP);
+        assertThat(updated.getCapacity()).isEqualTo(10);
+        assertThat(updated.getDurationMinutes()).isEqualTo(90);
+        assertThat(updated.getStartAt()).isEqualTo(LocalDateTime.of(2026, 8, 17, 20, 0));
+        assertThat(updated.getEndAt()).isEqualTo(LocalDateTime.of(2026, 8, 17, 21, 30));
+        assertThat(classSessionClassTypeRepository.findByClassSessionId(classSession.getId()))
+                .get()
+                .extracting(ClassSessionClassType::getClassTypeId)
+                .isEqualTo(classType.getId());
+    }
+
+    @Test
+    void 빈_문자열을_전달하면_수업_안내를_비운다() {
+        // given
+        Member owner = 회원을_저장한다("clear-description-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "수업 안내 삭제 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "수업 안내 삭제 요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "수업 안내 삭제 대상",
+                "삭제할 수업 안내"
+        );
+        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+                null, null, null, null, null, null, "");
+
+        // when
+        commandService.update(
+                owner.getId(), context.studio().getId(), classSession.getId(), request);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassSession updated = classSessionRepository.findById(classSession.getId()).orElseThrow();
+        assertThat(updated.getDescription()).isEmpty();
+    }
+
+    @Test
+    void 본인_수업_관리_권한자는_자신이_담당하는_수업을_수정할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("update-own-allowed-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "본인 수정 허용 시설");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        Member requester = 회원을_저장한다("update-own-allowed-requester");
+        StudioMembership requesterMembership = 소속을_저장한다(
+                context.studio(), requester, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession ownSession = 수업을_저장한다(
+                context,
+                requesterMembership,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "본인 수업"
+        );
+        ClassSessionUpdateRequest request = ClassSessionFixture
+                .기본_수업_회차_수정_요청(classType.getId());
+
+        // when
+        commandService.update(
+                requester.getId(), context.studio().getId(), ownSession.getId(), request);
+
+        // then
+        assertThat(ownSession.getName()).isEqualTo("수정된 개인 수업");
+    }
+
+    @Test
+    void 본인_수업_관리_권한자는_다른_강사의_수업을_수정할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("update-own-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "본인 수정 권한 시설");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        Member requester = 회원을_저장한다("update-own-requester");
+        소속을_저장한다(context.studio(), requester, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession otherSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "다른 강사의 수업"
+        );
+        ClassSessionUpdateRequest request = ClassSessionFixture
+                .기본_수업_회차_수정_요청(classType.getId());
+
+        // when / then
+        assertStudioError(
+                () -> commandService.update(
+                        requester.getId(), context.studio().getId(), otherSession.getId(), request),
+                StudioErrorCode.PERMISSION_DENIED
+        );
+        assertThat(otherSession.getName()).isEqualTo("다른 강사의 수업");
+    }
+
+    @Test
+    void 기존_시간대를_유지하는_수정은_자기_회차를_시간_충돌로_판단하지_않는다() {
+        // given
+        Member owner = 회원을_저장한다("update-self-overlap-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "자기 회차 제외 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession target = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "수정 전 이름"
+        );
+        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+                ClassForm.GROUP,
+                classType.getId(),
+                "수정 후 이름",
+                10,
+                60,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                null
+        );
+
+        // when
+        commandService.update(
+                owner.getId(), context.studio().getId(), target.getId(), request);
+
+        // then
+        assertThat(target.getName()).isEqualTo("수정 후 이름");
+        assertThat(target.getStartAt()).isEqualTo(LocalDateTime.of(2026, 8, 17, 20, 0));
+    }
+
+    @Test
+    void 수정_대상을_제외한_담당_강사의_활성_수업과_시간이_겹치면_수정하지_않는다() {
+        // given
+        Member owner = 회원을_저장한다("update-overlap-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "수정 충돌 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession target = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 10, 0),
+                60,
+                "수정 대상"
+        );
+        수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 18, 20, 0),
+                60,
+                "기존 수업"
+        );
+        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+                ClassForm.GROUP,
+                classType.getId(),
+                "충돌하는 변경",
+                10,
+                60,
+                LocalDateTime.of(2026, 8, 18, 20, 30),
+                null
+        );
+
+        // when / then
+        assertClassError(
+                () -> commandService.update(
+                        owner.getId(), context.studio().getId(), target.getId(), request),
+                ClassErrorCode.CLASS_SESSION_TIME_CONFLICT
+        );
+        assertThat(target.getName()).isEqualTo("수정 대상");
+        assertThat(target.getStartAt()).isEqualTo(LocalDateTime.of(2026, 8, 17, 10, 0));
+    }
+
+    @Test
+    void 취소된_수업_회차는_수정할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("update-canceled-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "취소 수정 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession canceled = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "취소된 수업"
+        );
+        canceled.cancel(LocalDateTime.of(2026, 8, 17, 19, 0));
+        ClassSessionUpdateRequest request = ClassSessionFixture
+                .기본_수업_회차_수정_요청(classType.getId());
+
+        // when / then
+        assertClassError(
+                () -> commandService.update(
+                        owner.getId(), context.studio().getId(), canceled.getId(), request),
+                ClassErrorCode.CLASS_SESSION_CANCELED
+        );
+    }
+
+    @Test
+    void 다른_시설의_수업_회차나_수업_종류로_수정할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("update-boundary-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "수정 요청 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "수정 대상"
+        );
+        Member otherOwner = 회원을_저장한다("update-boundary-other-owner");
+        StudioContext otherContext = 시설과_대표_소속을_저장한다(otherOwner, "다른 시설");
+        ClassType otherClassType = 수업_종류를_저장한다(otherContext.studio(), "다른 시설 요가");
+
+        // when / then
+        assertClassError(
+                () -> commandService.update(
+                        otherOwner.getId(),
+                        otherContext.studio().getId(),
+                        classSession.getId(),
+                        ClassSessionFixture.기본_수업_회차_수정_요청(otherClassType.getId())
+                ),
+                ClassErrorCode.CLASS_SESSION_NOT_FOUND
+        );
+        assertClassError(
+                () -> commandService.update(
+                        owner.getId(),
+                        context.studio().getId(),
+                        classSession.getId(),
+                        ClassSessionFixture.기본_수업_회차_수정_요청(otherClassType.getId())
+                ),
+                ClassErrorCode.CLASS_TYPE_NOT_FOUND
+        );
+    }
+
+    @Test
+    void 전체_수업_관리_권한자는_다른_강사의_수업을_수정할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("update-all-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "전체 수정 권한 시설");
+        StudioRole managerRole = 사용자_역할을_저장한다(
+                context.studio(), "전체 수업 관리자", false);
+        권한을_저장한다(managerRole, PermissionCode.CLASS_SESSION_MANAGE_ALL);
+        Member manager = 회원을_저장한다("update-all-manager");
+        소속을_저장한다(context.studio(), manager, managerRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "전체 수정 요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "다른 강사의 수업"
+        );
+
+        // when
+        commandService.update(
+                manager.getId(),
+                context.studio().getId(),
+                classSession.getId(),
+                ClassSessionFixture.기본_수업_회차_수정_요청(classType.getId())
+        );
+
+        // then
+        assertThat(classSession.getName()).isEqualTo("수정된 개인 수업");
+    }
+
     private ClassSessionCreateRequest 요청(
             Long instructorMembershipId,
             Long classTypeId,
@@ -839,14 +1179,53 @@ class ClassSessionCommandServiceTest {
 
     private ClassSession 수업을_저장한다(
             StudioContext context,
+            ClassType classType,
+            LocalDateTime startAt,
+            int durationMinutes,
+            String name,
+            String description
+    ) {
+        return 수업을_저장한다(
+                context,
+                context.membership(),
+                classType,
+                startAt,
+                durationMinutes,
+                name,
+                description
+        );
+    }
+
+    private ClassSession 수업을_저장한다(
+            StudioContext context,
             StudioMembership instructorMembership,
             ClassType classType,
             LocalDateTime startAt,
             int durationMinutes,
             String name
     ) {
+        return 수업을_저장한다(
+                context,
+                instructorMembership,
+                classType,
+                startAt,
+                durationMinutes,
+                name,
+                null
+        );
+    }
+
+    private ClassSession 수업을_저장한다(
+            StudioContext context,
+            StudioMembership instructorMembership,
+            ClassType classType,
+            LocalDateTime startAt,
+            int durationMinutes,
+            String name,
+            String description
+    ) {
         ClassSession session = classSessionRepository.saveAndFlush(ClassSessionFixture.수업_회차(
-                context.studio().getId(), instructorMembership, name, null, ClassForm.GROUP,
+                context.studio().getId(), instructorMembership, name, description, ClassForm.GROUP,
                 durationMinutes, 10, startAt));
         classSessionClassTypeRepository.saveAndFlush(
                 ClassSessionFixture.수업_종류_연결(session.getId(), classType.getId()));

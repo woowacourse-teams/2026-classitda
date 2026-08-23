@@ -9,6 +9,7 @@ import com.classitda.classes.application.student.calendar.StudentCalendarQuerySe
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
@@ -24,6 +25,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -51,6 +53,18 @@ public class ClassSessionController implements ClassSessionControllerApi {
     ) {
         classSessionCommandService.save(memberId, studioId, request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @Override
+    @PatchMapping(path = "/{classSessionId}", version = "1")
+    public ResponseEntity<Void> update(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classSessionId,
+            @Valid @RequestBody ClassSessionUpdateRequest request
+    ) {
+        classSessionCommandService.update(memberId, studioId, classSessionId, request);
+        return ResponseEntity.noContent().build();
     }
 
     @Override

@@ -30,6 +30,22 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     );
 
     @Query("""
+            SELECT CASE WHEN COUNT(classSession) > 0 THEN true ELSE false END
+            FROM ClassSession classSession
+            WHERE classSession.instructorMembership.id = :instructorMembershipId
+              AND classSession.id <> :excludedClassSessionId
+              AND classSession.canceledAt IS NULL
+              AND classSession.startAt < :endAt
+              AND classSession.endAt > :startAt
+            """)
+    boolean existsActiveOverlapExcluding(
+            @Param("instructorMembershipId") Long instructorMembershipId,
+            @Param("excludedClassSessionId") Long excludedClassSessionId,
+            @Param("startAt") LocalDateTime startAt,
+            @Param("endAt") LocalDateTime endAt
+    );
+
+    @Query("""
             SELECT classSession AS session,
                    classSession.instructorMembership.name AS instructorName,
                    classType.id AS classTypeId,

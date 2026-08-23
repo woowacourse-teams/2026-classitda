@@ -4,6 +4,7 @@ import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.member.domain.Member;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.studio.domain.MembershipStatus;
@@ -118,6 +119,18 @@ public final class ClassSessionFixture {
                 List.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
                 LocalDate.of(2026, 8, 17),
                 LocalDate.of(2026, 8, 24)
+        );
+    }
+
+    public static ClassSessionUpdateRequest 기본_수업_회차_수정_요청(Long classTypeId) {
+        return ClassSessionUpdateRequest.of(
+                ClassForm.INDIVIDUAL,
+                classTypeId,
+                "수정된 개인 수업",
+                1,
+                50,
+                LocalDateTime.of(2026, 8, 18, 19, 30),
+                "수정된 수업 안내"
         );
     }
 

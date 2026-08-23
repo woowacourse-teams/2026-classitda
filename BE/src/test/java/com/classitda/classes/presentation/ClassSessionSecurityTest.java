@@ -16,6 +16,8 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarQ
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
+import com.classitda.classes.fixture.ClassSessionFixture;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import java.time.Instant;
@@ -26,6 +28,7 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTe
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -56,6 +59,7 @@ class ClassSessionSecurityTest {
                     + "?from=2026-08-15&to=2026-08-19";
     private static final String DETAIL_URI =
             "/api/studios/7/class-sessions/11";
+    private static final String UPDATE_URI = DETAIL_URI;
     private static final String INSTRUCTOR_CALENDAR_URI =
             "/api/studios/7/class-sessions/instructor/calendar?from=2026-08-15&to=2026-08-19";
 
@@ -235,6 +239,64 @@ class ClassSessionSecurityTest {
         // then
         result.expectStatus().isOk();
         verify(queryService).findOne(1L, 7L, 11L);
+    }
+
+    @Test
+    void 인증이_없으면_수업_회차를_수정할_수_없다() {
+        // given
+        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+
+        // when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri(UPDATE_URI)
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange();
+
+        // then
+        assertError(result, 401, "AUTH-001", "인증이 필요합니다.");
+        verifyNoInteractions(commandService);
+    }
+
+    @Test
+    void 가입_토큰으로는_수업_회차를_수정할_수_없다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+
+        // when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri(UPDATE_URI)
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer signup-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange();
+
+        // then
+        assertError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
+        verifyNoInteractions(commandService);
+    }
+
+    @Test
+    void 액세스_토큰으로_수업_회차를_수정할_수_있다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("1", TokenUse.ACCESS));
+        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+
+        // when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri(UPDATE_URI)
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer access-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange();
+
+        // then
+        result.expectStatus().isNoContent();
+        verify(commandService).update(1L, 7L, 11L, request);
     }
 
     @Test

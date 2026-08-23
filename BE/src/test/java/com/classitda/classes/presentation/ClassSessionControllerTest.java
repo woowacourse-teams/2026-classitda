@@ -30,6 +30,7 @@ import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
@@ -40,6 +41,7 @@ import com.classitda.studio.exception.StudioException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -106,6 +108,71 @@ class ClassSessionControllerTest {
         // then
         result.expectStatus().isCreated().expectBody().isEmpty();
         verify(commandService).save(eq(1L), eq(7L), eq(request));
+    }
+
+    @Test
+    void 수업_회차를_수정하면_204와_빈_본문을_반환하고_명령_서비스에_위임한다() {
+        // given
+        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_회차를_수정한다(7L, 11L, "1", request);
+
+        // then
+        result.expectStatus().isNoContent().expectBody().isEmpty();
+        verify(commandService).update(1L, 7L, 11L, request);
+    }
+
+    @Test
+    void 일부_필드만_전달해_수업_회차를_수정할_수_있다() {
+        // given
+        ClassSessionUpdateRequest expected = ClassSessionUpdateRequest.of(
+                null, null, "이름만 수정", null, null, null, null);
+
+        // when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri("/api/studios/7/class-sessions/11")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(Map.of("className", "이름만 수정"))
+                .exchange();
+
+        // then
+        result.expectStatus().isNoContent().expectBody().isEmpty();
+        verify(commandService).update(1L, 7L, 11L, expected);
+    }
+
+    @Test
+    void 전달한_수업_회차_수정값이_유효하지_않으면_COMMON_001을_반환한다() {
+        // given
+        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+                null, null, " ", 0, 0, null, null);
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_회차를_수정한다(7L, 11L, "1", request);
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 수업_회차_수정_중_시간이_겹치면_CLASS_SESSION_015를_반환한다() {
+        // given
+        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+        doThrow(new ClassException(ClassErrorCode.CLASS_SESSION_TIME_CONFLICT))
+                .when(commandService).update(1L, 7L, 11L, request);
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_회차를_수정한다(7L, 11L, "1", request);
+
+        // then
+        오류를_검증한다(
+                result,
+                409,
+                "CLASS_SESSION-015",
+                "담당 강사의 기존 수업과 시간이 겹칩니다."
+        );
     }
 
     @Test
@@ -622,6 +689,24 @@ class ClassSessionControllerTest {
     ) {
         return client.post()
                 .uri("/api/studios/{studioId}/class-sessions", studioId)
+                .header("X-API-Version", version)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec 수업_회차를_수정한다(
+            Long studioId,
+            Long classSessionId,
+            String version,
+            ClassSessionUpdateRequest request
+    ) {
+        return client.patch()
+                .uri(
+                        "/api/studios/{studioId}/class-sessions/{classSessionId}",
+                        studioId,
+                        classSessionId
+                )
                 .header("X-API-Version", version)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)

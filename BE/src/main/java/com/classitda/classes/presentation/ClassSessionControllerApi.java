@@ -2,6 +2,7 @@ package com.classitda.classes.presentation;
 
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
@@ -26,7 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springdoc.core.annotations.ParameterObject;
 
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "수업 회차", description = "시설의 수업 회차를 등록하고 회원·강사용 수업 정보를 조회합니다.")
+@Tag(name = "수업 회차", description = "시설의 수업 회차를 등록·수정하고 회원·강사용 수업 정보를 조회합니다.")
 public interface ClassSessionControllerApi {
 
     @Operation(
@@ -128,6 +129,106 @@ public interface ClassSessionControllerApi {
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
             Long studioId,
             ClassSessionCreateRequest request
+    );
+
+    @Operation(
+            summary = "수업 회차 수정",
+            description = """
+                    생성된 수업 회차 한 건에서 요청에 포함된 정보만 수정합니다.
+
+                    - 반복 등록으로 생성된 다른 회차에는 변경 사항을 전파하지 않습니다.
+                    - 생략하거나 null로 전달한 필드는 기존 값을 유지합니다.
+                    - description은 빈 문자열을 전달하면 기존 안내를 비웁니다.
+                    - 담당 강사는 변경하지 않습니다.
+                    - 변경된 시작 일시와 진행 시간을 기준으로 종료 일시를 다시 계산합니다.
+                    - 본인 수업 관리 권한자는 본인이 담당하는 회차만 수정할 수 있습니다.
+                    - 대표 또는 전체 수업 관리 권한자는 시설의 모든 회차를 수정할 수 있습니다.
+                    - 취소된 회차와 담당 강사의 다른 활성 수업에 시간 충돌이 생기는 변경은 거부합니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "수업 회차를 정상적으로 수정합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "요청 값이나 API 버전 헤더가 올바르지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "요청 값 오류", value = """
+                                            {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}"""),
+                                    @ExampleObject(name = "버전 헤더 누락", value = """
+                                            {"code":"API-001","message":"X-API-Version 헤더는 필수입니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 버전", value = """
+                                            {"code":"API-002","message":"지원하지 않는 API 버전입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "인증 실패", value = """
+                                    {"code":"AUTH-001","message":"인증이 필요합니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "ACCESS 토큰이 아니거나 시설의 활성 소속이 아니거나 수업 회차 관리 권한이 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "접근 권한 없음", value = """
+                                            {"code":"AUTH-002","message":"접근 권한이 없습니다."}"""),
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code":"MEMBERSHIP-001","message":"해당 시설의 소속이 아닙니다."}"""),
+                                    @ExampleObject(name = "비활성 소속", value = """
+                                            {"code":"MEMBERSHIP-002","message":"이용이 정지된 소속입니다."}"""),
+                                    @ExampleObject(name = "권한 없음", value = """
+                                            {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설, 수업 회차 또는 수업 종류를 찾을 수 없습니다. 다른 시설의 자원도 동일하게 처리합니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "시설 없음", value = """
+                                            {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "수업 회차 없음", value = """
+                                            {"code":"CLASS_SESSION-014","message":"수업 회차를 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "수업 종류 없음", value = """
+                                            {"code":"CLASS_TYPE-003","message":"수업 종류를 찾을 수 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "취소된 회차이거나 담당 강사의 다른 활성 수업과 시간이 겹칩니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "수업 시간 충돌", value = """
+                                            {"code":"CLASS_SESSION-015","message":"담당 강사의 기존 수업과 시간이 겹칩니다."}"""),
+                                    @ExampleObject(name = "취소된 수업", value = """
+                                            {"code":"CLASS_SESSION-016","message":"취소된 수업은 수정할 수 없습니다."}""")
+                            }
+                    )
+            )
+    })
+    ResponseEntity<Void> update(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            @Parameter(description = "수정할 수업 회차 ID입니다.", required = true, example = "101")
+            Long classSessionId,
+            ClassSessionUpdateRequest request
     );
 
     @Operation(
