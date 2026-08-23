@@ -18,12 +18,21 @@ import com.classitda.feature.auth.signup.screen.SignupFormScreen
 import com.classitda.feature.auth.signup.screen.SignupWelcomeScreen
 
 @Composable
-internal fun SignupScreen(modifier: Modifier = Modifier) {
+internal fun SignupScreen(
+    onSignupCompleted: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var state by remember { mutableStateOf(SignupUiState()) }
 
     SignupScreenStateless(
         state = state,
-        onAction = { action -> state = state.reduce(action) },
+        onAction = { action ->
+            val wasCompleted = state.page == SignupPage.Completed
+            state = state.reduce(action)
+            if (wasCompleted && action == SignupAction.Close) {
+                onSignupCompleted()
+            }
+        },
         modifier = modifier,
     )
 }
