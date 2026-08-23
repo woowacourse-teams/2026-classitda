@@ -8,11 +8,11 @@ import com.classitda.domain.model.auth.signup.SignupName
 import com.classitda.domain.model.auth.signup.SignupPhoneNumber
 import com.classitda.domain.model.auth.signup.SignupToken
 import com.classitda.domain.repository.auth.signup.SignupRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -124,17 +124,20 @@ internal class SignupViewModel(
 
     private fun startVerificationTimer() {
         verificationTimerJob?.cancel()
-        verificationTimerJob = viewModelScope.launch {
-            while (isActive && (_uiState.value.verificationRemainingSeconds > 0 || _uiState.value.resendRemainingSeconds > 0)) {
-                delay(1_000)
-                update {
-                    copy(
-                        verificationRemainingSeconds = (verificationRemainingSeconds - 1).coerceAtLeast(0),
-                        resendRemainingSeconds = (resendRemainingSeconds - 1).coerceAtLeast(0),
-                    )
+        verificationTimerJob =
+            viewModelScope.launch {
+                while (isActive &&
+                    (_uiState.value.verificationRemainingSeconds > 0 || _uiState.value.resendRemainingSeconds > 0)
+                ) {
+                    delay(1_000)
+                    update {
+                        copy(
+                            verificationRemainingSeconds = (verificationRemainingSeconds - 1).coerceAtLeast(0),
+                            resendRemainingSeconds = (resendRemainingSeconds - 1).coerceAtLeast(0),
+                        )
+                    }
                 }
             }
-        }
     }
 
     override fun onCleared() {

@@ -98,7 +98,16 @@ internal fun SignupFormScreen(
                 label = "휴대전화 번호",
                 value = state.phoneNumber,
                 placeholder = "01012345678",
-                actionText = if (state.resendRemainingSeconds > 0) "대기" else if (state.isVerificationSent) "재요청" else "인증요청",
+                actionText =
+                    if (state.resendRemainingSeconds >
+                        0
+                    ) {
+                        "대기"
+                    } else if (state.isVerificationSent) {
+                        "재요청"
+                    } else {
+                        "인증요청"
+                    },
                 onValueChange = { onAction(SignupAction.ChangePhoneNumber(it)) },
                 onAction = { onAction(SignupAction.SendVerificationCode) },
                 keyboardType = KeyboardType.Phone,
@@ -109,7 +118,10 @@ internal fun SignupFormScreen(
                 label = "인증번호",
                 value = state.verificationCode,
                 placeholder = "인증번호 입력",
-                trailingText = state.verificationRemainingSeconds.takeIf { state.isVerificationSent }?.let(::formatRemainingTime),
+                trailingText =
+                    state.verificationRemainingSeconds.takeIf { state.isVerificationSent }?.let(
+                        ::formatRemainingTime,
+                    ),
                 onValueChange = { onAction(SignupAction.ChangeVerificationCode(it)) },
                 keyboardType = KeyboardType.Number,
             )
