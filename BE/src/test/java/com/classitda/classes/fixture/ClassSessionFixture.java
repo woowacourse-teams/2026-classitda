@@ -83,7 +83,6 @@ public final class ClassSessionFixture {
             Long classTypeId
     ) {
         return 수업_회차_생성_요청(
-                null,
                 instructorMembershipId,
                 ClassForm.GROUP,
                 classTypeId,
@@ -105,7 +104,6 @@ public final class ClassSessionFixture {
             Long classTypeId
     ) {
         return 수업_회차_생성_요청(
-                null,
                 instructorMembershipId,
                 ClassForm.GROUP,
                 classTypeId,
@@ -135,7 +133,6 @@ public final class ClassSessionFixture {
     }
 
     public static ClassSessionCreateRequest 수업_회차_생성_요청(
-            Long classTemplateId,
             Long instructorMembershipId,
             ClassForm classForm,
             Long classTypeId,
@@ -151,7 +148,6 @@ public final class ClassSessionFixture {
             LocalDate repeatEndDate
     ) {
         return ClassSessionCreateRequest.of(
-                classTemplateId,
                 instructorMembershipId,
                 classForm,
                 classTypeId,

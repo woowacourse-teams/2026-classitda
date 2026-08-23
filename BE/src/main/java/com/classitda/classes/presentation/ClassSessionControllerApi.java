@@ -37,8 +37,6 @@ public interface ClassSessionControllerApi {
 
                     - **반복 수업**: 반복 기간 안에서 recurringDays에 해당하는 날짜마다 독립적인 회차를 생성합니다.
 
-                    - **템플릿**: classTemplateId는 선택 값이며 템플릿의 시설 경계만 검증하고, 실제 회차에는 최종 요청 값을 저장합니다.
-
                     - **담당 강사**: instructorMembershipId로 같은 시설의 활성 강사 소속을 지정합니다.
 
                     - **권한**: 본인 수업 관리 권한이 있는 강사는 본인만 담당 강사로 지정할 수 있습니다. 대표 또는 전체 수업 관리 권한이 있는 사용자는 같은 시설의 다른 강사도 담당 강사로 지정할 수 있습니다.
@@ -98,7 +96,7 @@ public interface ClassSessionControllerApi {
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "시설, 수업 템플릿 또는 수업 종류를 찾을 수 없거나, 담당 강사 지정 권한이 있는 요청에서 유효한 담당 강사 소속을 찾을 수 없습니다. 다른 시설의 자원도 동일하게 처리합니다.",
+                    description = "시설 또는 수업 종류를 찾을 수 없거나, 담당 강사 지정 권한이 있는 요청에서 유효한 담당 강사 소속을 찾을 수 없습니다. 다른 시설의 자원도 동일하게 처리합니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
@@ -106,8 +104,6 @@ public interface ClassSessionControllerApi {
                                             {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
                                     @ExampleObject(name = "담당 강사 없음", value = """
                                             {"code":"CLASS_SESSION-017","message":"담당 가능한 강사 소속을 찾을 수 없습니다."}"""),
-                                    @ExampleObject(name = "수업 템플릿 없음", value = """
-                                            {"code":"CLASS_TEMPLATE-007","message":"수업 템플릿을 찾을 수 없습니다."}"""),
                                     @ExampleObject(name = "수업 종류 없음", value = """
                                             {"code":"CLASS_TYPE-003","message":"수업 종류를 찾을 수 없습니다."}""")
                             }

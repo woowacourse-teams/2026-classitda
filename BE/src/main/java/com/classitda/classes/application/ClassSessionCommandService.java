@@ -6,7 +6,6 @@ import com.classitda.classes.domain.ClassSessionClassType;
 import com.classitda.classes.domain.ClassSessionDatePlan;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
-import com.classitda.classes.domain.repository.ClassTemplateRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
@@ -36,7 +35,6 @@ public class ClassSessionCommandService {
 
     private final ClassSessionClassTypeRepository classSessionClassTypeRepository;
     private final ClassSessionRepository classSessionRepository;
-    private final ClassTemplateRepository classTemplateRepository;
     private final ClassTypeRepository classTypeRepository;
     private final StudioMembershipRepository studioMembershipRepository;
     private final StudioRepository studioRepository;
@@ -56,7 +54,6 @@ public class ClassSessionCommandService {
                 request.instructorMembershipId()
         );
 
-        validateTemplate(studioId, request.classTemplateId());
         validateClassType(studioId, request.classTypeId());
 
         List<LocalDate> sessionDates = ClassSessionDatePlan.of(
@@ -151,15 +148,6 @@ public class ClassSessionCommandService {
         )) {
             throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
         }
-    }
-
-    private void validateTemplate(Long studioId, Long classTemplateId) {
-        if (classTemplateId == null) {
-            return;
-        }
-
-        classTemplateRepository.findByIdAndStudioId(classTemplateId, studioId)
-                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND));
     }
 
     private void validateClassType(Long studioId, Long classTypeId) {

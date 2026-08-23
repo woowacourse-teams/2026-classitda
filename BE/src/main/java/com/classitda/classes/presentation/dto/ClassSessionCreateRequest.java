@@ -12,13 +12,6 @@ import java.time.LocalTime;
 import java.util.List;
 
 public record ClassSessionCreateRequest(
-        @Schema(
-                description = "사용할 수업 템플릿 ID. 선택 값이며 같은 시설의 템플릿인지 검증하는 데만 사용됩니다.",
-                example = "5"
-        )
-        @Positive(message = "수업 템플릿 ID는 양수여야 합니다.")
-        Long classTemplateId,
-
         @Schema(description = "담당 강사의 시설 소속 ID", example = "12")
         @NotNull(message = "담당 강사 소속은 필수입니다.")
         @Positive(message = "담당 강사 소속 ID는 양수여야 합니다.")
@@ -88,7 +81,6 @@ public record ClassSessionCreateRequest(
 ) {
 
     public static ClassSessionCreateRequest of(
-            Long classTemplateId,
             Long instructorMembershipId,
             ClassForm classForm,
             Long classTypeId,
@@ -104,7 +96,6 @@ public record ClassSessionCreateRequest(
             LocalDate repeatEndDate
     ) {
         return new ClassSessionCreateRequest(
-                classTemplateId,
                 instructorMembershipId,
                 classForm,
                 classTypeId,

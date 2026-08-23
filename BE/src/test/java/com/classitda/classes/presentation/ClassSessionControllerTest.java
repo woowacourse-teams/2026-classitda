@@ -622,7 +622,7 @@ class ClassSessionControllerTest {
     void 필수_요청값이_유효하지_않으면_COMMON_001을_반환하고_명령_서비스를_호출하지_않는다() {
         // given
         ClassSessionCreateRequest request = ClassSessionFixture.수업_회차_생성_요청(
-                null, null, null, null, " ", 0, 0, null, null,
+                null, null, null, " ", 0, 0, null, null,
                 null, null, null, null, null);
 
         // when
@@ -796,12 +796,6 @@ class ClassSessionControllerTest {
                         404,
                         "STUDIO-002",
                         "시설을 찾을 수 없습니다."
-                ),
-                Arguments.of(
-                        new ClassException(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND),
-                        404,
-                        "CLASS_TEMPLATE-007",
-                        "수업 템플릿을 찾을 수 없습니다."
                 ),
                 Arguments.of(
                         new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND),

@@ -6,11 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassSession;
 import com.classitda.classes.domain.ClassSessionClassType;
-import com.classitda.classes.domain.ClassTemplate;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
-import com.classitda.classes.domain.repository.ClassTemplateRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
@@ -64,7 +62,6 @@ class ClassSessionCommandServiceTest {
     private final ClassSessionCommandService commandService;
     private final ClassSessionClassTypeRepository classSessionClassTypeRepository;
     private final ClassSessionRepository classSessionRepository;
-    private final ClassTemplateRepository classTemplateRepository;
     private final ClassTypeRepository classTypeRepository;
     private final MemberRepository memberRepository;
     private final StudioMembershipRepository studioMembershipRepository;
@@ -81,7 +78,6 @@ class ClassSessionCommandServiceTest {
             ClassSessionCommandService commandService,
             ClassSessionClassTypeRepository classSessionClassTypeRepository,
             ClassSessionRepository classSessionRepository,
-            ClassTemplateRepository classTemplateRepository,
             ClassTypeRepository classTypeRepository,
             MemberRepository memberRepository,
             StudioMembershipRepository studioMembershipRepository,
@@ -96,7 +92,6 @@ class ClassSessionCommandServiceTest {
         this.commandService = commandService;
         this.classSessionClassTypeRepository = classSessionClassTypeRepository;
         this.classSessionRepository = classSessionRepository;
-        this.classTemplateRepository = classTemplateRepository;
         this.classTypeRepository = classTypeRepository;
         this.memberRepository = memberRepository;
         this.studioMembershipRepository = studioMembershipRepository;
@@ -428,74 +423,27 @@ class ClassSessionCommandServiceTest {
     }
 
     @Test
-    void 다른_시설이나_없는_템플릿과_수업_종류는_찾을_수_없다() {
+    void 다른_시설이나_없는_수업_종류는_찾을_수_없다() {
         // given
         Member owner = 회원을_저장한다("boundary-owner");
         StudioContext requested = 시설과_대표_소속을_저장한다(owner, "요청 시설");
         Studio other = 시설을_저장한다(owner, "다른 시설");
-        ClassType requestedType = 수업_종류를_저장한다(requested.studio(), "요가");
         ClassType otherType = 수업_종류를_저장한다(other, "필라테스");
-        ClassTemplate otherTemplate = 템플릿을_저장한다(other, "다른 시설 템플릿");
 
         // when / then
         assertClassError(
                 () -> commandService.save(owner.getId(), requested.studio().getId(),
                         단일_요청(requested.membership().getId(),
-                                otherTemplate.getId(), requestedType.getId(), "템플릿 경계")),
-                ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND
-        );
-        assertClassError(
-                () -> commandService.save(owner.getId(), requested.studio().getId(),
-                        단일_요청(requested.membership().getId(),
-                                Long.MAX_VALUE, requestedType.getId(), "없는 템플릿")),
-                ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND
-        );
-        assertClassError(
-                () -> commandService.save(owner.getId(), requested.studio().getId(),
-                        단일_요청(requested.membership().getId(),
-                                null, otherType.getId(), "수업 종류 경계")),
+                                otherType.getId(), "수업 종류 경계")),
                 ClassErrorCode.CLASS_TYPE_NOT_FOUND
         );
         assertClassError(
                 () -> commandService.save(owner.getId(), requested.studio().getId(),
                         단일_요청(requested.membership().getId(),
-                                null, Long.MAX_VALUE, "없는 수업 종류")),
+                                Long.MAX_VALUE, "없는 수업 종류")),
                 ClassErrorCode.CLASS_TYPE_NOT_FOUND
         );
         assertThat(classSessionRepository.count()).isZero();
-    }
-
-    @Test
-    void 템플릿은_검증만_하고_최종_요청값으로_수업을_저장하며_후속_변경에_영향받지_않는다() {
-        // given
-        Member owner = 회원을_저장한다("template-independent-owner");
-        StudioContext context = 시설과_대표_소속을_저장한다(owner, "템플릿 독립 시설");
-        ClassType classType = 수업_종류를_저장한다(context.studio(), "필라테스");
-        ClassTemplate template = 템플릿을_저장한다(context.studio(), "원본 템플릿");
-        ClassSessionCreateRequest request = ClassSessionFixture.수업_회차_생성_요청(
-                template.getId(), context.membership().getId(),
-                ClassForm.INDIVIDUAL, classType.getId(), "최종 개인 수업",
-                1, 45, false, LocalTime.of(9, 30), "최종 메모",
-                LocalDate.of(2026, 8, 18), null, null, null);
-
-        // when
-        commandService.save(owner.getId(), context.studio().getId(), request);
-        template.updateDetails(
-                "변경된 템플릿", null, ClassForm.GROUP, 120,
-                LocalTime.of(6, 0), Set.of(DayOfWeek.SUNDAY), 30);
-        classTemplateRepository.delete(template);
-        entityManager.flush();
-        entityManager.clear();
-
-        // then
-        ClassSession saved = classSessionRepository.findAll().getFirst();
-        assertThat(saved.getName()).isEqualTo("최종 개인 수업");
-        assertThat(saved.getDescription()).isEqualTo("최종 메모");
-        assertThat(saved.getClassForm()).isEqualTo(ClassForm.INDIVIDUAL);
-        assertThat(saved.getDurationMinutes()).isEqualTo(45);
-        assertThat(saved.getCapacity()).isEqualTo(1);
-        assertThat(saved.getStartAt()).isEqualTo(LocalDateTime.of(2026, 8, 18, 9, 30));
-        assertThat(classTemplateRepository.findById(template.getId())).isEmpty();
     }
 
     @Test
@@ -644,7 +592,7 @@ class ClassSessionCommandServiceTest {
         StudioContext context = 시설과_대표_소속을_저장한다(owner, "장기 수업 시설");
         ClassType classType = 수업_종류를_저장한다(context.studio(), "장기 수업");
         ClassSessionCreateRequest request = ClassSessionFixture.수업_회차_생성_요청(
-                null, context.membership().getId(),
+                context.membership().getId(),
                 ClassForm.GROUP, classType.getId(), "하루보다 긴 수업", 10, 1_441,
                 true, LocalTime.MIDNIGHT, null, null, List.of(DayOfWeek.MONDAY),
                 LocalDate.of(2026, 8, 17), LocalDate.of(2026, 8, 24));
@@ -1039,7 +987,7 @@ class ClassSessionCommandServiceTest {
             LocalDate repeatEndDate
     ) {
         return ClassSessionFixture.수업_회차_생성_요청(
-                null, instructorMembershipId,
+                instructorMembershipId,
                 ClassForm.GROUP, classTypeId, "요청 검증 수업", 10, 60,
                 recurring, LocalTime.of(10, 0), null, classDate, recurringDays,
                 repeatStartDate, repeatEndDate);
@@ -1047,12 +995,11 @@ class ClassSessionCommandServiceTest {
 
     private ClassSessionCreateRequest 단일_요청(
             Long instructorMembershipId,
-            Long templateId,
             Long classTypeId,
             String className
     ) {
         return ClassSessionFixture.수업_회차_생성_요청(
-                templateId, instructorMembershipId,
+                instructorMembershipId,
                 ClassForm.GROUP, classTypeId, className, 10, 60,
                 false, LocalTime.of(10, 0), null, LocalDate.of(2026, 8, 17),
                 null, null, null);
@@ -1066,7 +1013,7 @@ class ClassSessionCommandServiceTest {
             int durationMinutes
     ) {
         return ClassSessionFixture.수업_회차_생성_요청(
-                null, instructorMembershipId,
+                instructorMembershipId,
                 ClassForm.GROUP, classTypeId, "시간 검증 수업", 10, durationMinutes,
                 false, startTime, null, date, null, null, null);
     }
@@ -1145,19 +1092,6 @@ class ClassSessionCommandServiceTest {
 
     private ClassType 수업_종류를_저장한다(Studio studio, String name) {
         return classTypeRepository.saveAndFlush(ClassTypeFixture.이름이_다른_수업_종류(studio, name));
-    }
-
-    private ClassTemplate 템플릿을_저장한다(Studio studio, String name) {
-        return classTemplateRepository.saveAndFlush(ClassTemplate.builder()
-                .studioId(studio.getId())
-                .name(name)
-                .description("템플릿 메모")
-                .classForm(ClassForm.GROUP)
-                .durationMinutes(120)
-                .startTime(LocalTime.of(6, 0))
-                .recurringDays(Set.of(DayOfWeek.SUNDAY))
-                .capacity(30)
-                .build());
     }
 
     private ClassSession 수업을_저장한다(
