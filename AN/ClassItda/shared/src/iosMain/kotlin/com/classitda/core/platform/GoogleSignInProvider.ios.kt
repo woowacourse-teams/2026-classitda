@@ -5,14 +5,17 @@ import com.classitda.core.network.ClassItdaApiConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.darwin.Darwin
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.forms.submitForm
 import io.ktor.http.Parameters
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import platform.AuthenticationServices.ASWebAuthenticationSession
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
@@ -97,7 +100,12 @@ private suspend fun exchangeCodeForIdToken(
     callbackUrl: NSURL?,
     code: String,
 ): String {
-    val client = HttpClient(Darwin)
+    val client =
+        HttpClient(Darwin) {
+            install(ContentNegotiation) {
+                json(Json { ignoreUnknownKeys = true })
+            }
+        }
     return try {
         val responseBody =
             client.submitForm(
