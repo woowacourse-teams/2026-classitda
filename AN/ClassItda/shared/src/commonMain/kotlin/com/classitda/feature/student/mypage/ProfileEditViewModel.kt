@@ -44,6 +44,10 @@ internal class ProfileEditViewModel(
         }
     }
 
+    fun refresh() {
+        loadProfile()
+    }
+
     private fun loadProfile() {
         if (isLoading || _uiState.value is ProfileEditUiState.Saving) return
         isLoading = true

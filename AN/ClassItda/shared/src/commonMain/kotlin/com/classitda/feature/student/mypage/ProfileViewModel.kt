@@ -33,6 +33,10 @@ internal class ProfileViewModel(
         }
     }
 
+    fun refresh() {
+        loadProfile()
+    }
+
     private fun loadProfile() {
         if (isLoading) return
         isLoading = true

@@ -1,6 +1,7 @@
 package com.classitda.feature.student.mypage
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -15,9 +16,16 @@ internal fun ProfileViewRoute(
     onRequestLogout: () -> Unit,
     onRequestWithdrawal: () -> Unit,
     modifier: Modifier = Modifier,
+    refreshToken: Int = 0,
     viewModel: ProfileViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(refreshToken) {
+        if (refreshToken > 0) {
+            viewModel.refresh()
+        }
+    }
 
     ProfileViewScreen(
         uiState = uiState,
