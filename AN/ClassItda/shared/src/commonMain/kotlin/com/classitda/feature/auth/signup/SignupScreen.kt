@@ -4,12 +4,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.platform.rememberGoogleSignInProvider
@@ -85,6 +89,14 @@ internal fun SignupScreenStateless(
                 onDismiss = { onAction(SignupAction.DismissTerms) },
                 onTermsClick = onTermsClick,
                 onPrivacyPolicyClick = onPrivacyPolicyClick,
+            )
+        }
+
+        state.errorMessage?.let { message ->
+            Text(
+                text = message,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp),
+                color = StuColors.Red,
             )
         }
     }
