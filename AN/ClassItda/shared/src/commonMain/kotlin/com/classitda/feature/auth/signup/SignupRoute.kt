@@ -4,6 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
 @Composable
-internal fun SignupRoute(modifier: Modifier = Modifier) {
-    SignupScreen(modifier = modifier)
+internal fun SignupRoute(
+    onSignupCompleted: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SignupScreen(
+        onSignupCompleted = onSignupCompleted,
+        modifier = modifier,
+    )
 }

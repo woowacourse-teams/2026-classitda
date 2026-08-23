@@ -88,6 +88,7 @@ internal fun SignupTextFieldWithAction(
     onValueChange: (String) -> Unit,
     onAction: () -> Unit,
     keyboardType: KeyboardType,
+    enabled: Boolean = true,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
         Text(
@@ -115,6 +116,7 @@ internal fun SignupTextFieldWithAction(
             )
             Button(
                 onClick = onAction,
+                enabled = enabled,
                 modifier = Modifier.width(68.dp).height(48.dp),
                 shape = AppShape.Card,
                 colors = ButtonDefaults.buttonColors(containerColor = StuColors.Gray900),

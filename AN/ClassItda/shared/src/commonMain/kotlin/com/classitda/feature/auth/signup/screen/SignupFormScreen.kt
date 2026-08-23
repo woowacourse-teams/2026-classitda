@@ -98,17 +98,30 @@ internal fun SignupFormScreen(
                 label = "휴대전화 번호",
                 value = state.phoneNumber,
                 placeholder = "01012345678",
-                actionText = "인증번호",
+                actionText =
+                    if (state.resendRemainingSeconds >
+                        0
+                    ) {
+                        "대기"
+                    } else if (state.isVerificationSent) {
+                        "재요청"
+                    } else {
+                        "인증요청"
+                    },
                 onValueChange = { onAction(SignupAction.ChangePhoneNumber(it)) },
                 onAction = { onAction(SignupAction.SendVerificationCode) },
                 keyboardType = KeyboardType.Phone,
+                enabled = !state.isLoading && state.resendRemainingSeconds == 0L,
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             SignupTextField(
                 label = "인증번호",
                 value = state.verificationCode,
                 placeholder = "인증번호 입력",
-                trailingText = if (state.isVerificationSent) "03:00" else null,
+                trailingText =
+                    state.verificationRemainingSeconds.takeIf { state.isVerificationSent }?.let(
+                        ::formatRemainingTime,
+                    ),
                 onValueChange = { onAction(SignupAction.ChangeVerificationCode(it)) },
                 keyboardType = KeyboardType.Number,
             )
@@ -121,6 +134,12 @@ internal fun SignupFormScreen(
             modifier = Modifier.padding(horizontal = AppSpacing.xl, vertical = AppSpacing.md),
         )
     }
+}
+
+private fun formatRemainingTime(totalSeconds: Long): String {
+    val minutes = totalSeconds / 60
+    val seconds = totalSeconds % 60
+    return "${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}"
 }
 
 @Preview(name = "Signup form", showBackground = true, widthDp = 390, heightDp = 844)

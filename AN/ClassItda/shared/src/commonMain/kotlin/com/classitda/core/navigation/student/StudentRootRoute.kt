@@ -22,7 +22,10 @@ import com.classitda.feature.student.mypage.MyPageDemoNavHost
 import com.classitda.feature.student.myschedule.MyScheduleFlowRoute
 
 @Composable
-fun StudentRootRoute(modifier: Modifier = Modifier) {
+fun StudentRootRoute(
+    modifier: Modifier = Modifier,
+    onLogout: () -> Unit = {},
+) {
     var selectedTab by remember { mutableStateOf(StudentTab.HOME) }
 
     val bottomBar: @Composable () -> Unit = {
@@ -63,6 +66,7 @@ fun StudentRootRoute(modifier: Modifier = Modifier) {
         StudentTab.MYPage -> {
             MyPageDemoNavHost(
                 onExternalAction = {},
+                onLogout = onLogout,
                 onTabSelected = { selectedTab = it },
                 modifier = modifier,
             )
