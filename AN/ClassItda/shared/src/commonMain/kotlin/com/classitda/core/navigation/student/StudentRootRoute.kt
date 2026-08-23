@@ -65,9 +65,8 @@ fun StudentRootRoute(
 
         StudentTab.MYPage -> {
             MyPageDemoNavHost(
-                onExternalAction = { action ->
-                    if (action == "RequestLogout") onLogout()
-                },
+                onExternalAction = {},
+                onLogout = onLogout,
                 onTabSelected = { selectedTab = it },
                 modifier = modifier,
             )

@@ -57,6 +57,7 @@ private data object NotificationSettingsDestination
 @Composable
 internal fun MyPageDemoNavHost(
     onExternalAction: (String) -> Unit,
+    onLogout: () -> Unit = {},
     onTabSelected: (StudentTab) -> Unit = {},
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
@@ -123,7 +124,10 @@ internal fun MyPageDemoNavHost(
                     onExternalAction("onOpenEdit")
                     navController.navigate(ProfileEditDestination)
                 },
-                onRequestLogout = { onExternalAction("RequestLogout") },
+                onRequestLogout = {
+                    onExternalAction("RequestLogout")
+                    onLogout()
+                },
                 onRequestWithdrawal = { onExternalAction("RequestWithdrawal") },
             )
         }
