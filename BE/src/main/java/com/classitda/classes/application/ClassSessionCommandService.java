@@ -43,16 +43,9 @@ public class ClassSessionCommandService {
     public void save(Long memberId, Long studioId, ClassSessionCreateRequest request) {
         Studio studio = getStudio(studioId);
         StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
-        validateManagePermission(
-                studio,
-                requesterMembership,
-                request.instructorMembershipId(),
-                memberId
-        );
-        StudioMembership instructorMembership = getInstructorForCreate(
-                studioId,
-                request.instructorMembershipId()
-        );
+        validateManagePermission(studio, requesterMembership, request.instructorMembershipId(), memberId);
+
+        StudioMembership instructorMembership = getInstructorForCreate(studioId, request.instructorMembershipId());
 
         validateClassType(studioId, request.classTypeId());
 
@@ -212,10 +205,7 @@ public class ClassSessionCommandService {
                 .toList();
     }
 
-    private void validateNoInstructorTimeConflicts(
-            Long instructorMembershipId,
-            List<ClassSession> classSessions
-    ) {
+    private void validateNoInstructorTimeConflicts(Long instructorMembershipId, List<ClassSession> classSessions) {
         for (ClassSession classSession : classSessions) {
             if (classSessionRepository.existsActiveOverlap(
                     instructorMembershipId,
@@ -242,10 +232,7 @@ public class ClassSessionCommandService {
         }
     }
 
-    private void saveClassSessionClassTypes(
-            List<ClassSession> classSessions,
-            Long classTypeId
-    ) {
+    private void saveClassSessionClassTypes(List<ClassSession> classSessions, Long classTypeId) {
         List<ClassSessionClassType> classSessionClassTypes = classSessions.stream()
                 .map(classSession -> ClassSessionClassType.builder()
                         .classSessionId(classSession.getId())
@@ -256,16 +243,13 @@ public class ClassSessionCommandService {
         classSessionClassTypeRepository.saveAll(classSessionClassTypes);
     }
 
-    private void updateClassSessionClassType(
-            Long studioId,
-            Long classSessionId,
-            Long classTypeId
-    ) {
+    private void updateClassSessionClassType(Long studioId, Long classSessionId, Long classTypeId) {
         validateClassType(studioId, classTypeId);
 
         ClassSessionClassType classSessionClassType = classSessionClassTypeRepository
                 .findByClassSessionId(classSessionId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
+
         classSessionClassType.updateClassTypeId(classTypeId);
     }
 
