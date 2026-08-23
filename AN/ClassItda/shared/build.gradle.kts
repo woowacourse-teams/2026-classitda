@@ -54,6 +54,9 @@ kotlin {
             implementation(libs.compose.uiTooling)
             implementation(libs.ktor.client.android)
             implementation(libs.androidx.room.sqliteWrapper)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.googleid)
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)

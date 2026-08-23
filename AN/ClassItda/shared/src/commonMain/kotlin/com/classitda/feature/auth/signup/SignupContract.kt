@@ -1,5 +1,9 @@
 package com.classitda.feature.auth.signup
 
+import com.classitda.domain.model.auth.signup.PhoneVerificationId
+import com.classitda.domain.model.auth.signup.SignupTerm
+import com.classitda.domain.model.auth.signup.SignupToken
+
 enum class SignupPage {
     Welcome,
     Form,
@@ -16,6 +20,12 @@ data class SignupUiState(
     val termsAgreed: Boolean = false,
     val privacyPolicyAgreed: Boolean = false,
     val isTermsVisible: Boolean = false,
+    val signupToken: SignupToken? = null,
+    val verificationId: PhoneVerificationId? = null,
+    val terms: List<SignupTerm> = emptyList(),
+    val isPhoneVerified: Boolean = false,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null,
 )
 
 sealed interface SignupAction {

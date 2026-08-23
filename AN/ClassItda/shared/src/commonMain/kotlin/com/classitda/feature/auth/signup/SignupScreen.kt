@@ -6,31 +6,45 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.classitda.core.designsystem.StuColors
+import com.classitda.core.platform.rememberGoogleSignInProvider
 import com.classitda.feature.auth.signup.component.SignupTermsSheet
 import com.classitda.feature.auth.signup.screen.SignupCompletedScreen
 import com.classitda.feature.auth.signup.screen.SignupFormScreen
 import com.classitda.feature.auth.signup.screen.SignupWelcomeScreen
+import kotlinx.coroutines.launch
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun SignupScreen(
     onSignupCompleted: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: SignupViewModel = koinViewModel(),
 ) {
-    var state by remember { mutableStateOf(SignupUiState()) }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val googleSignInProvider = rememberGoogleSignInProvider()
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(state.page) {
+        if (state.page == SignupPage.Completed) onSignupCompleted()
+    }
 
     SignupScreenStateless(
         state = state,
         onAction = { action ->
-            val wasCompleted = state.page == SignupPage.Completed
-            state = state.reduce(action)
-            if (wasCompleted && action == SignupAction.Close) {
-                onSignupCompleted()
+            if (action == SignupAction.LoginWithGoogle) {
+                scope.launch {
+                    runCatching { googleSignInProvider.signIn() }
+                        .onSuccess(viewModel::loginWithGoogle)
+                        .onFailure(viewModel::showError)
+                }
+            } else {
+                viewModel.onAction(action)
             }
         },
         modifier = modifier,
@@ -75,79 +89,3 @@ internal fun SignupScreenStateless(
         }
     }
 }
-
-private fun SignupUiState.reduce(action: SignupAction): SignupUiState =
-    when (action) {
-        SignupAction.LoginWithGoogle -> {
-            copy(page = SignupPage.Form)
-        }
-
-        SignupAction.LoginWithApple -> {
-            copy(page = SignupPage.Form)
-        }
-
-        SignupAction.Back -> {
-            copy(page = SignupPage.Welcome, isTermsVisible = false)
-        }
-
-        SignupAction.Close -> {
-            copy(page = SignupPage.Welcome, isTermsVisible = false)
-        }
-
-        is SignupAction.ChangeName -> {
-            copy(name = action.value)
-        }
-
-        is SignupAction.ChangePhoneNumber -> {
-            copy(phoneNumber = action.value)
-        }
-
-        is SignupAction.ChangeVerificationCode -> {
-            copy(verificationCode = action.value)
-        }
-
-        SignupAction.SendVerificationCode -> {
-            copy(isVerificationSent = true)
-        }
-
-        SignupAction.ConfirmForm -> {
-            copy(isTermsVisible = true)
-        }
-
-        SignupAction.DismissTerms -> {
-            copy(isTermsVisible = false)
-        }
-
-        SignupAction.ToggleAllTerms -> {
-            val nextValue = !allTermsAgreed
-            copy(
-                allTermsAgreed = nextValue,
-                termsAgreed = nextValue,
-                privacyPolicyAgreed = nextValue,
-            )
-        }
-
-        SignupAction.ToggleTermsAgreement -> {
-            val nextValue = !termsAgreed
-            copy(
-                termsAgreed = nextValue,
-                allTermsAgreed = nextValue && privacyPolicyAgreed,
-            )
-        }
-
-        SignupAction.TogglePrivacyPolicyAgreement -> {
-            val nextValue = !privacyPolicyAgreed
-            copy(
-                privacyPolicyAgreed = nextValue,
-                allTermsAgreed = termsAgreed && nextValue,
-            )
-        }
-
-        SignupAction.CompleteSignup -> {
-            copy(page = SignupPage.Completed, isTermsVisible = false)
-        }
-
-        SignupAction.OpenProfile -> {
-            copy(page = SignupPage.Welcome)
-        }
-    }

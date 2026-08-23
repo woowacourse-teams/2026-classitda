@@ -18,8 +18,21 @@ internal fun createClassItdaHttpClient(
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
+
         defaultRequest {
             url.takeFrom(baseUrl)
+            header("X-API-Version", "1")
+        }
+    }
+
+internal fun createConfiguredHttpClient(config: NetworkConfig): HttpClient =
+    HttpClient {
+        expectSuccess = true
+        install(ContentNegotiation) {
+            json(Json { ignoreUnknownKeys = true })
+        }
+        defaultRequest {
+            url.takeFrom(config.baseUrl)
             header("X-API-Version", "1")
         }
     }
