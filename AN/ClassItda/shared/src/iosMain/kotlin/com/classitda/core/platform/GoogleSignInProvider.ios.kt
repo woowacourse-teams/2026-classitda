@@ -87,7 +87,7 @@ private class IosPresentationContextProvider :
     NSObject(),
     platform.AuthenticationServices.ASWebAuthenticationPresentationContextProvidingProtocol {
     override fun presentationAnchorForWebAuthenticationSession(session: ASWebAuthenticationSession): UIWindow =
-        UIApplication.sharedApplication.keyWindow ?: UIWindow()
+        (UIApplication.sharedApplication.windows.firstOrNull() as? UIWindow) ?: UIWindow()
 }
 
 @Composable
