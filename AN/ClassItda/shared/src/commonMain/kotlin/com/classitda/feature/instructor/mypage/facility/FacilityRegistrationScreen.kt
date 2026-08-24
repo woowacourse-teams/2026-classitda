@@ -191,6 +191,14 @@ fun FacilityRegistrationScreen(
                                 Res.string.instructor_facility_registration_register
                             },
                         ),
+                    submittingLabel =
+                        stringResource(
+                            if (isEditing) {
+                                Res.string.instructor_facility_edit_submitting
+                            } else {
+                                Res.string.instructor_facility_registration_submitting
+                            },
+                        ),
                     onSubmit = {
                         onAction(
                             if (uiState is FacilityRegistrationUiState.Error) {
@@ -763,6 +771,7 @@ private fun FacilityRegistrationBottomBar(
     isFailed: Boolean,
     enabled: Boolean,
     label: String,
+    submittingLabel: String,
     onSubmit: () -> Unit,
 ) {
     Surface(
@@ -789,7 +798,7 @@ private fun FacilityRegistrationBottomBar(
                     strokeWidth = AppSpacing.xs / 2,
                 )
                 Text(
-                    text = stringResource(Res.string.instructor_facility_registration_submitting),
+                    text = submittingLabel,
                     modifier = Modifier.padding(start = AppSpacing.xs),
                 )
             } else {
