@@ -64,3 +64,8 @@ internal data class SignupResponseDto(
     val refreshToken: String,
     val refreshTokenExpiresIn: Long,
 )
+
+@Serializable
+internal data class LogoutRequestDto(
+    val refreshToken: String,
+)

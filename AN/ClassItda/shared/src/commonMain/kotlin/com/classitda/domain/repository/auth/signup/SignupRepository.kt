@@ -33,4 +33,6 @@ interface SignupRepository {
         name: SignupName,
         agreedTermIds: List<TermId>,
     ): LoginTokens
+
+    suspend fun logout()
 }

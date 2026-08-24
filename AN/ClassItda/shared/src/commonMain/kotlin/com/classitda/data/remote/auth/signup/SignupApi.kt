@@ -55,4 +55,15 @@ internal class SignupApi(
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }.body()
+
+    suspend fun logout(
+        accessToken: String,
+        request: LogoutRequestDto,
+    ) {
+        client.post("api/auth/logout") {
+            bearerAuth(accessToken)
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+    }
 }

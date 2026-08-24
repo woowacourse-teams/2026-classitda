@@ -5,6 +5,7 @@ import com.classitda.core.auth.InMemoryAuthTokenStorage
 import com.classitda.data.remote.auth.signup.GoogleLoginRequestDto
 import com.classitda.data.remote.auth.signup.LoginResponseDto
 import com.classitda.data.remote.auth.signup.LoginStatusDto
+import com.classitda.data.remote.auth.signup.LogoutRequestDto
 import com.classitda.data.remote.auth.signup.PhoneVerificationConfirmRequestDto
 import com.classitda.data.remote.auth.signup.PhoneVerificationResponseDto
 import com.classitda.data.remote.auth.signup.PhoneVerificationSendRequestDto
@@ -73,6 +74,15 @@ internal class RemoteSignupRepository(
                 ).toDomain()
         tokenStorage.write(tokens)
         return tokens
+    }
+
+    override suspend fun logout() {
+        val tokens = tokenStorage.read() ?: return
+        runCatching {
+            api.logout(tokens.accessToken, LogoutRequestDto(tokens.refreshToken))
+        }.also {
+            tokenStorage.clear()
+        }
     }
 }
 
