@@ -16,7 +16,7 @@ class InstructorMyPageContractTest {
     fun memberActionCarriesStableMemberId() {
         val id = InstructorMemberId("member-1")
 
-        val action = MemberManagementAction.OpenMember(id)
+        val action = MemberManagementAction.EditMember(id)
 
         assertEquals(id, action.memberId)
     }

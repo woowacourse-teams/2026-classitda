@@ -2,6 +2,7 @@ package com.classitda.feature.instructor.mypage.member
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +19,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,18 +42,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_arrow_forward
 import classitda.shared.generated.resources.ic_expand_more
 import classitda.shared.generated.resources.ic_person_add
 import classitda.shared.generated.resources.ic_search
+import classitda.shared.generated.resources.instructor_member_delete_cancel
+import classitda.shared.generated.resources.instructor_member_delete_confirm
+import classitda.shared.generated.resources.instructor_member_delete_failed
+import classitda.shared.generated.resources.instructor_member_delete_message
+import classitda.shared.generated.resources.instructor_member_delete_name_error
+import classitda.shared.generated.resources.instructor_member_delete_pane_title
+import classitda.shared.generated.resources.instructor_member_delete_placeholder
+import classitda.shared.generated.resources.instructor_member_delete_submitting
+import classitda.shared.generated.resources.instructor_member_delete_title
+import classitda.shared.generated.resources.instructor_member_detail_delete
+import classitda.shared.generated.resources.instructor_member_detail_edit
 import classitda.shared.generated.resources.instructor_member_management_add
 import classitda.shared.generated.resources.instructor_member_management_back
 import classitda.shared.generated.resources.instructor_member_management_empty_description
@@ -78,6 +99,8 @@ import com.classitda.domain.model.instructor.mypage.ManagedMember
 import com.classitda.domain.model.instructor.mypage.MemberListPage
 import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
+import com.classitda.feature.instructor.mypage.contract.MemberManagementActionState
+import com.classitda.feature.instructor.mypage.contract.MemberManagementDeleteError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
 import org.jetbrains.compose.resources.painterResource
@@ -89,6 +112,7 @@ fun MemberManagementScreen(
     onAction: (MemberManagementAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var actionMember by remember { mutableStateOf<ManagedMember?>(null) }
     Scaffold(
         modifier = modifier,
         containerColor = InsColors.Background,
@@ -125,6 +149,7 @@ fun MemberManagementScreen(
                     members = uiState.page.members,
                     sortOrder = uiState.sortOrder,
                     emptyState = if (uiState.page.members.isEmpty()) MemberListEmptyState.Empty else null,
+                    onLongPress = { actionMember = it },
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -149,6 +174,33 @@ fun MemberManagementScreen(
                 )
             }
         }
+    }
+    actionMember?.let { member ->
+        MemberActionDialog(
+            onDismiss = { actionMember = null },
+            onEdit = {
+                actionMember = null
+                onAction(MemberManagementAction.EditMember(member.id))
+            },
+            onDelete = {
+                actionMember = null
+                onAction(MemberManagementAction.RequestDelete(member.id))
+            },
+        )
+    }
+    val content = uiState as? MemberManagementUiState.Content
+    val deleteState = content?.actionState
+    val deleteMember =
+        content?.page?.members?.firstOrNull { member ->
+            when (deleteState) {
+                is MemberManagementActionState.Confirming -> member.id == deleteState.memberId
+                is MemberManagementActionState.Submitting -> member.id == deleteState.memberId
+                is MemberManagementActionState.Failed -> member.id == deleteState.memberId
+                else -> false
+            }
+        }
+    if (deleteMember != null && deleteState != null) {
+        MemberDeleteDialog(deleteMember.name, deleteState, onAction)
     }
 }
 
@@ -197,6 +249,7 @@ private fun MemberManagementListContent(
     members: List<ManagedMember>,
     sortOrder: MemberSortOrder,
     emptyState: MemberListEmptyState?,
+    onLongPress: (ManagedMember) -> Unit = {},
     onAction: (MemberManagementAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -237,7 +290,7 @@ private fun MemberManagementListContent(
             ) { member ->
                 ManagedMemberCard(
                     member = member,
-                    onClick = { onAction(MemberManagementAction.OpenMember(member.id)) },
+                    onLongPress = { onLongPress(member) },
                 )
             }
         } else {
@@ -385,14 +438,18 @@ private fun MemberListHeader(
 @Composable
 private fun ManagedMemberCard(
     member: ManagedMember,
-    onClick: () -> Unit,
+    onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable(role = Role.Button, onClick = onClick),
+                .combinedClickable(
+                    role = Role.Button,
+                    onClick = {},
+                    onLongClick = onLongPress,
+                ),
         shape = AppShape.Card,
         color = InsColors.Surface,
     ) {
@@ -453,6 +510,182 @@ private fun MemberAvatar(
                 MemberAvatarFallback(name = member.name)
             },
         )
+    }
+}
+
+@Composable
+private fun MemberActionDialog(
+    onDismiss: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xxxl),
+            shape = AppShape.Card,
+            color = InsColors.Surface,
+        ) {
+            Column(
+                modifier = Modifier.padding(AppSpacing.xxl),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+            ) {
+                TextButton(onClick = onEdit, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(Res.string.instructor_member_detail_edit))
+                }
+                TextButton(onClick = onDelete, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(Res.string.instructor_member_detail_delete), color = InsColors.Red)
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(Res.string.instructor_member_delete_cancel))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemberDeleteDialog(
+    memberName: String,
+    state: MemberManagementActionState,
+    onAction: (MemberManagementAction) -> Unit,
+) {
+    if (state == MemberManagementActionState.Hidden) return
+    val isSubmitting = state is MemberManagementActionState.Submitting
+    val typedName =
+        when (state) {
+            is MemberManagementActionState.Confirming -> state.typedName
+            is MemberManagementActionState.Failed -> state.typedName
+            is MemberManagementActionState.Submitting -> state.typedName
+            else -> ""
+        }
+    val inputError =
+        (typedName.isNotBlank() && typedName != memberName) ||
+            when (state) {
+                is MemberManagementActionState.Confirming -> state.error == MemberManagementDeleteError.NAME_MISMATCH
+                is MemberManagementActionState.Failed -> state.reason == MemberManagementDeleteError.NAME_MISMATCH
+                else -> false
+            }
+    val errorText = stringResource(Res.string.instructor_member_delete_name_error)
+    val paneTitle = stringResource(Res.string.instructor_member_delete_pane_title)
+    Dialog(
+        onDismissRequest = { if (!isSubmitting) onAction(MemberManagementAction.CancelDelete) },
+        properties =
+            DialogProperties(
+                dismissOnBackPress = !isSubmitting,
+                dismissOnClickOutside = !isSubmitting,
+                usePlatformDefaultWidth = false,
+            ),
+    ) {
+        Surface(
+            modifier =
+                Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xxxl).semantics {
+                    this.paneTitle =
+                        paneTitle
+                },
+            shape = AppShape.Card,
+            color = InsColors.Surface,
+        ) {
+            Column(
+                modifier = Modifier.padding(AppSpacing.xxl),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+            ) {
+                Text(
+                    stringResource(Res.string.instructor_member_delete_title),
+                    style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = InsColors.TextPrimary,
+                )
+                Text(
+                    stringResource(Res.string.instructor_member_delete_message),
+                    style = appTypography().bodyMedium,
+                    color = InsColors.TextSecondary,
+                )
+                Text(
+                    memberName,
+                    style = appTypography().titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = InsColors.TextPrimary,
+                )
+                OutlinedTextField(
+                    value = typedName,
+                    onValueChange = { onAction(MemberManagementAction.DeleteNameChanged(it)) },
+                    enabled = !isSubmitting,
+                    modifier = Modifier.fillMaxWidth().semantics { if (inputError) error(errorText) },
+                    placeholder = { Text(stringResource(Res.string.instructor_member_delete_placeholder)) },
+                    isError = inputError,
+                    singleLine = true,
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = InsColors.Primary,
+                            unfocusedBorderColor = InsColors.Divider,
+                            errorBorderColor = InsColors.Red,
+                        ),
+                )
+                if (inputError) {
+                    Text(
+                        errorText,
+                        modifier =
+                            Modifier.semantics {
+                                liveRegion = LiveRegionMode.Assertive
+                            },
+                        style = appTypography().bodySmall,
+                        color = InsColors.Red,
+                    )
+                }
+                if (state is MemberManagementActionState.Failed &&
+                    state.reason != MemberManagementDeleteError.NAME_MISMATCH
+                ) {
+                    Text(
+                        stringResource(Res.string.instructor_member_delete_failed),
+                        modifier =
+                            Modifier.semantics {
+                                liveRegion =
+                                    LiveRegionMode.Assertive
+                            },
+                        style = appTypography().bodySmall,
+                        color = InsColors.Red,
+                    )
+                }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                    TextButton(onClick = {
+                        onAction(MemberManagementAction.CancelDelete)
+                    }, enabled = !isSubmitting, modifier = Modifier.weight(1f)) {
+                        Text(stringResource(Res.string.instructor_member_delete_cancel))
+                    }
+                    Button(
+                        onClick = { onAction(MemberManagementAction.ConfirmDelete) },
+                        enabled = !isSubmitting && typedName == memberName,
+                        modifier = Modifier.weight(1f),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = InsColors.Red,
+                                contentColor = InsColors.White,
+                            ),
+                    ) {
+                        if (isSubmitting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(AppSpacing.lg),
+                                color = InsColors.White,
+                                strokeWidth =
+                                    AppSpacing.xs / 2,
+                            )
+                        } else {
+                            Text(stringResource(Res.string.instructor_member_delete_confirm))
+                        }
+                    }
+                }
+                if (isSubmitting) {
+                    Text(
+                        stringResource(Res.string.instructor_member_delete_submitting),
+                        modifier =
+                            Modifier.semantics {
+                                liveRegion =
+                                    LiveRegionMode.Polite
+                            },
+                        style = appTypography().bodySmall,
+                        color = InsColors.TextSecondary,
+                    )
+                }
+            }
+        }
     }
 }
 

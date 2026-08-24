@@ -125,11 +125,27 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
                     )
                 }
 
-                is MemberManagementAction.OpenMember -> {
+                is MemberManagementAction.EditMember -> {
                     stringResource(
                         Res.string.instructor_member_management_harness_open_member,
                         action.memberId.value,
                     )
+                }
+
+                is MemberManagementAction.RequestDelete -> {
+                    "RequestDelete:${action.memberId.value}"
+                }
+
+                is MemberManagementAction.DeleteNameChanged -> {
+                    "DeleteNameChanged:${action.name}"
+                }
+
+                MemberManagementAction.CancelDelete -> {
+                    "CancelDelete"
+                }
+
+                MemberManagementAction.ConfirmDelete -> {
+                    "ConfirmDelete"
                 }
 
                 MemberManagementAction.OpenMemberRegistration -> {

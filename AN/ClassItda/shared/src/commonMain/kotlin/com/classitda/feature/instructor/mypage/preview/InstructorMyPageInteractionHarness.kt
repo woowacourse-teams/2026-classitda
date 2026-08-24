@@ -212,8 +212,24 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             lastEvent = "Back:F05"
                         }
 
-                        is MemberManagementAction.OpenMember -> {
-                            lastEvent = "OpenMember:${action.memberId.value}"
+                        is MemberManagementAction.EditMember -> {
+                            lastEvent = "EditMember:${action.memberId.value}"
+                        }
+
+                        is MemberManagementAction.RequestDelete -> {
+                            lastEvent = "RequestDelete:${action.memberId.value}"
+                        }
+
+                        is MemberManagementAction.DeleteNameChanged -> {
+                            lastEvent = "DeleteNameChanged"
+                        }
+
+                        MemberManagementAction.CancelDelete -> {
+                            lastEvent = "CancelDelete"
+                        }
+
+                        MemberManagementAction.ConfirmDelete -> {
+                            lastEvent = "ConfirmDelete"
                         }
 
                         MemberManagementAction.OpenMemberRegistration -> {
