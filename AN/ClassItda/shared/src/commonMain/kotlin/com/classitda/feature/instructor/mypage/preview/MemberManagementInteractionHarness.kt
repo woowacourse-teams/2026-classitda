@@ -37,10 +37,10 @@ import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.domain.model.instructor.mypage.ManagedMember
 import com.classitda.domain.model.instructor.mypage.MemberListPage
-import com.classitda.feature.instructor.mypage.MemberManagementScreen
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
+import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

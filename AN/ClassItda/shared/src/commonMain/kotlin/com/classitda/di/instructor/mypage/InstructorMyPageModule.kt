@@ -1,15 +1,15 @@
 package com.classitda.di.instructor.mypage
 
-import com.classitda.feature.instructor.mypage.FacilityDetailViewModel
-import com.classitda.feature.instructor.mypage.FacilityEditViewModel
-import com.classitda.feature.instructor.mypage.FacilityManagementViewModel
-import com.classitda.feature.instructor.mypage.FacilityRegistrationViewModel
 import com.classitda.feature.instructor.mypage.InstructorMyPageViewModel
-import com.classitda.feature.instructor.mypage.InstructorPhoneNumberChangeViewModel
-import com.classitda.feature.instructor.mypage.InstructorProfileEditViewModel
-import com.classitda.feature.instructor.mypage.InstructorProfileViewModel
-import com.classitda.feature.instructor.mypage.MemberManagementViewModel
-import com.classitda.feature.instructor.mypage.MemberRegistrationViewModel
+import com.classitda.feature.instructor.mypage.facility.FacilityDetailViewModel
+import com.classitda.feature.instructor.mypage.facility.FacilityEditViewModel
+import com.classitda.feature.instructor.mypage.facility.FacilityManagementViewModel
+import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationViewModel
+import com.classitda.feature.instructor.mypage.member.MemberManagementViewModel
+import com.classitda.feature.instructor.mypage.member.MemberRegistrationViewModel
+import com.classitda.feature.instructor.mypage.profile.InstructorPhoneNumberChangeViewModel
+import com.classitda.feature.instructor.mypage.profile.InstructorProfileEditViewModel
+import com.classitda.feature.instructor.mypage.profile.InstructorProfileViewModel
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 

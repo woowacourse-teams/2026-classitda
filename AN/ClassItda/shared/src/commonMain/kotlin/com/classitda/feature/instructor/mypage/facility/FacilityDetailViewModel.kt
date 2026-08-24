@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.mypage
+package com.classitda.feature.instructor.mypage.facility
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,68 +49,129 @@ import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFiel
 import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.toFacilityDeleteError
+import com.classitda.feature.instructor.mypage.toFacilityDetailError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class InstructorProfileEditViewModel(
+internal class FacilityDetailViewModel(
     private val repository: InstructorMyPageRepository,
+    private val facilityId: InstructorFacilityId,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<ProfileEditUiState>(ProfileEditUiState.Loading)
-    val uiState: StateFlow<ProfileEditUiState> = _uiState.asStateFlow()
-    private var profile: com.classitda.domain.model.instructor.mypage.InstructorAccountProfile? = null
+    private val _uiState = MutableStateFlow<FacilityDetailUiState>(FacilityDetailUiState.Loading)
+    val uiState: StateFlow<FacilityDetailUiState> = _uiState.asStateFlow()
 
     init {
         refresh()
     }
 
-    fun onAction(action: ProfileEditAction) {
+    fun onAction(action: FacilityDetailAction) {
         when (action) {
-            ProfileEditAction.Retry -> refresh()
-            is ProfileEditAction.NameChanged -> changeName(action.name)
-            ProfileEditAction.Save -> save()
-            else -> Unit
+            FacilityDetailAction.RequestDelete -> {
+                updateContent { copy(deleteState = FacilityDeleteState.Confirming()) }
+            }
+
+            is FacilityDetailAction.DeleteNameChanged -> {
+                updateContent {
+                    val deleteState = deleteState
+                    when (deleteState) {
+                        is FacilityDeleteState.Confirming -> {
+                            copy(deleteState = deleteState.copy(typedName = action.name, error = null))
+                        }
+
+                        is FacilityDeleteState.Failed -> {
+                            copy(deleteState = FacilityDeleteState.Confirming(action.name))
+                        }
+
+                        else -> {
+                            this
+                        }
+                    }
+                }
+            }
+
+            FacilityDetailAction.CancelDelete -> {
+                updateContent { copy(deleteState = FacilityDeleteState.Hidden) }
+            }
+
+            FacilityDetailAction.ConfirmDelete -> {
+                confirmDelete()
+            }
+
+            FacilityDetailAction.Retry -> {
+                refresh()
+            }
+
+            FacilityDetailAction.Back,
+            FacilityDetailAction.OpenEdit,
+            -> {
+                Unit
+            }
         }
     }
 
     fun refresh() {
+        _uiState.value = FacilityDetailUiState.Loading
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.getProfile()) {
-                    is InstructorMyPageResult.Success -> result.value.toEditingState().also { profile = result.value }
-                    is InstructorMyPageResult.Failure -> ProfileEditUiState.Error(result.reason.toProfileUiError())
-                }
-        }
-    }
-
-    private fun changeName(name: String) {
-        val current = profile ?: return
-        val state = _uiState.value as? ProfileEditUiState.Editing ?: return
-        _uiState.value = state.copy(draftName = name, canSave = name.isNotBlank() && name != current.name)
-    }
-
-    private fun save() {
-        val current = profile ?: return
-        val state = _uiState.value as? ProfileEditUiState.Editing ?: return
-        if (!state.canSave) return
-        _uiState.value = ProfileEditUiState.Saving(state.profile, state.phoneNumber, state.draftName)
-        viewModelScope.launch {
-            _uiState.value =
-                when (val result = repository.updateProfileName(state.draftName)) {
+                when (val result = repository.getFacility(facilityId)) {
                     is InstructorMyPageResult.Success -> {
-                        result.value.toEditingState().also { profile = result.value }
+                        FacilityDetailUiState.Content(result.value)
                     }
 
                     is InstructorMyPageResult.Failure -> {
-                        ProfileEditUiState.SaveFailed(
-                            state.profile,
-                            current.phoneNumber,
-                            state.draftName,
-                            result.reason.toProfileUiError(),
+                        FacilityDetailUiState.Error(
+                            result.reason.toFacilityDetailError(),
                         )
                     }
                 }
         }
+    }
+
+    private fun confirmDelete() {
+        val content = _uiState.value as? FacilityDetailUiState.Content ?: return
+        val typedName =
+            when (val deleteState = content.deleteState) {
+                is FacilityDeleteState.Confirming -> deleteState.typedName
+                is FacilityDeleteState.Failed -> deleteState.typedName
+                else -> return
+            }
+        if (typedName != content.facility.name) {
+            _uiState.value =
+                content.copy(
+                    deleteState =
+                        FacilityDeleteState.Confirming(
+                            typedName = typedName,
+                            error = FacilityDeleteError.NAME_MISMATCH,
+                        ),
+                )
+            return
+        }
+        _uiState.value = content.copy(deleteState = FacilityDeleteState.Submitting)
+        viewModelScope.launch {
+            _uiState.value =
+                when (val result = repository.deleteFacility(facilityId)) {
+                    is InstructorMyPageResult.Success -> {
+                        FacilityDetailUiState.Deleted(result.value)
+                    }
+
+                    is InstructorMyPageResult.Failure -> {
+                        content.copy(
+                            deleteState =
+                                FacilityDeleteState.Failed(
+                                    typedName = typedName,
+                                    reason = result.reason.toFacilityDeleteError(),
+                                ),
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun updateContent(transform: FacilityDetailUiState.Content.() -> FacilityDetailUiState.Content) {
+        val content = _uiState.value as? FacilityDetailUiState.Content ?: return
+        _uiState.value = content.transform()
     }
 }

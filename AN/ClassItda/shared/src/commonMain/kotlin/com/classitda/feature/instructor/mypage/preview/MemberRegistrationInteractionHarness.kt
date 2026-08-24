@@ -37,12 +37,12 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
-import com.classitda.feature.instructor.mypage.MemberRegistrationScreen
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.member.MemberRegistrationScreen
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

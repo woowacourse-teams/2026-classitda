@@ -43,11 +43,7 @@ import com.classitda.feature.common.profile.contract.ProfileEditAction
 import com.classitda.feature.common.profile.contract.ProfileEditUiState
 import com.classitda.feature.common.profile.contract.ProfileViewAction
 import com.classitda.feature.common.profile.contract.ProfileViewUiState
-import com.classitda.feature.instructor.mypage.FacilityManagementScreen
-import com.classitda.feature.instructor.mypage.FacilityRegistrationScreen
 import com.classitda.feature.instructor.mypage.InstructorMyPageScreen
-import com.classitda.feature.instructor.mypage.MemberManagementScreen
-import com.classitda.feature.instructor.mypage.MemberRegistrationScreen
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
@@ -59,6 +55,10 @@ import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
+import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
+import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
+import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
+import com.classitda.feature.instructor.mypage.member.MemberRegistrationScreen
 import org.jetbrains.compose.resources.stringResource
 
 /** Deterministic no-DI harness: it verifies Screen state/callback contracts only. */

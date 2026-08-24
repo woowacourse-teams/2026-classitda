@@ -30,10 +30,10 @@ import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.ManagedFacility
 import com.classitda.domain.repository.instructor.mypage.FacilityList
-import com.classitda.feature.instructor.mypage.FacilityManagementScreen
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
 import com.classitda.feature.instructor.mypage.contract.FacilitySuccessNotice
+import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

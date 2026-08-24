@@ -31,13 +31,13 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
-import com.classitda.feature.instructor.mypage.FacilityRegistrationScreen
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFieldErrors
 import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
+import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

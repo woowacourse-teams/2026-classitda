@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.mypage
+package com.classitda.feature.instructor.mypage.member
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,135 +49,66 @@ import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFiel
 import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.toListError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class FacilityEditViewModel(
+internal class MemberManagementViewModel(
     private val repository: InstructorMyPageRepository,
-    private val facilityId: InstructorFacilityId,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<FacilityEditUiState>(FacilityEditUiState.Loading)
-    val uiState: StateFlow<FacilityEditUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<MemberManagementUiState>(MemberManagementUiState.Loading)
+    val uiState: StateFlow<MemberManagementUiState> = _uiState.asStateFlow()
+    private var query = ""
+    private var sort = MemberSortOrder.RECENTLY_REGISTERED
 
     init {
-        refresh()
+        load()
     }
 
-    fun onAction(action: FacilityEditAction) {
+    fun onAction(action: MemberManagementAction) {
         when (action) {
-            is FacilityEditAction.NameChanged -> {
-                update { copy(name = action.name) }
+            is MemberManagementAction.QueryChanged -> {
+                query = action.query
+                load()
             }
 
-            is FacilityEditAction.AddressChanged -> {
-                update { copy(address = action.address) }
+            is MemberManagementAction.SortOrderChanged -> {
+                sort = action.sortOrder
+                load()
             }
 
-            is FacilityEditAction.DetailAddressChanged -> {
-                update { copy(detailAddress = action.detailAddress) }
+            MemberManagementAction.Retry -> {
+                load()
             }
 
-            is FacilityEditAction.PhoneNumberChanged -> {
-                update { copy(phoneNumber = action.phoneNumber) }
-            }
-
-            is FacilityEditAction.OpeningTimeChanged -> {
-                update { copy(openingTime = action.openingTime) }
-            }
-
-            is FacilityEditAction.ClosingTimeChanged -> {
-                update { copy(closingTime = action.closingTime) }
-            }
-
-            is FacilityEditAction.DescriptionChanged -> {
-                update { copy(description = action.description) }
-            }
-
-            is FacilityEditAction.ImagesSelected -> {
-                update { copy(images = action.images.take(FacilityRegistrationDraft.MAX_IMAGE_COUNT)) }
-            }
-
-            is FacilityEditAction.AddressSelected -> {
-                update {
-                    copy(
-                        address = action.address,
-                        detailAddress = action.detailAddress.ifBlank { detailAddress },
-                    )
-                }
-            }
-
-            FacilityEditAction.Submit -> {
-                submit()
-            }
-
-            FacilityEditAction.Retry -> {
-                refresh()
-            }
-
-            FacilityEditAction.Back,
-            FacilityEditAction.RequestImages,
-            FacilityEditAction.RequestAddressSearch,
-            -> {
+            else -> {
                 Unit
             }
         }
     }
 
     fun refresh() {
-        _uiState.value = FacilityEditUiState.Loading
+        load()
+    }
+
+    private fun load() {
+        _uiState.value =
+            MemberManagementUiState.Loading
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.getFacility(facilityId)) {
+                when (val result = repository.getMembers(query, sort)) {
                     is InstructorMyPageResult.Success -> {
-                        editing(result.value.toDraft())
+                        when {
+                            result.value.totalCount == 0 && query.isBlank() -> MemberManagementUiState.Empty(sort)
+                            result.value.members.isEmpty() -> MemberManagementUiState.SearchEmpty(query, sort)
+                            else -> MemberManagementUiState.Content(result.value, query, sort)
+                        }
                     }
 
                     is InstructorMyPageResult.Failure -> {
-                        FacilityEditUiState.Error(
-                            facilityId = facilityId,
-                            draft = FacilityRegistrationDraft(),
-                            reason = result.reason.toFacilityEditError(),
-                        )
-                    }
-                }
-        }
-    }
-
-    private fun update(change: FacilityRegistrationDraft.() -> FacilityRegistrationDraft) {
-        val state = _uiState.value as? FacilityEditUiState.Editing ?: return
-        _uiState.value = editing(state.draft.change())
-    }
-
-    private fun editing(draft: FacilityRegistrationDraft) =
-        FacilityEditUiState.Editing(
-            facilityId = facilityId,
-            draft = draft,
-            canSubmit = draft.isFacilityRegistrationValid(),
-        )
-
-    private fun submit() {
-        val state = _uiState.value as? FacilityEditUiState.Editing ?: return
-        val fieldErrors = facilityRegistrationFieldErrors(state.draft)
-        if (fieldErrors.isNotEmpty()) {
-            _uiState.value = state.copy(canSubmit = false, fieldErrors = fieldErrors)
-            return
-        }
-        _uiState.value = FacilityEditUiState.Submitting(facilityId, state.draft)
-        viewModelScope.launch {
-            _uiState.value =
-                when (val result = repository.updateFacility(facilityId, state.draft)) {
-                    is InstructorMyPageResult.Success -> {
-                        FacilityEditUiState.Success(result.value.id)
-                    }
-
-                    is InstructorMyPageResult.Failure -> {
-                        FacilityEditUiState.Error(
-                            facilityId = facilityId,
-                            draft = state.draft,
-                            reason = result.reason.toFacilityEditError(),
-                        )
+                        MemberManagementUiState.Error(result.reason.toListError())
                     }
                 }
         }

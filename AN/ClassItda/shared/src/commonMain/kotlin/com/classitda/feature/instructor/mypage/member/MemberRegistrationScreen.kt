@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.mypage
+package com.classitda.feature.instructor.mypage.member
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box

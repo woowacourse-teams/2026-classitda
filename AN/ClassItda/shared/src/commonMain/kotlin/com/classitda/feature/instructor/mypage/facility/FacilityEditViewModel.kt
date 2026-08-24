@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.mypage
+package com.classitda.feature.instructor.mypage.facility
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,52 +49,59 @@ import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFiel
 import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.toDraft
+import com.classitda.feature.instructor.mypage.toFacilityEditError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class FacilityRegistrationViewModel(
+internal class FacilityEditViewModel(
     private val repository: InstructorMyPageRepository,
+    private val facilityId: InstructorFacilityId,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<FacilityRegistrationUiState>(editing(FacilityRegistrationDraft()))
-    val uiState: StateFlow<FacilityRegistrationUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<FacilityEditUiState>(FacilityEditUiState.Loading)
+    val uiState: StateFlow<FacilityEditUiState> = _uiState.asStateFlow()
 
-    fun onAction(action: FacilityRegistrationAction) {
+    init {
+        refresh()
+    }
+
+    fun onAction(action: FacilityEditAction) {
         when (action) {
-            is FacilityRegistrationAction.NameChanged -> {
+            is FacilityEditAction.NameChanged -> {
                 update { copy(name = action.name) }
             }
 
-            is FacilityRegistrationAction.AddressChanged -> {
+            is FacilityEditAction.AddressChanged -> {
                 update { copy(address = action.address) }
             }
 
-            is FacilityRegistrationAction.DetailAddressChanged -> {
+            is FacilityEditAction.DetailAddressChanged -> {
                 update { copy(detailAddress = action.detailAddress) }
             }
 
-            is FacilityRegistrationAction.PhoneNumberChanged -> {
+            is FacilityEditAction.PhoneNumberChanged -> {
                 update { copy(phoneNumber = action.phoneNumber) }
             }
 
-            is FacilityRegistrationAction.OpeningTimeChanged -> {
+            is FacilityEditAction.OpeningTimeChanged -> {
                 update { copy(openingTime = action.openingTime) }
             }
 
-            is FacilityRegistrationAction.ClosingTimeChanged -> {
+            is FacilityEditAction.ClosingTimeChanged -> {
                 update { copy(closingTime = action.closingTime) }
             }
 
-            is FacilityRegistrationAction.DescriptionChanged -> {
+            is FacilityEditAction.DescriptionChanged -> {
                 update { copy(description = action.description) }
             }
 
-            is FacilityRegistrationAction.ImagesSelected -> {
+            is FacilityEditAction.ImagesSelected -> {
                 update { copy(images = action.images.take(FacilityRegistrationDraft.MAX_IMAGE_COUNT)) }
             }
 
-            is FacilityRegistrationAction.AddressSelected -> {
+            is FacilityEditAction.AddressSelected -> {
                 update {
                     copy(
                         address = action.address,
@@ -103,56 +110,75 @@ internal class FacilityRegistrationViewModel(
                 }
             }
 
-            FacilityRegistrationAction.Submit -> {
+            FacilityEditAction.Submit -> {
                 submit()
             }
 
-            FacilityRegistrationAction.Retry -> {
-                (_uiState.value as? FacilityRegistrationUiState.Error)?.let {
-                    _uiState.value =
-                        editing(it.draft)
-                }
+            FacilityEditAction.Retry -> {
+                refresh()
             }
 
-            else -> {
+            FacilityEditAction.Back,
+            FacilityEditAction.RequestImages,
+            FacilityEditAction.RequestAddressSearch,
+            -> {
                 Unit
             }
         }
     }
 
+    fun refresh() {
+        _uiState.value = FacilityEditUiState.Loading
+        viewModelScope.launch {
+            _uiState.value =
+                when (val result = repository.getFacility(facilityId)) {
+                    is InstructorMyPageResult.Success -> {
+                        editing(result.value.toDraft())
+                    }
+
+                    is InstructorMyPageResult.Failure -> {
+                        FacilityEditUiState.Error(
+                            facilityId = facilityId,
+                            draft = FacilityRegistrationDraft(),
+                            reason = result.reason.toFacilityEditError(),
+                        )
+                    }
+                }
+        }
+    }
+
     private fun update(change: FacilityRegistrationDraft.() -> FacilityRegistrationDraft) {
-        val state =
-            _uiState.value as? FacilityRegistrationUiState.Editing ?: return
+        val state = _uiState.value as? FacilityEditUiState.Editing ?: return
         _uiState.value = editing(state.draft.change())
     }
 
     private fun editing(draft: FacilityRegistrationDraft) =
-        FacilityRegistrationUiState.Editing(
-            draft,
-            draft.isFacilityRegistrationValid(),
+        FacilityEditUiState.Editing(
+            facilityId = facilityId,
+            draft = draft,
+            canSubmit = draft.isFacilityRegistrationValid(),
         )
 
     private fun submit() {
-        val state =
-            _uiState.value as? FacilityRegistrationUiState.Editing ?: return
+        val state = _uiState.value as? FacilityEditUiState.Editing ?: return
         val fieldErrors = facilityRegistrationFieldErrors(state.draft)
         if (fieldErrors.isNotEmpty()) {
             _uiState.value = state.copy(canSubmit = false, fieldErrors = fieldErrors)
             return
         }
-        _uiState.value =
-            FacilityRegistrationUiState.Submitting
+        _uiState.value = FacilityEditUiState.Submitting(facilityId, state.draft)
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.registerFacility(state.draft)) {
+                when (val result = repository.updateFacility(facilityId, state.draft)) {
                     is InstructorMyPageResult.Success -> {
-                        FacilityRegistrationUiState.Success(result.value)
+                        FacilityEditUiState.Success(result.value.id)
                     }
 
                     is InstructorMyPageResult.Failure -> {
-                        FacilityRegistrationUiState.Error(
-                            state.draft,
-                            result.reason.toFacilityRegistrationError(),
+                        FacilityEditUiState.Error(
+                            facilityId = facilityId,
+                            draft = state.draft,
+                            reason = result.reason.toFacilityEditError(),
                         )
                     }
                 }

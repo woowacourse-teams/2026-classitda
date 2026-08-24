@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.mypage
+package com.classitda.feature.instructor.mypage.facility
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

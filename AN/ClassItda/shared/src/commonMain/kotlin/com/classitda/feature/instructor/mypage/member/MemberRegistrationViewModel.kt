@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.mypage
+package com.classitda.feature.instructor.mypage.member
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,6 +49,7 @@ import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFiel
 import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.toMemberRegistrationError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

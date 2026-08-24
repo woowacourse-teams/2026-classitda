@@ -22,6 +22,21 @@ import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationActi
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
+import com.classitda.feature.instructor.mypage.facility.FacilityDetailScreen
+import com.classitda.feature.instructor.mypage.facility.FacilityDetailViewModel
+import com.classitda.feature.instructor.mypage.facility.FacilityEditScreen
+import com.classitda.feature.instructor.mypage.facility.FacilityEditViewModel
+import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
+import com.classitda.feature.instructor.mypage.facility.FacilityManagementViewModel
+import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
+import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationViewModel
+import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
+import com.classitda.feature.instructor.mypage.member.MemberManagementViewModel
+import com.classitda.feature.instructor.mypage.member.MemberRegistrationScreen
+import com.classitda.feature.instructor.mypage.member.MemberRegistrationViewModel
+import com.classitda.feature.instructor.mypage.profile.InstructorPhoneNumberChangeViewModel
+import com.classitda.feature.instructor.mypage.profile.InstructorProfileEditViewModel
+import com.classitda.feature.instructor.mypage.profile.InstructorProfileViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 

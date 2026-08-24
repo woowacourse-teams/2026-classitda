@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.mypage
+package com.classitda.feature.instructor.mypage.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -49,37 +49,43 @@ import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFiel
 import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.toPhoneError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-internal class MemberManagementViewModel(
+internal class InstructorPhoneNumberChangeViewModel(
     private val repository: InstructorMyPageRepository,
+    initialPhoneNumber: String = "",
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<MemberManagementUiState>(MemberManagementUiState.Loading)
-    val uiState: StateFlow<MemberManagementUiState> = _uiState.asStateFlow()
-    private var query = ""
-    private var sort = MemberSortOrder.RECENTLY_REGISTERED
+    private val _uiState =
+        MutableStateFlow<PhoneNumberChangeUiState>(PhoneNumberChangeUiState.Editing(initialPhoneNumber, ""))
+    val uiState: StateFlow<PhoneNumberChangeUiState> = _uiState.asStateFlow()
+    private var verificationId:
+        com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId? = null
 
-    init {
-        load()
-    }
-
-    fun onAction(action: MemberManagementAction) {
+    fun onAction(action: PhoneNumberChangeAction) {
         when (action) {
-            is MemberManagementAction.QueryChanged -> {
-                query = action.query
-                load()
+            is PhoneNumberChangeAction.PhoneNumberChanged -> {
+                _uiState.value =
+                    PhoneNumberChangeUiState.Editing(action.phoneNumber, "")
             }
 
-            is MemberManagementAction.SortOrderChanged -> {
-                sort = action.sortOrder
-                load()
+            is PhoneNumberChangeAction.VerificationCodeChanged -> {
+                updateCode(action.verificationCode)
             }
 
-            MemberManagementAction.Retry -> {
-                load()
+            PhoneNumberChangeAction.RequestVerification -> {
+                requestVerification()
+            }
+
+            PhoneNumberChangeAction.VerifyCode -> {
+                verify()
+            }
+
+            PhoneNumberChangeAction.Retry -> {
+                requestVerification()
             }
 
             else -> {
@@ -88,26 +94,67 @@ internal class MemberManagementViewModel(
         }
     }
 
-    fun refresh() {
-        load()
+    private fun updateCode(code: String) {
+        val state = _uiState.value
+        if (state is PhoneNumberChangeUiState.CodeEntry || state is PhoneNumberChangeUiState.Error) {
+            val phone =
+                if (state is PhoneNumberChangeUiState.CodeEntry) {
+                    state.phoneNumber
+                } else {
+                    (state as PhoneNumberChangeUiState.Error)
+                        .phoneNumber
+                }
+            _uiState.value = PhoneNumberChangeUiState.CodeEntry(phone, code.filter(Char::isDigit).take(6), 180)
+        }
     }
 
-    private fun load() {
-        _uiState.value =
-            MemberManagementUiState.Loading
+    private fun requestVerification() {
+        val phone =
+            when (val state = _uiState.value) {
+                is PhoneNumberChangeUiState.Editing -> state.phoneNumber
+                is PhoneNumberChangeUiState.Error -> state.phoneNumber
+                else -> return
+            }
+        if (phone.isBlank()) return
+        _uiState.value = PhoneNumberChangeUiState.Requesting(phone, "")
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.getMembers(query, sort)) {
+                when (val result = repository.requestPhoneVerification(phone)) {
                     is InstructorMyPageResult.Success -> {
-                        when {
-                            result.value.totalCount == 0 && query.isBlank() -> MemberManagementUiState.Empty(sort)
-                            result.value.members.isEmpty() -> MemberManagementUiState.SearchEmpty(query, sort)
-                            else -> MemberManagementUiState.Content(result.value, query, sort)
-                        }
+                        verificationId = result.value.verificationId
+                        PhoneNumberChangeUiState.CodeEntry(phone, "", 180)
                     }
 
                     is InstructorMyPageResult.Failure -> {
-                        MemberManagementUiState.Error(result.reason.toListError())
+                        PhoneNumberChangeUiState.Error(phone, "", result.reason.toPhoneError())
+                    }
+                }
+        }
+    }
+
+    private fun verify() {
+        val state = _uiState.value as? PhoneNumberChangeUiState.CodeEntry ?: return
+        val id = verificationId ?: return
+        if (state.verificationCode.length != 6) return
+        _uiState.value =
+            PhoneNumberChangeUiState.Verifying(state.phoneNumber, state.verificationCode, state.remainingSeconds)
+        viewModelScope.launch {
+            _uiState.value =
+                when (val result = repository.verifyPhoneNumber(id, state.phoneNumber, state.verificationCode)) {
+                    is InstructorMyPageResult.Success -> {
+                        PhoneNumberChangeUiState.Verified(
+                            result.value.phoneNumber,
+                            state.verificationCode,
+                        )
+                    }
+
+                    is InstructorMyPageResult.Failure -> {
+                        PhoneNumberChangeUiState.Error(
+                            state.phoneNumber,
+                            state.verificationCode,
+                            result.reason.toPhoneError(),
+                            state.remainingSeconds,
+                        )
                     }
                 }
         }
