@@ -43,7 +43,18 @@ internal class SignupViewModel(
             }
 
             is SignupAction.ChangePhoneNumber -> {
-                update { copy(phoneNumber = action.value, errorMessage = null) }
+                update {
+                    copy(
+                        phoneNumber = action.value,
+                        verificationId = null,
+                        verificationCode = "",
+                        isVerificationSent = false,
+                        isPhoneVerified = false,
+                        verificationRemainingSeconds = 0,
+                        resendRemainingSeconds = 0,
+                        errorMessage = null,
+                    )
+                }
             }
 
             is SignupAction.ChangeVerificationCode -> {
@@ -97,14 +108,35 @@ internal class SignupViewModel(
     }
 
     fun showError(error: Throwable) {
-        update { copy(isLoading = false, errorMessage = error.message ?: "요청에 실패했습니다.") }
+        val message = error.message ?: "요청에 실패했습니다."
+        if (message.contains("410") || message.contains("PHONE-003")) {
+            update {
+                copy(
+                    isLoading = false,
+                    verificationId = null,
+                    verificationCode = "",
+                    isPhoneVerified = false,
+                    errorMessage = "인증번호가 만료되었거나 이미 처리되었습니다. 재요청해 주세요.",
+                )
+            }
+        } else {
+            update { copy(isLoading = false, errorMessage = message) }
+        }
     }
 
     private fun requestVerification() {
         val state = _uiState.value
         val token = state.signupToken ?: return showError(IllegalStateException("Google 로그인이 필요합니다."))
         viewModelScope.launch {
-            update { copy(isLoading = true, errorMessage = null) }
+            update {
+                copy(
+                    isLoading = true,
+                    verificationId = null,
+                    verificationCode = "",
+                    isPhoneVerified = false,
+                    errorMessage = null,
+                )
+            }
             runCatching {
                 repository.requestPhoneVerification(token, SignupPhoneNumber(state.phoneNumber))
             }.onSuccess { challenge ->
@@ -148,6 +180,9 @@ internal class SignupViewModel(
     private fun confirmVerification() {
         val state = _uiState.value
         val token = state.signupToken ?: return showError(IllegalStateException("Google 로그인이 필요합니다."))
+        if (state.verificationRemainingSeconds <= 0L) {
+            return showError(IllegalStateException("인증번호가 만료되었습니다. 재요청해 주세요."))
+        }
         val verificationId = state.verificationId ?: return showError(IllegalStateException("인증번호를 먼저 요청해 주세요."))
         viewModelScope.launch {
             update { copy(isLoading = true, errorMessage = null) }
