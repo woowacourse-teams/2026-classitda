@@ -44,7 +44,6 @@ import androidx.compose.ui.window.DialogProperties
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.instructor_member_registration_back
-import classitda.shared.generated.resources.instructor_member_registration_card_title
 import classitda.shared.generated.resources.instructor_member_registration_intro_description
 import classitda.shared.generated.resources.instructor_member_registration_intro_title
 import classitda.shared.generated.resources.instructor_member_registration_name
@@ -54,7 +53,6 @@ import classitda.shared.generated.resources.instructor_member_registration_phone
 import classitda.shared.generated.resources.instructor_member_registration_phone_error
 import classitda.shared.generated.resources.instructor_member_registration_phone_placeholder
 import classitda.shared.generated.resources.instructor_member_registration_register
-import classitda.shared.generated.resources.instructor_member_registration_required
 import classitda.shared.generated.resources.instructor_member_registration_success
 import classitda.shared.generated.resources.instructor_member_registration_success_confirm
 import classitda.shared.generated.resources.instructor_member_registration_success_title
@@ -279,16 +277,6 @@ private fun MemberRegistrationForm(
                 modifier = Modifier.padding(AppSpacing.xxl),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
             ) {
-                Text(
-                    text = stringResource(Res.string.instructor_member_registration_card_title),
-                    style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = InsColors.TextPrimary,
-                )
-                Text(
-                    text = stringResource(Res.string.instructor_member_registration_required),
-                    style = appTypography().bodyLarge,
-                    color = InsColors.TextTertiary,
-                )
                 RegistrationFieldLabel(
                     text = stringResource(Res.string.instructor_member_registration_name),
                 )

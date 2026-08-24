@@ -350,7 +350,6 @@
     <string name="instructor_facility_edit_error">시설 정보 수정에 실패했습니다. 입력 내용을 확인한 뒤 다시 시도해 주세요.</string>
     <string name="instructor_facility_detail_title">시설 상세</string>
     <string name="instructor_facility_detail_back">시설 상세 뒤로 가기</string>
-    <string name="instructor_facility_detail_information">시설 정보</string>
     <string name="instructor_facility_detail_address">주소</string>
     <string name="instructor_facility_detail_phone">대표 연락처</string>
     <string name="instructor_facility_detail_operating_hours">운영 시간</string>

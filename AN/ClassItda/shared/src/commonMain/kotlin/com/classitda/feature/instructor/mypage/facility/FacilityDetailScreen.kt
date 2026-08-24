@@ -68,7 +68,6 @@ import classitda.shared.generated.resources.instructor_facility_detail_delete
 import classitda.shared.generated.resources.instructor_facility_detail_description
 import classitda.shared.generated.resources.instructor_facility_detail_edit
 import classitda.shared.generated.resources.instructor_facility_detail_error
-import classitda.shared.generated.resources.instructor_facility_detail_information
 import classitda.shared.generated.resources.instructor_facility_detail_loading
 import classitda.shared.generated.resources.instructor_facility_detail_operating_hours
 import classitda.shared.generated.resources.instructor_facility_detail_phone
@@ -230,11 +229,6 @@ private fun FacilityDetailContent(
                     modifier = Modifier.padding(AppSpacing.xxl),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
                 ) {
-                    Text(
-                        text = stringResource(Res.string.instructor_facility_detail_information),
-                        style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = InsColors.TextPrimary,
-                    )
                     FacilityDetailRow(
                         label = stringResource(Res.string.instructor_facility_detail_address),
                         value =

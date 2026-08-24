@@ -1,6 +1,5 @@
 package com.classitda.feature.instructor.mypage.member
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,10 +14,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -40,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.error
@@ -93,7 +89,6 @@ import classitda.shared.generated.resources.instructor_member_management_total_c
 import classitda.shared.generated.resources.instructor_member_management_total_label
 import classitda.shared.generated.resources.instructor_member_registration_success_confirm
 import classitda.shared.generated.resources.phone_number_change_close
-import coil3.compose.SubcomposeAsyncImage
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -483,8 +478,6 @@ private fun ManagedMemberCard(
             modifier = Modifier.padding(AppSpacing.lg),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            MemberAvatar(member = member)
-            Spacer(modifier = Modifier.width(AppSpacing.lg))
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
@@ -505,37 +498,6 @@ private fun ManagedMemberCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun MemberAvatar(
-    member: ManagedMember,
-    modifier: Modifier = Modifier,
-) {
-    val avatarModifier =
-        modifier
-            .size(AppSpacing.xxxl + AppSpacing.lg)
-            .clip(CircleShape)
-            .background(InsColors.PurpleLight)
-
-    if (member.profileImageUrl.isNullOrBlank()) {
-        MemberAvatarFallback(
-            name = member.name,
-            modifier = avatarModifier,
-        )
-    } else {
-        SubcomposeAsyncImage(
-            model = member.profileImageUrl,
-            contentDescription = null,
-            modifier = avatarModifier,
-            loading = {
-                MemberAvatarFallback(name = member.name)
-            },
-            error = {
-                MemberAvatarFallback(name = member.name)
-            },
-        )
     }
 }
 
