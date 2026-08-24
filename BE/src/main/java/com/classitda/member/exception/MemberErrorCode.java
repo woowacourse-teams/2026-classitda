@@ -14,6 +14,8 @@ public enum MemberErrorCode implements ErrorCode {
     MEMBER_CLEANUP_OCCURRED_AT_REQUIRED("MEMBER-005", "회원 개인정보 정리 시각은 필수입니다.", HttpStatus.BAD_REQUEST),
     MEMBER_WITHDRAWAL_REQUIRED("MEMBER-006", "탈퇴를 요청하지 않은 회원의 개인정보는 정리할 수 없습니다.", HttpStatus.CONFLICT),
     MEMBER_CLEANUP_NOT_DUE("MEMBER-007", "회원 개인정보 정리 예정 시각이 지나지 않았습니다.", HttpStatus.CONFLICT),
+    MEMBER_NOT_FOUND("MEMBER-008", "회원을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    MEMBER_WITHDRAWAL_BLOCKED_BY_OWNED_STUDIO("MEMBER-009", "시설 대표는 탈퇴할 수 없습니다.", HttpStatus.CONFLICT),
 
     REQUIRED_TERM_AGREEMENT_MISSING("TERM-001", "필수 약관에 모두 동의해야 합니다.", HttpStatus.BAD_REQUEST),
     TERM_NOT_FOUND("TERM-002", "존재하지 않는 약관이 포함되어 있습니다.", HttpStatus.BAD_REQUEST),
