@@ -99,8 +99,10 @@ internal fun SignupFormScreen(
                 value = state.phoneNumber,
                 placeholder = "01012345678",
                 actionText =
-                    if (state.isPhoneVerified) {
+                    if (state.isPhoneVerified && state.phoneNumber == state.verificationPhoneNumber) {
                         "인증완료"
+                    } else if (state.phoneNumber != state.verificationPhoneNumber) {
+                        "인증요청"
                     } else if (state.resendRemainingSeconds >
                         0
                     ) {
@@ -115,8 +117,10 @@ internal fun SignupFormScreen(
                 keyboardType = KeyboardType.Phone,
                 enabled =
                     !state.isLoading &&
-                        !state.isPhoneVerified &&
-                        state.resendRemainingSeconds == 0L,
+                        (
+                            state.phoneNumber != state.verificationPhoneNumber ||
+                                (!state.isPhoneVerified && state.resendRemainingSeconds == 0L)
+                        ),
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             SignupTextField(

@@ -43,15 +43,12 @@ internal class SignupViewModel(
             }
 
             is SignupAction.ChangePhoneNumber -> {
+                val isRequestedPhone = action.value == _uiState.value.verificationPhoneNumber
                 update {
                     copy(
                         phoneNumber = action.value,
-                        verificationId = null,
                         verificationCode = "",
-                        isVerificationSent = false,
-                        isPhoneVerified = false,
-                        verificationRemainingSeconds = 0,
-                        resendRemainingSeconds = 0,
+                        isPhoneVerified = isRequestedPhone && isPhoneVerified,
                         errorMessage = null,
                     )
                 }
@@ -149,6 +146,7 @@ internal class SignupViewModel(
                         isLoading = false,
                         isVerificationSent = true,
                         verificationId = challenge.id,
+                        verificationPhoneNumber = state.phoneNumber,
                         verificationRemainingSeconds = challenge.expiresInSeconds,
                         resendRemainingSeconds = challenge.resendAfterSeconds,
                     )
@@ -186,6 +184,9 @@ internal class SignupViewModel(
         val token = state.signupToken ?: return showError(IllegalStateException("Google 로그인이 필요합니다."))
         if (state.verificationRemainingSeconds <= 0L) {
             return showError(IllegalStateException("인증번호가 만료되었습니다. 재요청해 주세요."))
+        }
+        if (state.phoneNumber != state.verificationPhoneNumber) {
+            return showError(IllegalStateException("현재 휴대전화 번호로 인증요청을 해주세요."))
         }
         val verificationId = state.verificationId ?: return showError(IllegalStateException("인증번호를 먼저 요청해 주세요."))
         viewModelScope.launch {

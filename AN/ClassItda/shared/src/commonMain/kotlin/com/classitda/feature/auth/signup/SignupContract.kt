@@ -24,6 +24,7 @@ data class SignupUiState(
     val isTermsVisible: Boolean = false,
     val signupToken: SignupToken? = null,
     val verificationId: PhoneVerificationId? = null,
+    val verificationPhoneNumber: String = "",
     val terms: List<SignupTerm> = emptyList(),
     val isPhoneVerified: Boolean = false,
     val isLoading: Boolean = false,
