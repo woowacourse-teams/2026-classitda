@@ -1,6 +1,7 @@
 package com.classitda.classes.presentation;
 
-import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
@@ -31,7 +32,33 @@ import org.springdoc.core.annotations.ParameterObject;
 public interface ClassSessionControllerApi {
 
     @Operation(
-            summary = "수업 회차 등록",
+            summary = "수업 회차 등록(v1)",
+            description = """
+                    MVP용 수업 회차 등록 API입니다.
+
+                    - 인증된 회원 본인을 담당 강사로 지정합니다.
+                    - 요청에 담당 강사 소속 ID를 받지 않습니다.
+                    - 단일 수업과 반복 수업을 등록할 수 있습니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "모든 수업 회차를 정상적으로 등록합니다."),
+            @ApiResponse(responseCode = "400", description = "요청 값이나 반복 조건이 올바르지 않습니다."),
+            @ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않습니다."),
+            @ApiResponse(responseCode = "403", description = "활성 소속이 아니거나 관리 권한이 없습니다."),
+            @ApiResponse(responseCode = "404", description = "시설, 본인의 강사 소속 또는 수업 종류를 찾을 수 없습니다."),
+            @ApiResponse(responseCode = "409", description = "본인의 기존 활성 수업과 시간이 겹칩니다.")
+    })
+    ResponseEntity<Void> saveV1(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            ClassSessionCreateV1Request request
+    );
+
+    @Operation(
+            summary = "수업 회차 등록(v2)",
             description = """
                     - **단일 수업**: classDate에 한 회차를 생성합니다.
 
@@ -119,12 +146,12 @@ public interface ClassSessionControllerApi {
                     )
             )
     })
-    ResponseEntity<Void> save(
+    ResponseEntity<Void> saveV2(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
             Long studioId,
-            ClassSessionCreateRequest request
+            ClassSessionCreateV2Request request
     );
 
     @Operation(

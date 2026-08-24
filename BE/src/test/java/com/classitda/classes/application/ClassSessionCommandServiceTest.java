@@ -14,7 +14,8 @@ import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
-import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.member.domain.Member;
 import com.classitda.member.domain.repository.MemberRepository;
@@ -113,6 +114,46 @@ class ClassSessionCommandServiceTest {
     }
 
     @Test
+    void V1은_요청한_회원_본인을_담당_강사로_수업을_저장한다() {
+        // given
+        Member owner = 회원을_저장한다("v1-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V1 수업 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSessionCreateV1Request request =
+                ClassSessionFixture.기본_단일_수업_회차_V1_생성_요청(classType.getId());
+
+        // when
+        commandService.saveV1(owner.getId(), context.studio().getId(), request);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassSession saved = classSessionRepository.findAll().getFirst();
+        assertThat(saved.getInstructorMembership().getId()).isEqualTo(context.membership().getId());
+    }
+
+    @Test
+    void V1은_요청한_회원이_강사가_아니면_수업을_저장하지_않는다() {
+        // given
+        Member owner = 회원을_저장한다("v1-student-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V1 비강사 시설");
+        StudioRole managerRole = 사용자_역할을_저장한다(context.studio(), "비강사 관리자", false);
+        권한을_저장한다(managerRole, PermissionCode.CLASS_SESSION_MANAGE_ALL);
+        Member manager = 회원을_저장한다("v1-student-manager");
+        소속을_저장한다(context.studio(), manager, managerRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSessionCreateV1Request request =
+                ClassSessionFixture.기본_단일_수업_회차_V1_생성_요청(classType.getId());
+
+        // when / then
+        assertClassError(
+                () -> commandService.saveV1(manager.getId(), context.studio().getId(), request),
+                ClassErrorCode.CLASS_SESSION_INSTRUCTOR_NOT_FOUND
+        );
+        assertThat(classSessionRepository.findAll()).isEmpty();
+    }
+
+    @Test
     void 반복하지_않는_수업은_요청한_날짜에_선택한_강사_담당으로_한_건을_저장한다() {
         // given
         Member owner = 회원을_저장한다("single-owner");
@@ -120,7 +161,7 @@ class ClassSessionCommandServiceTest {
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
 
         // when
-        commandService.save(owner.getId(), context.studio().getId(),
+        commandService.saveV2(owner.getId(), context.studio().getId(),
                 ClassSessionFixture.기본_단일_수업_회차_생성_요청(
                         context.membership().getId(), classType.getId()));
         entityManager.flush();
@@ -146,7 +187,7 @@ class ClassSessionCommandServiceTest {
         ClassType classType = 수업_종류를_저장한다(context.studio(), "필라테스");
 
         // when
-        commandService.save(owner.getId(), context.studio().getId(),
+        commandService.saveV2(owner.getId(), context.studio().getId(),
                 ClassSessionFixture.기본_반복_수업_회차_생성_요청(
                         context.membership().getId(), classType.getId()));
         entityManager.flush();
@@ -176,7 +217,7 @@ class ClassSessionCommandServiceTest {
         StudioContext context = 시설과_대표_소속을_저장한다(owner, "조합 검증 시설");
         ClassType classType = 수업_종류를_저장한다(context.studio(), "발레");
         LocalDate date = LocalDate.of(2026, 8, 17);
-        List<ClassSessionCreateRequest> requests = List.of(
+        List<ClassSessionCreateV2Request> requests = List.of(
                 요청(context.membership().getId(), classType.getId(), null, date, null, null, null),
                 요청(context.membership().getId(), classType.getId(), false, null, null, null, null),
                 요청(context.membership().getId(), classType.getId(), false, date,
@@ -188,9 +229,9 @@ class ClassSessionCommandServiceTest {
         );
 
         // when / then
-        for (ClassSessionCreateRequest request : requests) {
+        for (ClassSessionCreateV2Request request : requests) {
             assertClassError(
-                    () -> commandService.save(owner.getId(), context.studio().getId(), request),
+                    () -> commandService.saveV2(owner.getId(), context.studio().getId(), request),
                     ClassErrorCode.INVALID_CLASS_SESSION_RECURRENCE
             );
         }
@@ -205,7 +246,7 @@ class ClassSessionCommandServiceTest {
         StudioContext context = 시설과_대표_소속을_저장한다(owner, "반복 검증 시설");
         ClassType classType = 수업_종류를_저장한다(context.studio(), "수영");
         LocalDate monday = LocalDate.of(2026, 8, 17);
-        List<ClassSessionCreateRequest> invalidDays = new ArrayList<>();
+        List<ClassSessionCreateV2Request> invalidDays = new ArrayList<>();
         invalidDays.add(요청(context.membership().getId(), classType.getId(),
                 true, null, null, monday, monday));
         invalidDays.add(요청(context.membership().getId(), classType.getId(),
@@ -219,33 +260,33 @@ class ClassSessionCommandServiceTest {
                 List.of(DayOfWeek.MONDAY, DayOfWeek.MONDAY), monday, monday));
 
         // when / then
-        for (ClassSessionCreateRequest request : invalidDays) {
+        for (ClassSessionCreateV2Request request : invalidDays) {
             assertClassError(
-                    () -> commandService.save(owner.getId(), context.studio().getId(), request),
+                    () -> commandService.saveV2(owner.getId(), context.studio().getId(), request),
                     ClassErrorCode.INVALID_CLASS_SESSION_RECURRING_DAYS
             );
         }
         assertClassError(
-                () -> commandService.save(owner.getId(), context.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), context.studio().getId(),
                         요청(context.membership().getId(), classType.getId(), true, null,
                                 List.of(DayOfWeek.MONDAY), null, monday)),
                 ClassErrorCode.INVALID_CLASS_SESSION_REPEAT_PERIOD
         );
         assertClassError(
-                () -> commandService.save(owner.getId(), context.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), context.studio().getId(),
                         요청(context.membership().getId(), classType.getId(), true, null,
                                 List.of(DayOfWeek.MONDAY), monday, null)),
                 ClassErrorCode.INVALID_CLASS_SESSION_REPEAT_PERIOD
         );
         assertClassError(
-                () -> commandService.save(owner.getId(), context.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), context.studio().getId(),
                         요청(context.membership().getId(), classType.getId(), true, null,
                                 List.of(DayOfWeek.MONDAY),
                                 monday.plusDays(1), monday)),
                 ClassErrorCode.INVALID_CLASS_SESSION_REPEAT_PERIOD
         );
         assertClassError(
-                () -> commandService.save(owner.getId(), context.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), context.studio().getId(),
                         요청(context.membership().getId(), classType.getId(), true, null,
                                 List.of(DayOfWeek.TUESDAY), monday, monday)),
                 ClassErrorCode.CLASS_SESSION_DATES_EMPTY
@@ -267,7 +308,7 @@ class ClassSessionCommandServiceTest {
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
 
         // when
-        commandService.save(instructor.getId(), context.studio().getId(),
+        commandService.saveV2(instructor.getId(), context.studio().getId(),
                 ClassSessionFixture.기본_단일_수업_회차_생성_요청(
                         membership.getId(), classType.getId()));
         entityManager.flush();
@@ -290,7 +331,7 @@ class ClassSessionCommandServiceTest {
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
 
         // when
-        commandService.save(owner.getId(), context.studio().getId(),
+        commandService.saveV2(owner.getId(), context.studio().getId(),
                 ClassSessionFixture.기본_단일_수업_회차_생성_요청(
                         instructorMembership.getId(), classType.getId()));
         entityManager.flush();
@@ -318,7 +359,7 @@ class ClassSessionCommandServiceTest {
         ClassType classType = 수업_종류를_저장한다(context.studio(), "댄스");
 
         // when
-        commandService.save(manager.getId(), context.studio().getId(),
+        commandService.saveV2(manager.getId(), context.studio().getId(),
                 ClassSessionFixture.기본_단일_수업_회차_생성_요청(
                         otherMembership.getId(), classType.getId()));
         entityManager.flush();
@@ -342,12 +383,12 @@ class ClassSessionCommandServiceTest {
         StudioMembership otherMembership = 소속을_저장한다(
                 context.studio(), other, instructorRole, MembershipStatus.ACTIVE);
         ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
-        ClassSessionCreateRequest request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(
+        ClassSessionCreateV2Request request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(
                 otherMembership.getId(), classType.getId());
 
         // when / then
         assertStudioError(
-                () -> commandService.save(requester.getId(), context.studio().getId(), request),
+                () -> commandService.saveV2(requester.getId(), context.studio().getId(), request),
                 StudioErrorCode.PERMISSION_DENIED
         );
         assertThat(classSessionRepository.count()).isZero();
@@ -369,24 +410,24 @@ class ClassSessionCommandServiceTest {
         Member noPermission = 회원을_저장한다("no-permission");
         StudioRole noPermissionRole = 사용자_역할을_저장한다(context.studio(), "무권한 강사", true);
         소속을_저장한다(context.studio(), noPermission, noPermissionRole, MembershipStatus.ACTIVE);
-        ClassSessionCreateRequest request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(
+        ClassSessionCreateV2Request request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(
                 context.membership().getId(), classType.getId());
 
         // when / then
         assertStudioError(
-                () -> commandService.save(inactive.getId(), context.studio().getId(), request),
+                () -> commandService.saveV2(inactive.getId(), context.studio().getId(), request),
                 StudioErrorCode.MEMBERSHIP_INACTIVE
         );
         assertStudioError(
-                () -> commandService.save(stranger.getId(), context.studio().getId(), request),
+                () -> commandService.saveV2(stranger.getId(), context.studio().getId(), request),
                 StudioErrorCode.NOT_MEMBERSHIP
         );
         assertStudioError(
-                () -> commandService.save(student.getId(), context.studio().getId(), request),
+                () -> commandService.saveV2(student.getId(), context.studio().getId(), request),
                 StudioErrorCode.PERMISSION_DENIED
         );
         assertStudioError(
-                () -> commandService.save(noPermission.getId(), context.studio().getId(), request),
+                () -> commandService.saveV2(noPermission.getId(), context.studio().getId(), request),
                 StudioErrorCode.PERMISSION_DENIED
         );
         assertThat(classSessionRepository.count()).isZero();
@@ -418,7 +459,7 @@ class ClassSessionCommandServiceTest {
         // when / then
         for (Long instructorMembershipId : invalidInstructorMembershipIds) {
             assertClassError(
-                    () -> commandService.save(
+                    () -> commandService.saveV2(
                             owner.getId(),
                             context.studio().getId(),
                             ClassSessionFixture.기본_단일_수업_회차_생성_요청(
@@ -440,13 +481,13 @@ class ClassSessionCommandServiceTest {
 
         // when / then
         assertClassError(
-                () -> commandService.save(owner.getId(), requested.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), requested.studio().getId(),
                         단일_요청(requested.membership().getId(),
                                 otherType.getId(), "수업 종류 경계")),
                 ClassErrorCode.CLASS_TYPE_NOT_FOUND
         );
         assertClassError(
-                () -> commandService.save(owner.getId(), requested.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), requested.studio().getId(),
                         단일_요청(requested.membership().getId(),
                                 Long.MAX_VALUE, "없는 수업 종류")),
                 ClassErrorCode.CLASS_TYPE_NOT_FOUND
@@ -465,13 +506,13 @@ class ClassSessionCommandServiceTest {
 
         // when / then
         assertClassError(
-                () -> commandService.save(owner.getId(), context.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), context.studio().getId(),
                         단일_요청(context.membership().getId(), classType.getId(),
                                 LocalDate.of(2026, 8, 17), LocalTime.of(10, 0), 60)),
                 ClassErrorCode.CLASS_SESSION_TIME_CONFLICT
         );
         assertClassError(
-                () -> commandService.save(owner.getId(), context.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), context.studio().getId(),
                         단일_요청(context.membership().getId(), classType.getId(),
                                 LocalDate.of(2026, 8, 17), LocalTime.of(10, 30), 60)),
                 ClassErrorCode.CLASS_SESSION_TIME_CONFLICT
@@ -505,7 +546,7 @@ class ClassSessionCommandServiceTest {
 
         // when / then
         assertClassError(
-                () -> commandService.save(
+                () -> commandService.saveV2(
                         manager.getId(),
                         context.studio().getId(),
                         단일_요청(instructorMembership.getId(), classType.getId(),
@@ -530,7 +571,7 @@ class ClassSessionCommandServiceTest {
                 60, "요청자의 기존 수업");
 
         // when
-        commandService.save(
+        commandService.saveV2(
                 owner.getId(),
                 context.studio().getId(),
                 단일_요청(instructorMembership.getId(), classType.getId(),
@@ -560,10 +601,10 @@ class ClassSessionCommandServiceTest {
         canceled.cancel(canceled.getStartAt().minusMinutes(1));
 
         // when
-        commandService.save(owner.getId(), context.studio().getId(),
+        commandService.saveV2(owner.getId(), context.studio().getId(),
                 단일_요청(context.membership().getId(), classType.getId(),
                         LocalDate.of(2026, 8, 17), LocalTime.of(11, 0), 60));
-        commandService.save(owner.getId(), context.studio().getId(),
+        commandService.saveV2(owner.getId(), context.studio().getId(),
                 단일_요청(context.membership().getId(), classType.getId(),
                         LocalDate.of(2026, 8, 18), LocalTime.of(10, 30), 60));
         entityManager.flush();
@@ -584,7 +625,7 @@ class ClassSessionCommandServiceTest {
 
         // when / then
         assertClassError(
-                () -> commandService.save(owner.getId(), context.studio().getId(),
+                () -> commandService.saveV2(owner.getId(), context.studio().getId(),
                         ClassSessionFixture.기본_반복_수업_회차_생성_요청(
                                 context.membership().getId(), classType.getId())),
                 ClassErrorCode.CLASS_SESSION_TIME_CONFLICT
@@ -599,7 +640,7 @@ class ClassSessionCommandServiceTest {
         Member owner = 회원을_저장한다("self-overlap-owner");
         StudioContext context = 시설과_대표_소속을_저장한다(owner, "장기 수업 시설");
         ClassType classType = 수업_종류를_저장한다(context.studio(), "장기 수업");
-        ClassSessionCreateRequest request = ClassSessionFixture.수업_회차_생성_요청(
+        ClassSessionCreateV2Request request = ClassSessionFixture.수업_회차_생성_요청(
                 context.membership().getId(),
                 ClassForm.GROUP, classType.getId(), "하루보다 긴 수업", 10, 1_441,
                 true, LocalTime.MIDNIGHT, null, null, List.of(DayOfWeek.MONDAY),
@@ -607,7 +648,7 @@ class ClassSessionCommandServiceTest {
 
         // when / then
         assertClassError(
-                () -> commandService.save(owner.getId(), context.studio().getId(), request),
+                () -> commandService.saveV2(owner.getId(), context.studio().getId(), request),
                 ClassErrorCode.INVALID_CLASS_SESSION_DURATION_MINUTES
         );
         assertThat(classSessionRepository.count()).isZero();
@@ -631,7 +672,7 @@ class ClassSessionCommandServiceTest {
 
         try {
             // when / then
-            assertThatThrownBy(() -> commandService.save(
+            assertThatThrownBy(() -> commandService.saveV2(
                     setup.memberId(), setup.studioId(),
                     ClassSessionFixture.기본_단일_수업_회차_생성_요청(
                             setup.membershipId(), setup.classTypeId())))
@@ -1111,7 +1152,7 @@ class ClassSessionCommandServiceTest {
         assertThat(classSession.isCanceled()).isFalse();
     }
 
-    private ClassSessionCreateRequest 요청(
+    private ClassSessionCreateV2Request 요청(
             Long instructorMembershipId,
             Long classTypeId,
             Boolean recurring,
@@ -1127,7 +1168,7 @@ class ClassSessionCommandServiceTest {
                 repeatStartDate, repeatEndDate);
     }
 
-    private ClassSessionCreateRequest 단일_요청(
+    private ClassSessionCreateV2Request 단일_요청(
             Long instructorMembershipId,
             Long classTypeId,
             String className
@@ -1139,7 +1180,7 @@ class ClassSessionCommandServiceTest {
                 null, null, null);
     }
 
-    private ClassSessionCreateRequest 단일_요청(
+    private ClassSessionCreateV2Request 단일_요청(
             Long instructorMembershipId,
             Long classTypeId,
             LocalDate date,

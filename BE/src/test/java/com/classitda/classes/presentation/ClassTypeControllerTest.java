@@ -124,7 +124,7 @@ class ClassTypeControllerTest {
     @Test
     void 지원하지_않는_버전이면_API_002를_반환한다() {
         // given / when
-        RestTestClient.ResponseSpec result = 수업_종류를_등록한다(1L, "2", ClassTypeFixture.기본_수업_종류_생성_요청());
+        RestTestClient.ResponseSpec result = 수업_종류를_등록한다(1L, "3", ClassTypeFixture.기본_수업_종류_생성_요청());
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
@@ -199,7 +199,7 @@ class ClassTypeControllerTest {
     @Test
     void 수업_종류_목록_조회_버전이_지원되지_않으면_API_002를_반환한다() {
         // given / when
-        RestTestClient.ResponseSpec result = 수업_종류_목록을_조회한다(1L, "2");
+        RestTestClient.ResponseSpec result = 수업_종류_목록을_조회한다(1L, "3");
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
@@ -291,7 +291,7 @@ class ClassTypeControllerTest {
     void 수업_종류_수정_버전이_지원되지_않으면_API_002를_반환하고_서비스를_호출하지_않는다() {
         // given / when
         RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(
-                7L, 13L, "2", ClassTypeFixture.기본_수업_종류_수정_요청());
+                7L, 13L, "3", ClassTypeFixture.기본_수업_종류_수정_요청());
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
@@ -351,7 +351,7 @@ class ClassTypeControllerTest {
     @Test
     void 수업_종류_삭제_버전이_지원되지_않으면_API_002를_반환하고_서비스를_호출하지_않는다() {
         // given / when
-        RestTestClient.ResponseSpec result = 수업_종류를_삭제한다(7L, 13L, "2");
+        RestTestClient.ResponseSpec result = 수업_종류를_삭제한다(7L, 13L, "3");
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");

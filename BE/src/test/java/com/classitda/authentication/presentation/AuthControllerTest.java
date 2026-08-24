@@ -209,7 +209,7 @@ class AuthControllerTest {
         // given / when
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/auth/google")
-                .header("X-API-Version", "2")
+                .header("X-API-Version", "3")
                 .body(GoogleLoginRequest.from(ID_TOKEN))
                 .exchange();
 
@@ -308,7 +308,7 @@ class AuthControllerTest {
 
         // when
         RestTestClient.ResponseSpec missing = refresh(null, request);
-        RestTestClient.ResponseSpec unsupported = refresh("2", request);
+        RestTestClient.ResponseSpec unsupported = refresh("3", request);
 
         // then
         assertError(missing, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
@@ -366,7 +366,7 @@ class AuthControllerTest {
 
         // when
         RestTestClient.ResponseSpec missing = logout("access-token", null, request);
-        RestTestClient.ResponseSpec unsupported = logout("access-token", "2", request);
+        RestTestClient.ResponseSpec unsupported = logout("access-token", "3", request);
 
         // then
         assertError(missing, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
@@ -673,7 +673,7 @@ class AuthControllerTest {
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
 
         // when
-        RestTestClient.ResponseSpec result = confirm("signup-token", VERIFICATION_ID, OTP, "2");
+        RestTestClient.ResponseSpec result = confirm("signup-token", VERIFICATION_ID, OTP, "3");
 
         // then
         assertError(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
@@ -868,7 +868,7 @@ class AuthControllerTest {
         );
         RestTestClient.ResponseSpec unsupported = signup(
                 "signup-token",
-                "2",
+                "3",
                 SignupRequest.of("홍길동", List.of(1L, 2L))
         );
 

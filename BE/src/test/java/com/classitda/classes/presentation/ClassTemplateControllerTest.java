@@ -102,7 +102,7 @@ class ClassTemplateControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange(), 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        오류를_검증한다(수업_템플릿을_등록한다(7L, "2", request),
+        오류를_검증한다(수업_템플릿을_등록한다(7L, "3", request),
                 400, "API-002", "지원하지 않는 API 버전입니다.");
         verify(commandService, never()).save(anyLong(), anyLong(), any());
     }
@@ -247,7 +247,7 @@ class ClassTemplateControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange(), 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        오류를_검증한다(수업_템플릿을_수정한다(7L, 11L, "2", request),
+        오류를_검증한다(수업_템플릿을_수정한다(7L, 11L, "3", request),
                 400, "API-002", "지원하지 않는 API 버전입니다.");
         verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
     }
@@ -287,7 +287,7 @@ class ClassTemplateControllerTest {
         오류를_검증한다(client.delete()
                 .uri("/api/studios/7/class-templates/11")
                 .exchange(), 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        오류를_검증한다(수업_템플릿을_삭제한다(7L, 11L, "2"),
+        오류를_검증한다(수업_템플릿을_삭제한다(7L, 11L, "3"),
                 400, "API-002", "지원하지 않는 API 버전입니다.");
         verify(commandService, never()).delete(anyLong(), anyLong(), anyLong());
     }
@@ -351,7 +351,7 @@ class ClassTemplateControllerTest {
         // when / then
         오류를_검증한다(client.get().uri("/api/studios/7/class-templates").exchange(),
                 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        오류를_검증한다(수업_템플릿_목록을_조회한다(7L, "2"),
+        오류를_검증한다(수업_템플릿_목록을_조회한다(7L, "3"),
                 400, "API-002", "지원하지 않는 API 버전입니다.");
         verify(queryService, never()).findAll(anyLong(), anyLong());
     }

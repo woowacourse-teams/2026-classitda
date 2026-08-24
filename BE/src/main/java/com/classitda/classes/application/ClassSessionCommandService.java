@@ -9,6 +9,8 @@ import com.classitda.classes.domain.session.ClassSessionDatePlan;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.PermissionCode;
@@ -41,13 +43,30 @@ public class ClassSessionCommandService {
     private final StudioRolePermissionRepository studioRolePermissionRepository;
     private final Clock clock;
 
-    public void save(Long memberId, Long studioId, ClassSessionCreateRequest request) {
+    public void saveV1(Long memberId, Long studioId, ClassSessionCreateV1Request request) {
+        Studio studio = getStudio(studioId);
+        StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
+        validateManagePermission(studio, requesterMembership, requesterMembership.getId(), memberId);
+        validateInstructorForCreate(requesterMembership);
+
+        saveClassSessions(studioId, requesterMembership, request);
+    }
+
+    public void saveV2(Long memberId, Long studioId, ClassSessionCreateV2Request request) {
         Studio studio = getStudio(studioId);
         StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
         validateManagePermission(studio, requesterMembership, request.instructorMembershipId(), memberId);
 
         StudioMembership instructorMembership = getInstructorForCreate(studioId, request.instructorMembershipId());
 
+        saveClassSessions(studioId, instructorMembership, request);
+    }
+
+    private void saveClassSessions(
+            Long studioId,
+            StudioMembership instructorMembership,
+            ClassSessionCreateRequest request
+    ) {
         validateClassType(studioId, request.classTypeId());
 
         List<LocalDate> sessionDates = ClassSessionDatePlan.of(
@@ -130,6 +149,12 @@ public class ClassSessionCommandService {
                 .orElseThrow(() -> new ClassException(
                         ClassErrorCode.CLASS_SESSION_INSTRUCTOR_NOT_FOUND
                 ));
+    }
+
+    private void validateInstructorForCreate(StudioMembership membership) {
+        if (!membership.isInstructor()) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_INSTRUCTOR_NOT_FOUND);
+        }
     }
 
     private void validateManagePermission(

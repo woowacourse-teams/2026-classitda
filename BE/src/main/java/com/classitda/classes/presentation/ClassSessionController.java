@@ -7,7 +7,8 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarQ
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
-import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
@@ -47,12 +48,23 @@ public class ClassSessionController implements ClassSessionControllerApi {
 
     @Override
     @PostMapping(version = "1")
-    public ResponseEntity<Void> save(
+    public ResponseEntity<Void> saveV1(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
-            @Valid @RequestBody ClassSessionCreateRequest request
+            @Valid @RequestBody ClassSessionCreateV1Request request
     ) {
-        classSessionCommandService.save(memberId, studioId, request);
+        classSessionCommandService.saveV1(memberId, studioId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @Override
+    @PostMapping(version = "2")
+    public ResponseEntity<Void> saveV2(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @Valid @RequestBody ClassSessionCreateV2Request request
+    ) {
+        classSessionCommandService.saveV2(memberId, studioId, request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
