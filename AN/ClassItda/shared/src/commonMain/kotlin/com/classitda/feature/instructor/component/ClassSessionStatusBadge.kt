@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.management.lesson.component
+package com.classitda.feature.instructor.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -50,10 +50,7 @@ internal fun ClassSessionStatusBadge(
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
                     )
-                    Text(
-                        text = "수업 예정",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
+                    Text(text = "수업 예정", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

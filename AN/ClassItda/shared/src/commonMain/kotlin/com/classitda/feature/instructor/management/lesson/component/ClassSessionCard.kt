@@ -21,6 +21,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
+import com.classitda.feature.instructor.component.ClassSessionStatusBadge
 import com.classitda.feature.instructor.management.lesson.model.ClassSessionUiModel
 
 @Composable
