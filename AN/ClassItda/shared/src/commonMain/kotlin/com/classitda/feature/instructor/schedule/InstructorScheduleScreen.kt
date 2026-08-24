@@ -43,9 +43,10 @@ import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.feature.instructor.management.lesson.component.ClassSessionStatusBadge
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
-import kotlinx.datetime.minus
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -75,7 +76,8 @@ private fun InstructorScheduleScreen(
     modifier: Modifier = Modifier,
 ) {
     val firstSessionDate = sessions.minOfOrNull { it.startAt.date } ?: LocalDate(2026, 8, 1)
-    var displayedMonth by remember { mutableStateOf(YearMonth(firstSessionDate.year, firstSessionDate.month)) }
+    var displayedYear by remember { mutableStateOf(firstSessionDate.year) }
+    var displayedMonth by remember { mutableStateOf(firstSessionDate.month.number) }
     var selectedDate by remember { mutableStateOf(firstSessionDate) }
     val selectedSessions = sessions.filter { it.startAt.date == selectedDate }.sortedBy { it.startAt }
 
@@ -92,15 +94,26 @@ private fun InstructorScheduleScreen(
         }
         item {
             InstructorCalendar(
+                displayedYear = displayedYear,
                 displayedMonth = displayedMonth,
                 selectedDate = selectedDate,
                 sessionDates = sessions.map { it.startAt.date }.toSet(),
                 onDateSelected = { selectedDate = it },
                 onPreviousMonth = {
-                    displayedMonth = displayedMonth.minus(DatePeriod(months = 1))
+                    if (displayedMonth == 1) {
+                        displayedYear -= 1
+                        displayedMonth = 12
+                    } else {
+                        displayedMonth -= 1
+                    }
                 },
                 onNextMonth = {
-                    displayedMonth = displayedMonth.plus(DatePeriod(months = 1))
+                    if (displayedMonth == 12) {
+                        displayedYear += 1
+                        displayedMonth = 1
+                    } else {
+                        displayedMonth += 1
+                    }
                 },
             )
         }
@@ -128,17 +141,19 @@ private fun InstructorScheduleScreen(
 
 @Composable
 private fun InstructorCalendar(
-    displayedMonth: YearMonth,
+    displayedYear: Int,
+    displayedMonth: Int,
     selectedDate: LocalDate,
     sessionDates: Set<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
 ) {
-    val firstDay = displayedMonth.firstDay
+    val calendarMonth = YearMonth(displayedYear, Month.entries[displayedMonth - 1])
+    val firstDay = calendarMonth.firstDay
     val days = buildList<LocalDate?> {
         repeat(firstDay.dayOfWeek.ordinal) { add(null) }
-        repeat(displayedMonth.lastDay.dayOfMonth) { add(firstDay.plus(DatePeriod(days = it))) }
+        repeat(calendarMonth.lastDay.dayOfMonth) { add(firstDay.plus(DatePeriod(days = it))) }
         while (size % 7 != 0) add(null)
     }
 
@@ -147,7 +162,7 @@ private fun InstructorCalendar(
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text("${displayedMonth.year}년 ${displayedMonth.monthNumber}월", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text("${displayedYear}년 ${displayedMonth}월", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             Text("‹", modifier = Modifier.clickable(onClick = onPreviousMonth).padding(horizontal = AppSpacing.md), style = MaterialTheme.typography.headlineSmall)
             Text("›", modifier = Modifier.clickable(onClick = onNextMonth).padding(horizontal = AppSpacing.md), style = MaterialTheme.typography.headlineSmall)

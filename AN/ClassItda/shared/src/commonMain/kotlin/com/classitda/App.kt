@@ -15,6 +15,7 @@ import com.classitda.core.navigation.student.StudentRootRoute
 import com.classitda.core.network.ClassItdaApiConfig
 import com.classitda.core.network.networkModule
 import com.classitda.di.home.homeModule
+import com.classitda.di.instructor.instructorModule
 import com.classitda.di.mypage.myPageModule
 import com.classitda.di.myschedule.myScheduleModule
 import com.classitda.di.reservation.reservationModule
@@ -42,6 +43,7 @@ fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }
                     ),
                     signupModule(tokenStorage),
                     homeModule,
+                    instructorModule,
                     reservationModule,
                     myScheduleModule,
                     myPageModule,
