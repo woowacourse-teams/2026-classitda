@@ -9,8 +9,5 @@ public interface StudioRolePermissionRepository extends JpaRepository<StudioRole
 
     boolean existsByStudioRoleIdAndPermissionCode(Long studioRoleId, PermissionCode code);
 
-    boolean existsByStudioRoleIdAndPermissionCodeIn(
-            Long studioRoleId,
-            Collection<PermissionCode> codes
-    );
+    boolean existsByStudioRoleIdAndPermissionCodeIn(Long studioRoleId, Collection<PermissionCode> codes);
 }
