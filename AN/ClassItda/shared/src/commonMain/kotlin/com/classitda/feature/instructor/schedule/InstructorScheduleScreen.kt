@@ -49,6 +49,7 @@ import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.component.TopBar
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.feature.instructor.management.lesson.component.ClassSessionStatusBadge
@@ -152,9 +153,7 @@ internal fun InstructorScheduleStateless(
         contentPadding = PaddingValues(bottom = AppSpacing.xxxl),
     ) {
         item {
-            Column(Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.xxxl)) {
-                Text("일정", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
-            }
+            TopBar(title = "일정", hasBackground = true)
         }
         item {
             InstructorCalendar(
