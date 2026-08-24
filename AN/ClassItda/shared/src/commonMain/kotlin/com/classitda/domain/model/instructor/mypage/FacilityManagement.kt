@@ -5,6 +5,12 @@ data class ManagedFacility(
     val name: String,
     val address: String,
     val representativeImageReference: String? = null,
+    val images: List<FacilityImageDraft> = emptyList(),
+    val detailAddress: String = "",
+    val phoneNumber: String = "",
+    val description: String = "",
+    val openingTime: String = "",
+    val closingTime: String = "",
 )
 
 data class FacilityImageDraft(
@@ -23,6 +29,8 @@ data class FacilityRegistrationDraft(
     val detailAddress: String = "",
     val phoneNumber: String = "",
     val description: String = "",
+    val openingTime: String = "",
+    val closingTime: String = "",
 ) {
     init {
         require(images.size <= MAX_IMAGE_COUNT) {

@@ -1,5 +1,7 @@
 package com.classitda.di.instructor.mypage
 
+import com.classitda.feature.instructor.mypage.FacilityDetailViewModel
+import com.classitda.feature.instructor.mypage.FacilityEditViewModel
 import com.classitda.feature.instructor.mypage.FacilityManagementViewModel
 import com.classitda.feature.instructor.mypage.FacilityRegistrationViewModel
 import com.classitda.feature.instructor.mypage.InstructorMyPageViewModel
@@ -25,4 +27,6 @@ internal val instructorMyPageModule =
         viewModel { MemberRegistrationViewModel(get()) }
         viewModel { FacilityManagementViewModel(get()) }
         viewModel { FacilityRegistrationViewModel(get()) }
+        viewModel { parameters -> FacilityDetailViewModel(get(), parameters.get()) }
+        viewModel { parameters -> FacilityEditViewModel(get(), parameters.get()) }
     }

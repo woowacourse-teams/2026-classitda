@@ -51,11 +51,19 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_camera
 import classitda.shared.generated.resources.ic_location_on
+import classitda.shared.generated.resources.instructor_facility_edit_back
+import classitda.shared.generated.resources.instructor_facility_edit_error
+import classitda.shared.generated.resources.instructor_facility_edit_submit
+import classitda.shared.generated.resources.instructor_facility_edit_submitting
+import classitda.shared.generated.resources.instructor_facility_edit_success
+import classitda.shared.generated.resources.instructor_facility_edit_title
 import classitda.shared.generated.resources.instructor_facility_registration_address
 import classitda.shared.generated.resources.instructor_facility_registration_address_error
 import classitda.shared.generated.resources.instructor_facility_registration_address_placeholder
 import classitda.shared.generated.resources.instructor_facility_registration_address_search
 import classitda.shared.generated.resources.instructor_facility_registration_back
+import classitda.shared.generated.resources.instructor_facility_registration_closing_time
+import classitda.shared.generated.resources.instructor_facility_registration_closing_time_placeholder
 import classitda.shared.generated.resources.instructor_facility_registration_description
 import classitda.shared.generated.resources.instructor_facility_registration_description_placeholder
 import classitda.shared.generated.resources.instructor_facility_registration_detail_address
@@ -66,9 +74,12 @@ import classitda.shared.generated.resources.instructor_facility_registration_ima
 import classitda.shared.generated.resources.instructor_facility_registration_image_optional
 import classitda.shared.generated.resources.instructor_facility_registration_intro_description
 import classitda.shared.generated.resources.instructor_facility_registration_intro_title
+import classitda.shared.generated.resources.instructor_facility_registration_loading
 import classitda.shared.generated.resources.instructor_facility_registration_name
 import classitda.shared.generated.resources.instructor_facility_registration_name_error
 import classitda.shared.generated.resources.instructor_facility_registration_name_placeholder
+import classitda.shared.generated.resources.instructor_facility_registration_opening_time
+import classitda.shared.generated.resources.instructor_facility_registration_opening_time_placeholder
 import classitda.shared.generated.resources.instructor_facility_registration_phone
 import classitda.shared.generated.resources.instructor_facility_registration_phone_error
 import classitda.shared.generated.resources.instructor_facility_registration_phone_placeholder
@@ -98,8 +109,10 @@ fun FacilityRegistrationScreen(
     uiState: FacilityRegistrationUiState,
     onAction: (FacilityRegistrationAction) -> Unit,
     modifier: Modifier = Modifier,
+    isEditing: Boolean = false,
 ) {
     val isSubmitting = uiState is FacilityRegistrationUiState.Submitting
+    val isLoading = uiState is FacilityRegistrationUiState.Loading
     val draft =
         when (uiState) {
             is FacilityRegistrationUiState.Editing -> uiState.draft
@@ -116,36 +129,83 @@ fun FacilityRegistrationScreen(
         topBar = {
             FacilityRegistrationTopBar(
                 onBack = { if (!isSubmitting) onAction(FacilityRegistrationAction.Back) },
+                title =
+                    stringResource(
+                        if (isEditing) {
+                            Res.string.instructor_facility_edit_title
+                        } else {
+                            Res.string.instructor_facility_registration_title
+                        },
+                    ),
+                backDescription =
+                    stringResource(
+                        if (isEditing) {
+                            Res.string.instructor_facility_edit_back
+                        } else {
+                            Res.string.instructor_facility_registration_back
+                        },
+                    ),
             )
         },
         bottomBar = {
-            FacilityRegistrationBottomBar(
-                isSubmitting = isSubmitting,
-                isFailed = uiState is FacilityRegistrationUiState.Error,
-                enabled = canSubmit,
-                onSubmit = {
-                    onAction(
-                        if (uiState is FacilityRegistrationUiState.Error) {
-                            FacilityRegistrationAction.Retry
-                        } else {
-                            FacilityRegistrationAction.Submit
-                        },
-                    )
-                },
-            )
+            if (!isLoading) {
+                FacilityRegistrationBottomBar(
+                    isSubmitting = isSubmitting,
+                    isFailed = uiState is FacilityRegistrationUiState.Error,
+                    enabled = canSubmit,
+                    label =
+                        stringResource(
+                            if (isEditing) {
+                                Res.string.instructor_facility_edit_submit
+                            } else {
+                                Res.string.instructor_facility_registration_register
+                            },
+                        ),
+                    onSubmit = {
+                        onAction(
+                            if (uiState is FacilityRegistrationUiState.Error) {
+                                FacilityRegistrationAction.Retry
+                            } else {
+                                FacilityRegistrationAction.Submit
+                            },
+                        )
+                    },
+                )
+            }
         },
     ) { innerPadding ->
         when (uiState) {
+            FacilityRegistrationUiState.Loading -> {
+                FacilityRegistrationStatus(
+                    message = stringResource(Res.string.instructor_facility_registration_loading),
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+
             FacilityRegistrationUiState.Submitting -> {
                 FacilityRegistrationStatus(
-                    message = stringResource(Res.string.instructor_facility_registration_submitting),
+                    message =
+                        stringResource(
+                            if (isEditing) {
+                                Res.string.instructor_facility_edit_submitting
+                            } else {
+                                Res.string.instructor_facility_registration_submitting
+                            },
+                        ),
                     modifier = Modifier.padding(innerPadding),
                 )
             }
 
             is FacilityRegistrationUiState.Success -> {
                 FacilityRegistrationStatus(
-                    message = stringResource(Res.string.instructor_facility_registration_success),
+                    message =
+                        stringResource(
+                            if (isEditing) {
+                                Res.string.instructor_facility_edit_success
+                            } else {
+                                Res.string.instructor_facility_registration_success
+                            },
+                        ),
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -157,7 +217,13 @@ fun FacilityRegistrationScreen(
                     isSubmitting = false,
                     errorMessage =
                         if (uiState is FacilityRegistrationUiState.Error) {
-                            stringResource(Res.string.instructor_facility_registration_error)
+                            stringResource(
+                                if (isEditing) {
+                                    Res.string.instructor_facility_edit_error
+                                } else {
+                                    Res.string.instructor_facility_registration_error
+                                },
+                            )
                         } else {
                             null
                         },
@@ -170,7 +236,11 @@ fun FacilityRegistrationScreen(
 }
 
 @Composable
-private fun FacilityRegistrationTopBar(onBack: () -> Unit) {
+private fun FacilityRegistrationTopBar(
+    onBack: () -> Unit,
+    title: String,
+    backDescription: String,
+) {
     Box(
         modifier = Modifier.fillMaxWidth().statusBarsPadding(),
         contentAlignment = Alignment.Center,
@@ -181,12 +251,12 @@ private fun FacilityRegistrationTopBar(onBack: () -> Unit) {
         ) {
             Icon(
                 painter = painterResource(Res.drawable.ic_arrow_back),
-                contentDescription = stringResource(Res.string.instructor_facility_registration_back),
+                contentDescription = backDescription,
                 tint = InsColors.TextPrimary,
             )
         }
         Text(
-            text = stringResource(Res.string.instructor_facility_registration_title),
+            text = title,
             modifier = Modifier.semantics { heading() },
             style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
             color = InsColors.TextPrimary,
@@ -227,7 +297,7 @@ private fun FacilityRegistrationForm(
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
             Text(
                 text = stringResource(Res.string.instructor_facility_registration_intro_title),
-                style = appTypography().headlineLarge.copy(fontWeight = FontWeight.Bold),
+                style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
                 color = InsColors.TextPrimary,
             )
             Text(
@@ -259,7 +329,11 @@ private fun FacilityRegistrationForm(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
-        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
+            verticalAlignment = Alignment.Bottom,
+        ) {
             FacilityTextField(
                 label = stringResource(Res.string.instructor_facility_registration_address),
                 value = draft.address,
@@ -275,7 +349,7 @@ private fun FacilityRegistrationForm(
                     },
                 enabled = !isSubmitting,
                 onValueChange = { onAction(FacilityRegistrationAction.AddressChanged(it)) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.weight(1f),
             )
             TextButton(
                 onClick = { onAction(FacilityRegistrationAction.RequestAddressSearch) },
@@ -323,6 +397,40 @@ private fun FacilityRegistrationForm(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
+        Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+            FacilityTextField(
+                label = stringResource(Res.string.instructor_facility_registration_opening_time),
+                value = draft.openingTime,
+                placeholder = stringResource(Res.string.instructor_facility_registration_opening_time_placeholder),
+                isError = false,
+                errorMessage = null,
+                enabled = !isSubmitting,
+                onValueChange = { onAction(FacilityRegistrationAction.OpeningTimeChanged(it)) },
+                modifier = Modifier.weight(1f),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Ascii,
+                        imeAction = ImeAction.Next,
+                    ),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Right) }),
+            )
+            FacilityTextField(
+                label = stringResource(Res.string.instructor_facility_registration_closing_time),
+                value = draft.closingTime,
+                placeholder = stringResource(Res.string.instructor_facility_registration_closing_time_placeholder),
+                isError = false,
+                errorMessage = null,
+                enabled = !isSubmitting,
+                onValueChange = { onAction(FacilityRegistrationAction.ClosingTimeChanged(it)) },
+                modifier = Modifier.weight(1f),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Ascii,
+                        imeAction = ImeAction.Next,
+                    ),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            )
+        }
         FacilityTextField(
             label = stringResource(Res.string.instructor_facility_registration_description),
             value = draft.description,
@@ -458,7 +566,10 @@ private fun FacilityTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+    ) {
         Text(
             text = label,
             style = appTypography().titleMedium.copy(fontWeight = FontWeight.Bold),
@@ -468,7 +579,7 @@ private fun FacilityTextField(
             value = value,
             onValueChange = onValueChange,
             modifier =
-                modifier.fillMaxWidth().semantics {
+                Modifier.fillMaxWidth().semantics {
                     if (isError && errorMessage != null) error(errorMessage)
                 },
             enabled = enabled,
@@ -529,6 +640,7 @@ private fun FacilityRegistrationBottomBar(
     isSubmitting: Boolean,
     isFailed: Boolean,
     enabled: Boolean,
+    label: String,
     onSubmit: () -> Unit,
 ) {
     Surface(
@@ -560,7 +672,7 @@ private fun FacilityRegistrationBottomBar(
                 )
             } else {
                 Text(
-                    text = stringResource(Res.string.instructor_facility_registration_register),
+                    text = label,
                     style = appTypography().bodyLarge.copy(fontWeight = FontWeight.Bold),
                 )
             }

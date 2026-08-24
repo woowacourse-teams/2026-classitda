@@ -92,4 +92,39 @@ class InstructorMyPageContractTest {
         assertEquals(page, state.page)
         assertEquals("query", state.query)
     }
+
+    @Test
+    fun facilityDetailStateKeepsStableIdAndDeleteInputSeparate() {
+        val facility = InstructorFacilityId("facility-1")
+        val confirming = FacilityDeleteState.Confirming(typedName = "다른 이름")
+        val state =
+            FacilityDetailUiState.Content(
+                facility =
+                    com.classitda.domain.model.instructor.mypage.ManagedFacility(
+                        id = facility,
+                        name = "클래스잇다 스튜디오",
+                        address = "서울",
+                    ),
+                deleteState = confirming,
+            )
+
+        assertEquals(facility, state.facility.id)
+        assertEquals("다른 이름", assertIs<FacilityDeleteState.Confirming>(state.deleteState).typedName)
+        assertEquals(
+            "다른 이름",
+            assertIs<FacilityDetailAction.DeleteNameChanged>(
+                FacilityDetailAction.DeleteNameChanged("다른 이름"),
+            ).name,
+        )
+    }
+
+    @Test
+    fun facilityEditSuccessCarriesStableFacilityId() {
+        val id = InstructorFacilityId("facility-1")
+
+        assertEquals(
+            id,
+            assertIs<FacilityEditUiState.Success>(FacilityEditUiState.Success(id)).facilityId,
+        )
+    }
 }

@@ -4,88 +4,84 @@ import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 
-sealed interface FacilityRegistrationUiState {
-    data object Loading : FacilityRegistrationUiState
+sealed interface FacilityEditUiState {
+    data object Loading : FacilityEditUiState
 
     data class Editing(
+        val facilityId: InstructorFacilityId,
         val draft: FacilityRegistrationDraft,
         val canSubmit: Boolean,
         val fieldErrors: Set<FacilityRegistrationField> = emptySet(),
-    ) : FacilityRegistrationUiState
+    ) : FacilityEditUiState
 
-    data object Submitting : FacilityRegistrationUiState
+    data class Submitting(
+        val facilityId: InstructorFacilityId,
+        val draft: FacilityRegistrationDraft,
+    ) : FacilityEditUiState
 
     data class Success(
         val facilityId: InstructorFacilityId,
-    ) : FacilityRegistrationUiState
+    ) : FacilityEditUiState
 
     data class Error(
+        val facilityId: InstructorFacilityId,
         val draft: FacilityRegistrationDraft,
-        val reason: FacilityRegistrationUiError,
-    ) : FacilityRegistrationUiState
+        val reason: FacilityEditUiError,
+    ) : FacilityEditUiState
 }
 
-enum class FacilityRegistrationField {
-    NAME,
-    ADDRESS,
-    DETAIL_ADDRESS,
-    PHONE_NUMBER,
-    DESCRIPTION,
-    IMAGES,
-}
-
-enum class FacilityRegistrationUiError {
+enum class FacilityEditUiError {
     NETWORK,
-    CONFLICT,
+    NOT_FOUND,
     INVALID_REQUEST,
     UNKNOWN,
 }
 
-sealed interface FacilityRegistrationAction {
-    data object Back : FacilityRegistrationAction
+sealed interface FacilityEditAction {
+    data object Back : FacilityEditAction
 
     data class NameChanged(
         val name: String,
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
     data class AddressChanged(
         val address: String,
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
     data class DetailAddressChanged(
         val detailAddress: String,
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
     data class PhoneNumberChanged(
         val phoneNumber: String,
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
     data class OpeningTimeChanged(
         val openingTime: String,
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
     data class ClosingTimeChanged(
         val closingTime: String,
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
     data class DescriptionChanged(
         val description: String,
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
-    data object RequestImages : FacilityRegistrationAction
+    data object RequestImages : FacilityEditAction
 
     data class ImagesSelected(
         val images: List<FacilityImageDraft>,
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
-    data object RequestAddressSearch : FacilityRegistrationAction
+    data object RequestAddressSearch : FacilityEditAction
 
     data class AddressSelected(
         val address: String,
         val detailAddress: String = "",
-    ) : FacilityRegistrationAction
+    ) : FacilityEditAction
 
-    data object Submit : FacilityRegistrationAction
+    data object Submit : FacilityEditAction
 
-    data object Retry : FacilityRegistrationAction
+    data object Retry : FacilityEditAction
 }

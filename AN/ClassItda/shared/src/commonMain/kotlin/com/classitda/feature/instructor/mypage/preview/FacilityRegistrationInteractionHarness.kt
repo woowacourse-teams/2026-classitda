@@ -76,6 +76,16 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
                         uiState = editingState(uiState.draftOrEmpty().copy(phoneNumber = action.phoneNumber))
                     }
 
+                    is FacilityRegistrationAction.OpeningTimeChanged -> {
+                        lastEvent = "OpeningTimeChanged"
+                        uiState = editingState(uiState.draftOrEmpty().copy(openingTime = action.openingTime))
+                    }
+
+                    is FacilityRegistrationAction.ClosingTimeChanged -> {
+                        lastEvent = "ClosingTimeChanged"
+                        uiState = editingState(uiState.draftOrEmpty().copy(closingTime = action.closingTime))
+                    }
+
                     is FacilityRegistrationAction.DescriptionChanged -> {
                         lastEvent = "DescriptionChanged"
                         uiState = editingState(uiState.draftOrEmpty().copy(description = action.description))
@@ -197,6 +207,8 @@ private val filledFacilityDraft =
         detailAddress = "2층",
         phoneNumber = "0212345678",
         description = "회원들이 편하게 운동할 수 있는 시설입니다.",
+        openingTime = "09:00",
+        closingTime = "22:00",
     )
 
 private val fiveImageFacilityDraft =

@@ -43,6 +43,7 @@ import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_check_circle
 import classitda.shared.generated.resources.ic_edit
 import classitda.shared.generated.resources.ic_home
+import classitda.shared.generated.resources.instructor_facility_detail_operating_hours
 import classitda.shared.generated.resources.instructor_facility_management_add
 import classitda.shared.generated.resources.instructor_facility_management_back
 import classitda.shared.generated.resources.instructor_facility_management_count
@@ -286,6 +287,15 @@ private fun ManagedFacilityCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    val operatingHoursLabel =
+                        stringResource(Res.string.instructor_facility_detail_operating_hours)
+                    Text(
+                        text = "$operatingHoursLabel ${formatFacilityOperatingHours(facility)}",
+                        style = appTypography().bodyMedium,
+                        color = InsColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
             Row(
@@ -329,6 +339,12 @@ private fun ManagedFacilityCard(
         }
     }
 }
+
+private fun formatFacilityOperatingHours(facility: ManagedFacility): String =
+    listOf(facility.openingTime, facility.closingTime)
+        .filter(String::isNotBlank)
+        .joinToString(" - ")
+        .ifBlank { "-" }
 
 @Composable
 private fun FacilityImage(

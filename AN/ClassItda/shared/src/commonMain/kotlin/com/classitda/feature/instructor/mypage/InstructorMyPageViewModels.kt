@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.domain.model.instructor.mypage.ManagedFacility
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
@@ -19,6 +20,14 @@ import com.classitda.feature.common.profile.contract.ProfileEditUiState
 import com.classitda.feature.common.profile.contract.ProfileUiError
 import com.classitda.feature.common.profile.contract.ProfileViewAction
 import com.classitda.feature.common.profile.contract.ProfileViewUiState
+import com.classitda.feature.instructor.mypage.contract.FacilityDeleteError
+import com.classitda.feature.instructor.mypage.contract.FacilityDeleteState
+import com.classitda.feature.instructor.mypage.contract.FacilityDetailAction
+import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiError
+import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiState
+import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
+import com.classitda.feature.instructor.mypage.contract.FacilityEditUiError
+import com.classitda.feature.instructor.mypage.contract.FacilityEditUiState
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
@@ -427,6 +436,10 @@ internal class FacilityManagementViewModel(
         if (action == FacilityManagementAction.Retry) load()
     }
 
+    fun refresh() {
+        load()
+    }
+
     private fun load() {
         _uiState.value = FacilityManagementUiState.Loading
         viewModelScope.launch {
@@ -445,6 +458,258 @@ internal class FacilityManagementViewModel(
 
                     is InstructorMyPageResult.Failure -> {
                         FacilityManagementUiState.Error(result.reason.toFacilityError())
+                    }
+                }
+        }
+    }
+}
+
+internal class FacilityDetailViewModel(
+    private val repository: InstructorMyPageRepository,
+    private val facilityId: InstructorFacilityId,
+) : ViewModel() {
+    private val _uiState = MutableStateFlow<FacilityDetailUiState>(FacilityDetailUiState.Loading)
+    val uiState: StateFlow<FacilityDetailUiState> = _uiState.asStateFlow()
+
+    init {
+        refresh()
+    }
+
+    fun onAction(action: FacilityDetailAction) {
+        when (action) {
+            FacilityDetailAction.RequestDelete -> {
+                updateContent { copy(deleteState = FacilityDeleteState.Confirming()) }
+            }
+
+            is FacilityDetailAction.DeleteNameChanged -> {
+                updateContent {
+                    val deleteState = deleteState
+                    when (deleteState) {
+                        is FacilityDeleteState.Confirming -> {
+                            copy(deleteState = deleteState.copy(typedName = action.name, error = null))
+                        }
+
+                        is FacilityDeleteState.Failed -> {
+                            copy(deleteState = FacilityDeleteState.Confirming(action.name))
+                        }
+
+                        else -> {
+                            this
+                        }
+                    }
+                }
+            }
+
+            FacilityDetailAction.CancelDelete -> {
+                updateContent { copy(deleteState = FacilityDeleteState.Hidden) }
+            }
+
+            FacilityDetailAction.ConfirmDelete -> {
+                confirmDelete()
+            }
+
+            FacilityDetailAction.Retry -> {
+                refresh()
+            }
+
+            FacilityDetailAction.Back,
+            FacilityDetailAction.OpenEdit,
+            -> {
+                Unit
+            }
+        }
+    }
+
+    fun refresh() {
+        _uiState.value = FacilityDetailUiState.Loading
+        viewModelScope.launch {
+            _uiState.value =
+                when (val result = repository.getFacility(facilityId)) {
+                    is InstructorMyPageResult.Success -> {
+                        FacilityDetailUiState.Content(result.value)
+                    }
+
+                    is InstructorMyPageResult.Failure -> {
+                        FacilityDetailUiState.Error(
+                            result.reason.toFacilityDetailError(),
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun confirmDelete() {
+        val content = _uiState.value as? FacilityDetailUiState.Content ?: return
+        val typedName =
+            when (val deleteState = content.deleteState) {
+                is FacilityDeleteState.Confirming -> deleteState.typedName
+                is FacilityDeleteState.Failed -> deleteState.typedName
+                else -> return
+            }
+        if (typedName != content.facility.name) {
+            _uiState.value =
+                content.copy(
+                    deleteState =
+                        FacilityDeleteState.Confirming(
+                            typedName = typedName,
+                            error = FacilityDeleteError.NAME_MISMATCH,
+                        ),
+                )
+            return
+        }
+        _uiState.value = content.copy(deleteState = FacilityDeleteState.Submitting)
+        viewModelScope.launch {
+            _uiState.value =
+                when (val result = repository.deleteFacility(facilityId)) {
+                    is InstructorMyPageResult.Success -> {
+                        FacilityDetailUiState.Deleted(result.value)
+                    }
+
+                    is InstructorMyPageResult.Failure -> {
+                        content.copy(
+                            deleteState =
+                                FacilityDeleteState.Failed(
+                                    typedName = typedName,
+                                    reason = result.reason.toFacilityDeleteError(),
+                                ),
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun updateContent(transform: FacilityDetailUiState.Content.() -> FacilityDetailUiState.Content) {
+        val content = _uiState.value as? FacilityDetailUiState.Content ?: return
+        _uiState.value = content.transform()
+    }
+}
+
+internal class FacilityEditViewModel(
+    private val repository: InstructorMyPageRepository,
+    private val facilityId: InstructorFacilityId,
+) : ViewModel() {
+    private val _uiState = MutableStateFlow<FacilityEditUiState>(FacilityEditUiState.Loading)
+    val uiState: StateFlow<FacilityEditUiState> = _uiState.asStateFlow()
+
+    init {
+        refresh()
+    }
+
+    fun onAction(action: FacilityEditAction) {
+        when (action) {
+            is FacilityEditAction.NameChanged -> {
+                update { copy(name = action.name) }
+            }
+
+            is FacilityEditAction.AddressChanged -> {
+                update { copy(address = action.address) }
+            }
+
+            is FacilityEditAction.DetailAddressChanged -> {
+                update { copy(detailAddress = action.detailAddress) }
+            }
+
+            is FacilityEditAction.PhoneNumberChanged -> {
+                update { copy(phoneNumber = action.phoneNumber) }
+            }
+
+            is FacilityEditAction.OpeningTimeChanged -> {
+                update { copy(openingTime = action.openingTime) }
+            }
+
+            is FacilityEditAction.ClosingTimeChanged -> {
+                update { copy(closingTime = action.closingTime) }
+            }
+
+            is FacilityEditAction.DescriptionChanged -> {
+                update { copy(description = action.description) }
+            }
+
+            is FacilityEditAction.ImagesSelected -> {
+                update { copy(images = action.images.take(FacilityRegistrationDraft.MAX_IMAGE_COUNT)) }
+            }
+
+            is FacilityEditAction.AddressSelected -> {
+                update {
+                    copy(
+                        address = action.address,
+                        detailAddress = action.detailAddress.ifBlank { detailAddress },
+                    )
+                }
+            }
+
+            FacilityEditAction.Submit -> {
+                submit()
+            }
+
+            FacilityEditAction.Retry -> {
+                refresh()
+            }
+
+            FacilityEditAction.Back,
+            FacilityEditAction.RequestImages,
+            FacilityEditAction.RequestAddressSearch,
+            -> {
+                Unit
+            }
+        }
+    }
+
+    fun refresh() {
+        _uiState.value = FacilityEditUiState.Loading
+        viewModelScope.launch {
+            _uiState.value =
+                when (val result = repository.getFacility(facilityId)) {
+                    is InstructorMyPageResult.Success -> {
+                        editing(result.value.toDraft())
+                    }
+
+                    is InstructorMyPageResult.Failure -> {
+                        FacilityEditUiState.Error(
+                            facilityId = facilityId,
+                            draft = FacilityRegistrationDraft(),
+                            reason = result.reason.toFacilityEditError(),
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun update(change: FacilityRegistrationDraft.() -> FacilityRegistrationDraft) {
+        val state = _uiState.value as? FacilityEditUiState.Editing ?: return
+        _uiState.value = editing(state.draft.change())
+    }
+
+    private fun editing(draft: FacilityRegistrationDraft) =
+        FacilityEditUiState.Editing(
+            facilityId = facilityId,
+            draft = draft,
+            canSubmit = draft.name.isNotBlank() && draft.address.isNotBlank() && draft.phoneNumber.isNotBlank(),
+            fieldErrors =
+                buildSet {
+                    if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
+                    if (draft.address.isBlank()) add(FacilityRegistrationField.ADDRESS)
+                    if (draft.phoneNumber.isBlank()) add(FacilityRegistrationField.PHONE_NUMBER)
+                },
+        )
+
+    private fun submit() {
+        val state = _uiState.value as? FacilityEditUiState.Editing ?: return
+        if (!state.canSubmit) return
+        _uiState.value = FacilityEditUiState.Submitting(facilityId, state.draft)
+        viewModelScope.launch {
+            _uiState.value =
+                when (val result = repository.updateFacility(facilityId, state.draft)) {
+                    is InstructorMyPageResult.Success -> {
+                        FacilityEditUiState.Success(result.value.id)
+                    }
+
+                    is InstructorMyPageResult.Failure -> {
+                        FacilityEditUiState.Error(
+                            facilityId = facilityId,
+                            draft = state.draft,
+                            reason = result.reason.toFacilityEditError(),
+                        )
                     }
                 }
         }
@@ -473,6 +738,14 @@ internal class FacilityRegistrationViewModel(
 
             is FacilityRegistrationAction.PhoneNumberChanged -> {
                 update { copy(phoneNumber = action.phoneNumber) }
+            }
+
+            is FacilityRegistrationAction.OpeningTimeChanged -> {
+                update { copy(openingTime = action.openingTime) }
+            }
+
+            is FacilityRegistrationAction.ClosingTimeChanged -> {
+                update { copy(closingTime = action.closingTime) }
             }
 
             is FacilityRegistrationAction.DescriptionChanged -> {
@@ -564,6 +837,18 @@ private fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfil
 private fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfile.toEditingState() =
     ProfileEditUiState.Editing(toProfileUiModel(), phoneNumber, name, false)
 
+private fun ManagedFacility.toDraft() =
+    FacilityRegistrationDraft(
+        images = images,
+        name = name,
+        address = address,
+        detailAddress = detailAddress,
+        phoneNumber = phoneNumber,
+        description = description,
+        openingTime = openingTime,
+        closingTime = closingTime,
+    )
+
 private fun maskPhoneNumber(value: String): String {
     val digits = value.filter(Char::isDigit)
     return if (digits.length >=
@@ -624,4 +909,26 @@ private fun InstructorMyPageFailureReason.toFacilityRegistrationError() =
         InstructorMyPageFailureReason.CONFLICT -> FacilityRegistrationUiError.CONFLICT
         InstructorMyPageFailureReason.INVALID_REQUEST -> FacilityRegistrationUiError.INVALID_REQUEST
         else -> FacilityRegistrationUiError.UNKNOWN
+    }
+
+private fun InstructorMyPageFailureReason.toFacilityDetailError() =
+    when (this) {
+        InstructorMyPageFailureReason.NETWORK -> FacilityDetailUiError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> FacilityDetailUiError.NOT_FOUND
+        else -> FacilityDetailUiError.UNKNOWN
+    }
+
+private fun InstructorMyPageFailureReason.toFacilityDeleteError() =
+    when (this) {
+        InstructorMyPageFailureReason.NETWORK -> FacilityDeleteError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> FacilityDeleteError.NOT_FOUND
+        else -> FacilityDeleteError.UNKNOWN
+    }
+
+private fun InstructorMyPageFailureReason.toFacilityEditError() =
+    when (this) {
+        InstructorMyPageFailureReason.NETWORK -> FacilityEditUiError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> FacilityEditUiError.NOT_FOUND
+        InstructorMyPageFailureReason.INVALID_REQUEST -> FacilityEditUiError.INVALID_REQUEST
+        else -> FacilityEditUiError.UNKNOWN
     }

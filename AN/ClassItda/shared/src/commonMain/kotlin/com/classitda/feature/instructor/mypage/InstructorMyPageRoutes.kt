@@ -14,6 +14,9 @@ import com.classitda.feature.common.profile.ProfileViewScreen
 import com.classitda.feature.common.profile.contract.PhoneNumberChangeAction
 import com.classitda.feature.common.profile.contract.ProfileEditAction
 import com.classitda.feature.common.profile.contract.ProfileViewAction
+import com.classitda.feature.instructor.mypage.contract.FacilityDetailAction
+import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiState
+import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
@@ -204,10 +207,12 @@ internal fun InstructorFacilityManagementRoute(
     onEditFacility: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
     onOpenFacilityDetail: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
     onOpenFacilityRegistration: () -> Unit,
+    refreshToken: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: FacilityManagementViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
     FacilityManagementScreen(uiState, onAction = { action ->
         when (action) {
             FacilityManagementAction.Back -> onBack()
@@ -215,6 +220,58 @@ internal fun InstructorFacilityManagementRoute(
             is FacilityManagementAction.OpenFacilityDetail -> onOpenFacilityDetail(action.facilityId)
             FacilityManagementAction.OpenFacilityRegistration -> onOpenFacilityRegistration()
             FacilityManagementAction.Retry -> viewModel.onAction(action)
+        }
+    }, modifier = modifier)
+}
+
+@Composable
+internal fun InstructorFacilityDetailRoute(
+    facilityId: com.classitda.domain.model.instructor.mypage.InstructorFacilityId,
+    onBack: () -> Unit,
+    onOpenEdit: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
+    onDeleted: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: FacilityDetailViewModel =
+        koinViewModel(
+            key = "instructor-facility-detail-${facilityId.value}",
+            parameters = { parametersOf(facilityId) },
+        ),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState) {
+        val deleted = uiState as? FacilityDetailUiState.Deleted
+        deleted?.let { onDeleted(it.facilityId) }
+    }
+    FacilityDetailScreen(uiState, onAction = { action ->
+        when (action) {
+            FacilityDetailAction.Back -> onBack()
+            FacilityDetailAction.OpenEdit -> onOpenEdit(facilityId)
+            else -> viewModel.onAction(action)
+        }
+    }, modifier = modifier)
+}
+
+@Composable
+internal fun InstructorFacilityEditRoute(
+    facilityId: com.classitda.domain.model.instructor.mypage.InstructorFacilityId,
+    onBack: () -> Unit,
+    onSaved: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: FacilityEditViewModel =
+        koinViewModel(
+            key = "instructor-facility-edit-${facilityId.value}",
+            parameters = { parametersOf(facilityId) },
+        ),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState) {
+        val success = uiState as? com.classitda.feature.instructor.mypage.contract.FacilityEditUiState.Success
+        success?.let { onSaved(it.facilityId) }
+    }
+    FacilityEditScreen(uiState, onAction = { action ->
+        when (action) {
+            FacilityEditAction.Back -> onBack()
+            else -> viewModel.onAction(action)
         }
     }, modifier = modifier)
 }
