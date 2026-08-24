@@ -3,8 +3,8 @@ package com.classitda.classes.application.instructor;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import com.classitda.classes.domain.BookingWindow;
-import com.classitda.classes.domain.SessionPhase;
+import com.classitda.classes.domain.session.BookingWindow;
+import com.classitda.classes.domain.session.SessionPhase;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;

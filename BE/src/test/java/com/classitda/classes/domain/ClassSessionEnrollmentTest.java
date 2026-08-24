@@ -4,6 +4,10 @@ import static com.classitda.classes.fixture.ClassSessionFixture.기본_수업_�
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classitda.classes.domain.enrollment.AttendanceResult;
+import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
+import com.classitda.classes.domain.enrollment.EnrollmentStatus;
+import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.passproduct.domain.MemberPassProduct;

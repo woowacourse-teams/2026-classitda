@@ -1,8 +1,8 @@
 package com.classitda.classes.application.student.enrollment;
 
 import com.classitda.classes.application.student.StudentSessionAccessReader;
-import com.classitda.classes.domain.ClassSessionEnrollment;
-import com.classitda.classes.domain.EnrollmentStatus;
+import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
+import com.classitda.classes.domain.enrollment.EnrollmentStatus;
 import com.classitda.classes.domain.repository.ClassSessionEnrollmentRepository;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;

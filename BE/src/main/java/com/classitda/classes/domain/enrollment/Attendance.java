@@ -1,4 +1,4 @@
-package com.classitda.classes.domain;
+package com.classitda.classes.domain.enrollment;
 
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;

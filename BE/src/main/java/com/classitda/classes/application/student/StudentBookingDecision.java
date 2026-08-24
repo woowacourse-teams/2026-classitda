@@ -1,6 +1,6 @@
 package com.classitda.classes.application.student;
 
-import com.classitda.classes.domain.AttendanceResult;
+import com.classitda.classes.domain.enrollment.AttendanceResult;
 import java.util.Optional;
 
 public record StudentBookingDecision(

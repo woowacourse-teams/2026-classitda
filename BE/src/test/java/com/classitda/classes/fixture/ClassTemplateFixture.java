@@ -1,7 +1,7 @@
 package com.classitda.classes.fixture;
 
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassTemplate;
+import com.classitda.classes.domain.template.ClassTemplate;
 import com.classitda.classes.presentation.dto.ClassTemplateCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTemplateUpdateRequest;
 import java.time.DayOfWeek;

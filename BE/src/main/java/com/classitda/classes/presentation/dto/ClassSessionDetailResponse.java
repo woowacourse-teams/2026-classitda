@@ -1,9 +1,9 @@
 package com.classitda.classes.presentation.dto;
 
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.domain.ClassType;
-import com.classitda.classes.domain.SessionPhase;
+import com.classitda.classes.domain.session.SessionPhase;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 

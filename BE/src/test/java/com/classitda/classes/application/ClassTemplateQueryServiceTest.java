@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.groups.Tuple.tuple;
 
-import com.classitda.classes.domain.ClassTemplate;
-import com.classitda.classes.domain.ClassTemplateClassType;
+import com.classitda.classes.domain.template.ClassTemplate;
+import com.classitda.classes.domain.template.ClassTemplateClassType;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTemplateClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassTemplateRepository;

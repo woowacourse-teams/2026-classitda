@@ -1,7 +1,7 @@
 package com.classitda.classes.application.instructor;
 
-import com.classitda.classes.domain.BookingWindow;
-import com.classitda.classes.domain.SessionPhase;
+import com.classitda.classes.domain.session.BookingWindow;
+import com.classitda.classes.domain.session.SessionPhase;
 
 public enum InstructorSessionStatus {
     SCHEDULED_BOOKING_OPEN,

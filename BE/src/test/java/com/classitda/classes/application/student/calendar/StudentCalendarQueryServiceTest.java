@@ -5,10 +5,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
-import com.classitda.classes.domain.AttendanceResult;
+import com.classitda.classes.domain.enrollment.AttendanceResult;
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionEnrollment;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;

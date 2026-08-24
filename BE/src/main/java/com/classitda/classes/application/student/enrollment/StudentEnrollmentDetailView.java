@@ -1,7 +1,7 @@
 package com.classitda.classes.application.student.enrollment;
 
-import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionEnrollment;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
 import com.classitda.passproduct.domain.MemberPassProduct;
 import com.classitda.studio.domain.StudioMembership;
 import java.time.LocalDate;

@@ -2,7 +2,7 @@ package com.classitda.classes.application.student.daily;
 
 import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.domain.repository.projection.StudentDailySessionProjection;
 import java.time.LocalDateTime;
 

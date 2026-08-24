@@ -1,6 +1,6 @@
 package com.classitda.classes.domain.repository;
 
-import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionCalendarSummaryProjection;
 import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
 import com.classitda.classes.domain.repository.projection.StudentDailySessionProjection;
@@ -30,20 +30,36 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     );
 
     @Query("""
+            SELECT CASE WHEN COUNT(classSession) > 0 THEN true ELSE false END
+            FROM ClassSession classSession
+            WHERE classSession.instructorMembership.id = :instructorMembershipId
+              AND classSession.id <> :excludedClassSessionId
+              AND classSession.canceledAt IS NULL
+              AND classSession.startAt < :endAt
+              AND classSession.endAt > :startAt
+            """)
+    boolean existsActiveOverlapExcluding(
+            @Param("instructorMembershipId") Long instructorMembershipId,
+            @Param("excludedClassSessionId") Long excludedClassSessionId,
+            @Param("startAt") LocalDateTime startAt,
+            @Param("endAt") LocalDateTime endAt
+    );
+
+    @Query("""
             SELECT classSession AS session,
                    classSession.instructorMembership.name AS instructorName,
                    classType.id AS classTypeId,
                    classType.name AS classTypeName,
                    SUM(
                        CASE WHEN enrollment.state.status IN (
-                            com.classitda.classes.domain.EnrollmentStatus.RESERVED,
-                            com.classitda.classes.domain.EnrollmentStatus.OFFERED
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED,
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED
                        )
                             THEN 1 ELSE 0 END
                    ) AS reservedCount,
                    SUM(
                        CASE WHEN enrollment.state.status =
-                            com.classitda.classes.domain.EnrollmentStatus.WAITING
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING
                             THEN 1 ELSE 0 END
                    ) AS waitingCount,
                    ownEnrollment.id AS ownEnrollmentId,
@@ -57,17 +73,17 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             LEFT JOIN ClassSessionEnrollment enrollment
               ON enrollment.classSession.id = classSession.id
              AND enrollment.state.status IN (
-                 com.classitda.classes.domain.EnrollmentStatus.WAITING,
-                 com.classitda.classes.domain.EnrollmentStatus.OFFERED,
-                 com.classitda.classes.domain.EnrollmentStatus.RESERVED
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
              )
             LEFT JOIN ClassSessionEnrollment ownEnrollment
               ON ownEnrollment.classSession.id = classSession.id
              AND ownEnrollment.membership.id = :membershipId
              AND ownEnrollment.state.status IN (
-                 com.classitda.classes.domain.EnrollmentStatus.WAITING,
-                 com.classitda.classes.domain.EnrollmentStatus.OFFERED,
-                 com.classitda.classes.domain.EnrollmentStatus.RESERVED
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
              )
             WHERE classSession.studioId = :studioId
               AND classType.studio.id = :studioId
@@ -78,7 +94,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
               AND (
                   :enrollmentHistoryOnly = false
                   OR ownEnrollment.state.status =
-                     com.classitda.classes.domain.EnrollmentStatus.RESERVED
+                     com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
               )
             GROUP BY classSession,
                      classSession.instructorMembership.name,
@@ -105,14 +121,14 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
                    classType.name AS classTypeName,
                    SUM(
                        CASE WHEN enrollment.state.status IN (
-                            com.classitda.classes.domain.EnrollmentStatus.RESERVED,
-                            com.classitda.classes.domain.EnrollmentStatus.OFFERED
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED,
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED
                        )
                             THEN 1 ELSE 0 END
                    ) AS reservedCount,
                    SUM(
                        CASE WHEN enrollment.state.status =
-                            com.classitda.classes.domain.EnrollmentStatus.WAITING
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING
                             THEN 1 ELSE 0 END
                    ) AS waitingCount
             FROM ClassSession classSession
@@ -123,9 +139,9 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             LEFT JOIN ClassSessionEnrollment enrollment
               ON enrollment.classSession.id = classSession.id
              AND enrollment.state.status IN (
-                 com.classitda.classes.domain.EnrollmentStatus.WAITING,
-                 com.classitda.classes.domain.EnrollmentStatus.OFFERED,
-                 com.classitda.classes.domain.EnrollmentStatus.RESERVED
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
              )
             WHERE classSession.studioId = :studioId
               AND classType.studio.id = :studioId

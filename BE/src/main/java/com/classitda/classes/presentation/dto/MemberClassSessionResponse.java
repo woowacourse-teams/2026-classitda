@@ -3,7 +3,7 @@ package com.classitda.classes.presentation.dto;
 import com.classitda.classes.application.student.BookingAvailability;
 import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.daily.StudentDailySessionView;
-import com.classitda.classes.domain.AttendanceResult;
+import com.classitda.classes.domain.enrollment.AttendanceResult;
 import com.classitda.classes.domain.ClassForm;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;

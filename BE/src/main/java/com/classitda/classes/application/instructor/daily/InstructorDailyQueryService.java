@@ -2,7 +2,7 @@ package com.classitda.classes.application.instructor.daily;
 
 import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
-import com.classitda.classes.domain.ClassSession;
+import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
 import java.time.Clock;
 import java.time.LocalDate;

@@ -1,5 +1,6 @@
-package com.classitda.classes.domain;
+package com.classitda.classes.domain.template;
 
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;

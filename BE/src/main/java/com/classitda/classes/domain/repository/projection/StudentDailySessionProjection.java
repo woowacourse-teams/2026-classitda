@@ -1,8 +1,8 @@
 package com.classitda.classes.domain.repository.projection;
 
-import com.classitda.classes.domain.AttendanceResult;
-import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.EnrollmentStatus;
+import com.classitda.classes.domain.enrollment.AttendanceResult;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.enrollment.EnrollmentStatus;
 import java.util.Optional;
 
 public interface StudentDailySessionProjection {

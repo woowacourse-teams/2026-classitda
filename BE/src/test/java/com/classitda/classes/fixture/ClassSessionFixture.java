@@ -1,9 +1,10 @@
 package com.classitda.classes.fixture;
 
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionClassType;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.session.ClassSessionClassType;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.member.domain.Member;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.studio.domain.MembershipStatus;
@@ -82,7 +83,6 @@ public final class ClassSessionFixture {
             Long classTypeId
     ) {
         return 수업_회차_생성_요청(
-                null,
                 instructorMembershipId,
                 ClassForm.GROUP,
                 classTypeId,
@@ -104,7 +104,6 @@ public final class ClassSessionFixture {
             Long classTypeId
     ) {
         return 수업_회차_생성_요청(
-                null,
                 instructorMembershipId,
                 ClassForm.GROUP,
                 classTypeId,
@@ -121,8 +120,19 @@ public final class ClassSessionFixture {
         );
     }
 
+    public static ClassSessionUpdateRequest 기본_수업_회차_수정_요청(Long classTypeId) {
+        return ClassSessionUpdateRequest.of(
+                ClassForm.INDIVIDUAL,
+                classTypeId,
+                "수정된 개인 수업",
+                1,
+                50,
+                LocalDateTime.of(2026, 8, 18, 19, 30),
+                "수정된 수업 안내"
+        );
+    }
+
     public static ClassSessionCreateRequest 수업_회차_생성_요청(
-            Long classTemplateId,
             Long instructorMembershipId,
             ClassForm classForm,
             Long classTypeId,
@@ -138,7 +148,6 @@ public final class ClassSessionFixture {
             LocalDate repeatEndDate
     ) {
         return ClassSessionCreateRequest.of(
-                classTemplateId,
                 instructorMembershipId,
                 classForm,
                 classTypeId,

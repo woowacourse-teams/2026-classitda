@@ -1,4 +1,4 @@
-package com.classitda.classes.domain;
+package com.classitda.classes.domain.enrollment;
 
 public enum AttendanceResult {
     NOT_RECORDED,
