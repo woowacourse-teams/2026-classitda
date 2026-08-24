@@ -197,7 +197,16 @@ internal class SignupViewModel(
                     PhoneVerificationCode(state.verificationCode),
                 )
             }.onSuccess {
-                update { copy(isLoading = false, isPhoneVerified = true, isTermsVisible = true) }
+                verificationTimerJob?.cancel()
+                update {
+                    copy(
+                        isLoading = false,
+                        isPhoneVerified = true,
+                        verificationRemainingSeconds = 0,
+                        resendRemainingSeconds = 0,
+                        isTermsVisible = true,
+                    )
+                }
             }.onFailure { error -> showError(error) }
         }
     }
