@@ -176,6 +176,47 @@ class ClassSessionControllerTest {
     }
 
     @Test
+    void 수업_회차를_취소하면_204와_빈_본문을_반환하고_명령_서비스에_위임한다() {
+        // when
+        RestTestClient.ResponseSpec result = 수업_회차를_취소한다(7L, 11L, "1");
+
+        // then
+        result.expectStatus().isNoContent().expectBody().isEmpty();
+        verify(commandService).cancel(1L, 7L, 11L);
+    }
+
+    @Test
+    void 이미_취소된_수업_회차를_다시_취소하면_CLASS_SESSION_020을_반환한다() {
+        // given
+        doThrow(new ClassException(ClassErrorCode.CLASS_SESSION_ALREADY_CANCELED))
+                .when(commandService).cancel(1L, 7L, 11L);
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_회차를_취소한다(7L, 11L, "1");
+
+        // then
+        오류를_검증한다(result, 409, "CLASS_SESSION-020", "이미 취소된 수업입니다.");
+    }
+
+    @Test
+    void 시작된_수업_회차를_취소하면_CLASS_SESSION_021을_반환한다() {
+        // given
+        doThrow(new ClassException(ClassErrorCode.CLASS_SESSION_ALREADY_STARTED))
+                .when(commandService).cancel(1L, 7L, 11L);
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_회차를_취소한다(7L, 11L, "1");
+
+        // then
+        오류를_검증한다(
+                result,
+                409,
+                "CLASS_SESSION-021",
+                "이미 시작된 수업은 취소할 수 없습니다."
+        );
+    }
+
+    @Test
     void 수업_회차_상세를_조회하면_200과_공용_상세_정보를_반환한다() {
         // given
         ClassSessionDetailResponse response = 수업_회차_상세_응답();
@@ -710,6 +751,21 @@ class ClassSessionControllerTest {
                 .header("X-API-Version", version)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec 수업_회차를_취소한다(
+            Long studioId,
+            Long classSessionId,
+            String version
+    ) {
+        return client.delete()
+                .uri(
+                        "/api/studios/{studioId}/class-sessions/{classSessionId}",
+                        studioId,
+                        classSessionId
+                )
+                .header("X-API-Version", version)
                 .exchange();
     }
 

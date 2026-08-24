@@ -20,6 +20,7 @@ import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.domain.repository.StudioRolePermissionRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
+import java.time.Clock;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -39,6 +40,7 @@ public class ClassSessionCommandService {
     private final StudioMembershipRepository studioMembershipRepository;
     private final StudioRepository studioRepository;
     private final StudioRolePermissionRepository studioRolePermissionRepository;
+    private final Clock clock;
 
     public void save(Long memberId, Long studioId, ClassSessionCreateRequest request) {
         Studio studio = getStudio(studioId);
@@ -86,6 +88,24 @@ public class ClassSessionCommandService {
         if (request.classTypeId() != null) {
             updateClassSessionClassType(studioId, classSessionId, request.classTypeId());
         }
+    }
+
+    public void cancel(Long memberId, Long studioId, Long classSessionId) {
+        Studio studio = getStudio(studioId);
+        StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
+        ClassSession classSession = classSessionRepository
+                .findByIdAndStudioId(classSessionId, studioId)
+                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
+
+        validateManagePermission(
+                studio,
+                requesterMembership,
+                classSession.getInstructorMembership().getId(),
+                memberId
+        );
+
+        classSession.cancel(LocalDateTime.now(clock));
+        // TODO: 수업 취소 시 예약 회원의 수강권 횟수를 복구한다.
     }
 
     private Studio getStudio(Long studioId) {

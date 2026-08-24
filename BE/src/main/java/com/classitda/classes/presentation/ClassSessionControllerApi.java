@@ -27,7 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springdoc.core.annotations.ParameterObject;
 
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "수업 회차", description = "시설의 수업 회차를 등록·수정하고 회원·강사용 수업 정보를 조회합니다.")
+@Tag(name = "수업 회차", description = "시설의 수업 회차를 등록·수정·취소하고 회원·강사용 수업 정보를 조회합니다.")
 public interface ClassSessionControllerApi {
 
     @Operation(
@@ -225,6 +225,99 @@ public interface ClassSessionControllerApi {
             @Parameter(description = "수정할 수업 회차 ID입니다.", required = true, example = "101")
             Long classSessionId,
             ClassSessionUpdateRequest request
+    );
+
+    @Operation(
+            summary = "수업 회차 취소",
+            description = """
+                    수업 회차를 물리적으로 삭제하지 않고 취소 시각을 기록합니다.
+
+                    - 수업 시작 전까지만 취소할 수 있습니다.
+                    - 이미 취소된 회차를 다시 취소하면 요청을 거부합니다.
+                    - 수업 신청과 출결 이력은 유지합니다.
+                    - 이번 API에서는 신청·대기 상태를 일괄 변경하거나 예약 회원의 수강권 횟수를 복구하지 않습니다.
+                    - 본인 수업 관리 권한자는 본인이 담당하는 회차만 취소할 수 있습니다.
+                    - 대표 또는 전체 수업 관리 권한자는 시설의 모든 회차를 취소할 수 있습니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "수업 회차를 정상적으로 취소합니다."
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "API 버전 헤더가 올바르지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "버전 헤더 누락", value = """
+                                            {"code":"API-001","message":"X-API-Version 헤더는 필수입니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 버전", value = """
+                                            {"code":"API-002","message":"지원하지 않는 API 버전입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "인증 실패", value = """
+                                    {"code":"AUTH-001","message":"인증이 필요합니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "ACCESS 토큰이 아니거나 시설의 활성 소속이 아니거나 수업 회차 관리 권한이 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "접근 권한 없음", value = """
+                                            {"code":"AUTH-002","message":"접근 권한이 없습니다."}"""),
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code":"MEMBERSHIP-001","message":"해당 시설의 소속이 아닙니다."}"""),
+                                    @ExampleObject(name = "비활성 소속", value = """
+                                            {"code":"MEMBERSHIP-002","message":"이용이 정지된 소속입니다."}"""),
+                                    @ExampleObject(name = "권한 없음", value = """
+                                            {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설 또는 수업 회차를 찾을 수 없습니다. 다른 시설의 회차도 동일하게 처리합니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "시설 없음", value = """
+                                            {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "수업 회차 없음", value = """
+                                            {"code":"CLASS_SESSION-014","message":"수업 회차를 찾을 수 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 취소된 회차이거나 수업 시작 시각에 도달했습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "이미 취소된 수업", value = """
+                                            {"code":"CLASS_SESSION-020","message":"이미 취소된 수업입니다."}"""),
+                                    @ExampleObject(name = "이미 시작된 수업", value = """
+                                            {"code":"CLASS_SESSION-021","message":"이미 시작된 수업은 취소할 수 없습니다."}""")
+                            }
+                    )
+            )
+    })
+    ResponseEntity<Void> cancel(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            @Parameter(description = "취소할 수업 회차 ID입니다.", required = true, example = "101")
+            Long classSessionId
     );
 
     @Operation(

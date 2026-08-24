@@ -23,6 +23,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -64,6 +65,17 @@ public class ClassSessionController implements ClassSessionControllerApi {
             @Valid @RequestBody ClassSessionUpdateRequest request
     ) {
         classSessionCommandService.update(memberId, studioId, classSessionId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @DeleteMapping(path = "/{classSessionId}", version = "1")
+    public ResponseEntity<Void> cancel(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classSessionId
+    ) {
+        classSessionCommandService.cancel(memberId, studioId, classSessionId);
         return ResponseEntity.noContent().build();
     }
 

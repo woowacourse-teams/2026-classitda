@@ -36,15 +36,19 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
+import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -52,11 +56,16 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@Import(ClassSessionCommandService.class)
+@Import({
+        ClassSessionCommandService.class,
+        ClassSessionCommandServiceTest.FixedClockConfig.class
+})
 @MySqlRepositoryTest
 class ClassSessionCommandServiceTest {
 
     private static final String LINK_FAILURE_CONSTRAINT = "ck_test_reject_class_session_class_type";
+    private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 12, 0);
+    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     private final ClassSessionCommandService commandService;
     private final ClassSessionClassTypeRepository classSessionClassTypeRepository;
@@ -976,6 +985,170 @@ class ClassSessionCommandServiceTest {
         assertThat(classSession.getName()).isEqualTo("수정된 개인 수업");
     }
 
+    @Test
+    void 대표는_시작_전_수업_회차를_삭제하지_않고_취소_시각을_기록한다() {
+        // given
+        Member owner = 회원을_저장한다("cancel-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "취소 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "취소 대상"
+        );
+
+        // when
+        commandService.cancel(owner.getId(), context.studio().getId(), classSession.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassSession canceled = classSessionRepository.findById(classSession.getId()).orElseThrow();
+        assertThat(canceled.getCanceledAt()).isEqualTo(NOW);
+        assertThat(classSessionRepository.count()).isOne();
+    }
+
+    @Test
+    void 이미_취소된_수업_회차는_다시_취소할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("recancel-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "재취소 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "이미 취소된 수업"
+        );
+        classSession.cancel(NOW.minusHours(1));
+
+        // when / then
+        assertClassError(
+                () -> commandService.cancel(
+                        owner.getId(), context.studio().getId(), classSession.getId()),
+                ClassErrorCode.CLASS_SESSION_ALREADY_CANCELED
+        );
+    }
+
+    @Test
+    void 시작_시각에_도달한_수업_회차는_취소할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("started-cancel-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "시작된 수업 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                NOW,
+                60,
+                "시작된 수업"
+        );
+
+        // when / then
+        assertClassError(
+                () -> commandService.cancel(
+                        owner.getId(), context.studio().getId(), classSession.getId()),
+                ClassErrorCode.CLASS_SESSION_ALREADY_STARTED
+        );
+        assertThat(classSession.isCanceled()).isFalse();
+    }
+
+    @Test
+    void 본인_수업_관리_권한자는_자신의_수업만_취소할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("cancel-own-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "본인 취소 권한 시설");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        Member requester = 회원을_저장한다("cancel-own-requester");
+        StudioMembership requesterMembership = 소속을_저장한다(
+                context.studio(), requester, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession ownSession = 수업을_저장한다(
+                context,
+                requesterMembership,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "본인 수업"
+        );
+        ClassSession otherSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 21, 0),
+                60,
+                "다른 강사의 수업"
+        );
+
+        // when
+        commandService.cancel(
+                requester.getId(), context.studio().getId(), ownSession.getId());
+
+        // then
+        assertThat(ownSession.getCanceledAt()).isEqualTo(NOW);
+        assertStudioError(
+                () -> commandService.cancel(
+                        requester.getId(), context.studio().getId(), otherSession.getId()),
+                StudioErrorCode.PERMISSION_DENIED
+        );
+        assertThat(otherSession.isCanceled()).isFalse();
+    }
+
+    @Test
+    void 전체_수업_관리_권한자는_다른_강사의_수업을_취소할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("cancel-all-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "전체 취소 권한 시설");
+        StudioRole managerRole = 사용자_역할을_저장한다(
+                context.studio(), "전체 수업 관리자", false);
+        권한을_저장한다(managerRole, PermissionCode.CLASS_SESSION_MANAGE_ALL);
+        Member manager = 회원을_저장한다("cancel-all-manager");
+        소속을_저장한다(context.studio(), manager, managerRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "다른 강사의 수업"
+        );
+
+        // when
+        commandService.cancel(
+                manager.getId(), context.studio().getId(), classSession.getId());
+
+        // then
+        assertThat(classSession.getCanceledAt()).isEqualTo(NOW);
+    }
+
+    @Test
+    void 다른_시설의_수업_회차는_취소할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("cancel-boundary-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "취소 요청 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession classSession = 수업을_저장한다(
+                context,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "취소 대상"
+        );
+        Member otherOwner = 회원을_저장한다("cancel-boundary-other-owner");
+        StudioContext otherContext = 시설과_대표_소속을_저장한다(otherOwner, "다른 시설");
+
+        // when / then
+        assertClassError(
+                () -> commandService.cancel(
+                        otherOwner.getId(), otherContext.studio().getId(), classSession.getId()),
+                ClassErrorCode.CLASS_SESSION_NOT_FOUND
+        );
+        assertThat(classSession.isCanceled()).isFalse();
+    }
+
     private ClassSessionCreateRequest 요청(
             Long instructorMembershipId,
             Long classTypeId,
@@ -1229,5 +1402,14 @@ class ClassSessionCommandServiceTest {
             Long roleId,
             Long classTypeId
     ) {
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class FixedClockConfig {
+
+        @Bean
+        Clock clock() {
+            return Clock.fixed(NOW.atZone(SERVICE_ZONE_ID).toInstant(), SERVICE_ZONE_ID);
+        }
     }
 }

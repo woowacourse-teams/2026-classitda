@@ -60,6 +60,7 @@ class ClassSessionSecurityTest {
     private static final String DETAIL_URI =
             "/api/studios/7/class-sessions/11";
     private static final String UPDATE_URI = DETAIL_URI;
+    private static final String CANCEL_URI = DETAIL_URI;
     private static final String INSTRUCTOR_CALENDAR_URI =
             "/api/studios/7/class-sessions/instructor/calendar?from=2026-08-15&to=2026-08-19";
 
@@ -297,6 +298,53 @@ class ClassSessionSecurityTest {
         // then
         result.expectStatus().isNoContent();
         verify(commandService).update(1L, 7L, 11L, request);
+    }
+
+    @Test
+    void 인증이_없으면_수업_회차를_취소할_수_없다() {
+        // when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri(CANCEL_URI)
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        assertError(result, 401, "AUTH-001", "인증이 필요합니다.");
+        verifyNoInteractions(commandService);
+    }
+
+    @Test
+    void 가입_토큰으로는_수업_회차를_취소할_수_없다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
+
+        // when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri(CANCEL_URI)
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer signup-token")
+                .exchange();
+
+        // then
+        assertError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
+        verifyNoInteractions(commandService);
+    }
+
+    @Test
+    void 액세스_토큰으로_수업_회차를_취소할_수_있다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("1", TokenUse.ACCESS));
+
+        // when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri(CANCEL_URI)
+                .header("X-API-Version", "1")
+                .header("Authorization", "Bearer access-token")
+                .exchange();
+
+        // then
+        result.expectStatus().isNoContent();
+        verify(commandService).cancel(1L, 7L, 11L);
     }
 
     @Test
