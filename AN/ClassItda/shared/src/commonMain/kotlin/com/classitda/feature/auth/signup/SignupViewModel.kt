@@ -115,7 +115,9 @@ internal class SignupViewModel(
         val message = error.message ?: "요청에 실패했습니다."
         val normalizedMessage = message.lowercase()
         when {
-            message.contains("410") || message.contains("PHONE-003") -> {
+            message.contains("410") ||
+                message.contains("PHONE-003") ||
+                message.contains("인증번호가 만료") -> {
                 update {
                     copy(
                         isLoading = false,

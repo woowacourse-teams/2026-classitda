@@ -5,6 +5,7 @@ import com.classitda.domain.model.auth.signup.LoginTokens
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -17,6 +18,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 
 internal fun createClassItdaHttpClient(
@@ -66,10 +68,14 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
             }
             refreshTokens {
                 val refreshToken = tokenStorage.read()?.refreshToken ?: return@refreshTokens null
-                runCatching {
+                val refreshParams = this
+                try {
                     val refreshed =
                         client
                             .post("api/auth/tokens/refresh") {
+                                with(refreshParams) {
+                                    this@post.markAsRefreshTokenRequest()
+                                }
                                 contentType(ContentType.Application.Json)
                                 setBody(RefreshTokenRequestDto(refreshToken))
                             }.body<RefreshTokenResponseDto>()
@@ -82,8 +88,14 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
                         )
                     tokenStorage.write(tokens)
                     BearerTokens(tokens.accessToken, tokens.refreshToken)
-                }.getOrElse {
-                    tokenStorage.clear()
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: ClientRequestException) {
+                    if (exception.response.status.value == 401) {
+                        tokenStorage.clear()
+                    }
+                    null
+                } catch (_: Throwable) {
                     null
                 }
             }

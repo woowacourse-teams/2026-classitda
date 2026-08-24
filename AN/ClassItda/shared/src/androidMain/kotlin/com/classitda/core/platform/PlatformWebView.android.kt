@@ -20,8 +20,9 @@ actual fun PlatformWebView(
 ) {
     val context = LocalContext.current
     var webView by remember { mutableStateOf<WebView?>(null) }
+    var canGoBack by remember { mutableStateOf(false) }
 
-    BackHandler(enabled = webView?.canGoBack() == true) {
+    BackHandler(enabled = canGoBack) {
         webView?.goBack()
     }
 
@@ -31,12 +32,21 @@ actual fun PlatformWebView(
             WebView(context).apply {
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
-                webViewClient = WebViewClient()
+                webViewClient =
+                    object : WebViewClient() {
+                        override fun onPageFinished(
+                            view: WebView?,
+                            url: String?,
+                        ) {
+                            canGoBack = view?.canGoBack() == true
+                        }
+                    }
                 loadUrl(url)
                 webView = this
             }
         },
         update = { view ->
+            canGoBack = view.canGoBack()
             if (view.url != url) view.loadUrl(url)
         },
     )
