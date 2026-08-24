@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Preview
+import com.classitda.core.auth.AuthTokenStorage
+import com.classitda.core.auth.InMemoryAuthTokenStorage
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.navigation.student.StudentRootRoute
@@ -22,8 +24,8 @@ import org.koin.dsl.koinConfiguration
 
 @Composable
 @Preview
-fun App() {
-    var showSignup by remember { mutableStateOf(true) }
+fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }) {
+    var showSignup by remember { mutableStateOf(tokenStorage.read() == null) }
 
     KoinApplication(
         configuration =
@@ -33,7 +35,7 @@ fun App() {
                         com.classitda.core.network
                             .NetworkConfig(ClassItdaApiConfig.BASE_URL),
                     ),
-                    signupModule,
+                    signupModule(tokenStorage),
                     homeModule,
                     reservationModule,
                     myScheduleModule,
@@ -45,7 +47,12 @@ fun App() {
             if (showSignup) {
                 SignupRoute(onSignupCompleted = { showSignup = false })
             } else {
-                StudentRootRoute(onLogout = { showSignup = true })
+                StudentRootRoute(
+                    onLogout = {
+                        tokenStorage.clear()
+                        showSignup = true
+                    },
+                )
             }
         }
     }
