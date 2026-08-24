@@ -9,8 +9,11 @@ import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
+import com.classitda.authentication.exception.AuthErrorCode;
+import com.classitda.authentication.exception.AuthException;
 import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.login.LoginResponse;
+import com.classitda.member.domain.repository.MemberRepository;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,7 @@ public class SocialLoginService {
     private final AuthAccountRepository authAccountRepository;
     private final SignupTokenIssuer signupTokenIssuer;
     private final LoginTokenIssuer loginTokenIssuer;
+    private final MemberRepository memberRepository;
 
     public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
         GoogleIdentity identity = googleIdentityVerifier.verify(request.idToken());
@@ -41,6 +45,10 @@ public class SocialLoginService {
         }
 
         AuthAccount registeredAccount = authAccount.get();
+        if (!memberRepository.existsByIdAndWithdrawalRequestedAtIsNull(registeredAccount.getMemberId())) {
+            throw new AuthException(AuthErrorCode.MEMBER_WITHDRAWAL_PENDING);
+        }
+
         if (!Objects.equals(registeredAccount.getProviderEmail(), identity.providerEmail())) {
             registeredAccount.updateProviderEmail(identity.providerEmail());
             // 로그인 전체 흐름에 Google 검증(외부 API) 및 Redis 처리가 포함되어있기 때문에 DB 트랜잭션을 열지 않는다.

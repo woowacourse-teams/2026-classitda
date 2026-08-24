@@ -20,6 +20,7 @@ import com.classitda.authentication.exception.AuthException;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
 import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
+import com.classitda.member.domain.repository.MemberRepository;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -58,6 +59,9 @@ class RefreshTokenServiceTest {
     @Mock
     private LoginTokenIssuer loginTokenIssuer;
 
+    @Mock
+    private MemberRepository memberRepository;
+
     private RefreshTokenService refreshTokenService;
 
     @BeforeEach
@@ -72,6 +76,7 @@ class RefreshTokenServiceTest {
                 refreshTokenVerifier,
                 refreshSessionStore,
                 loginTokenIssuer,
+                memberRepository,
                 tokenProperties
         );
     }
@@ -161,6 +166,28 @@ class RefreshTokenServiceTest {
             );
         }
         verifyNoInteractions(loginTokenIssuer);
+        verify(refreshSessionStore, never()).rotate(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyLong()
+        );
+    }
+
+    @Test
+    void 탈퇴_처리_중인_회원의_리프레시_토큰은_AUTH_008로_거부한다() {
+        // given
+        RefreshSession oldSession = activeSession();
+        givenValidOldSession(oldSession);
+        given(memberRepository.existsByIdAndWithdrawalRequestedAtIsNull(MEMBER_ID)).willReturn(false);
+
+        // when / then
+        assertAuthError(
+                () -> refreshTokenService.refresh(RefreshTokenRequest.from(OLD_TOKEN)),
+                AuthErrorCode.REFRESH_TOKEN_INVALID
+        );
+        verifyNoInteractions(loginTokenIssuer, refreshTokenIssuer);
         verify(refreshSessionStore, never()).rotate(
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any(),
@@ -264,6 +291,7 @@ class RefreshTokenServiceTest {
         givenTokenParsing();
         given(refreshSessionStore.findBySessionId(OLD_SESSION_ID)).willReturn(Optional.of(oldSession));
         given(refreshTokenVerifier.matches(OLD_TOKEN, oldSession.tokenHash())).willReturn(true);
+        given(memberRepository.existsByIdAndWithdrawalRequestedAtIsNull(oldSession.memberId())).willReturn(true);
     }
 
     private void givenTokenParsing() {

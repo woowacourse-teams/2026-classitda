@@ -3,6 +3,7 @@ package com.classitda.authentication.presentation;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
+import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
@@ -17,6 +18,23 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 class AuthControllerApiTest {
+
+    @Test
+    void 구글_로그인_OpenAPI는_탈퇴_처리_중_오류를_문서화한다() throws NoSuchMethodException {
+        // given
+        ApiResponses responses = AuthControllerApi.class
+                .getMethod("loginWithGoogle", GoogleLoginRequest.class)
+                .getAnnotation(ApiResponses.class);
+
+        // when
+        ApiResponse forbidden = response(responses, "403");
+
+        // then
+        assertThat(exampleValues(forbidden))
+                .containsExactly("{\"code\":\"AUTH-009\",\"message\":\"탈퇴 처리 중인 계정입니다.\"}");
+        assertThat(Arrays.stream(responses.value()).map(ApiResponse::responseCode))
+                .containsExactlyInAnyOrder("200", "400", "401", "403");
+    }
 
     @Test
     void 로그아웃_OpenAPI는_현재_기기_폐기와_클라이언트_정리_계약만_문서화한다() throws NoSuchMethodException {
@@ -123,6 +141,7 @@ class AuthControllerApiTest {
         assertThat(exampleValues(invalidInput)).anyMatch(value -> value.contains("\"code\":\"API-002\""));
         assertThat(exampleValues(invalidRefresh))
                 .containsExactly("{\"code\":\"AUTH-008\",\"message\":\"리프레시 토큰이 유효하지 않습니다.\"}");
+        assertThat(invalidRefresh.description()).contains("탈퇴");
         assertThat(exampleValues(internalFailure))
                 .containsExactly("{\"code\":\"COMMON-002\",\"message\":\"서버 내부 오류가 발생했습니다.\"}");
         assertThat(Arrays.stream(responses.value()).map(ApiResponse::responseCode))

@@ -2,6 +2,8 @@ package com.classitda.authentication.integration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 
 import com.classitda.authentication.application.LogoutService;
@@ -31,6 +33,7 @@ import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
 import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import com.classitda.authentication.support.JwtTestSupport;
+import com.classitda.member.domain.repository.MemberRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -104,11 +107,14 @@ class RedisTokenSessionIntegrationTest {
                 new JwtTokenEncoder(jwtSupport.encoder()),
                 tokenProperties
         );
+        MemberRepository memberRepository = mock(MemberRepository.class);
+        given(memberRepository.existsByIdAndWithdrawalRequestedAtIsNull(anyLong())).willReturn(true);
         refreshTokenService = new RefreshTokenService(
                 refreshTokenIssuer,
                 refreshTokenVerifier,
                 refreshSessionStore,
                 loginTokenIssuer,
+                memberRepository,
                 tokenProperties
         );
         logoutService = new LogoutService(refreshTokenVerifier, refreshSessionStore);

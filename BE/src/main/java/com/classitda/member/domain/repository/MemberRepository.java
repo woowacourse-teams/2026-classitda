@@ -8,5 +8,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     boolean existsByPhoneNumber(String phoneNumber);
 
+    boolean existsByIdAndWithdrawalRequestedAtIsNull(Long memberId);
+
     Optional<Member> findByPhoneNumber(String phoneNumber);
 }
