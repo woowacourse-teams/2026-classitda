@@ -133,12 +133,8 @@ internal fun SignupScreenStateless(
 }
 
 private fun SignupTerm.webUrl(): String =
-    if (url.contains("example.invalid")) {
-        when (code) {
-            SignupTermCode.SERVICE_TERMS -> SERVICE_TERMS_URL
-            SignupTermCode.PRIVACY_POLICY -> PRIVACY_POLICY_URL
-            SignupTermCode.MARKETING_CONSENT -> url
-        }
-    } else {
-        url
+    when (code) {
+        SignupTermCode.SERVICE_TERMS -> SERVICE_TERMS_URL
+        SignupTermCode.PRIVACY_POLICY -> PRIVACY_POLICY_URL
+        SignupTermCode.MARKETING_CONSENT -> url
     }
