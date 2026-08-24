@@ -92,6 +92,7 @@ internal fun SignupFormScreen(
                 placeholder = "성함을 입력해 주세요",
                 onValueChange = { onAction(SignupAction.ChangeName(it)) },
                 keyboardType = KeyboardType.Text,
+                errorText = state.nameError,
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             SignupTextFieldWithAction(
@@ -99,7 +100,11 @@ internal fun SignupFormScreen(
                 value = state.phoneNumber,
                 placeholder = "01012345678",
                 actionText =
-                    if (state.resendRemainingSeconds >
+                    if (state.isPhoneVerified && state.phoneNumber == state.verificationPhoneNumber) {
+                        "인증완료"
+                    } else if (state.phoneNumber != state.verificationPhoneNumber) {
+                        "인증요청"
+                    } else if (state.resendRemainingSeconds >
                         0
                     ) {
                         "대기"
@@ -111,7 +116,13 @@ internal fun SignupFormScreen(
                 onValueChange = { onAction(SignupAction.ChangePhoneNumber(it)) },
                 onAction = { onAction(SignupAction.SendVerificationCode) },
                 keyboardType = KeyboardType.Phone,
-                enabled = !state.isLoading && state.resendRemainingSeconds == 0L,
+                enabled =
+                    !state.isLoading &&
+                        (
+                            state.phoneNumber != state.verificationPhoneNumber ||
+                                (!state.isPhoneVerified && state.resendRemainingSeconds == 0L)
+                        ),
+                errorText = state.phoneNumberError,
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             SignupTextField(
@@ -124,6 +135,7 @@ internal fun SignupFormScreen(
                     ),
                 onValueChange = { onAction(SignupAction.ChangeVerificationCode(it)) },
                 keyboardType = KeyboardType.Number,
+                errorText = state.verificationCodeError,
             )
             Spacer(modifier = Modifier.height(AppSpacing.xl))
         }

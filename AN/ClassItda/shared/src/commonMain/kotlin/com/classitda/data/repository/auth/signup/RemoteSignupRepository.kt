@@ -1,8 +1,11 @@
 package com.classitda.data.repository.auth.signup
 
+import com.classitda.core.auth.AuthTokenStorage
+import com.classitda.core.auth.InMemoryAuthTokenStorage
 import com.classitda.data.remote.auth.signup.GoogleLoginRequestDto
 import com.classitda.data.remote.auth.signup.LoginResponseDto
 import com.classitda.data.remote.auth.signup.LoginStatusDto
+import com.classitda.data.remote.auth.signup.LogoutRequestDto
 import com.classitda.data.remote.auth.signup.PhoneVerificationConfirmRequestDto
 import com.classitda.data.remote.auth.signup.PhoneVerificationResponseDto
 import com.classitda.data.remote.auth.signup.PhoneVerificationSendRequestDto
@@ -27,9 +30,14 @@ import com.classitda.domain.repository.auth.signup.SignupRepository
 
 internal class RemoteSignupRepository(
     private val api: SignupApi,
+    private val tokenStorage: AuthTokenStorage = InMemoryAuthTokenStorage(),
 ) : SignupRepository {
     override suspend fun loginWithGoogle(idToken: GoogleIdToken): GoogleLoginResult =
-        api.loginWithGoogle(GoogleLoginRequestDto(idToken.value)).toDomain()
+        api.loginWithGoogle(GoogleLoginRequestDto(idToken.value)).toDomain().also { result ->
+            if (result is GoogleLoginResult.Registered) {
+                tokenStorage.write(result.tokens)
+            }
+        }
 
     override suspend fun getTerms(signupToken: SignupToken): List<SignupTerm> =
         api.getTerms(signupToken.value).map(SignupTermResponseDto::toDomain)
@@ -58,11 +66,23 @@ internal class RemoteSignupRepository(
         agreedTermIds: List<TermId>,
     ): LoginTokens {
         require(agreedTermIds.isNotEmpty()) { "동의한 약관은 한 개 이상이어야 합니다." }
-        return api
-            .completeSignup(
-                signupToken.value,
-                SignupRequestDto(name.value, agreedTermIds.map(TermId::value)),
-            ).toDomain()
+        val tokens =
+            api
+                .completeSignup(
+                    signupToken.value,
+                    SignupRequestDto(name.value, agreedTermIds.map(TermId::value)),
+                ).toDomain()
+        tokenStorage.write(tokens)
+        return tokens
+    }
+
+    override suspend fun logout() {
+        val tokens = tokenStorage.read() ?: return
+        runCatching {
+            api.logout(tokens.accessToken, LogoutRequestDto(tokens.refreshToken))
+        }.also {
+            tokenStorage.clear()
+        }
     }
 }
 

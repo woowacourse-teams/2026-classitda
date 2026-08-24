@@ -10,19 +10,27 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.platform.rememberGoogleSignInProvider
+import com.classitda.domain.model.auth.signup.SignupTerm
+import com.classitda.domain.model.auth.signup.SignupTermCode
 import com.classitda.feature.auth.signup.component.SignupTermsSheet
 import com.classitda.feature.auth.signup.screen.SignupCompletedScreen
 import com.classitda.feature.auth.signup.screen.SignupFormScreen
 import com.classitda.feature.auth.signup.screen.SignupWelcomeScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
+
+private const val SERVICE_TERMS_URL = "https://classitda.com/terms"
+private const val PRIVACY_POLICY_URL = "https://classitda.com/privacy-policy"
 
 @Composable
 internal fun SignupScreen(
@@ -33,35 +41,49 @@ internal fun SignupScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val googleSignInProvider = rememberGoogleSignInProvider()
     val scope = rememberCoroutineScope()
+    var selectedTerm by remember { mutableStateOf<SignupTermLink?>(null) }
 
     LaunchedEffect(state.page) {
         if (state.page == SignupPage.Completed) onSignupCompleted()
     }
 
-    SignupScreenStateless(
-        state = state,
-        onAction = { action ->
-            if (action == SignupAction.LoginWithGoogle) {
-                scope.launch {
-                    runCatching { googleSignInProvider.signIn() }
-                        .onSuccess(viewModel::loginWithGoogle)
-                        .onFailure(viewModel::showError)
+    if (selectedTerm == null) {
+        SignupScreenStateless(
+            state = state,
+            onAction = { action ->
+                if (action == SignupAction.LoginWithGoogle) {
+                    scope.launch {
+                        runCatching { googleSignInProvider.signIn() }
+                            .onSuccess(viewModel::loginWithGoogle)
+                            .onFailure(viewModel::showError)
+                    }
+                } else {
+                    viewModel.onAction(action)
                 }
-            } else {
-                viewModel.onAction(action)
-            }
-        },
-        modifier = modifier,
-    )
+            },
+            modifier = modifier,
+            onTermClick = { selectedTerm = it },
+        )
+    } else {
+        TermsWebViewScreen(
+            title = selectedTerm!!.title,
+            url = selectedTerm!!.url,
+            onNavigateBack = { selectedTerm = null },
+        )
+    }
 }
+
+internal data class SignupTermLink(
+    val title: String,
+    val url: String,
+)
 
 @Composable
 internal fun SignupScreenStateless(
     state: SignupUiState,
     onAction: (SignupAction) -> Unit,
     modifier: Modifier = Modifier,
-    onTermsClick: () -> Unit = {},
-    onPrivacyPolicyClick: () -> Unit = {},
+    onTermClick: (SignupTermLink) -> Unit = {},
 ) {
     Box(
         modifier =
@@ -87,8 +109,16 @@ internal fun SignupScreenStateless(
                 onTogglePrivacyPolicy = { onAction(SignupAction.TogglePrivacyPolicyAgreement) },
                 onComplete = { onAction(SignupAction.CompleteSignup) },
                 onDismiss = { onAction(SignupAction.DismissTerms) },
-                onTermsClick = onTermsClick,
-                onPrivacyPolicyClick = onPrivacyPolicyClick,
+                onTermsClick = {
+                    state.terms
+                        .firstOrNull { it.code == SignupTermCode.SERVICE_TERMS }
+                        ?.let { onTermClick(SignupTermLink(it.title, it.webUrl())) }
+                },
+                onPrivacyPolicyClick = {
+                    state.terms
+                        .firstOrNull { it.code == SignupTermCode.PRIVACY_POLICY }
+                        ?.let { onTermClick(SignupTermLink(it.title, it.webUrl())) }
+                },
             )
         }
 
@@ -101,3 +131,14 @@ internal fun SignupScreenStateless(
         }
     }
 }
+
+private fun SignupTerm.webUrl(): String =
+    if (url.contains("example.invalid")) {
+        when (code) {
+            SignupTermCode.SERVICE_TERMS -> SERVICE_TERMS_URL
+            SignupTermCode.PRIVACY_POLICY -> PRIVACY_POLICY_URL
+            SignupTermCode.MARKETING_CONSENT -> url
+        }
+    } else {
+        url
+    }
