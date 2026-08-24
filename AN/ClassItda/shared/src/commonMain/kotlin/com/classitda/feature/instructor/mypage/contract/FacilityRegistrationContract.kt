@@ -30,6 +30,8 @@ enum class FacilityRegistrationField {
     ADDRESS,
     DETAIL_ADDRESS,
     PHONE_NUMBER,
+    OPENING_TIME,
+    CLOSING_TIME,
     DESCRIPTION,
     IMAGES,
 }
@@ -94,8 +96,25 @@ internal fun facilityRegistrationFieldErrors(draft: FacilityRegistrationDraft): 
     buildSet {
         if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
         if (draft.address.isBlank()) add(FacilityRegistrationField.ADDRESS)
-        if (draft.phoneNumber.isBlank()) add(FacilityRegistrationField.PHONE_NUMBER)
+        if (!isFacilityPhoneNumberValid(draft.phoneNumber)) add(FacilityRegistrationField.PHONE_NUMBER)
+        if (draft.openingTime.isNotBlank() && !isFacilityTimeValid(draft.openingTime)) {
+            add(FacilityRegistrationField.OPENING_TIME)
+        }
+        if (draft.closingTime.isNotBlank() && !isFacilityTimeValid(draft.closingTime)) {
+            add(FacilityRegistrationField.CLOSING_TIME)
+        }
     }
 
 internal fun FacilityRegistrationDraft.isFacilityRegistrationValid(): Boolean =
     facilityRegistrationFieldErrors(this).isEmpty()
+
+internal fun isFacilityPhoneNumberValid(value: String): Boolean {
+    val digits = value.filter(Char::isDigit)
+    return value.isNotBlank() &&
+        value.all { it.isDigit() || it == '-' || it == ' ' } &&
+        digits.length in 9..11
+}
+
+private val facilityTimePattern = Regex("""(?:[01]\d|2[0-3]):[0-5]\d""")
+
+internal fun isFacilityTimeValid(value: String): Boolean = facilityTimePattern.matches(value)

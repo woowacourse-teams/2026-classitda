@@ -293,10 +293,12 @@
     <string name="instructor_facility_registration_detail_address_placeholder">상세 주소를 입력해 주세요.</string>
     <string name="instructor_facility_registration_phone">대표 연락처</string>
     <string name="instructor_facility_registration_phone_placeholder">대표 연락처를 입력해 주세요.</string>
-    <string name="instructor_facility_registration_phone_error">대표 연락처를 입력해 주세요.</string>
+    <string name="instructor_facility_registration_phone_error">대표 연락처 형식이 올바르지 않습니다.</string>
     <string name="instructor_facility_registration_opening_time">오픈 시간</string>
+    <string name="instructor_facility_registration_opening_time_error">시간 형식이 올바르지 않습니다. 예: 09:00</string>
     <string name="instructor_facility_registration_opening_time_placeholder">예: 09:00</string>
     <string name="instructor_facility_registration_closing_time">닫는 시간</string>
+    <string name="instructor_facility_registration_closing_time_error">시간 형식이 올바르지 않습니다. 예: 22:00</string>
     <string name="instructor_facility_registration_closing_time_placeholder">예: 22:00</string>
     <string name="instructor_facility_registration_description">시설 소개</string>
     <string name="instructor_facility_registration_description_placeholder">시설을 소개해 주세요.</string>

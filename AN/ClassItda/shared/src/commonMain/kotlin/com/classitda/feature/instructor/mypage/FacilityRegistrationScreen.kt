@@ -63,6 +63,7 @@ import classitda.shared.generated.resources.instructor_facility_registration_add
 import classitda.shared.generated.resources.instructor_facility_registration_address_search
 import classitda.shared.generated.resources.instructor_facility_registration_back
 import classitda.shared.generated.resources.instructor_facility_registration_closing_time
+import classitda.shared.generated.resources.instructor_facility_registration_closing_time_error
 import classitda.shared.generated.resources.instructor_facility_registration_closing_time_placeholder
 import classitda.shared.generated.resources.instructor_facility_registration_description
 import classitda.shared.generated.resources.instructor_facility_registration_description_placeholder
@@ -79,6 +80,7 @@ import classitda.shared.generated.resources.instructor_facility_registration_nam
 import classitda.shared.generated.resources.instructor_facility_registration_name_error
 import classitda.shared.generated.resources.instructor_facility_registration_name_placeholder
 import classitda.shared.generated.resources.instructor_facility_registration_opening_time
+import classitda.shared.generated.resources.instructor_facility_registration_opening_time_error
 import classitda.shared.generated.resources.instructor_facility_registration_opening_time_placeholder
 import classitda.shared.generated.resources.instructor_facility_registration_phone
 import classitda.shared.generated.resources.instructor_facility_registration_phone_error
@@ -279,6 +281,8 @@ private fun FacilityRegistrationForm(
     val addressError = FacilityRegistrationField.ADDRESS in fieldErrors
     val detailAddressError = FacilityRegistrationField.DETAIL_ADDRESS in fieldErrors
     val phoneError = FacilityRegistrationField.PHONE_NUMBER in fieldErrors
+    val openingTimeError = FacilityRegistrationField.OPENING_TIME in fieldErrors
+    val closingTimeError = FacilityRegistrationField.CLOSING_TIME in fieldErrors
     val descriptionError = FacilityRegistrationField.DESCRIPTION in fieldErrors
 
     Column(
@@ -399,8 +403,13 @@ private fun FacilityRegistrationForm(
                 label = stringResource(Res.string.instructor_facility_registration_opening_time),
                 value = draft.openingTime,
                 placeholder = stringResource(Res.string.instructor_facility_registration_opening_time_placeholder),
-                isError = false,
-                errorMessage = null,
+                isError = openingTimeError,
+                errorMessage =
+                    if (openingTimeError) {
+                        stringResource(Res.string.instructor_facility_registration_opening_time_error)
+                    } else {
+                        null
+                    },
                 enabled = !isSubmitting,
                 onValueChange = { onAction(FacilityRegistrationAction.OpeningTimeChanged(it)) },
                 modifier = Modifier.weight(1f),
@@ -415,8 +424,13 @@ private fun FacilityRegistrationForm(
                 label = stringResource(Res.string.instructor_facility_registration_closing_time),
                 value = draft.closingTime,
                 placeholder = stringResource(Res.string.instructor_facility_registration_closing_time_placeholder),
-                isError = false,
-                errorMessage = null,
+                isError = closingTimeError,
+                errorMessage =
+                    if (closingTimeError) {
+                        stringResource(Res.string.instructor_facility_registration_closing_time_error)
+                    } else {
+                        null
+                    },
                 enabled = !isSubmitting,
                 onValueChange = { onAction(FacilityRegistrationAction.ClosingTimeChanged(it)) },
                 modifier = Modifier.weight(1f),

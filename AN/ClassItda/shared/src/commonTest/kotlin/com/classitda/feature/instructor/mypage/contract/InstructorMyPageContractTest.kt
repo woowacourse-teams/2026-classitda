@@ -106,6 +106,14 @@ class InstructorMyPageContractTest {
                 name = "Facility",
                 address = "Seoul",
                 phoneNumber = "0212345678",
+                openingTime = "09:00",
+                closingTime = "22:00",
+            )
+        val invalidFormatDraft =
+            validDraft.copy(
+                phoneNumber = "02-12",
+                openingTime = "9:00",
+                closingTime = "25:00",
             )
 
         assertEquals(
@@ -118,6 +126,14 @@ class InstructorMyPageContractTest {
         )
         assertTrue(facilityRegistrationFieldErrors(validDraft).isEmpty())
         assertTrue(validDraft.isFacilityRegistrationValid())
+        assertEquals(
+            setOf(
+                FacilityRegistrationField.PHONE_NUMBER,
+                FacilityRegistrationField.OPENING_TIME,
+                FacilityRegistrationField.CLOSING_TIME,
+            ),
+            facilityRegistrationFieldErrors(invalidFormatDraft),
+        )
     }
 
     @Test
