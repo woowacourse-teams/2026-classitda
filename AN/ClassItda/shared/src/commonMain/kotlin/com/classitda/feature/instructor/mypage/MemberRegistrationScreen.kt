@@ -39,6 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.instructor_member_registration_back
@@ -54,6 +56,8 @@ import classitda.shared.generated.resources.instructor_member_registration_phone
 import classitda.shared.generated.resources.instructor_member_registration_register
 import classitda.shared.generated.resources.instructor_member_registration_required
 import classitda.shared.generated.resources.instructor_member_registration_success
+import classitda.shared.generated.resources.instructor_member_registration_success_confirm
+import classitda.shared.generated.resources.instructor_member_registration_success_title
 import classitda.shared.generated.resources.instructor_member_registration_title
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
@@ -141,6 +145,61 @@ fun MemberRegistrationScreen(
                 state = uiState,
                 onAction = onAction,
             )
+            if (uiState is MemberRegistrationUiState.Success) {
+                MemberRegistrationSuccessDialog(
+                    onComplete = {
+                        val memberId = uiState.memberId
+                        onAction(MemberRegistrationAction.SuccessAcknowledged(memberId))
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemberRegistrationSuccessDialog(onComplete: () -> Unit) {
+    Dialog(
+        onDismissRequest = onComplete,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xxxl),
+            shape = AppShape.Card,
+            color = InsColors.Surface,
+        ) {
+            Column(
+                modifier = Modifier.padding(AppSpacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+            ) {
+                Text(
+                    text = stringResource(Res.string.instructor_member_registration_success_title),
+                    style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = InsColors.TextPrimary,
+                )
+                Text(
+                    text = stringResource(Res.string.instructor_member_registration_success),
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
+                    style = appTypography().bodyLarge,
+                    color = InsColors.TextSecondary,
+                )
+                Button(
+                    onClick = onComplete,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = AppShape.Card,
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = InsColors.Primary,
+                            contentColor = InsColors.White,
+                        ),
+                ) {
+                    Text(
+                        text = stringResource(Res.string.instructor_member_registration_success_confirm),
+                        style = appTypography().bodyLarge.copy(fontWeight = FontWeight.Bold),
+                    )
+                }
+            }
         }
     }
 }

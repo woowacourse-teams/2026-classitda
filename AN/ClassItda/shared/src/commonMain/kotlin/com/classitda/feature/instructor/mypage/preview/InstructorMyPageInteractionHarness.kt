@@ -273,6 +273,11 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             lastEvent = "Retry:F07"
                         }
 
+                        is MemberRegistrationAction.SuccessAcknowledged -> {
+                            destination = HarnessDestination.F05
+                            lastEvent = "SuccessAcknowledged:${action.memberId.value}"
+                        }
+
                         is MemberRegistrationAction.NameChanged -> {
                             registrationState =
                                 MemberRegistrationUiState.Editing(

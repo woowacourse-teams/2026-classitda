@@ -16,6 +16,7 @@ import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     var profileRefreshToken by remember { mutableStateOf(0) }
+    var memberRefreshToken by remember { mutableStateOf(0) }
     var facilityRefreshToken by remember { mutableStateOf(0) }
     var selectedFacilityId by remember { mutableStateOf<InstructorFacilityId?>(null) }
 
@@ -69,12 +70,17 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
                 onBack = { navController.popBackStack() },
                 onOpenMember = {},
                 onOpenMemberRegistration = { navController.navigate(InstructorMyPageDestination.F06) },
+                refreshToken = memberRefreshToken,
             )
         }
 
         composable(InstructorMyPageDestination.F06) {
             InstructorMemberRegistrationRoute(
                 onBack = { navController.popBackStack() },
+                onSuccess = {
+                    memberRefreshToken++
+                    navController.popBackStack(InstructorMyPageDestination.F05, false)
+                },
             )
         }
 

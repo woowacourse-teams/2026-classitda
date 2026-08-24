@@ -78,6 +78,13 @@ class InstructorMyPageContractTest {
 
         assertEquals(
             memberId,
+            assertIs<MemberRegistrationAction.SuccessAcknowledged>(
+                MemberRegistrationAction.SuccessAcknowledged(memberId),
+            ).memberId,
+        )
+
+        assertEquals(
+            memberId,
             assertIs<MemberRegistrationUiState.Success>(MemberRegistrationUiState.Success(memberId)).memberId,
         )
         assertEquals(

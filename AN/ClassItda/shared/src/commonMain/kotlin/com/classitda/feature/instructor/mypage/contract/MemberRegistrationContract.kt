@@ -59,6 +59,10 @@ sealed interface MemberRegistrationAction {
     data object ConfirmRegistration : MemberRegistrationAction
 
     data object Retry : MemberRegistrationAction
+
+    data class SuccessAcknowledged(
+        val memberId: InstructorMemberId,
+    ) : MemberRegistrationAction
 }
 
 internal fun memberRegistrationFieldErrors(draft: MemberRegistrationDraft): Set<MemberRegistrationField> =

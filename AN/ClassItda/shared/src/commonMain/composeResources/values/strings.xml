@@ -228,6 +228,8 @@
     <string name="instructor_member_registration_register">회원 등록</string>
     <string name="instructor_member_registration_submitting">회원을 등록하는 중입니다.</string>
     <string name="instructor_member_registration_success">회원 등록이 완료되었습니다.</string>
+    <string name="instructor_member_registration_success_title">회원 등록 완료</string>
+    <string name="instructor_member_registration_success_confirm">확인</string>
     <string name="instructor_member_registration_error">회원 등록에 실패했습니다. 입력 내용을 확인한 뒤 다시 시도해 주세요.</string>
     <string name="instructor_member_registration_confirm_title">회원 등록 확인</string>
     <string name="instructor_member_registration_confirm_pane_title">회원 등록 확인 대화상자</string>

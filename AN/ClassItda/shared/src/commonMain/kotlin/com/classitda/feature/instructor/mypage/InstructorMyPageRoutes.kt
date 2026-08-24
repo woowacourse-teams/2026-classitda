@@ -167,10 +167,12 @@ internal fun InstructorMemberManagementRoute(
     onBack: () -> Unit,
     onOpenMember: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
     onOpenMemberRegistration: () -> Unit,
+    refreshToken: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: MemberManagementViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
     MemberManagementScreen(uiState, onAction = { action ->
         when (action) {
             MemberManagementAction.Back -> onBack()
@@ -184,19 +186,30 @@ internal fun InstructorMemberManagementRoute(
 @Composable
 internal fun InstructorMemberRegistrationRoute(
     onBack: () -> Unit,
+    onSuccess: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit = {},
     onOpenConfirmation: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: MemberRegistrationViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     MemberRegistrationScreen(uiState, onAction = { action ->
-        if (action == MemberRegistrationAction.Back) {
-            onBack()
-        } else if (action == MemberRegistrationAction.OpenConfirmation) {
-            viewModel.onAction(action)
-            onOpenConfirmation()
-        } else {
-            viewModel.onAction(action)
+        when (action) {
+            MemberRegistrationAction.Back -> {
+                onBack()
+            }
+
+            MemberRegistrationAction.OpenConfirmation -> {
+                viewModel.onAction(action)
+                onOpenConfirmation()
+            }
+
+            is MemberRegistrationAction.SuccessAcknowledged -> {
+                onSuccess(action.memberId)
+            }
+
+            else -> {
+                viewModel.onAction(action)
+            }
         }
     }, modifier = modifier)
 }

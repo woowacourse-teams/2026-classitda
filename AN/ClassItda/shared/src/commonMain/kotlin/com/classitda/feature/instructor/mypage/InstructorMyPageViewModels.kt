@@ -312,6 +312,10 @@ internal class MemberManagementViewModel(
         }
     }
 
+    fun refresh() {
+        load()
+    }
+
     private fun load() {
         _uiState.value =
             MemberManagementUiState.Loading
