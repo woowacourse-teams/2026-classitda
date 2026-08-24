@@ -1,13 +1,22 @@
 CREATE TABLE member
 (
-    id                BIGINT       NOT NULL AUTO_INCREMENT,
-    name              VARCHAR(50)  NOT NULL,
-    phone_number      VARCHAR(20)  NOT NULL,
-    profile_image_url VARCHAR(500) NULL,
-    created_at        DATETIME(6)  NOT NULL,
-    updated_at        DATETIME(6)  NULL,
+    id                      BIGINT       NOT NULL AUTO_INCREMENT,
+    name                    VARCHAR(50)  NOT NULL,
+    phone_number            VARCHAR(20)  NULL,
+    profile_image_url       VARCHAR(500) NULL,
+    withdrawal_requested_at DATETIME(6)  NULL,
+    cleanup_scheduled_at    DATETIME(6)  NULL,
+    cleaned_up_at           DATETIME(6)  NULL,
+    created_at              DATETIME(6)  NOT NULL,
+    updated_at              DATETIME(6)  NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_member_phone_number (phone_number)
+    UNIQUE KEY uk_member_phone_number (phone_number),
+    KEY idx_member_cleanup (cleaned_up_at, cleanup_scheduled_at, id),
+    CONSTRAINT chk_member_phone_by_cleanup
+        CHECK (
+            (cleaned_up_at IS NULL AND phone_number IS NOT NULL)
+            OR (cleaned_up_at IS NOT NULL AND phone_number IS NULL)
+        )
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 

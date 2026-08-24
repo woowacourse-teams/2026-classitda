@@ -160,6 +160,24 @@ class AuthControllerTest {
     }
 
     @Test
+    void 탈퇴_처리_중인_구글_계정은_AUTH_009를_반환한다() {
+        // given
+        GoogleLoginRequest request = GoogleLoginRequest.from(ID_TOKEN);
+        given(socialLoginService.loginWithGoogle(request))
+                .willThrow(new AuthException(AuthErrorCode.MEMBER_WITHDRAWAL_PENDING));
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/auth/google")
+                .header("X-API-Version", "1")
+                .body(request)
+                .exchange();
+
+        // then
+        assertError(result, 403, "AUTH-009", "탈퇴 처리 중인 계정입니다.");
+    }
+
+    @Test
     void 빈_구글_ID_토큰은_COMMON_001을_반환한다() {
         // given / when
         RestTestClient.ResponseSpec result = client.post()

@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -17,6 +18,10 @@ public interface AuthAccountRepository extends JpaRepository<AuthAccount, Long> 
     );
 
     boolean existsByMemberId(Long memberId);
+
+    @Modifying
+    @Query("delete from AuthAccount authAccount where authAccount.memberId in :memberIds")
+    int deleteByMemberIdIn(@Param("memberIds") Collection<Long> memberIds);
 
     @Query("select authAccount.memberId from AuthAccount authAccount where authAccount.memberId in :memberIds")
     List<Long> findMemberIdsByMemberIdIn(@Param("memberIds") Collection<Long> memberIds);
