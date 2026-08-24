@@ -34,6 +34,7 @@ fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }
                     networkModule(
                         com.classitda.core.network
                             .NetworkConfig(ClassItdaApiConfig.BASE_URL),
+                        tokenStorage,
                     ),
                     signupModule(tokenStorage),
                     homeModule,
