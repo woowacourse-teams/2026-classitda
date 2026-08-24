@@ -1,5 +1,6 @@
 package com.classitda.feature.common.privacypolicy
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -54,26 +55,31 @@ internal fun PrivacyPolicyScreen(
         )
 
         Box(modifier = Modifier.fillMaxSize()) {
+            content()
+
             when (uiState) {
                 PrivacyPolicyUiState.Loading -> {
-                    PrivacyPolicyLoading()
+                    PrivacyPolicyLoading(
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background),
+                    )
                 }
 
                 is PrivacyPolicyUiState.Error -> {
                     PrivacyPolicyErrorContent(
                         error = uiState.reason,
                         onRetry = { onAction(PrivacyPolicyAction.Retry) },
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background),
                     )
                 }
 
                 is PrivacyPolicyUiState.Content -> {
-                    PrivacyPolicyContent(
-                        showBlockedNavigationNotice = uiState.isBlockedNavigationNoticeVisible,
-                        onDismissBlockedNavigationNotice = {
-                            onAction(PrivacyPolicyAction.DismissBlockedNavigationNotice)
-                        },
-                        content = content,
-                    )
+                    if (uiState.isBlockedNavigationNoticeVisible) {
+                        PrivacyPolicyBlockedNavigationNotice(
+                            onDismiss = {
+                                onAction(PrivacyPolicyAction.DismissBlockedNavigationNotice)
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -137,44 +143,37 @@ private fun PrivacyPolicyErrorContent(
 }
 
 @Composable
-private fun PrivacyPolicyContent(
-    showBlockedNavigationNotice: Boolean,
-    onDismissBlockedNavigationNotice: () -> Unit,
-    content: @Composable BoxScope.() -> Unit,
+private fun BoxScope.PrivacyPolicyBlockedNavigationNotice(
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        content()
-
-        if (showBlockedNavigationNotice) {
-            Surface(
-                modifier =
-                    Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth()
-                        .padding(AppSpacing.md)
-                        .semantics { liveRegion = LiveRegionMode.Assertive },
-                shape = AppShape.Card,
-                color = MaterialTheme.colorScheme.errorContainer,
-                contentColor = MaterialTheme.colorScheme.onErrorContainer,
-            ) {
-                Row(
-                    modifier = Modifier.padding(start = AppSpacing.md, end = AppSpacing.xs),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = stringResource(Res.string.privacy_policy_navigation_blocked),
-                        modifier = Modifier.weight(1f).padding(vertical = AppSpacing.md),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    TextButton(onClick = onDismissBlockedNavigationNotice) {
-                        Text(
-                            text =
-                                stringResource(
-                                    Res.string.privacy_policy_navigation_blocked_dismiss,
-                                ),
-                        )
-                    }
-                }
+    Surface(
+        modifier =
+            modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .padding(AppSpacing.md)
+                .semantics { liveRegion = LiveRegionMode.Assertive },
+        shape = AppShape.Card,
+        color = MaterialTheme.colorScheme.errorContainer,
+        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+    ) {
+        Row(
+            modifier = Modifier.padding(start = AppSpacing.md, end = AppSpacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = stringResource(Res.string.privacy_policy_navigation_blocked),
+                modifier = Modifier.weight(1f).padding(vertical = AppSpacing.md),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text =
+                        stringResource(
+                            Res.string.privacy_policy_navigation_blocked_dismiss,
+                        ),
+                )
             }
         }
     }
