@@ -403,6 +403,7 @@ private fun FacilityRegistrationForm(
             images = draft.images,
             enabled = !isSubmitting,
             onRequestImages = { onAction(FacilityRegistrationAction.RequestImages) },
+            onRemoveImage = { onAction(FacilityRegistrationAction.RemoveImage(it)) },
         )
         FacilityTextField(
             label = stringResource(Res.string.instructor_facility_registration_name),
@@ -570,6 +571,7 @@ private fun FacilityImageSection(
     images: List<FacilityImageInputUiModel>,
     enabled: Boolean,
     onRequestImages: () -> Unit,
+    onRemoveImage: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -600,8 +602,9 @@ private fun FacilityImageSection(
                 FacilityImageTile(
                     image = image,
                     count = null,
-                    enabled = false,
+                    enabled = enabled,
                     onClick = {},
+                    onRemove = { onRemoveImage(image.id) },
                 )
             }
         }
@@ -614,6 +617,7 @@ private fun FacilityImageTile(
     count: Int?,
     enabled: Boolean,
     onClick: () -> Unit,
+    onRemove: (() -> Unit)? = null,
 ) {
     val tileModifier =
         Modifier
@@ -645,13 +649,27 @@ private fun FacilityImageTile(
             )
         }
     } else {
-        SubcomposeAsyncImage(
-            model = image.previewReference,
-            contentDescription = null,
-            modifier = tileModifier,
-            loading = { RegistrationFacilityImageFallback(Modifier.fillMaxSize()) },
-            error = { RegistrationFacilityImageFallback(Modifier.fillMaxSize()) },
-        )
+        Box(modifier = tileModifier) {
+            SubcomposeAsyncImage(
+                model = image.previewReference,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                loading = { RegistrationFacilityImageFallback(Modifier.fillMaxSize()) },
+                error = { RegistrationFacilityImageFallback(Modifier.fillMaxSize()) },
+            )
+            if (enabled && onRemove != null) {
+                IconButton(
+                    onClick = onRemove,
+                    modifier = Modifier.align(Alignment.TopEnd),
+                ) {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_close),
+                        contentDescription = stringResource(Res.string.instructor_facility_registration_image_remove),
+                        tint = InsColors.TextPrimary,
+                    )
+                }
+            }
+        }
     }
 }
 

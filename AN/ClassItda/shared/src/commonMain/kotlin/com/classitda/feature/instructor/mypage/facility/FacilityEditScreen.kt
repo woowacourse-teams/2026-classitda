@@ -74,6 +74,7 @@ private fun FacilityRegistrationAction.toEditAction(): FacilityEditAction =
         is FacilityRegistrationAction.DescriptionChanged -> FacilityEditAction.DescriptionChanged(description)
         FacilityRegistrationAction.RequestImages -> FacilityEditAction.RequestImages
         is FacilityRegistrationAction.ImagesSelected -> FacilityEditAction.ImagesSelected(images)
+        is FacilityRegistrationAction.RemoveImage -> FacilityEditAction.RemoveImage(imageId)
         FacilityRegistrationAction.RequestAddressSearch -> FacilityEditAction.RequestAddressSearch
         is FacilityRegistrationAction.AddressSelected -> FacilityEditAction.AddressSelected(address, detailAddress)
         FacilityRegistrationAction.Submit -> FacilityEditAction.Submit

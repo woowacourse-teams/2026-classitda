@@ -78,6 +78,10 @@ sealed interface FacilityRegistrationAction {
         val images: List<FacilityImageInputUiModel>,
     ) : FacilityRegistrationAction
 
+    data class RemoveImage(
+        val imageId: String,
+    ) : FacilityRegistrationAction
+
     data object RequestAddressSearch : FacilityRegistrationAction
 
     data class AddressSelected(

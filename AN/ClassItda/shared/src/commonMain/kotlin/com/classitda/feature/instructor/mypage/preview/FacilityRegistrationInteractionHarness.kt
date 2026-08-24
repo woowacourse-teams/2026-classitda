@@ -107,6 +107,16 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
                             )
                     }
 
+                    is FacilityRegistrationAction.RemoveImage -> {
+                        lastEvent = "RemoveImage:${action.imageId}"
+                        uiState =
+                            editingState(
+                                uiState.draftOrEmpty().copy(
+                                    images = uiState.draftOrEmpty().images.filterNot { it.id == action.imageId },
+                                ),
+                            )
+                    }
+
                     FacilityRegistrationAction.RequestAddressSearch -> {
                         lastEvent = "RequestAddressSearch"
                     }

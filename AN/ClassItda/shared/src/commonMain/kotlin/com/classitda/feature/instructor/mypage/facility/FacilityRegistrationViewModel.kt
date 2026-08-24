@@ -56,6 +56,10 @@ internal class FacilityRegistrationViewModel(
                 update { copy(images = action.images.take(FacilityInputUiModel.MAX_IMAGE_COUNT)) }
             }
 
+            is FacilityRegistrationAction.RemoveImage -> {
+                update { copy(images = images.filterNot { it.id == action.imageId }) }
+            }
+
             is FacilityRegistrationAction.AddressSelected -> {
                 update {
                     copy(

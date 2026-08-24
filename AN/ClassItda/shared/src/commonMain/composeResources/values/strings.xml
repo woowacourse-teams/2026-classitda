@@ -314,6 +314,7 @@
     <string name="instructor_facility_registration_intro_description">입력하신 정보는 시설 프로필에 노출되며, 나중에 언제든지 수정할 수 있어요.</string>
     <string name="instructor_facility_registration_image_label">시설 이미지</string>
     <string name="instructor_facility_registration_image_optional"> (선택)</string>
+    <string name="instructor_facility_registration_image_remove">이미지 삭제</string>
     <string name="instructor_facility_registration_image_count">%1$d / 5</string>
     <string name="instructor_facility_registration_name">시설명</string>
     <string name="instructor_facility_registration_name_placeholder">시설명을 입력해 주세요.</string>
