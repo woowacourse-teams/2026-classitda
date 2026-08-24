@@ -1,4 +1,4 @@
-package com.classitda.feature.instructor.management.lesson.component
+package com.classitda.feature.instructor.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -37,11 +37,7 @@ internal fun ClassSessionStatusBadge(
                 contentColor = InsColors.Purple,
             ) {
                 Row(
-                    modifier =
-                        Modifier.padding(
-                            horizontal = AppSpacing.pillChipHorizontalPadding,
-                            vertical = AppSpacing.pillChipVerticalPadding,
-                        ),
+                    modifier = Modifier.padding(horizontal = AppSpacing.pillChipHorizontalPadding, vertical = AppSpacing.pillChipVerticalPadding),
                     horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -50,30 +46,17 @@ internal fun ClassSessionStatusBadge(
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
                     )
-                    Text(
-                        text = "수업 예정",
-                        style = MaterialTheme.typography.labelMedium,
-                    )
+                    Text(text = "수업 예정", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }
 
         ClassSessionStatus.CANCELLED -> {
-            Text(
-                text = "취소됨",
-                modifier = modifier,
-                style = MaterialTheme.typography.labelMedium,
-                color = InsColors.Red,
-            )
+            Text(text = "취소됨", modifier = modifier, style = MaterialTheme.typography.labelMedium, color = InsColors.Red)
         }
 
         ClassSessionStatus.COMPLETED -> {
-            Text(
-                text = "완료",
-                modifier = modifier,
-                style = MaterialTheme.typography.labelMedium,
-                color = InsColors.TextTertiary,
-            )
+            Text(text = "완료", modifier = modifier, style = MaterialTheme.typography.labelMedium, color = InsColors.TextTertiary)
         }
     }
 }
