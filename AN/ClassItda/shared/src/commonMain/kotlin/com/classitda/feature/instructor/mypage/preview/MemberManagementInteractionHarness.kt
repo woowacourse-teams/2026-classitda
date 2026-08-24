@@ -148,6 +148,10 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
                     "ConfirmDelete"
                 }
 
+                MemberManagementAction.DeleteAcknowledged -> {
+                    "DeleteAcknowledged"
+                }
+
                 MemberManagementAction.OpenMemberRegistration -> {
                     stringResource(Res.string.instructor_member_management_harness_open_registration)
                 }

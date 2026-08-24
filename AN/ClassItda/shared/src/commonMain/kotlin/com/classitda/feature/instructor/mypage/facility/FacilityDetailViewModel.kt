@@ -100,6 +100,10 @@ internal class FacilityDetailViewModel(
                 confirmDelete()
             }
 
+            is FacilityDetailAction.DeleteAcknowledged -> {
+                Unit
+            }
+
             FacilityDetailAction.Retry -> {
                 refresh()
             }

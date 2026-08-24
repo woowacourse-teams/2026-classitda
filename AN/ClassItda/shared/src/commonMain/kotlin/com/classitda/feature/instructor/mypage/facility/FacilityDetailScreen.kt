@@ -28,6 +28,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +49,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
+import classitda.shared.generated.resources.ic_close
 import classitda.shared.generated.resources.ic_home
 import classitda.shared.generated.resources.instructor_facility_delete_cancel
 import classitda.shared.generated.resources.instructor_facility_delete_confirm
@@ -53,6 +59,8 @@ import classitda.shared.generated.resources.instructor_facility_delete_name_erro
 import classitda.shared.generated.resources.instructor_facility_delete_pane_title
 import classitda.shared.generated.resources.instructor_facility_delete_placeholder
 import classitda.shared.generated.resources.instructor_facility_delete_submitting
+import classitda.shared.generated.resources.instructor_facility_delete_success
+import classitda.shared.generated.resources.instructor_facility_delete_success_title
 import classitda.shared.generated.resources.instructor_facility_delete_title
 import classitda.shared.generated.resources.instructor_facility_detail_address
 import classitda.shared.generated.resources.instructor_facility_detail_back
@@ -66,6 +74,8 @@ import classitda.shared.generated.resources.instructor_facility_detail_operating
 import classitda.shared.generated.resources.instructor_facility_detail_phone
 import classitda.shared.generated.resources.instructor_facility_detail_retry
 import classitda.shared.generated.resources.instructor_facility_detail_title
+import classitda.shared.generated.resources.instructor_member_registration_success_confirm
+import classitda.shared.generated.resources.phone_number_change_close
 import coil3.compose.SubcomposeAsyncImage
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
@@ -88,6 +98,20 @@ fun FacilityDetailScreen(
     onAction: (FacilityDetailAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var deleteSuccessVisible by remember { mutableStateOf(false) }
+    var deleteSuccessPresented by remember { mutableStateOf(false) }
+    LaunchedEffect(uiState) {
+        if (uiState is FacilityDetailUiState.Deleted) {
+            deleteSuccessPresented = true
+            deleteSuccessVisible = true
+        }
+    }
+    LaunchedEffect(deleteSuccessVisible) {
+        val deleted = uiState as? FacilityDetailUiState.Deleted
+        if (deleteSuccessPresented && !deleteSuccessVisible && deleted != null) {
+            onAction(FacilityDetailAction.DeleteAcknowledged(deleted.facilityId))
+        }
+    }
     val content = uiState as? FacilityDetailUiState.Content
     val isDeleting = content?.deleteState is FacilityDeleteState.Submitting
 
@@ -142,6 +166,9 @@ fun FacilityDetailScreen(
             state = content.deleteState,
             onAction = onAction,
         )
+    }
+    if (uiState is FacilityDetailUiState.Deleted && deleteSuccessVisible) {
+        FacilityDeleteSuccessDialog(onClose = { deleteSuccessVisible = false })
     }
 }
 
@@ -420,6 +447,69 @@ private fun FacilityDeleteDialog(
                         color = InsColors.TextSecondary,
                         textAlign = TextAlign.Center,
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FacilityDeleteSuccessDialog(onClose: () -> Unit) {
+    val paneTitle = stringResource(Res.string.instructor_facility_delete_success_title)
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = {},
+        properties =
+            DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+            ),
+    ) {
+        Surface(
+            modifier =
+                Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xxxl).semantics {
+                    this.paneTitle = paneTitle
+                },
+            shape = AppShape.Card,
+            color = InsColors.Surface,
+        ) {
+            Column(
+                modifier = Modifier.padding(AppSpacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = paneTitle,
+                        modifier = Modifier.align(Alignment.Center),
+                        style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = InsColors.TextPrimary,
+                    )
+                    IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd)) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_close),
+                            contentDescription = stringResource(Res.string.phone_number_change_close),
+                            tint = InsColors.TextSecondary,
+                        )
+                    }
+                }
+                Text(
+                    text = stringResource(Res.string.instructor_facility_delete_success),
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
+                    style = appTypography().bodyLarge,
+                    color = InsColors.TextSecondary,
+                )
+                Button(
+                    onClick = onClose,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = AppShape.Card,
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = InsColors.Primary,
+                            contentColor = InsColors.White,
+                        ),
+                ) {
+                    Text(stringResource(Res.string.instructor_member_registration_success_confirm))
                 }
             }
         }

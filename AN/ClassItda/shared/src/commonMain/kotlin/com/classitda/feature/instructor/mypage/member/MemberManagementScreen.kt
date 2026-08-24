@@ -33,6 +33,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +56,7 @@ import androidx.compose.ui.window.DialogProperties
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_arrow_forward
+import classitda.shared.generated.resources.ic_close
 import classitda.shared.generated.resources.ic_expand_more
 import classitda.shared.generated.resources.ic_person_add
 import classitda.shared.generated.resources.ic_search
@@ -66,6 +68,8 @@ import classitda.shared.generated.resources.instructor_member_delete_name_error
 import classitda.shared.generated.resources.instructor_member_delete_pane_title
 import classitda.shared.generated.resources.instructor_member_delete_placeholder
 import classitda.shared.generated.resources.instructor_member_delete_submitting
+import classitda.shared.generated.resources.instructor_member_delete_success
+import classitda.shared.generated.resources.instructor_member_delete_success_title
 import classitda.shared.generated.resources.instructor_member_delete_title
 import classitda.shared.generated.resources.instructor_member_detail_delete
 import classitda.shared.generated.resources.instructor_member_detail_edit
@@ -87,6 +91,8 @@ import classitda.shared.generated.resources.instructor_member_management_sort_re
 import classitda.shared.generated.resources.instructor_member_management_title
 import classitda.shared.generated.resources.instructor_member_management_total_count
 import classitda.shared.generated.resources.instructor_member_management_total_label
+import classitda.shared.generated.resources.instructor_member_registration_success_confirm
+import classitda.shared.generated.resources.phone_number_change_close
 import coil3.compose.SubcomposeAsyncImage
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
@@ -113,6 +119,22 @@ fun MemberManagementScreen(
     modifier: Modifier = Modifier,
 ) {
     var actionMember by remember { mutableStateOf<ManagedMember?>(null) }
+    var deleteSuccessVisible by remember { mutableStateOf(false) }
+    var deleteSuccessPresented by remember { mutableStateOf(false) }
+    LaunchedEffect(uiState) {
+        val content = uiState as? MemberManagementUiState.Content
+        if (content?.actionState is MemberManagementActionState.Deleted) {
+            deleteSuccessPresented = true
+            deleteSuccessVisible = true
+        }
+    }
+    LaunchedEffect(deleteSuccessVisible) {
+        val content = uiState as? MemberManagementUiState.Content
+        val deleted = content?.actionState as? MemberManagementActionState.Deleted
+        if (deleteSuccessPresented && !deleteSuccessVisible && deleted != null) {
+            onAction(MemberManagementAction.DeleteAcknowledged)
+        }
+    }
     Scaffold(
         modifier = modifier,
         containerColor = InsColors.Background,
@@ -196,11 +218,15 @@ fun MemberManagementScreen(
                 is MemberManagementActionState.Confirming -> member.id == deleteState.memberId
                 is MemberManagementActionState.Submitting -> member.id == deleteState.memberId
                 is MemberManagementActionState.Failed -> member.id == deleteState.memberId
+                is MemberManagementActionState.Deleted -> member.id == deleteState.memberId
                 else -> false
             }
         }
     if (deleteMember != null && deleteState != null) {
         MemberDeleteDialog(deleteMember.name, deleteState, onAction)
+    }
+    if (deleteSuccessVisible && deleteState is MemberManagementActionState.Deleted) {
+        MemberDeleteSuccessDialog(onClose = { deleteSuccessVisible = false })
     }
 }
 
@@ -549,7 +575,13 @@ private fun MemberDeleteDialog(
     state: MemberManagementActionState,
     onAction: (MemberManagementAction) -> Unit,
 ) {
-    if (state == MemberManagementActionState.Hidden) return
+    if (
+        state !is MemberManagementActionState.Confirming &&
+        state !is MemberManagementActionState.Submitting &&
+        state !is MemberManagementActionState.Failed
+    ) {
+        return
+    }
     val isSubmitting = state is MemberManagementActionState.Submitting
     val typedName =
         when (state) {
@@ -683,6 +715,69 @@ private fun MemberDeleteDialog(
                         style = appTypography().bodySmall,
                         color = InsColors.TextSecondary,
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemberDeleteSuccessDialog(onClose: () -> Unit) {
+    val paneTitle = stringResource(Res.string.instructor_member_delete_success_title)
+    Dialog(
+        onDismissRequest = {},
+        properties =
+            DialogProperties(
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+                usePlatformDefaultWidth = false,
+            ),
+    ) {
+        Surface(
+            modifier =
+                Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xxxl).semantics {
+                    this.paneTitle = paneTitle
+                },
+            shape = AppShape.Card,
+            color = InsColors.Surface,
+        ) {
+            Column(
+                modifier = Modifier.padding(AppSpacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+            ) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = paneTitle,
+                        modifier = Modifier.align(Alignment.Center),
+                        style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = InsColors.TextPrimary,
+                    )
+                    IconButton(onClick = onClose, modifier = Modifier.align(Alignment.TopEnd)) {
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_close),
+                            contentDescription = stringResource(Res.string.phone_number_change_close),
+                            tint = InsColors.TextSecondary,
+                        )
+                    }
+                }
+                Text(
+                    text = stringResource(Res.string.instructor_member_delete_success),
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
+                    style = appTypography().bodyLarge,
+                    color = InsColors.TextSecondary,
+                )
+                Button(
+                    onClick = onClose,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = AppShape.Card,
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = InsColors.Primary,
+                            contentColor = InsColors.White,
+                        ),
+                ) {
+                    Text(stringResource(Res.string.instructor_member_registration_success_confirm))
                 }
             }
         }

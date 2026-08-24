@@ -273,6 +273,8 @@
     <string name="instructor_member_delete_cancel">취소</string>
     <string name="instructor_member_delete_confirm">삭제하기</string>
     <string name="instructor_member_delete_submitting">회원을 삭제하는 중입니다.</string>
+    <string name="instructor_member_delete_success_title">회원 삭제 완료</string>
+    <string name="instructor_member_delete_success">회원이 삭제되었습니다.</string>
     <string name="instructor_member_edit_title">회원 정보 수정</string>
     <string name="instructor_member_edit_back">회원 정보 수정 뒤로 가기</string>
     <string name="instructor_member_edit_intro_title">회원 정보를 수정해 주세요.</string>
@@ -365,6 +367,8 @@
     <string name="instructor_facility_delete_cancel">취소</string>
     <string name="instructor_facility_delete_confirm">삭제하기</string>
     <string name="instructor_facility_delete_submitting">시설을 삭제하는 중입니다.</string>
+    <string name="instructor_facility_delete_success_title">시설 삭제 완료</string>
+    <string name="instructor_facility_delete_success">시설이 삭제되었습니다.</string>
     <string name="instructor_facility_delete_failed">시설을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.</string>
     <string name="instructor_facility_delete_pane_title">시설 삭제 확인</string>
     <string name="instructor_facility_registration_harness_empty">빈 form</string>

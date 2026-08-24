@@ -195,6 +195,7 @@ internal fun InstructorMemberManagementRoute(
         when (action) {
             MemberManagementAction.Back -> onBack()
             is MemberManagementAction.EditMember -> onEditMember(action.memberId)
+            MemberManagementAction.DeleteAcknowledged -> viewModel.refresh()
             MemberManagementAction.OpenMemberRegistration -> onOpenMemberRegistration()
             else -> viewModel.onAction(action)
         }
@@ -291,14 +292,11 @@ internal fun InstructorFacilityDetailRoute(
         ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(uiState) {
-        val deleted = uiState as? FacilityDetailUiState.Deleted
-        deleted?.let { onDeleted(it.facilityId) }
-    }
     FacilityDetailScreen(uiState, onAction = { action ->
         when (action) {
             FacilityDetailAction.Back -> onBack()
             FacilityDetailAction.OpenEdit -> onOpenEdit(facilityId)
+            is FacilityDetailAction.DeleteAcknowledged -> onDeleted(action.facilityId)
             else -> viewModel.onAction(action)
         }
     }, modifier = modifier)

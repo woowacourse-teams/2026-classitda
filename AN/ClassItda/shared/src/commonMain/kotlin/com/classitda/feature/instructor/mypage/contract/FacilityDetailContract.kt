@@ -64,5 +64,9 @@ sealed interface FacilityDetailAction {
 
     data object ConfirmDelete : FacilityDetailAction
 
+    data class DeleteAcknowledged(
+        val facilityId: InstructorFacilityId,
+    ) : FacilityDetailAction
+
     data object Retry : FacilityDetailAction
 }

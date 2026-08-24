@@ -232,6 +232,10 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             lastEvent = "ConfirmDelete"
                         }
 
+                        MemberManagementAction.DeleteAcknowledged -> {
+                            lastEvent = "DeleteAcknowledged"
+                        }
+
                         MemberManagementAction.OpenMemberRegistration -> {
                             destination = HarnessDestination.F06
                             lastEvent =

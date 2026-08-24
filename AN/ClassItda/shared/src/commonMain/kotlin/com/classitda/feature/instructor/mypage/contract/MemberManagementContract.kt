@@ -60,6 +60,8 @@ sealed interface MemberManagementAction {
 
     data object ConfirmDelete : MemberManagementAction
 
+    data object DeleteAcknowledged : MemberManagementAction
+
     data object OpenMemberRegistration : MemberManagementAction
 
     data object Retry : MemberManagementAction
@@ -83,6 +85,10 @@ sealed interface MemberManagementActionState {
         val memberId: InstructorMemberId,
         val typedName: String,
         val reason: MemberManagementDeleteError,
+    ) : MemberManagementActionState
+
+    data class Deleted(
+        val memberId: InstructorMemberId,
     ) : MemberManagementActionState
 }
 

@@ -184,7 +184,9 @@ internal class MemberManagementViewModel(
         viewModelScope.launch {
             when (val result = repository.deleteMember(memberId)) {
                 is InstructorMyPageResult.Success -> {
-                    load()
+                    updateContent {
+                        copy(actionState = MemberManagementActionState.Deleted(memberId))
+                    }
                 }
 
                 is InstructorMyPageResult.Failure -> {
