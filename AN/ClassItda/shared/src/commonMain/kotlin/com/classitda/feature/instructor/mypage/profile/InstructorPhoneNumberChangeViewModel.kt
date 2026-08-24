@@ -53,6 +53,7 @@ import com.classitda.feature.instructor.mypage.toPhoneError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 internal class InstructorPhoneNumberChangeViewModel(
@@ -64,10 +65,15 @@ internal class InstructorPhoneNumberChangeViewModel(
     val uiState: StateFlow<PhoneNumberChangeUiState> = _uiState.asStateFlow()
     private var verificationId:
         com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId? = null
+    private var requestJob: Job? = null
+    private var requestGeneration = 0
 
     fun onAction(action: PhoneNumberChangeAction) {
         when (action) {
             is PhoneNumberChangeAction.PhoneNumberChanged -> {
+                requestJob?.cancel()
+                requestGeneration++
+                verificationId = null
                 _uiState.value =
                     PhoneNumberChangeUiState.Editing(action.phoneNumber, "")
             }
@@ -116,10 +122,15 @@ internal class InstructorPhoneNumberChangeViewModel(
                 else -> return
             }
         if (phone.isBlank()) return
+        requestJob?.cancel()
+        verificationId = null
+        val generation = ++requestGeneration
         _uiState.value = PhoneNumberChangeUiState.Requesting(phone, "")
-        viewModelScope.launch {
+        requestJob = viewModelScope.launch {
+            val result = repository.requestPhoneVerification(phone)
+            if (generation != requestGeneration) return@launch
             _uiState.value =
-                when (val result = repository.requestPhoneVerification(phone)) {
+                when (result) {
                     is InstructorMyPageResult.Success -> {
                         verificationId = result.value.verificationId
                         PhoneNumberChangeUiState.CodeEntry(phone, "", 180)
