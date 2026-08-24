@@ -35,7 +35,20 @@ internal class MemberEditViewModel(
             is MemberEditAction.PhoneNumberChanged -> update { copy(phoneNumber = action.phoneNumber) }
             MemberEditAction.Submit -> submit()
             is MemberEditAction.SuccessAcknowledged -> Unit
-            MemberEditAction.Retry -> refresh()
+            MemberEditAction.Retry -> {
+                when (val current = _uiState.value) {
+                    is MemberEditUiState.Error -> {
+                        if (current.isSubmitFailure) {
+                            _uiState.value = editing(current.draft)
+                            submit()
+                        } else {
+                            refresh()
+                        }
+                    }
+
+                    else -> refresh()
+                }
+            }
             MemberEditAction.Back -> Unit
         }
     }
@@ -95,6 +108,7 @@ internal class MemberEditViewModel(
                             memberId = memberId,
                             draft = state.draft,
                             reason = result.reason.toMemberEditError(),
+                            isSubmitFailure = true,
                         )
                     }
                 }

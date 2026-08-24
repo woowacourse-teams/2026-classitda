@@ -25,6 +25,7 @@ sealed interface MemberEditUiState {
         val memberId: InstructorMemberId,
         val draft: MemberInputUiModel,
         val reason: MemberEditUiError,
+        val isSubmitFailure: Boolean = false,
     ) : MemberEditUiState
 }
 
