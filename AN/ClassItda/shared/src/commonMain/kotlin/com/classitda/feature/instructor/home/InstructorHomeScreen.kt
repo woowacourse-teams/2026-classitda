@@ -160,7 +160,7 @@ private fun InstructorTimelineItem(
         if (isNext) {
             Card(
                 onClick = onScheduleClick,
-                colors = CardDefaults.cardColors(containerColor = InsColors.Surface),
+                colors = CardDefaults.cardColors(containerColor = InsColors.White),
                 modifier = Modifier.fillMaxWidth().padding(bottom = AppSpacing.md),
             ) {
                 InstructorTimelineItemContent(
