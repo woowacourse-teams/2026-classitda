@@ -8,12 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -21,8 +21,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -35,9 +37,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_arrow_back
+import classitda.shared.generated.resources.ic_arrow_forward
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -47,12 +53,14 @@ import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.feature.instructor.management.lesson.component.ClassSessionStatusBadge
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -146,8 +154,6 @@ internal fun InstructorScheduleStateless(
         item {
             Column(Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg)) {
                 Text("일정", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(AppSpacing.xs))
-                Text("수업 일정을 한눈에 확인하세요", color = InsColors.TextSecondary)
             }
         }
         item {
@@ -162,12 +168,18 @@ internal fun InstructorScheduleStateless(
             )
         }
         item {
-            Text(
-                text = "${selectedDate.month.number}월 ${selectedDate.day}일 수업",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
-            )
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "${selectedDate.month.number}월 ${selectedDate.day}일 ${selectedDate.dayOfWeek.koreanName}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(Modifier.weight(1f))
+                Text("수업 ${selectedSessions.size}개", style = MaterialTheme.typography.bodySmall, color = InsColors.TextSecondary)
+            }
         }
         if (selectedSessions.isEmpty()) {
             item {
@@ -202,18 +214,38 @@ private fun InstructorCalendar(
     }
 
     Column(
-        modifier = Modifier.fillMaxWidth().background(InsColors.Surface).padding(AppSpacing.screenPadding),
+        modifier = Modifier.fillMaxWidth().background(InsColors.White).padding(AppSpacing.screenPadding),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(Res.drawable.ic_arrow_back),
+                contentDescription = "이전 달",
+                tint = InsColors.TextSecondary,
+                modifier = Modifier.size(20.dp).clickable(onClick = onPreviousMonth),
+            )
+            Spacer(Modifier.width(AppSpacing.sm))
             Text("${displayedYear}년 ${displayedMonth}월", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.width(AppSpacing.sm))
+            Icon(
+                painter = painterResource(Res.drawable.ic_arrow_forward),
+                contentDescription = "다음 달",
+                tint = InsColors.TextSecondary,
+                modifier = Modifier.size(20.dp).clickable(onClick = onNextMonth),
+            )
             Spacer(Modifier.weight(1f))
-            Text("‹", modifier = Modifier.clickable(onClick = onPreviousMonth).padding(horizontal = AppSpacing.md), style = MaterialTheme.typography.headlineSmall)
-            Text("›", modifier = Modifier.clickable(onClick = onNextMonth).padding(horizontal = AppSpacing.md), style = MaterialTheme.typography.headlineSmall)
+            Surface(shape = AppShape.Card, color = InsColors.SurfaceVariant) {
+                Row(Modifier.padding(2.dp)) {
+                    Surface(shape = AppShape.Card, color = InsColors.White) {
+                        Text("월", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
+                    }
+                    Text("주", color = InsColors.TextSecondary, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
+                }
+            }
         }
         Row(Modifier.fillMaxWidth()) {
             listOf("월", "화", "수", "목", "금", "토", "일").forEach { day ->
-                Text(day, modifier = Modifier.weight(1f), color = InsColors.TextTertiary, style = MaterialTheme.typography.labelMedium)
+                Text(day, modifier = Modifier.weight(1f), color = InsColors.TextTertiary, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
             }
         }
         days.chunked(7).forEach { week ->
@@ -235,13 +267,13 @@ private fun CalendarDay(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.aspectRatio(1f).padding(2.dp).clip(AppShape.Pill).clickable(enabled = date != null) { date?.let(onDateSelected) },
+        modifier = modifier.height(40.dp).clip(AppShape.Pill).clickable(enabled = date != null) { date?.let(onDateSelected) },
         contentAlignment = Alignment.Center,
     ) {
         if (date != null) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
-                    modifier = Modifier.size(32.dp).clip(AppShape.Pill).background(if (isSelected) InsColors.Primary else Color.Transparent),
+                    modifier = Modifier.size(28.dp).clip(AppShape.Pill).background(if (isSelected) InsColors.Black else Color.Transparent),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(date.day.toString(), color = if (isSelected) InsColors.White else InsColors.TextPrimary)
@@ -260,14 +292,29 @@ private fun InstructorScheduleCard(session: ClassSession) {
     ) {
         Column(Modifier.padding(AppSpacing.cardPadding)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(session.timeText(), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+                    session.tags.take(2).forEach { tag ->
+                        Surface(shape = AppShape.Pill, color = InsColors.SurfaceVariant) {
+                            Text(
+                                text = tag,
+                                color = InsColors.TextSecondary,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
+                            )
+                        }
+                    }
+                }
                 Spacer(Modifier.weight(1f))
                 ClassSessionStatusBadge(session.status)
             }
             Spacer(Modifier.height(AppSpacing.sm))
             Text(session.title, style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(AppSpacing.xs))
-            Text("예약 ${session.reservedCount} / ${session.capacity}명", color = InsColors.TextSecondary)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(session.timeText(), color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Spacer(Modifier.weight(1f))
+                Text("예약 ${session.reservedCount}명  |  정원 ${session.capacity}명", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }
@@ -313,6 +360,18 @@ private fun InstructorScheduleStatelessPreview() {
 }
 
 private fun ClassSession.timeText(): String = "${startAt.hour.toString().padStart(2, '0')}:${startAt.minute.toString().padStart(2, '0')}"
+
+private val DayOfWeek.koreanName: String
+    get() =
+        when (this) {
+            DayOfWeek.MONDAY -> "월요일"
+            DayOfWeek.TUESDAY -> "화요일"
+            DayOfWeek.WEDNESDAY -> "수요일"
+            DayOfWeek.THURSDAY -> "목요일"
+            DayOfWeek.FRIDAY -> "금요일"
+            DayOfWeek.SATURDAY -> "토요일"
+            DayOfWeek.SUNDAY -> "일요일"
+        }
 
 @Composable
 private fun ScheduleLoading(modifier: Modifier = Modifier) {
