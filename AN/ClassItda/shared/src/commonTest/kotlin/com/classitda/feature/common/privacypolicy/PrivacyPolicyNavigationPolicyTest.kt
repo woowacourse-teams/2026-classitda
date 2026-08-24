@@ -18,7 +18,7 @@ class PrivacyPolicyNavigationPolicyTest {
             policy.allows(
                 target(
                     scheme = "HTTPS",
-                    host = "WWW.CLASSITDA.COM",
+                    host = "CLASSITDA.COM",
                 ),
             ),
         )
@@ -33,20 +33,22 @@ class PrivacyPolicyNavigationPolicyTest {
 
     @Test
     fun `같은 문서 path는 허용한다`() {
-        assertTrue(policy.allows(target(path = "/privacy")))
+        assertTrue(policy.allows(target(path = "/privacy-policy")))
     }
 
     @Test
     fun `비승인 path와 query는 차단한다`() {
         assertFalse(policy.allows(target(path = "/")))
-        assertFalse(policy.allows(target(path = "/privacy/")))
+        assertFalse(policy.allows(target(path = "/privacy-policy/")))
+        assertFalse(policy.allows(target(path = "/privacy")))
         assertFalse(policy.allows(target(query = "next=https://naver.com")))
     }
 
     @Test
     fun `host 위장과 userInfo를 차단한다`() {
-        assertFalse(policy.allows(target(host = "www.classitda.com.evil.com")))
-        assertFalse(policy.allows(target(host = "evil-www.classitda.com")))
+        assertFalse(policy.allows(target(host = "classitda.com.evil.com")))
+        assertFalse(policy.allows(target(host = "evil-classitda.com")))
+        assertFalse(policy.allows(target(host = "www.classitda.com")))
         assertFalse(policy.allows(target(hasUserInfo = true)))
     }
 
@@ -87,10 +89,10 @@ class PrivacyPolicyNavigationPolicyTest {
 
     private fun target(
         scheme: String? = "https",
-        host: String? = "www.classitda.com",
+        host: String? = "classitda.com",
         port: Int? = null,
         hasUserInfo: Boolean = false,
-        path: String = "/privacy",
+        path: String = "/privacy-policy",
         query: String? = null,
     ) =
         PrivacyPolicyNavigationTarget(
