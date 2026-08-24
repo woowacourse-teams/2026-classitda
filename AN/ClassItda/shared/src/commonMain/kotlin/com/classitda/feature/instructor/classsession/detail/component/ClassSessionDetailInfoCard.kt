@@ -2,6 +2,7 @@ package com.classitda.feature.instructor.classsession.detail.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,7 +37,10 @@ internal fun ClassSessionDetailInfoCard(
             modifier = Modifier.padding(AppSpacing.cardPadding),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+            ) {
                 detail.tags.forEach { tag ->
                     Surface(
                         shape = AppShape.Pill,

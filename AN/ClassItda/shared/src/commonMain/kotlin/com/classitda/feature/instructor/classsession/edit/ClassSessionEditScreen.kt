@@ -85,8 +85,8 @@ internal fun ClassSessionEditRoute(
                 initialForm = state.form,
                 categories = categories,
                 onBackClick = onBackClick,
-                onSaved = onSaved,
-                onDeleted = onDeleted,
+                onSave = { form -> viewModel.updateSession(form, onSaved) },
+                onDelete = { viewModel.deleteSession(sessionId, onDeleted) },
                 modifier = modifier,
             )
         }
@@ -98,8 +98,8 @@ private fun ClassSessionEditStateful(
     initialForm: ClassSessionEditFormUiModel,
     categories: List<String>,
     onBackClick: () -> Unit,
-    onSaved: () -> Unit,
-    onDeleted: () -> Unit,
+    onSave: (ClassSessionEditFormUiModel) -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var classType by remember(initialForm.id) { mutableStateOf(initialForm.classType) }
@@ -141,7 +141,18 @@ private fun ClassSessionEditStateful(
         if (capacity < initialForm.reservedCount) {
             isCapacityDialogVisible = true
         } else {
-            onSaved()
+            onSave(
+                initialForm.copy(
+                    classType = classType,
+                    categories = selectedCategories,
+                    title = title,
+                    capacity = capacity,
+                    durationMinutes = durationMinutes,
+                    startTime = startTime,
+                    sessionDate = sessionDate,
+                    description = description,
+                ),
+            )
         }
     }
 
@@ -209,7 +220,7 @@ private fun ClassSessionEditStateful(
             onDismissRequest = { isDeleteDialogVisible = false },
             onConfirmClick = {
                 isDeleteDialogVisible = false
-                onDeleted()
+                onDelete()
             },
         )
     }

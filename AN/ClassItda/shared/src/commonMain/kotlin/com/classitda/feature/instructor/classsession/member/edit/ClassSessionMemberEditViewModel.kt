@@ -3,10 +3,13 @@ package com.classitda.feature.instructor.classsession.member.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.instructor.management.ClassSession
+import com.classitda.domain.model.instructor.management.ClassSessionMember
 import com.classitda.domain.repository.instructor.management.ClassManagementRepository
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionDetailUiModel
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionMemberUiModel
 import com.classitda.feature.instructor.classsession.member.edit.model.ClassSessionMemberEditUiModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,29 +23,63 @@ internal class ClassSessionMemberEditViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ClassSessionMemberEditUiState>(ClassSessionMemberEditUiState.Loading)
     val uiState: StateFlow<ClassSessionMemberEditUiState> = _uiState.asStateFlow()
+    private var loadJob: Job? = null
 
     fun load(sessionId: String) {
+        loadJob?.cancel()
         _uiState.value = ClassSessionMemberEditUiState.Loading
-        viewModelScope.launch {
-            runCatching { repository.getSessions().firstOrNull { it.id == sessionId } }
-                .onSuccess { session ->
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    val session = repository.getSessions().firstOrNull { it.id == sessionId }
                     _uiState.value =
                         session?.let { ClassSessionMemberEditUiState.Success(it.toMemberEditUiModel()) }
                             ?: ClassSessionMemberEditUiState.Error("수업 정보를 찾을 수 없어요")
-                }.onFailure { error ->
-                    _uiState.value = ClassSessionMemberEditUiState.Error(error.message)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    _uiState.value = ClassSessionMemberEditUiState.Error(exception.message)
                 }
+            }
+    }
+
+    fun saveMembers(
+        sessionId: String,
+        members: List<ClassSessionMemberUiModel>,
+        onSuccess: () -> Unit,
+    ) {
+        viewModelScope.launch {
+            try {
+                repository.updateSessionMembers(
+                    sessionId = sessionId,
+                    members =
+                        members.map { member ->
+                            ClassSessionMember(
+                                id = member.id,
+                                name = member.name,
+                                isTemporary = member.isTemporary,
+                            )
+                        },
+                )
+                onSuccess()
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                _uiState.value = ClassSessionMemberEditUiState.Error(exception.message)
+            }
         }
     }
 }
 
 private fun ClassSession.toMemberEditUiModel(): ClassSessionMemberEditUiModel {
     val bookedMembers =
-        listOf(
-            ClassSessionMemberUiModel(id = "member-1", name = "김민지"),
-            ClassSessionMemberUiModel(id = "member-2", name = "이서윤"),
-            ClassSessionMemberUiModel(id = "member-3", name = "박지수", isTemporary = true),
-        )
+        members.map { member ->
+            ClassSessionMemberUiModel(
+                id = member.id,
+                name = member.name,
+                isTemporary = member.isTemporary,
+            )
+        }
     val detail =
         ClassSessionDetailUiModel(
             id = id,

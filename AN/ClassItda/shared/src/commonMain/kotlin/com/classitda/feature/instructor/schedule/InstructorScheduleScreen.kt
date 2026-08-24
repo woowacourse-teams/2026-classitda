@@ -57,12 +57,14 @@ import kotlin.time.Clock
 internal fun InstructorScheduleRoute(
     bottomBar: @Composable () -> Unit,
     onSessionClick: (String) -> Unit = {},
+    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: InstructorScheduleViewModel = koinViewModel(),
 ) {
     InstructorScheduleStateful(
         bottomBar = bottomBar,
         onSessionClick = onSessionClick,
+        refreshKey = refreshKey,
         modifier = modifier,
         viewModel = viewModel,
     )
@@ -72,16 +74,25 @@ internal fun InstructorScheduleRoute(
 internal fun InstructorScheduleStateful(
     bottomBar: @Composable () -> Unit,
     onSessionClick: (String) -> Unit,
+    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: InstructorScheduleViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val sessions = (uiState as? InstructorScheduleUiState.Success)?.sessions.orEmpty()
-    val firstSessionDate = sessions.minOfOrNull { it.startAt.date } ?: LocalDate(2026, 8, 1)
+    val firstSessionDate =
+        sessions.minOfOrNull { it.startAt.date }
+            ?: Clock.System.todayIn(TimeZone.currentSystemDefault())
     var displayedYear by remember { mutableStateOf(firstSessionDate.year) }
     var displayedMonth by remember { mutableStateOf(firstSessionDate.month.number) }
     var selectedDate by remember { mutableStateOf(firstSessionDate) }
     var isMonthMode by remember { mutableStateOf(true) }
+
+    LaunchedEffect(refreshKey) {
+        if (refreshKey > 0) {
+            viewModel.load()
+        }
+    }
 
     LaunchedEffect(sessions) {
         if (sessions.isNotEmpty()) {

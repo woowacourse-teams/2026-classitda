@@ -23,8 +23,8 @@ import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_edit
 import classitda.shared.generated.resources.ic_more
 import classitda.shared.generated.resources.ic_person
-import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import org.jetbrains.compose.resources.painterResource
 

@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -75,7 +76,7 @@ internal fun ClassSessionMemberEditRoute(
             ClassSessionMemberEditStateful(
                 content = state.content,
                 onBackClick = onBackClick,
-                onSaved = onSaved,
+                onSave = { members -> viewModel.saveMembers(sessionId, members, onSaved) },
                 modifier = modifier,
             )
         }
@@ -86,15 +87,17 @@ internal fun ClassSessionMemberEditRoute(
 private fun ClassSessionMemberEditStateful(
     content: ClassSessionMemberEditUiModel,
     onBackClick: () -> Unit,
-    onSaved: () -> Unit,
+    onSave: (List<ClassSessionMemberUiModel>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var bookedMembers by remember(content.detail.id) { mutableStateOf(content.detail.members) }
+    var temporaryMemberSequence by remember(content.detail.id) { mutableIntStateOf(0) }
     var addType by remember { mutableStateOf(MemberAddType.EXISTING) }
     var temporaryName by remember { mutableStateOf("") }
     var isExistingSheetVisible by remember { mutableStateOf(false) }
     var memberQuery by remember { mutableStateOf("") }
     var selectedMemberIds by remember { mutableStateOf(emptySet<String>()) }
+    val remainingCapacity = (content.detail.capacity - bookedMembers.size).coerceAtLeast(0)
 
     val selectableMembers =
         content.availableMembers
@@ -115,18 +118,19 @@ private fun ClassSessionMemberEditStateful(
             isExistingSheetVisible = true
         },
         onTemporaryAddClick = {
-            if (temporaryName.isNotBlank()) {
+            if (temporaryName.isNotBlank() && bookedMembers.size < content.detail.capacity) {
+                val temporaryMemberId = "temporary-${temporaryMemberSequence++}"
                 bookedMembers =
                     bookedMembers +
                     ClassSessionMemberUiModel(
-                        id = "temporary-${bookedMembers.size}-${temporaryName.trim()}",
+                        id = temporaryMemberId,
                         name = temporaryName.trim(),
                         isTemporary = true,
                     )
                 temporaryName = ""
             }
         },
-        onSaveClick = onSaved,
+        onSaveClick = { onSave(bookedMembers) },
         modifier = modifier,
     )
 
@@ -140,13 +144,18 @@ private fun ClassSessionMemberEditStateful(
                 selectedMemberIds =
                     if (memberId in selectedMemberIds) {
                         selectedMemberIds - memberId
-                    } else {
+                    } else if (selectedMemberIds.size < remainingCapacity) {
                         selectedMemberIds + memberId
+                    } else {
+                        selectedMemberIds
                     }
             },
             onConfirmClick = {
                 bookedMembers =
-                    bookedMembers + content.availableMembers.filter { it.id in selectedMemberIds }
+                    bookedMembers +
+                    content.availableMembers
+                        .filter { it.id in selectedMemberIds }
+                        .take(remainingCapacity)
                 selectedMemberIds = emptySet()
                 memberQuery = ""
                 isExistingSheetVisible = false

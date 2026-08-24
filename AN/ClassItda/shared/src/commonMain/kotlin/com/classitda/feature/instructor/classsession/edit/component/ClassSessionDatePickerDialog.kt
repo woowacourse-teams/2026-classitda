@@ -76,7 +76,8 @@ private fun LocalDate.toPickerEpochMillis(): Long =
         .toEpochMilliseconds()
 
 private fun Long.toPickerLocalDate(): LocalDate =
-    Instant.fromEpochMilliseconds(this)
+    Instant
+        .fromEpochMilliseconds(this)
         .toLocalDateTime(TimeZone.UTC)
         .date
 

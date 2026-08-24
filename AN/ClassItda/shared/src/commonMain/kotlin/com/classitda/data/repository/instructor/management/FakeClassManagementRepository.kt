@@ -1,6 +1,7 @@
 package com.classitda.data.repository.instructor.management
 
 import com.classitda.domain.model.instructor.management.ClassSession
+import com.classitda.domain.model.instructor.management.ClassSessionMember
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.domain.model.instructor.management.ClassTemplate
 import com.classitda.domain.model.instructor.management.ClassTemplateSchedule
@@ -62,6 +63,7 @@ internal class FakeClassManagementRepository : ClassManagementRepository {
                 reservedCount = 8,
                 capacity = 10,
                 status = ClassSessionStatus.SCHEDULED,
+                members = demoMembers,
             ),
             ClassSession(
                 id = "2",
@@ -72,6 +74,7 @@ internal class FakeClassManagementRepository : ClassManagementRepository {
                 reservedCount = 8,
                 capacity = 10,
                 status = ClassSessionStatus.CANCELLED,
+                members = demoMembers,
             ),
             ClassSession(
                 id = "3",
@@ -82,6 +85,7 @@ internal class FakeClassManagementRepository : ClassManagementRepository {
                 reservedCount = 1,
                 capacity = 1,
                 status = ClassSessionStatus.COMPLETED,
+                members = demoMembers,
             ),
         )
 
@@ -134,4 +138,38 @@ internal class FakeClassManagementRepository : ClassManagementRepository {
         sessions += created
         return created
     }
+
+    override suspend fun updateSession(session: ClassSession): ClassSession {
+        delay(300)
+        val index = sessions.indexOfFirst { it.id == session.id }
+        require(index >= 0) { "수업을 찾을 수 없습니다." }
+        sessions[index] = session
+        return session
+    }
+
+    override suspend fun deleteSession(id: String) {
+        delay(300)
+        sessions.removeAll { it.id == id }
+    }
+
+    override suspend fun updateSessionMembers(
+        sessionId: String,
+        members: List<ClassSessionMember>,
+    ) {
+        delay(300)
+        val index = sessions.indexOfFirst { it.id == sessionId }
+        require(index >= 0) { "수업을 찾을 수 없습니다." }
+        sessions[index] =
+            sessions[index].copy(
+                members = members,
+                reservedCount = members.size,
+            )
+    }
 }
+
+private val demoMembers =
+    listOf(
+        ClassSessionMember(id = "member-1", name = "김민지"),
+        ClassSessionMember(id = "member-2", name = "이서윤"),
+        ClassSessionMember(id = "member-3", name = "박지수", isTemporary = true),
+    )

@@ -20,13 +20,19 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
     var isSessionEditing by remember { mutableStateOf(false) }
     var isMemberEditing by remember { mutableStateOf(false) }
+    var scheduleRefreshKey by remember { mutableStateOf(0) }
+    var detailRefreshKey by remember { mutableStateOf(0) }
 
     val sessionId = selectedSessionId
     if (sessionId != null && isMemberEditing) {
         ClassSessionMemberEditRoute(
             sessionId = sessionId,
             onBackClick = { isMemberEditing = false },
-            onSaved = { isMemberEditing = false },
+            onSaved = {
+                isMemberEditing = false
+                scheduleRefreshKey++
+                detailRefreshKey++
+            },
             modifier = modifier,
         )
     } else if (sessionId != null && isSessionEditing) {
@@ -34,11 +40,16 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             sessionId = sessionId,
             categories = listOf("필라테스", "요가", "그룹 PT"),
             onBackClick = { isSessionEditing = false },
-            onSaved = { isSessionEditing = false },
+            onSaved = {
+                isSessionEditing = false
+                scheduleRefreshKey++
+                detailRefreshKey++
+            },
             onDeleted = {
                 isSessionEditing = false
                 selectedSessionId = null
                 selectedTab = InstructorBottomTab.SCHEDULE
+                scheduleRefreshKey++
             },
             modifier = modifier,
         )
@@ -48,6 +59,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             onBackClick = { selectedSessionId = null },
             onEditClick = { isSessionEditing = true },
             onMemberEditClick = { isMemberEditing = true },
+            refreshKey = detailRefreshKey,
             modifier = modifier,
         )
     } else {
@@ -64,6 +76,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
                 InstructorScheduleRoute(
                     bottomBar = {},
                     onSessionClick = { selectedSessionId = it },
+                    refreshKey = scheduleRefreshKey,
                     modifier = modifier,
                 )
             }

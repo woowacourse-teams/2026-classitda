@@ -6,6 +6,8 @@ import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.repository.instructor.management.ClassManagementRepository
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionDetailUiModel
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionMemberUiModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,19 +22,24 @@ internal class ClassSessionDetailViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ClassSessionDetailUiState>(ClassSessionDetailUiState.Loading)
     val uiState: StateFlow<ClassSessionDetailUiState> = _uiState.asStateFlow()
+    private var loadJob: Job? = null
 
     fun load(sessionId: String) {
+        loadJob?.cancel()
         _uiState.value = ClassSessionDetailUiState.Loading
-        viewModelScope.launch {
-            runCatching { repository.getSessions().firstOrNull { it.id == sessionId } }
-                .onSuccess { session ->
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    val session = repository.getSessions().firstOrNull { it.id == sessionId }
                     _uiState.value =
                         session?.let { ClassSessionDetailUiState.Success(it.toDetailUiModel()) }
                             ?: ClassSessionDetailUiState.Error("수업 정보를 찾을 수 없어요")
-                }.onFailure { error ->
-                    _uiState.value = ClassSessionDetailUiState.Error(error.message)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    _uiState.value = ClassSessionDetailUiState.Error(exception.message)
                 }
-        }
+            }
     }
 }
 
@@ -48,14 +55,14 @@ private fun ClassSession.toDetailUiModel(): ClassSessionDetailUiModel =
         description = "체어룸에서 할 예정",
         location = "체어룸",
         status = status,
-        members = demoMembers,
-    )
-
-private val demoMembers =
-    listOf(
-        ClassSessionMemberUiModel(id = "member-1", name = "김민지"),
-        ClassSessionMemberUiModel(id = "member-2", name = "이서윤"),
-        ClassSessionMemberUiModel(id = "member-3", name = "박지수", isTemporary = true),
+        members =
+            members.map { member ->
+                ClassSessionMemberUiModel(
+                    id = member.id,
+                    name = member.name,
+                    isTemporary = member.isTemporary,
+                )
+            },
     )
 
 private fun LocalDate.toInstructorDateText(): String {

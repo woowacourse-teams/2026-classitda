@@ -46,10 +46,11 @@ internal fun ClassSessionDetailRoute(
     onBackClick: () -> Unit,
     onEditClick: () -> Unit,
     onMemberEditClick: () -> Unit,
+    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: ClassSessionDetailViewModel = koinViewModel(),
 ) {
-    LaunchedEffect(sessionId) {
+    LaunchedEffect(sessionId, refreshKey) {
         viewModel.load(sessionId)
     }
 

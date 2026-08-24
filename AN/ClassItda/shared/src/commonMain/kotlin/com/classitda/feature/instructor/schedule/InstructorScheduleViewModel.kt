@@ -23,7 +23,7 @@ internal class InstructorScheduleViewModel(
         load()
     }
 
-    private fun load() {
+    fun load() {
         _uiState.value = InstructorScheduleUiState.Loading
         viewModelScope.launch {
             runCatching { repository.getSessions() }
