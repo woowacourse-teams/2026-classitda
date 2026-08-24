@@ -34,6 +34,7 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_add
 import classitda.shared.generated.resources.ic_check
 import classitda.shared.generated.resources.ic_person
+import classitda.shared.generated.resources.ic_search
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -103,6 +104,13 @@ internal fun ExistingMemberBottomSheetContent(
             value = query,
             onValueChange = onQueryChange,
             modifier = Modifier.fillMaxWidth(),
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_search),
+                    contentDescription = null,
+                    tint = InsColors.TextSecondary,
+                )
+            },
             placeholder = { Text("회원 이름 검색") },
             singleLine = true,
             shape = AppShape.Card,
