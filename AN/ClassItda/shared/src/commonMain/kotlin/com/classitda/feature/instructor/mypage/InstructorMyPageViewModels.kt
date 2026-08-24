@@ -365,26 +365,30 @@ internal class MemberRegistrationViewModel(
             }
 
             MemberRegistrationAction.CancelConfirmation -> {
-                (_uiState.value as? MemberRegistrationUiState.Confirmation)?.let {
-                    _uiState.value =
-                        editing(it.draft)
+                when (val state = _uiState.value) {
+                    is MemberRegistrationUiState.Confirmation -> {
+                        _uiState.value = editing(state.draft)
+                    }
+
+                    is MemberRegistrationUiState.Error -> {
+                        _uiState.value = editing(state.draft)
+                    }
+
+                    else -> {}
                 }
             }
 
             MemberRegistrationAction.ConfirmRegistration -> {
-                confirm()
+                val state = _uiState.value as? MemberRegistrationUiState.Confirmation ?: return
+                submit(state.draft)
             }
 
             MemberRegistrationAction.Retry -> {
-                (_uiState.value as? MemberRegistrationUiState.Error)?.let {
-                    _uiState.value =
-                        MemberRegistrationUiState.Confirmation(it.draft)
-                }
+                val state = _uiState.value as? MemberRegistrationUiState.Error ?: return
+                submit(state.draft)
             }
 
-            else -> {
-                Unit
-            }
+            else -> {}
         }
     }
 
@@ -399,12 +403,7 @@ internal class MemberRegistrationViewModel(
             draft.isMemberRegistrationValid(),
         )
 
-    private fun confirm() {
-        val draft =
-            when (val state = _uiState.value) {
-                is MemberRegistrationUiState.Confirmation -> state.draft
-                else -> return
-            }
+    private fun submit(draft: MemberRegistrationDraft) {
         _uiState.value = MemberRegistrationUiState.Submitting(draft)
         viewModelScope.launch {
             _uiState.value =
