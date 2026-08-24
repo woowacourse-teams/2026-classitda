@@ -5,11 +5,11 @@ import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.domain.model.instructor.management.ClassTemplate
 import com.classitda.domain.model.instructor.management.ClassTemplateSchedule
 import com.classitda.domain.repository.instructor.management.ClassManagementRepository
-import kotlin.time.Clock
 import kotlinx.coroutines.delay
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
+import kotlin.time.Clock
 
 // TODO: 실제 API 연동 시 remote 기반 구현으로 교체
 internal class FakeClassManagementRepository : ClassManagementRepository {
