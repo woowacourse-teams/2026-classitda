@@ -17,12 +17,13 @@ import com.classitda.di.myschedule.myScheduleModule
 import com.classitda.di.reservation.reservationModule
 import com.classitda.di.signup.signupModule
 import com.classitda.feature.auth.signup.SignupRoute
+import com.classitda.feature.auth.signup.SignupTermsPreviewScreen
 import org.koin.compose.KoinApplication
 import org.koin.dsl.koinConfiguration
 
 @Composable
 @Preview
-fun App() {
+fun App(showTermsPreview: Boolean = false) {
     var showSignup by remember { mutableStateOf(true) }
 
     KoinApplication(
@@ -42,7 +43,9 @@ fun App() {
             },
     ) {
         AppTheme(theme = ThemeType.STUDENT) {
-            if (showSignup) {
+            if (showTermsPreview) {
+                SignupTermsPreviewScreen(onComplete = {})
+            } else if (showSignup) {
                 SignupRoute(onSignupCompleted = { showSignup = false })
             } else {
                 StudentRootRoute(onLogout = { showSignup = true })
