@@ -37,7 +37,11 @@ internal fun ClassSessionStatusBadge(
                 contentColor = InsColors.Purple,
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = AppSpacing.pillChipHorizontalPadding, vertical = AppSpacing.pillChipVerticalPadding),
+                    modifier =
+                        Modifier.padding(
+                            horizontal = AppSpacing.pillChipHorizontalPadding,
+                            vertical = AppSpacing.pillChipVerticalPadding,
+                        ),
                     horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -52,11 +56,21 @@ internal fun ClassSessionStatusBadge(
         }
 
         ClassSessionStatus.CANCELLED -> {
-            Text(text = "취소됨", modifier = modifier, style = MaterialTheme.typography.labelMedium, color = InsColors.Red)
+            Text(
+                text = "취소됨",
+                modifier = modifier,
+                style = MaterialTheme.typography.labelMedium,
+                color = InsColors.Red,
+            )
         }
 
         ClassSessionStatus.COMPLETED -> {
-            Text(text = "완료", modifier = modifier, style = MaterialTheme.typography.labelMedium, color = InsColors.TextTertiary)
+            Text(
+                text = "완료",
+                modifier = modifier,
+                style = MaterialTheme.typography.labelMedium,
+                color = InsColors.TextTertiary,
+            )
         }
     }
 }

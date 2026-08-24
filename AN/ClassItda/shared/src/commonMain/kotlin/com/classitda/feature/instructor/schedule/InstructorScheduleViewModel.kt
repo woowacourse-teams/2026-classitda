@@ -36,7 +36,11 @@ internal class InstructorScheduleViewModel(
 internal sealed interface InstructorScheduleUiState {
     data object Loading : InstructorScheduleUiState
 
-    data class Success(val sessions: List<ClassSession>) : InstructorScheduleUiState
+    data class Success(
+        val sessions: List<ClassSession>,
+    ) : InstructorScheduleUiState
 
-    data class Error(val message: String?) : InstructorScheduleUiState
+    data class Error(
+        val message: String?,
+    ) : InstructorScheduleUiState
 }

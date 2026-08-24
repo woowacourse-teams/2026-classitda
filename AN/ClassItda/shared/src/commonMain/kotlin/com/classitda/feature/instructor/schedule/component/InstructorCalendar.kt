@@ -56,11 +56,12 @@ internal fun InstructorCalendar(
 ) {
     val calendarMonth = YearMonth(displayedYear, Month.entries[displayedMonth - 1])
     val firstDay = calendarMonth.firstDay
-    val monthDays = buildList<LocalDate?> {
-        repeat(firstDay.dayOfWeek.ordinal) { add(null) }
-        repeat(calendarMonth.lastDay.day) { add(firstDay.plus(DatePeriod(days = it))) }
-        while (size % 7 != 0) add(null)
-    }
+    val monthDays =
+        buildList<LocalDate?> {
+            repeat(firstDay.dayOfWeek.ordinal) { add(null) }
+            repeat(calendarMonth.lastDay.day) { add(firstDay.plus(DatePeriod(days = it))) }
+            while (size % 7 != 0) add(null)
+        }
     val weekStart = selectedDate - DatePeriod(days = selectedDate.dayOfWeek.ordinal)
     val weekDays = List(7) { index -> weekStart.plus(DatePeriod(days = index)) }
 
@@ -76,7 +77,11 @@ internal fun InstructorCalendar(
                 modifier = Modifier.size(20.dp).clickable(onClick = onPreviousMonth),
             )
             Spacer(Modifier.width(AppSpacing.sm))
-            Text("${displayedYear}년 ${displayedMonth}월", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(
+                text = "${displayedYear}년 ${displayedMonth}월",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+            )
             Spacer(Modifier.width(AppSpacing.sm))
             Icon(
                 painter = painterResource(Res.drawable.ic_arrow_forward),
@@ -92,21 +97,45 @@ internal fun InstructorCalendar(
                         color = if (isMonthMode) InsColors.White else Color.Transparent,
                         modifier = Modifier.clickable { onModeChange(true) },
                     ) {
-                        Text("월", color = if (isMonthMode) InsColors.TextPrimary else InsColors.TextSecondary, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
+                        Text(
+                            text = "월",
+                            color = if (isMonthMode) InsColors.TextPrimary else InsColors.TextSecondary,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier =
+                                Modifier.padding(
+                                    horizontal = AppSpacing.sm,
+                                    vertical = AppSpacing.xs,
+                                ),
+                        )
                     }
                     Surface(
                         shape = AppShape.Card,
                         color = if (isMonthMode) Color.Transparent else InsColors.White,
                         modifier = Modifier.clickable { onModeChange(false) },
                     ) {
-                        Text("주", color = if (isMonthMode) InsColors.TextSecondary else InsColors.TextPrimary, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
+                        Text(
+                            text = "주",
+                            color = if (isMonthMode) InsColors.TextSecondary else InsColors.TextPrimary,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier =
+                                Modifier.padding(
+                                    horizontal = AppSpacing.sm,
+                                    vertical = AppSpacing.xs,
+                                ),
+                        )
                     }
                 }
             }
         }
         Row(Modifier.fillMaxWidth()) {
             listOf("월", "화", "수", "목", "금", "토", "일").forEach { day ->
-                Text(day, modifier = Modifier.weight(1f), color = InsColors.TextTertiary, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
+                Text(
+                    text = day,
+                    modifier = Modifier.weight(1f),
+                    color = InsColors.TextTertiary,
+                    style = MaterialTheme.typography.labelSmall,
+                    textAlign = TextAlign.Center,
+                )
             }
         }
         val visibleWeeks: List<List<LocalDate?>> = if (isMonthMode) monthDays.chunked(7) else listOf(weekDays)
@@ -126,12 +155,25 @@ internal fun InstructorCalendar(
         }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             InstructorCalendarLegendDot(InsColors.Purple)
-            Text("예정 수업", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "예정 수업",
+                color = InsColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
             Spacer(Modifier.width(AppSpacing.xxl))
             InstructorCalendarLegendDot(InsColors.Gray400)
-            Text("완료 수업", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "완료 수업",
+                color = InsColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
             Spacer(Modifier.weight(1f))
-            Text("오늘", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.clickable(onClick = onTodayClick))
+            Text(
+                text = "오늘",
+                color = InsColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.clickable(onClick = onTodayClick),
+            )
         }
     }
 }
@@ -146,16 +188,27 @@ private fun InstructorCalendarDay(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.height(40.dp).clip(AppShape.Pill).clickable(enabled = date != null) { date?.let(onDateSelected) },
+        modifier =
+            modifier
+                .height(40.dp)
+                .clip(AppShape.Pill)
+                .clickable(enabled = date != null) { date?.let(onDateSelected) },
         contentAlignment = Alignment.Center,
     ) {
         if (date != null) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
-                    modifier = Modifier.size(28.dp).clip(AppShape.Pill).background(if (isSelected) InsColors.Black else Color.Transparent),
+                    modifier =
+                        Modifier
+                            .size(28.dp)
+                            .clip(AppShape.Pill)
+                            .background(if (isSelected) InsColors.Black else Color.Transparent),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(date.day.toString(), color = if (isSelected) InsColors.White else InsColors.TextPrimary)
+                    Text(
+                        text = date.day.toString(),
+                        color = if (isSelected) InsColors.White else InsColors.TextPrimary,
+                    )
                 }
                 Row(Modifier.height(6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     if (hasScheduledSession) InstructorCalendarLegendDot(InsColors.Purple)

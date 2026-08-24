@@ -96,52 +96,70 @@ internal fun InstructorScheduleStateful(
         bottomBar = bottomBar,
     ) { contentPadding ->
         when (val state = uiState) {
-            InstructorScheduleUiState.Loading -> ScheduleLoading(Modifier.padding(contentPadding))
-            is InstructorScheduleUiState.Error -> ScheduleError(state.message, viewModel::retry, Modifier.padding(contentPadding))
-            is InstructorScheduleUiState.Success -> InstructorScheduleStateless(
-                sessions = state.sessions,
-                displayedYear = displayedYear,
-                displayedMonth = displayedMonth,
-                selectedDate = selectedDate,
-                isMonthMode = isMonthMode,
-                onDateSelected = {
-                    selectedDate = it
-                    displayedYear = it.year
-                    displayedMonth = it.month.number
-                },
-                onModeChange = { isMonthMode = it },
-                onTodayClick = {
-                    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-                    selectedDate = today
-                    displayedYear = today.year
-                    displayedMonth = today.month.number
-                },
-                onPreviousMonth = {
-                    if (!isMonthMode) {
-                        selectedDate = selectedDate.minus(DatePeriod(days = 7))
-                        displayedYear = selectedDate.year
-                        displayedMonth = selectedDate.month.number
-                    } else if (displayedMonth == 1) {
-                        displayedYear -= 1
-                        displayedMonth = 12
-                    } else {
-                        displayedMonth -= 1
-                    }
-                },
-                onNextMonth = {
-                    if (!isMonthMode) {
-                        selectedDate = selectedDate.plus(DatePeriod(days = 7))
-                        displayedYear = selectedDate.year
-                        displayedMonth = selectedDate.month.number
-                    } else if (displayedMonth == 12) {
-                        displayedYear += 1
-                        displayedMonth = 1
-                    } else {
-                        displayedMonth += 1
-                    }
-                },
-                modifier = Modifier.padding(contentPadding),
-            )
+            InstructorScheduleUiState.Loading -> {
+                ScheduleLoading(Modifier.padding(contentPadding))
+            }
+
+            is InstructorScheduleUiState.Error -> {
+                ScheduleError(
+                    message = state.message,
+                    onRetry = viewModel::retry,
+                    modifier = Modifier.padding(contentPadding),
+                )
+            }
+
+            is InstructorScheduleUiState.Success -> {
+                InstructorScheduleStateless(
+                    sessions = state.sessions,
+                    displayedYear = displayedYear,
+                    displayedMonth = displayedMonth,
+                    selectedDate = selectedDate,
+                    isMonthMode = isMonthMode,
+                    onDateSelected = {
+                        selectedDate = it
+                        displayedYear = it.year
+                        displayedMonth = it.month.number
+                    },
+                    onModeChange = {
+                        isMonthMode = it
+                        if (!it) {
+                            displayedYear = selectedDate.year
+                            displayedMonth = selectedDate.month.number
+                        }
+                    },
+                    onTodayClick = {
+                        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                        selectedDate = today
+                        displayedYear = today.year
+                        displayedMonth = today.month.number
+                    },
+                    onPreviousMonth = {
+                        if (!isMonthMode) {
+                            selectedDate = selectedDate.minus(DatePeriod(days = 7))
+                            displayedYear = selectedDate.year
+                            displayedMonth = selectedDate.month.number
+                        } else if (displayedMonth == 1) {
+                            displayedYear -= 1
+                            displayedMonth = 12
+                        } else {
+                            displayedMonth -= 1
+                        }
+                    },
+                    onNextMonth = {
+                        if (!isMonthMode) {
+                            selectedDate = selectedDate.plus(DatePeriod(days = 7))
+                            displayedYear = selectedDate.year
+                            displayedMonth = selectedDate.month.number
+                        } else if (displayedMonth == 12) {
+                            displayedYear += 1
+                            displayedMonth = 1
+                        } else {
+                            displayedMonth += 1
+                        }
+                    },
+                    modifier = Modifier.padding(contentPadding),
+                )
+            }
         }
     }
 }
@@ -175,8 +193,16 @@ internal fun InstructorScheduleStateless(
                 displayedMonth = displayedMonth,
                 selectedDate = selectedDate,
                 isMonthMode = isMonthMode,
-                scheduledDates = sessions.filter { it.status == ClassSessionStatus.SCHEDULED }.map { it.startAt.date }.toSet(),
-                completedDates = sessions.filter { it.status == ClassSessionStatus.COMPLETED }.map { it.startAt.date }.toSet(),
+                scheduledDates =
+                    sessions
+                        .filter { it.status == ClassSessionStatus.SCHEDULED }
+                        .map { it.startAt.date }
+                        .toSet(),
+                completedDates =
+                    sessions
+                        .filter { it.status == ClassSessionStatus.COMPLETED }
+                        .map { it.startAt.date }
+                        .toSet(),
                 onDateSelected = onDateSelected,
                 onModeChange = onModeChange,
                 onTodayClick = onTodayClick,
@@ -195,7 +221,11 @@ internal fun InstructorScheduleStateless(
                     fontWeight = FontWeight.Bold,
                 )
                 Spacer(Modifier.weight(1f))
-                Text("수업 ${selectedSessions.size}개", style = MaterialTheme.typography.bodySmall, color = InsColors.TextSecondary)
+                Text(
+                    text = "수업 ${selectedSessions.size}개",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = InsColors.TextSecondary,
+                )
             }
         }
         if (selectedSessions.isEmpty()) {
@@ -259,13 +289,34 @@ private fun InstructorScheduleStatelessPreview() {
 
 @Composable
 private fun ScheduleLoading(modifier: Modifier = Modifier) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator(color = InsColors.Primary) }
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(color = InsColors.Primary)
+    }
 }
 
 @Composable
-private fun ScheduleError(message: String?, onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Text(message ?: "일정을 불러오지 못했어요", color = InsColors.TextSecondary)
-        Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary)) { Text("다시 시도") }
+private fun ScheduleError(
+    message: String?,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = message ?: "일정을 불러오지 못했어요",
+            color = InsColors.TextSecondary,
+        )
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary),
+        ) {
+            Text("다시 시도")
+        }
     }
 }

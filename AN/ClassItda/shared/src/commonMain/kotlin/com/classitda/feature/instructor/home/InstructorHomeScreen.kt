@@ -16,9 +16,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.classitda.core.designsystem.AppSpacing
@@ -62,9 +62,25 @@ internal fun InstructorHomeStateful(
         bottomBar = bottomBar,
     ) { contentPadding ->
         when (val state = uiState) {
-            InstructorHomeUiState.Loading -> LoadingContent(Modifier.padding(contentPadding))
-            is InstructorHomeUiState.Error -> ErrorContent(state.message, viewModel::retry, Modifier.padding(contentPadding))
-            is InstructorHomeUiState.Success -> InstructorHomeStateless(state.sessions, onScheduleClick, Modifier.padding(contentPadding))
+            InstructorHomeUiState.Loading -> {
+                LoadingContent(Modifier.padding(contentPadding))
+            }
+
+            is InstructorHomeUiState.Error -> {
+                ErrorContent(
+                    message = state.message,
+                    onRetry = viewModel::retry,
+                    modifier = Modifier.padding(contentPadding),
+                )
+            }
+
+            is InstructorHomeUiState.Success -> {
+                InstructorHomeStateless(
+                    sessions = state.sessions,
+                    onScheduleClick = onScheduleClick,
+                    modifier = Modifier.padding(contentPadding),
+                )
+            }
         }
     }
 }
@@ -75,7 +91,7 @@ internal fun InstructorHomeStateless(
     onScheduleClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val visibleSessions = sessions.sortedBy { it.startAt }.take(4)
+    val visibleSessions = sessions.sortedBy { it.startAt }
 
     LazyColumn(
         modifier = modifier.fillMaxSize().background(InsColors.Background),
@@ -85,26 +101,49 @@ internal fun InstructorHomeStateless(
             InstructorHomeHeader()
         }
         item {
-            InstructorHomeSummary(visibleSessions)
+            InstructorHomeSummary(sessions)
         }
         item {
-            InstructorTimeline(visibleSessions, onScheduleClick)
+            InstructorTimeline(
+                sessions = visibleSessions.take(4),
+                onScheduleClick = onScheduleClick,
+            )
         }
     }
 }
 
 @Composable
 private fun LoadingContent(modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
         CircularProgressIndicator(color = InsColors.Primary)
     }
 }
 
 @Composable
-private fun ErrorContent(message: String?, onRetry: () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-        Text(message ?: "일정을 불러오지 못했어요", color = InsColors.TextSecondary)
-        Button(onClick = onRetry, colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary)) { Text("다시 시도") }
+private fun ErrorContent(
+    message: String?,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = message ?: "일정을 불러오지 못했어요",
+            color = InsColors.TextSecondary,
+        )
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary),
+        ) {
+            Text("다시 시도")
+        }
     }
 }
 

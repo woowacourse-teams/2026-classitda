@@ -39,7 +39,11 @@ internal class InstructorHomeViewModel(
 internal sealed interface InstructorHomeUiState {
     data object Loading : InstructorHomeUiState
 
-    data class Success(val sessions: List<ClassSession>) : InstructorHomeUiState
+    data class Success(
+        val sessions: List<ClassSession>,
+    ) : InstructorHomeUiState
 
-    data class Error(val message: String?) : InstructorHomeUiState
+    data class Error(
+        val message: String?,
+    ) : InstructorHomeUiState
 }

@@ -104,25 +104,63 @@ private fun InstructorTimelineItemContent(
 ) {
     Column(modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(session.instructorTimeText(), style = MaterialTheme.typography.bodySmall, color = InsColors.TextSecondary)
+            Text(
+                text = session.instructorTimeText(),
+                style = MaterialTheme.typography.bodySmall,
+                color = InsColors.TextSecondary,
+            )
             Spacer(Modifier.weight(1f))
             if (isNext) {
                 Surface(shape = AppShape.Pill, color = InsColors.PurpleLight) {
-                    Text("다음 수업", color = InsColors.Purple, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
+                    Text(
+                        text = "다음 수업",
+                        color = InsColors.Purple,
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier =
+                            Modifier.padding(
+                                horizontal = AppSpacing.sm,
+                                vertical = AppSpacing.xs,
+                            ),
+                    )
                 }
             }
         }
         Spacer(Modifier.height(AppSpacing.xs))
-        Text(session.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text(
+            text = session.title,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+        )
         Spacer(Modifier.height(AppSpacing.sm))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("예약 ${session.reservedCount}명", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "예약 ${session.reservedCount}명",
+                color = InsColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
             Spacer(Modifier.width(AppSpacing.md))
-            Text("정원 ${session.capacity}명", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Text(
+                text = "정원 ${session.capacity}명",
+                color = InsColors.TextSecondary,
+                style = MaterialTheme.typography.bodySmall,
+            )
             Spacer(Modifier.weight(1f))
             if (isNext) {
-                Surface(shape = AppShape.Card, color = InsColors.Primary, modifier = Modifier.clickable(onClick = onScheduleClick)) {
-                    Text("수업 상세", color = InsColors.White, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm))
+                Surface(
+                    shape = AppShape.Card,
+                    color = InsColors.Primary,
+                    modifier = Modifier.clickable(onClick = onScheduleClick),
+                ) {
+                    Text(
+                        text = "수업 상세",
+                        color = InsColors.White,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier =
+                            Modifier.padding(
+                                horizontal = AppSpacing.md,
+                                vertical = AppSpacing.sm,
+                            ),
+                    )
                 }
             }
         }
@@ -138,7 +176,12 @@ private fun InstructorTimelineIndicator(
     when {
         status == ClassSessionStatus.COMPLETED -> {
             Box(
-                modifier = modifier.size(16.dp).clip(CircleShape).background(InsColors.Gray400).border(2.dp, InsColors.White, CircleShape),
+                modifier =
+                    modifier
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(InsColors.Gray400)
+                        .border(2.dp, InsColors.White, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -156,14 +199,24 @@ private fun InstructorTimelineIndicator(
                 contentAlignment = Alignment.Center,
             ) {
                 Box(
-                    modifier = Modifier.size(16.dp).clip(CircleShape).background(InsColors.Black).border(2.dp, InsColors.White, CircleShape),
+                    modifier =
+                        Modifier
+                            .size(16.dp)
+                            .clip(CircleShape)
+                            .background(InsColors.Black)
+                            .border(2.dp, InsColors.White, CircleShape),
                 )
             }
         }
 
         status == ClassSessionStatus.CANCELLED -> {
             Box(
-                modifier = modifier.size(16.dp).clip(CircleShape).background(InsColors.Gray100).border(2.dp, InsColors.White, CircleShape),
+                modifier =
+                    modifier
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(InsColors.Gray100)
+                        .border(2.dp, InsColors.White, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -177,10 +230,16 @@ private fun InstructorTimelineIndicator(
 
         else -> {
             Box(
-                modifier = modifier.size(16.dp).clip(CircleShape).background(InsColors.Gray100).border(2.dp, InsColors.White, CircleShape),
+                modifier =
+                    modifier
+                        .size(16.dp)
+                        .clip(CircleShape)
+                        .background(InsColors.Gray100)
+                        .border(2.dp, InsColors.White, CircleShape),
             )
         }
     }
 }
 
-internal fun ClassSession.instructorTimeText(): String = "${startAt.hour.toString().padStart(2, '0')}:${startAt.minute.toString().padStart(2, '0')}"
+internal fun ClassSession.instructorTimeText(): String =
+    "${startAt.hour.toString().padStart(2, '0')}:${startAt.minute.toString().padStart(2, '0')}"

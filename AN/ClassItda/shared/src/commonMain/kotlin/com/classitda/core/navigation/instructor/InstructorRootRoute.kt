@@ -43,6 +43,8 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
 
         InstructorBottomTab.CHAT,
         InstructorBottomTab.MY,
-        -> InstructorHomeRoute(onScheduleClick = {}, bottomBar = {}, modifier = modifier)
+        -> {
+            InstructorHomeRoute(onScheduleClick = {}, bottomBar = {}, modifier = modifier)
+        }
     }
 }

@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -51,12 +51,21 @@ internal fun InstructorScheduleCard(
             Text(session.title, style = MaterialTheme.typography.titleMedium)
             Spacer(Modifier.height(AppSpacing.xs))
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(session.instructorTimeText(), color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    text = session.instructorTimeText(),
+                    color = InsColors.TextSecondary,
+                    style = MaterialTheme.typography.bodySmall,
+                )
                 Spacer(Modifier.weight(1f))
-                Text("예약 ${session.reservedCount}명  |  정원 ${session.capacity}명", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    text = "예약 ${session.reservedCount}명  |  정원 ${session.capacity}명",
+                    color = InsColors.TextSecondary,
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
     }
 }
 
-internal fun ClassSession.instructorTimeText(): String = "${startAt.hour.toString().padStart(2, '0')}:${startAt.minute.toString().padStart(2, '0')}"
+internal fun ClassSession.instructorTimeText(): String =
+    "${startAt.hour.toString().padStart(2, '0')}:${startAt.minute.toString().padStart(2, '0')}"
