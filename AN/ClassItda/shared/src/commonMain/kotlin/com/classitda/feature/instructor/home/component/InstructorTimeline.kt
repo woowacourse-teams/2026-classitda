@@ -25,15 +25,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_check
 import classitda.shared.generated.resources.ic_close
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
+import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -243,3 +247,46 @@ private fun InstructorTimelineIndicator(
 
 internal fun ClassSession.instructorTimeText(): String =
     "${startAt.hour.toString().padStart(2, '0')}:${startAt.minute.toString().padStart(2, '0')}"
+
+@Preview(name = "강사 홈 수업 타임라인", showBackground = true, widthDp = 390)
+@Composable
+private fun InstructorTimelinePreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorTimeline(
+            sessions =
+                listOf(
+                    ClassSession(
+                        id = "session-1",
+                        tags = listOf("그룹 수업", "필라테스"),
+                        title = "체어 밸런스",
+                        startAt = LocalDateTime(2026, 8, 5, 14, 0),
+                        endAt = LocalDateTime(2026, 8, 5, 14, 50),
+                        reservedCount = 7,
+                        capacity = 8,
+                        status = ClassSessionStatus.COMPLETED,
+                    ),
+                    ClassSession(
+                        id = "session-2",
+                        tags = listOf("그룹 수업", "필라테스"),
+                        title = "리포머 밸런스",
+                        startAt = LocalDateTime(2026, 8, 5, 19, 30),
+                        endAt = LocalDateTime(2026, 8, 5, 20, 20),
+                        reservedCount = 6,
+                        capacity = 8,
+                        status = ClassSessionStatus.SCHEDULED,
+                    ),
+                    ClassSession(
+                        id = "session-3",
+                        tags = listOf("개인 수업"),
+                        title = "바렐 코어 테라피",
+                        startAt = LocalDateTime(2026, 8, 5, 20, 30),
+                        endAt = LocalDateTime(2026, 8, 5, 21, 20),
+                        reservedCount = 2,
+                        capacity = 4,
+                        status = ClassSessionStatus.CANCELLED,
+                    ),
+                ),
+            onScheduleClick = {},
+        )
+    }
+}

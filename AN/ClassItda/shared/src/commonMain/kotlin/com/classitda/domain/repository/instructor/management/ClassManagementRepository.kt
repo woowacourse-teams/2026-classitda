@@ -1,6 +1,7 @@
 package com.classitda.domain.repository.instructor.management
 
 import com.classitda.domain.model.instructor.management.ClassSession
+import com.classitda.domain.model.instructor.management.ClassSessionMember
 import com.classitda.domain.model.instructor.management.ClassTemplate
 
 interface ClassManagementRepository {
@@ -19,4 +20,13 @@ interface ClassManagementRepository {
     suspend fun deleteTemplate(id: String)
 
     suspend fun createSession(session: ClassSession): ClassSession
+
+    suspend fun updateSession(session: ClassSession): ClassSession
+
+    suspend fun deleteSession(id: String)
+
+    suspend fun updateSessionMembers(
+        sessionId: String,
+        members: List<ClassSessionMember>,
+    )
 }

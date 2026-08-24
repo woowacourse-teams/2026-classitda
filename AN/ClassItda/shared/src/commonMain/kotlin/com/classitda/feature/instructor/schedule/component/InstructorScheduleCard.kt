@@ -15,18 +15,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.domain.model.instructor.management.ClassSession
+import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.feature.instructor.component.ClassSessionStatusBadge
+import kotlinx.datetime.LocalDateTime
 
 @Composable
 internal fun InstructorScheduleCard(
     session: ClassSession,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(
+        onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = InsColors.White),
         modifier = modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.xs).fillMaxWidth(),
     ) {
@@ -69,3 +76,23 @@ internal fun InstructorScheduleCard(
 
 internal fun ClassSession.instructorTimeText(): String =
     "${startAt.hour.toString().padStart(2, '0')}:${startAt.minute.toString().padStart(2, '0')}"
+
+@Preview(name = "강사 일정 수업 카드", showBackground = true, widthDp = 390)
+@Composable
+private fun InstructorScheduleCardPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorScheduleCard(
+            session =
+                ClassSession(
+                    id = "session-1",
+                    tags = listOf("그룹 수업", "필라테스"),
+                    title = "리포머 밸런스",
+                    startAt = LocalDateTime(2026, 8, 5, 19, 30),
+                    endAt = LocalDateTime(2026, 8, 5, 20, 20),
+                    reservedCount = 6,
+                    capacity = 8,
+                    status = ClassSessionStatus.SCHEDULED,
+                ),
+        )
+    }
+}

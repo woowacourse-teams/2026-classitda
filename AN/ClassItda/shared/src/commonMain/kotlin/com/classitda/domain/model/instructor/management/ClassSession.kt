@@ -11,4 +11,5 @@ data class ClassSession(
     val reservedCount: Int,
     val capacity: Int,
     val status: ClassSessionStatus,
+    val members: List<ClassSessionMember> = emptyList(),
 )

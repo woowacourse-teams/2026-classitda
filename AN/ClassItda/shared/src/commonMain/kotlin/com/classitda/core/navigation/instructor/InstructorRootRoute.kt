@@ -7,6 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.classitda.feature.instructor.InstructorBottomTab
+import com.classitda.feature.instructor.classsession.detail.ClassSessionDetailRoute
+import com.classitda.feature.instructor.classsession.edit.ClassSessionEditRoute
+import com.classitda.feature.instructor.classsession.member.edit.ClassSessionMemberEditRoute
 import com.classitda.feature.instructor.home.InstructorHomeRoute
 import com.classitda.feature.instructor.management.lesson.ClassManagementRoute
 import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
@@ -14,37 +17,88 @@ import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
 @Composable
 fun InstructorRootRoute(modifier: Modifier = Modifier) {
     var selectedTab by remember { mutableStateOf(InstructorBottomTab.HOME) }
+    var selectedSessionId by remember { mutableStateOf<String?>(null) }
+    var isSessionEditing by remember { mutableStateOf(false) }
+    var isMemberEditing by remember { mutableStateOf(false) }
+    var scheduleRefreshKey by remember { mutableStateOf(0) }
+    var detailRefreshKey by remember { mutableStateOf(0) }
 
-    when (selectedTab) {
-        InstructorBottomTab.HOME -> {
-            InstructorHomeRoute(
-                onScheduleClick = { selectedTab = InstructorBottomTab.SCHEDULE },
-                bottomBar = {},
-                modifier = modifier,
-            )
-        }
+    val sessionId = selectedSessionId
+    if (sessionId != null && isMemberEditing) {
+        ClassSessionMemberEditRoute(
+            sessionId = sessionId,
+            onBackClick = { isMemberEditing = false },
+            onSaved = {
+                isMemberEditing = false
+                scheduleRefreshKey++
+                detailRefreshKey++
+            },
+            modifier = modifier,
+        )
+    } else if (sessionId != null && isSessionEditing) {
+        ClassSessionEditRoute(
+            sessionId = sessionId,
+            categories = listOf("필라테스", "요가", "그룹 PT"),
+            onBackClick = { isSessionEditing = false },
+            onSaved = {
+                isSessionEditing = false
+                scheduleRefreshKey++
+                detailRefreshKey++
+            },
+            onDeleted = {
+                isSessionEditing = false
+                selectedSessionId = null
+                selectedTab = InstructorBottomTab.SCHEDULE
+                scheduleRefreshKey++
+            },
+            modifier = modifier,
+        )
+    } else if (sessionId != null) {
+        ClassSessionDetailRoute(
+            sessionId = sessionId,
+            onBackClick = { selectedSessionId = null },
+            onEditClick = { isSessionEditing = true },
+            onMemberEditClick = { isMemberEditing = true },
+            refreshKey = detailRefreshKey,
+            modifier = modifier,
+        )
+    } else {
+        when (selectedTab) {
+            InstructorBottomTab.HOME -> {
+                InstructorHomeRoute(
+                    onScheduleClick = { selectedTab = InstructorBottomTab.SCHEDULE },
+                    bottomBar = {},
+                    modifier = modifier,
+                )
+            }
 
-        InstructorBottomTab.SCHEDULE -> {
-            InstructorScheduleRoute(bottomBar = {}, modifier = modifier)
-        }
+            InstructorBottomTab.SCHEDULE -> {
+                InstructorScheduleRoute(
+                    bottomBar = {},
+                    onSessionClick = { selectedSessionId = it },
+                    refreshKey = scheduleRefreshKey,
+                    modifier = modifier,
+                )
+            }
 
-        InstructorBottomTab.MANAGEMENT -> {
-            ClassManagementRoute(
-                onBackClick = { selectedTab = InstructorBottomTab.HOME },
-                onCreateTemplateClick = {},
-                onCreateSessionClick = {},
-                onTemplateCardClick = {},
-                onTemplateEditClick = {},
-                onSessionCardClick = {},
-                bottomBar = {},
-                modifier = modifier,
-            )
-        }
+            InstructorBottomTab.MANAGEMENT -> {
+                ClassManagementRoute(
+                    onBackClick = { selectedTab = InstructorBottomTab.HOME },
+                    onCreateTemplateClick = {},
+                    onCreateSessionClick = {},
+                    onTemplateCardClick = {},
+                    onTemplateEditClick = {},
+                    onSessionCardClick = {},
+                    bottomBar = {},
+                    modifier = modifier,
+                )
+            }
 
-        InstructorBottomTab.CHAT,
-        InstructorBottomTab.MY,
-        -> {
-            InstructorHomeRoute(onScheduleClick = {}, bottomBar = {}, modifier = modifier)
+            InstructorBottomTab.CHAT,
+            InstructorBottomTab.MY,
+            -> {
+                InstructorHomeRoute(onScheduleClick = {}, bottomBar = {}, modifier = modifier)
+            }
         }
     }
 }
