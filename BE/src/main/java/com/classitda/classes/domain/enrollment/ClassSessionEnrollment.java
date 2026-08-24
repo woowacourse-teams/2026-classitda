@@ -1,5 +1,6 @@
-package com.classitda.classes.domain;
+package com.classitda.classes.domain.enrollment;
 
+import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.common.domain.BaseEntity;

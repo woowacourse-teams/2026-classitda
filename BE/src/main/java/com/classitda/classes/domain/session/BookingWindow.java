@@ -1,4 +1,4 @@
-package com.classitda.classes.domain;
+package com.classitda.classes.domain.session;
 
 public enum BookingWindow {
     OPEN,

@@ -8,6 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
+import com.classitda.classes.domain.session.BookingWindow;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.session.ClassSessionClassType;
+import com.classitda.classes.domain.session.SessionPhase;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.studio.domain.StudioMembership;

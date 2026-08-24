@@ -1,8 +1,8 @@
 package com.classitda.classes.fixture;
 
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionClassType;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.session.ClassSessionClassType;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
 import com.classitda.member.domain.Member;

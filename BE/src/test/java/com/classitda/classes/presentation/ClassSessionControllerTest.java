@@ -23,8 +23,8 @@ import com.classitda.classes.application.student.calendar.StudentCalendarSummary
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.application.student.daily.StudentDailySessionView;
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.AttendanceResult;
-import com.classitda.classes.domain.SessionPhase;
+import com.classitda.classes.domain.enrollment.AttendanceResult;
+import com.classitda.classes.domain.session.SessionPhase;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;

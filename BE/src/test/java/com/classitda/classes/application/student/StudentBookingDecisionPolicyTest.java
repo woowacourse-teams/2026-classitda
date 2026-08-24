@@ -2,9 +2,9 @@ package com.classitda.classes.application.student;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.classitda.classes.domain.AttendanceResult;
-import com.classitda.classes.domain.BookingWindow;
-import com.classitda.classes.domain.EnrollmentStatus;
+import com.classitda.classes.domain.enrollment.AttendanceResult;
+import com.classitda.classes.domain.session.BookingWindow;
+import com.classitda.classes.domain.enrollment.EnrollmentStatus;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;

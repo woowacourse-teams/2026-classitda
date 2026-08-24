@@ -3,6 +3,8 @@ package com.classitda.classes.domain;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classitda.classes.domain.enrollment.Attendance;
+import com.classitda.classes.domain.enrollment.AttendanceResult;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import java.time.LocalDateTime;

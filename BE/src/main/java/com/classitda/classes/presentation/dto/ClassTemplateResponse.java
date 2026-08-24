@@ -2,7 +2,7 @@ package com.classitda.classes.presentation.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassTemplate;
+import com.classitda.classes.domain.template.ClassTemplate;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.DayOfWeek;
 import java.time.LocalTime;

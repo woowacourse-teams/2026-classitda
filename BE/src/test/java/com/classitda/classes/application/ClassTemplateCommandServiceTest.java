@@ -7,10 +7,10 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
 
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionClassType;
-import com.classitda.classes.domain.ClassTemplate;
-import com.classitda.classes.domain.ClassTemplateClassType;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.session.ClassSessionClassType;
+import com.classitda.classes.domain.template.ClassTemplate;
+import com.classitda.classes.domain.template.ClassTemplateClassType;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTemplateClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassTemplateRepository;

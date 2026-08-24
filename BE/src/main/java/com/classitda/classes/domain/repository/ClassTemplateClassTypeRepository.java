@@ -1,6 +1,6 @@
 package com.classitda.classes.domain.repository;
 
-import com.classitda.classes.domain.ClassTemplateClassType;
+import com.classitda.classes.domain.template.ClassTemplateClassType;
 import com.classitda.classes.domain.repository.projection.TemplateClassTypeProjection;
 import jakarta.persistence.LockModeType;
 import java.util.List;

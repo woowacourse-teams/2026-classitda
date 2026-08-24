@@ -1,6 +1,6 @@
 package com.classitda.classes.domain.repository;
 
-import com.classitda.classes.domain.ClassSessionEnrollment;
+import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
 import com.classitda.classes.domain.repository.projection.StudentEnrollmentCalendarEventProjection;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,7 +27,7 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
             FROM ClassSessionEnrollment enrollment
             WHERE enrollment.classSession.id = :classSessionId
               AND enrollment.state.status =
-                  com.classitda.classes.domain.EnrollmentStatus.WAITING
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING
               AND (
                   enrollment.state.statusChangedAt < :statusChangedAt
                   OR (
@@ -59,8 +59,8 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
               AND enrollment.classSession.startAt < :rangeEnd
               AND enrollment.classSession.canceledAt IS NULL
               AND enrollment.state.status IN (
-                  com.classitda.classes.domain.EnrollmentStatus.RESERVED,
-                  com.classitda.classes.domain.EnrollmentStatus.WAITING
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED,
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING
               )
             """)
     List<StudentEnrollmentCalendarEventProjection> findCalendarEventsForStudent(

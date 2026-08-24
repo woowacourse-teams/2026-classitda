@@ -1,6 +1,6 @@
 package com.classitda.classes.application;
 
-import com.classitda.classes.domain.ClassTemplate;
+import com.classitda.classes.domain.template.ClassTemplate;
 import com.classitda.classes.domain.repository.ClassTemplateClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassTemplateRepository;
 import com.classitda.classes.domain.repository.projection.TemplateClassTypeProjection;

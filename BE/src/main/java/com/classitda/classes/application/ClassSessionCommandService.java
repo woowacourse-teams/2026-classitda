@@ -1,9 +1,9 @@
 package com.classitda.classes.application;
 
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.ClassSession;
-import com.classitda.classes.domain.ClassSessionClassType;
-import com.classitda.classes.domain.ClassSessionDatePlan;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.session.ClassSessionClassType;
+import com.classitda.classes.domain.session.ClassSessionDatePlan;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;

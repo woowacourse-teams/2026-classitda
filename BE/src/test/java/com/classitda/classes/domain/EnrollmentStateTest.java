@@ -2,6 +2,8 @@ package com.classitda.classes.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.classitda.classes.domain.enrollment.EnrollmentState;
+import com.classitda.classes.domain.enrollment.EnrollmentStatus;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 

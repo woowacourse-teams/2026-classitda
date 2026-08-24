@@ -2,7 +2,7 @@ package com.classitda.classes.application.student.calendar;
 
 import com.classitda.classes.application.ClassSessionQueryRange;
 import com.classitda.classes.application.student.pass.StudentOwnedPasses;
-import com.classitda.classes.domain.EnrollmentStatus;
+import com.classitda.classes.domain.enrollment.EnrollmentStatus;
 import com.classitda.classes.domain.repository.ClassSessionEnrollmentRepository;
 import com.classitda.classes.domain.repository.projection.StudentEnrollmentCalendarEventProjection;
 import java.time.LocalDate;

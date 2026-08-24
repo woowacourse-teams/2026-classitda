@@ -1,4 +1,4 @@
-package com.classitda.classes.domain;
+package com.classitda.classes.domain.template;
 
 import com.classitda.common.domain.BaseEntity;
 import jakarta.persistence.Column;
