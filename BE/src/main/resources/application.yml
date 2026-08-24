@@ -16,6 +16,9 @@ spring:
       connect-timeout: 3s
       read-timeout: 5s
 
+server:
+  forward-headers-strategy: native
+
 springdoc:
   api-docs:
     enabled: true
