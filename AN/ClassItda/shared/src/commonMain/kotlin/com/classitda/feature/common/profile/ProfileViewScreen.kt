@@ -208,6 +208,7 @@ private fun ProfileViewContent(
 @Composable
 private fun ProfileAvatar(name: String) {
     val typography = appTypography()
+    val avatarInitial = name.firstOrNull { !it.isWhitespace() }?.toString() ?: "?"
 
     Box(
         modifier =
@@ -220,7 +221,7 @@ private fun ProfileAvatar(name: String) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = name.first { !it.isWhitespace() }.toString(),
+            text = avatarInitial,
             style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.onSurface,
         )

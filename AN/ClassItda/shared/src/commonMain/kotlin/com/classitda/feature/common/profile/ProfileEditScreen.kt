@@ -302,6 +302,7 @@ private fun EditableProfileAvatar(
                     contentDescription = photoChangeDescription
                 },
     ) {
+        val avatarInitial = name.firstOrNull { !it.isWhitespace() }?.toString() ?: "?"
         Box(
             modifier =
                 Modifier
@@ -313,7 +314,7 @@ private fun EditableProfileAvatar(
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = name.first { !it.isWhitespace() }.toString(),
+                text = avatarInitial,
                 style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
             )

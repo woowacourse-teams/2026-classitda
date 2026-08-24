@@ -58,14 +58,14 @@ import kotlinx.coroutines.launch
 
 internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfile.toUiModel() =
     InstructorMyPageUiModel(
-        name,
+        displayProfileName(name),
         maskProfilePhoneNumber(phoneNumber),
         profileImageUrl,
         name.firstOrNull()?.toString() ?: "?",
     )
 
 internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfile.toProfileUiModel() =
-    MemberProfileUiModel(name, maskProfilePhoneNumber(phoneNumber), email, profileImageUrl)
+    MemberProfileUiModel(displayProfileName(name), maskProfilePhoneNumber(phoneNumber), email, profileImageUrl)
 
 internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfile.toEditingState() =
     ProfileEditUiState.Editing(toProfileUiModel(), phoneNumber, name, false)
@@ -92,6 +92,8 @@ private fun maskProfilePhoneNumber(value: String): String {
         value
     }
 }
+
+private fun displayProfileName(value: String): String = value.trim().ifBlank { "이름 없음" }
 
 internal fun InstructorMyPageFailureReason.toMyPageError() =
     when (this) {
