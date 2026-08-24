@@ -152,8 +152,8 @@ internal fun InstructorScheduleStateless(
         contentPadding = PaddingValues(bottom = AppSpacing.xxxl),
     ) {
         item {
-            Column(Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg)) {
-                Text("일정", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Column(Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.xxxl)) {
+                Text("일정", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
             }
         }
         item {
@@ -161,7 +161,8 @@ internal fun InstructorScheduleStateless(
                 displayedYear = displayedYear,
                 displayedMonth = displayedMonth,
                 selectedDate = selectedDate,
-                sessionDates = sessions.map { it.startAt.date }.toSet(),
+                scheduledDates = sessions.filter { it.status == ClassSessionStatus.SCHEDULED }.map { it.startAt.date }.toSet(),
+                completedDates = sessions.filter { it.status == ClassSessionStatus.COMPLETED }.map { it.startAt.date }.toSet(),
                 onDateSelected = onDateSelected,
                 onPreviousMonth = onPreviousMonth,
                 onNextMonth = onNextMonth,
@@ -200,7 +201,8 @@ private fun InstructorCalendar(
     displayedYear: Int,
     displayedMonth: Int,
     selectedDate: LocalDate,
-    sessionDates: Set<LocalDate>,
+    scheduledDates: Set<LocalDate>,
+    completedDates: Set<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -251,9 +253,25 @@ private fun InstructorCalendar(
         days.chunked(7).forEach { week ->
             Row(Modifier.fillMaxWidth()) {
                 week.forEach { date ->
-                    CalendarDay(date, date == selectedDate, date in sessionDates, onDateSelected, Modifier.weight(1f))
+                    CalendarDay(
+                        date = date,
+                        isSelected = date == selectedDate,
+                        hasScheduledSession = date in scheduledDates,
+                        hasCompletedSession = date in completedDates,
+                        onDateSelected = onDateSelected,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            CalendarLegendDot(InsColors.Purple)
+            Text("예정 수업", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.width(AppSpacing.xxl))
+            CalendarLegendDot(InsColors.Gray400)
+            Text("완료 수업", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.weight(1f))
+            Text("오늘", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
         }
     }
 }
@@ -262,7 +280,8 @@ private fun InstructorCalendar(
 private fun CalendarDay(
     date: LocalDate?,
     isSelected: Boolean,
-    hasSession: Boolean,
+    hasScheduledSession: Boolean,
+    hasCompletedSession: Boolean,
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -278,10 +297,18 @@ private fun CalendarDay(
                 ) {
                     Text(date.day.toString(), color = if (isSelected) InsColors.White else InsColors.TextPrimary)
                 }
-                if (hasSession) Box(Modifier.size(4.dp).clip(AppShape.Pill).background(InsColors.Purple))
+                Row(Modifier.height(6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    if (hasScheduledSession) CalendarLegendDot(InsColors.Purple)
+                    if (hasCompletedSession) CalendarLegendDot(InsColors.Gray400)
+                }
             }
         }
     }
+}
+
+@Composable
+private fun CalendarLegendDot(color: Color) {
+    Box(Modifier.size(4.dp).clip(AppShape.Pill).background(color))
 }
 
 @Composable
