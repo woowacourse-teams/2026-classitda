@@ -67,7 +67,11 @@ internal class SignupViewModel(
             }
 
             SignupAction.SendVerificationCode -> {
-                requestVerification()
+                if (_uiState.value.isPhoneVerified) {
+                    showError(IllegalStateException("이미 휴대전화 인증이 완료되었습니다."))
+                } else {
+                    requestVerification()
+                }
             }
 
             SignupAction.ConfirmForm -> {
