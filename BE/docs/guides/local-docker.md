@@ -69,7 +69,7 @@ curl http://localhost:8080/api/studios/me \
 
 **1. 실제 클라이언트 ID 설정**
 
-`docker/.env`의 `GOOGLE_OAUTH_WEB_CLIENT_ID`를 팀 채널에서 받은 값으로 바꾸고 서버를 다시 시작합니다.
+`docker/.env`의 `GOOGLE_OAUTH_WEB_CLIENT_ID`와 `GOOGLE_OAUTH_IOS_CLIENT_ID`를 팀 채널에서 받은 값으로 바꾸고 서버를 다시 시작합니다.
 
 ```bash
 ./docker/scripts/stop.sh && ./docker/scripts/start.sh

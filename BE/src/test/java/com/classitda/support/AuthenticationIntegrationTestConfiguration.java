@@ -33,6 +33,7 @@ public class AuthenticationIntegrationTestConfiguration {
             registry.add("auth.sms.local.fixed-otp", () -> FIXED_OTP);
             registry.add("auth.phone.key-hmac-secret-base64", () -> KEY_MATERIAL);
             registry.add("auth.google.web-client-id", () -> "test-client");
+            registry.add("auth.google.ios-client-id", () -> "test-ios-client");
             registry.add("auth.jwt.private-key-base64", () -> Base64.getEncoder()
                     .encodeToString(JWT_KEY_PAIR.getPrivate().getEncoded()));
             registry.add("auth.jwt.public-key-base64", () -> Base64.getEncoder()

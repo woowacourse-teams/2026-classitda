@@ -40,6 +40,7 @@ management:
 auth:
   google:
     web-client-id: ${GOOGLE_OAUTH_WEB_CLIENT_ID}
+    ios-client-id: ${GOOGLE_OAUTH_IOS_CLIENT_ID}
   phone:
     key-hmac-secret-base64: ${AUTH_PHONE_KEY_HMAC_SECRET_BASE64:}
   sms:

@@ -23,17 +23,21 @@ public class GoogleIdTokenVerifierAdapter implements GoogleIdentityVerifier {
     private final GoogleIdTokenVerifier verifier;
 
     public GoogleIdTokenVerifierAdapter(
-            @Value("${auth.google.web-client-id}") String webClientId
+            @Value("${auth.google.web-client-id}") String webClientId,
+            @Value("${auth.google.ios-client-id}") String iosClientId
     ) {
         if (webClientId == null || webClientId.isBlank()) {
             throw new IllegalArgumentException("Google OAuth Web Client ID는 필수입니다.");
+        }
+        if (iosClientId == null || iosClientId.isBlank()) {
+            throw new IllegalArgumentException("Google OAuth iOS Client ID는 필수입니다.");
         }
 
         NetHttpTransport transport = new NetHttpTransport.Builder().build();
         this.verifier = new GoogleIdTokenVerifier.Builder(
                 transport,
                 JSON_FACTORY)
-                .setAudience(List.of(webClientId))
+                .setAudience(List.of(webClientId, iosClientId))
                 .build();
     }
 
