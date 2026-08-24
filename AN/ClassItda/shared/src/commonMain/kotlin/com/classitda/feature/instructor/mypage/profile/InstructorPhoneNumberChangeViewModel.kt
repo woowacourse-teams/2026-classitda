@@ -50,11 +50,11 @@ import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationVa
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
 import com.classitda.feature.instructor.mypage.toPhoneError
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal class InstructorPhoneNumberChangeViewModel(
@@ -130,22 +130,23 @@ internal class InstructorPhoneNumberChangeViewModel(
         verificationId = null
         val generation = ++requestGeneration
         _uiState.value = PhoneNumberChangeUiState.Requesting(phone, "")
-        requestJob = viewModelScope.launch {
-            val result = repository.requestPhoneVerification(phone)
-            if (generation != requestGeneration) return@launch
-            _uiState.value =
-                when (result) {
-                    is InstructorMyPageResult.Success -> {
-                        verificationId = result.value.verificationId
-                        startCountdown(generation)
-                        PhoneNumberChangeUiState.CodeEntry(phone, "", 180)
-                    }
+        requestJob =
+            viewModelScope.launch {
+                val result = repository.requestPhoneVerification(phone)
+                if (generation != requestGeneration) return@launch
+                _uiState.value =
+                    when (result) {
+                        is InstructorMyPageResult.Success -> {
+                            verificationId = result.value.verificationId
+                            startCountdown(generation)
+                            PhoneNumberChangeUiState.CodeEntry(phone, "", 180)
+                        }
 
-                    is InstructorMyPageResult.Failure -> {
-                        PhoneNumberChangeUiState.Error(phone, "", result.reason.toPhoneError())
+                        is InstructorMyPageResult.Failure -> {
+                            PhoneNumberChangeUiState.Error(phone, "", result.reason.toPhoneError())
+                        }
                     }
-                }
-        }
+            }
     }
 
     private fun startCountdown(generation: Int) {
@@ -175,16 +176,19 @@ internal class InstructorPhoneNumberChangeViewModel(
                             val remaining = current.remainingSeconds ?: return@launch
                             if (current.reason == PhoneNumberChangeUiError.VERIFICATION_EXPIRED || remaining <= 1) {
                                 verificationId = null
-                                _uiState.value = current.copy(
-                                    reason = PhoneNumberChangeUiError.VERIFICATION_EXPIRED,
-                                    remainingSeconds = 0,
-                                )
+                                _uiState.value =
+                                    current.copy(
+                                        reason = PhoneNumberChangeUiError.VERIFICATION_EXPIRED,
+                                        remainingSeconds = 0,
+                                    )
                                 return@launch
                             }
                             _uiState.value = current.copy(remainingSeconds = remaining - 1)
                         }
 
-                        else -> return@launch
+                        else -> {
+                            return@launch
+                        }
                     }
                 }
             }

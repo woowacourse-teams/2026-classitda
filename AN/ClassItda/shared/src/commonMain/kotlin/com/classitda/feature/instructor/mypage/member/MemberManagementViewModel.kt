@@ -3,6 +3,7 @@ package com.classitda.feature.instructor.mypage.member
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.domain.model.instructor.mypage.MemberListPage
 import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
@@ -24,11 +25,11 @@ import com.classitda.feature.instructor.mypage.toListError
 import com.classitda.feature.instructor.mypage.toMemberListUiModel
 import com.classitda.feature.instructor.mypage.toMemberManagementDeleteError
 import com.classitda.feature.instructor.mypage.toUiModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal class MemberManagementViewModel(
@@ -110,17 +111,27 @@ internal class MemberManagementViewModel(
         }
     }
 
-    private fun toUiState(result: InstructorMyPageResult<com.classitda.domain.model.instructor.mypage.MemberListPage>): MemberManagementUiState =
+    private fun toUiState(result: InstructorMyPageResult<MemberListPage>): MemberManagementUiState =
         when (result) {
             is InstructorMyPageResult.Success -> {
                 when {
-                    result.value.totalCount == 0 && query.isBlank() -> MemberManagementUiState.Empty(sort.toUiModel())
-                    result.value.members.isEmpty() -> MemberManagementUiState.SearchEmpty(query, sort.toUiModel())
-                    else -> MemberManagementUiState.Content(result.value.toMemberListUiModel(), query, sort.toUiModel())
+                    result.value.totalCount == 0 && query.isBlank() -> {
+                        MemberManagementUiState.Empty(sort.toUiModel())
+                    }
+
+                    result.value.members.isEmpty() -> {
+                        MemberManagementUiState.SearchEmpty(query, sort.toUiModel())
+                    }
+
+                    else -> {
+                        MemberManagementUiState.Content(result.value.toMemberListUiModel(), query, sort.toUiModel())
+                    }
                 }
             }
 
-            is InstructorMyPageResult.Failure -> MemberManagementUiState.Error(result.reason.toListError())
+            is InstructorMyPageResult.Failure -> {
+                MemberManagementUiState.Error(result.reason.toListError())
+            }
         }
 
     private fun confirmDelete() {

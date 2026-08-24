@@ -6,13 +6,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavType
-import androidx.navigation.navArgument
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import kotlinx.serialization.Serializable
+
+@Serializable
+private data class InstructorMemberEditDestination(
+    val memberId: String,
+)
+
+@Serializable
+private data class InstructorFacilityDetailDestination(
+    val facilityId: String,
+)
+
+@Serializable
+private data class InstructorFacilityEditDestination(
+    val facilityId: String,
+)
 
 /** Temporary feature graph used until the app-level instructor graph is assembled. */
 @Composable
@@ -75,7 +90,7 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
             InstructorMemberManagementRoute(
                 onBack = { navController.popBackStack() },
                 onEditMember = { memberId ->
-                    navController.navigate("${InstructorMyPageDestination.F13}/${memberId.value}")
+                    navController.navigate(InstructorMemberEditDestination(memberId.value))
                 },
                 onOpenMemberRegistration = { navController.navigate(InstructorMyPageDestination.F06) },
                 refreshToken = memberRefreshToken,
@@ -92,14 +107,8 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
             )
         }
 
-        composable(
-            route = InstructorMyPageDestination.F13WithArgument,
-            arguments = listOf(navArgument(InstructorMyPageDestination.MEMBER_ID_ARG) { type = NavType.StringType }),
-        ) { backStackEntry ->
-            val memberId =
-                backStackEntry.arguments?.getString(InstructorMyPageDestination.MEMBER_ID_ARG)
-                    ?.let(::InstructorMemberId)
-                    ?: return@composable
+        composable<InstructorMemberEditDestination> { backStackEntry ->
+            val memberId = InstructorMemberId(backStackEntry.toRoute<InstructorMemberEditDestination>().memberId)
             InstructorMemberEditRoute(
                 memberId = memberId,
                 onBack = { navController.popBackStack() },
@@ -114,29 +123,24 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
             InstructorFacilityManagementRoute(
                 onBack = { navController.popBackStack() },
                 onEditFacility = { facilityId ->
-                    navController.navigate("${InstructorMyPageDestination.F11}/${facilityId.value}")
+                    navController.navigate(InstructorFacilityEditDestination(facilityId.value))
                 },
                 onOpenFacilityDetail = { facilityId ->
-                    navController.navigate("${InstructorMyPageDestination.F10}/${facilityId.value}")
+                    navController.navigate(InstructorFacilityDetailDestination(facilityId.value))
                 },
                 onOpenFacilityRegistration = { navController.navigate(InstructorMyPageDestination.F09) },
                 refreshToken = facilityRefreshToken,
             )
         }
 
-        composable(
-            route = InstructorMyPageDestination.F10WithArgument,
-            arguments = listOf(navArgument(InstructorMyPageDestination.FACILITY_ID_ARG) { type = NavType.StringType }),
-        ) { backStackEntry ->
-            val facilityId =
-                backStackEntry.arguments?.getString(InstructorMyPageDestination.FACILITY_ID_ARG)
-                    ?.let(::InstructorFacilityId)
-                    ?: return@composable
+        composable<InstructorFacilityDetailDestination> { backStackEntry ->
+            val destination = backStackEntry.toRoute<InstructorFacilityDetailDestination>()
+            val facilityId = InstructorFacilityId(destination.facilityId)
             InstructorFacilityDetailRoute(
                 facilityId = facilityId,
                 onBack = { navController.popBackStack() },
                 onOpenEdit = { id ->
-                    navController.navigate("${InstructorMyPageDestination.F11}/${id.value}")
+                    navController.navigate(InstructorFacilityEditDestination(id.value))
                 },
                 onDeleted = {
                     facilityRefreshToken++
@@ -145,14 +149,9 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
             )
         }
 
-        composable(
-            route = InstructorMyPageDestination.F11WithArgument,
-            arguments = listOf(navArgument(InstructorMyPageDestination.FACILITY_ID_ARG) { type = NavType.StringType }),
-        ) { backStackEntry ->
-            val facilityId =
-                backStackEntry.arguments?.getString(InstructorMyPageDestination.FACILITY_ID_ARG)
-                    ?.let(::InstructorFacilityId)
-                    ?: return@composable
+        composable<InstructorFacilityEditDestination> { backStackEntry ->
+            val destination = backStackEntry.toRoute<InstructorFacilityEditDestination>()
+            val facilityId = InstructorFacilityId(destination.facilityId)
             InstructorFacilityEditRoute(
                 facilityId = facilityId,
                 onBack = { navController.popBackStack() },
@@ -183,13 +182,8 @@ private object InstructorMyPageDestination {
     const val F05 = "instructor_member_management"
     const val F06 = "instructor_member_registration"
     const val F13 = "instructor_member_edit"
-    const val MEMBER_ID_ARG = "memberId"
-    const val F13WithArgument = "$F13/{$MEMBER_ID_ARG}"
     const val F08 = "instructor_facility_management"
     const val F09 = "instructor_facility_registration"
     const val F10 = "instructor_facility_detail"
     const val F11 = "instructor_facility_edit"
-    const val FACILITY_ID_ARG = "facilityId"
-    const val F10WithArgument = "$F10/{$FACILITY_ID_ARG}"
-    const val F11WithArgument = "$F11/{$FACILITY_ID_ARG}"
 }

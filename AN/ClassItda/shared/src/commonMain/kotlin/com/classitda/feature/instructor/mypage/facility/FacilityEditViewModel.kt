@@ -96,7 +96,9 @@ internal class FacilityEditViewModel(
                         }
                     }
 
-                    else -> refresh()
+                    else -> {
+                        refresh()
+                    }
                 }
             }
 

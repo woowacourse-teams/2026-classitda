@@ -25,11 +25,21 @@ data class MemberInputUiModel(
         get() {
             val digits = phoneNumber.filter(Char::isDigit)
             return when {
-                digits.length == 11 -> "${digits.take(3)}-${digits.substring(3, 7)}-${digits.takeLast(4)}"
-                digits.length == 10 && digits.startsWith("02") ->
+                digits.length == 11 -> {
+                    "${digits.take(3)}-${digits.substring(3, 7)}-${digits.takeLast(4)}"
+                }
+
+                digits.length == 10 && digits.startsWith("02") -> {
                     "${digits.take(2)}-${digits.substring(2, 6)}-${digits.takeLast(4)}"
-                digits.length == 10 -> "${digits.take(3)}-${digits.substring(3, 6)}-${digits.takeLast(4)}"
-                else -> phoneNumber
+                }
+
+                digits.length == 10 -> {
+                    "${digits.take(3)}-${digits.substring(3, 6)}-${digits.takeLast(4)}"
+                }
+
+                else -> {
+                    phoneNumber
+                }
             }
         }
 }

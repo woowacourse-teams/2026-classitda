@@ -31,10 +31,22 @@ internal class MemberEditViewModel(
 
     fun onAction(action: MemberEditAction) {
         when (action) {
-            is MemberEditAction.NameChanged -> update { copy(name = action.name) }
-            is MemberEditAction.PhoneNumberChanged -> update { copy(phoneNumber = action.phoneNumber) }
-            MemberEditAction.Submit -> submit()
-            is MemberEditAction.SuccessAcknowledged -> Unit
+            is MemberEditAction.NameChanged -> {
+                update { copy(name = action.name) }
+            }
+
+            is MemberEditAction.PhoneNumberChanged -> {
+                update { copy(phoneNumber = action.phoneNumber) }
+            }
+
+            MemberEditAction.Submit -> {
+                submit()
+            }
+
+            is MemberEditAction.SuccessAcknowledged -> {
+                Unit
+            }
+
             MemberEditAction.Retry -> {
                 when (val current = _uiState.value) {
                     is MemberEditUiState.Error -> {
@@ -46,10 +58,15 @@ internal class MemberEditViewModel(
                         }
                     }
 
-                    else -> refresh()
+                    else -> {
+                        refresh()
+                    }
                 }
             }
-            MemberEditAction.Back -> Unit
+
+            MemberEditAction.Back -> {
+                Unit
+            }
         }
     }
 
