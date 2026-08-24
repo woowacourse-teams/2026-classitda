@@ -85,6 +85,38 @@ internal class DemoInstructorMyPageRepository : InstructorMyPageRepository {
         return InstructorMyPageResult.Success(id)
     }
 
+    override suspend fun getMember(memberId: InstructorMemberId) =
+        members
+            .firstOrNull { it.id == memberId }
+            ?.let { InstructorMyPageResult.Success(it) }
+            ?: InstructorMyPageResult.Failure(
+                com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
+            )
+
+    override suspend fun updateMember(
+        memberId: InstructorMemberId,
+        draft: MemberRegistrationDraft,
+    ) = members
+        .indexOfFirst { it.id == memberId }
+        .takeIf { it >= 0 }
+        ?.let { index ->
+            val updated = members[index].copy(name = draft.name, phoneNumber = draft.phoneNumber)
+            members[index] = updated
+            InstructorMyPageResult.Success(updated)
+        }
+        ?: InstructorMyPageResult.Failure(
+            com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
+        )
+
+    override suspend fun deleteMember(memberId: InstructorMemberId) =
+        if (members.removeAll { it.id == memberId }) {
+            InstructorMyPageResult.Success(memberId)
+        } else {
+            InstructorMyPageResult.Failure(
+                com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
+            )
+        }
+
     override suspend fun getFacilities() =
         InstructorMyPageResult.Success(FacilityList(facilities.size, facilities.toList()))
 

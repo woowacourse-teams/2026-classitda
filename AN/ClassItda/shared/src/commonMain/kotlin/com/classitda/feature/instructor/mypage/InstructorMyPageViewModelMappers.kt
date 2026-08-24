@@ -38,6 +38,9 @@ import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiError
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiModel
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiState
+import com.classitda.feature.instructor.mypage.contract.MemberDeleteError
+import com.classitda.feature.instructor.mypage.contract.MemberDetailUiError
+import com.classitda.feature.instructor.mypage.contract.MemberEditUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
@@ -126,6 +129,29 @@ internal fun InstructorMyPageFailureReason.toMemberRegistrationError() =
         InstructorMyPageFailureReason.CONFLICT -> MemberRegistrationUiError.CONFLICT
         InstructorMyPageFailureReason.INVALID_REQUEST -> MemberRegistrationUiError.INVALID_REQUEST
         else -> MemberRegistrationUiError.UNKNOWN
+    }
+
+internal fun InstructorMyPageFailureReason.toMemberDetailError() =
+    when (this) {
+        InstructorMyPageFailureReason.NETWORK -> MemberDetailUiError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> MemberDetailUiError.NOT_FOUND
+        else -> MemberDetailUiError.UNKNOWN
+    }
+
+internal fun InstructorMyPageFailureReason.toMemberDeleteError() =
+    when (this) {
+        InstructorMyPageFailureReason.NETWORK -> MemberDeleteError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> MemberDeleteError.NOT_FOUND
+        else -> MemberDeleteError.UNKNOWN
+    }
+
+internal fun InstructorMyPageFailureReason.toMemberEditError() =
+    when (this) {
+        InstructorMyPageFailureReason.NETWORK -> MemberEditUiError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> MemberEditUiError.NOT_FOUND
+        InstructorMyPageFailureReason.CONFLICT -> MemberEditUiError.CONFLICT
+        InstructorMyPageFailureReason.INVALID_REQUEST -> MemberEditUiError.INVALID_REQUEST
+        else -> MemberEditUiError.UNKNOWN
     }
 
 internal fun InstructorMyPageFailureReason.toFacilityError() =

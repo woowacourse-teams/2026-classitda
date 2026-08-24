@@ -7,6 +7,7 @@ import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.domain.model.instructor.mypage.InstructorMyPageSummary
 import com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId
 import com.classitda.domain.model.instructor.mypage.ManagedFacility
+import com.classitda.domain.model.instructor.mypage.ManagedMember
 import com.classitda.domain.model.instructor.mypage.MemberListPage
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.MemberSortOrder
@@ -35,6 +36,15 @@ interface InstructorMyPageRepository {
     ): InstructorMyPageResult<MemberListPage>
 
     suspend fun registerMember(draft: MemberRegistrationDraft): InstructorMyPageResult<InstructorMemberId>
+
+    suspend fun getMember(memberId: InstructorMemberId): InstructorMyPageResult<ManagedMember>
+
+    suspend fun updateMember(
+        memberId: InstructorMemberId,
+        draft: MemberRegistrationDraft,
+    ): InstructorMyPageResult<ManagedMember>
+
+    suspend fun deleteMember(memberId: InstructorMemberId): InstructorMyPageResult<InstructorMemberId>
 
     suspend fun getFacilities(): InstructorMyPageResult<FacilityList>
 
