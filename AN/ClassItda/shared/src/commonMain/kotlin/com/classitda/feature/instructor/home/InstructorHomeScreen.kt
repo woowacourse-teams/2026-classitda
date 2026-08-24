@@ -23,7 +23,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -38,7 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import classitda.shared.generated.resources.Res
-import classitda.shared.generated.resources.ic_notification
+import classitda.shared.generated.resources.ic_expand_more
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppTheme
@@ -106,14 +105,15 @@ internal fun InstructorHomeStateless(
                 Column(Modifier.weight(1f)) {
                     Text("안녕하세요, 이지은 강사님", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
                     Spacer(Modifier.height(AppSpacing.xs))
-                    Text("클래스잇다 요가&필라테스⌄", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                }
-                IconButton(onClick = {}) {
-                    Icon(
-                        painter = painterResource(Res.drawable.ic_notification),
-                        contentDescription = "알림",
-                        tint = InsColors.TextPrimary,
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("클래스잇다 요가&필라테스", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Icon(
+                            painter = painterResource(Res.drawable.ic_expand_more),
+                            contentDescription = "시설 선택",
+                            tint = InsColors.TextPrimary,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                 }
             }
         }
