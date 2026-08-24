@@ -1,7 +1,9 @@
 package com.classitda.core.network
 
 import com.classitda.core.auth.AuthTokenStorage
+import com.classitda.domain.model.auth.signup.LoginTokens
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
@@ -9,6 +11,10 @@ import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import io.ktor.http.takeFrom
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
@@ -52,9 +58,33 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
 
     install(Auth) {
         bearer {
+            sendWithoutRequest { request -> request.url.build().encodedPath != "/api/auth/tokens/refresh" }
             loadTokens {
                 tokenStorage.read()?.let { tokens ->
                     BearerTokens(tokens.accessToken, tokens.refreshToken)
+                }
+            }
+            refreshTokens {
+                val refreshToken = tokenStorage.read()?.refreshToken ?: return@refreshTokens null
+                runCatching {
+                    val refreshed =
+                        client
+                            .post("api/auth/tokens/refresh") {
+                                contentType(ContentType.Application.Json)
+                                setBody(RefreshTokenRequestDto(refreshToken))
+                            }.body<RefreshTokenResponseDto>()
+                    val tokens =
+                        LoginTokens(
+                            accessToken = refreshed.accessToken,
+                            accessTokenExpiresInSeconds = refreshed.accessTokenExpiresIn,
+                            refreshToken = refreshed.refreshToken,
+                            refreshTokenExpiresInSeconds = refreshed.refreshTokenExpiresIn,
+                        )
+                    tokenStorage.write(tokens)
+                    BearerTokens(tokens.accessToken, tokens.refreshToken)
+                }.getOrElse {
+                    tokenStorage.clear()
+                    null
                 }
             }
         }
