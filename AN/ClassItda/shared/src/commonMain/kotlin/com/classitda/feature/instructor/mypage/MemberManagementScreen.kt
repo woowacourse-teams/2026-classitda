@@ -372,12 +372,6 @@ private fun ManagedMemberCard(
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            Icon(
-                painter = painterResource(Res.drawable.ic_arrow_forward),
-                contentDescription = null,
-                tint = InsColors.TextTertiary,
-                modifier = Modifier.size(AppSpacing.xxl),
-            )
         }
     }
 }
