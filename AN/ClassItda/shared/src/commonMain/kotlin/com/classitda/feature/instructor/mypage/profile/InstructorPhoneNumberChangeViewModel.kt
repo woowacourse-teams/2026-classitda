@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal class InstructorPhoneNumberChangeViewModel(
@@ -66,12 +67,14 @@ internal class InstructorPhoneNumberChangeViewModel(
     private var verificationId:
         com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId? = null
     private var requestJob: Job? = null
+    private var countdownJob: Job? = null
     private var requestGeneration = 0
 
     fun onAction(action: PhoneNumberChangeAction) {
         when (action) {
             is PhoneNumberChangeAction.PhoneNumberChanged -> {
                 requestJob?.cancel()
+                countdownJob?.cancel()
                 requestGeneration++
                 verificationId = null
                 _uiState.value =
@@ -123,6 +126,7 @@ internal class InstructorPhoneNumberChangeViewModel(
             }
         if (phone.isBlank()) return
         requestJob?.cancel()
+        countdownJob?.cancel()
         verificationId = null
         val generation = ++requestGeneration
         _uiState.value = PhoneNumberChangeUiState.Requesting(phone, "")
@@ -133,6 +137,7 @@ internal class InstructorPhoneNumberChangeViewModel(
                 when (result) {
                     is InstructorMyPageResult.Success -> {
                         verificationId = result.value.verificationId
+                        startCountdown(generation)
                         PhoneNumberChangeUiState.CodeEntry(phone, "", 180)
                     }
 
@@ -141,6 +146,48 @@ internal class InstructorPhoneNumberChangeViewModel(
                     }
                 }
         }
+    }
+
+    private fun startCountdown(generation: Int) {
+        countdownJob?.cancel()
+        countdownJob =
+            viewModelScope.launch {
+                while (true) {
+                    delay(1_000)
+                    if (generation != requestGeneration) return@launch
+                    when (val current = _uiState.value) {
+                        is PhoneNumberChangeUiState.CodeEntry -> {
+                            if (current.remainingSeconds <= 1) {
+                                verificationId = null
+                                _uiState.value =
+                                    PhoneNumberChangeUiState.Error(
+                                        current.phoneNumber,
+                                        current.verificationCode,
+                                        PhoneNumberChangeUiError.VERIFICATION_EXPIRED,
+                                        0,
+                                    )
+                                return@launch
+                            }
+                            _uiState.value = current.copy(remainingSeconds = current.remainingSeconds - 1)
+                        }
+
+                        is PhoneNumberChangeUiState.Error -> {
+                            val remaining = current.remainingSeconds ?: return@launch
+                            if (current.reason == PhoneNumberChangeUiError.VERIFICATION_EXPIRED || remaining <= 1) {
+                                verificationId = null
+                                _uiState.value = current.copy(
+                                    reason = PhoneNumberChangeUiError.VERIFICATION_EXPIRED,
+                                    remainingSeconds = 0,
+                                )
+                                return@launch
+                            }
+                            _uiState.value = current.copy(remainingSeconds = remaining - 1)
+                        }
+
+                        else -> return@launch
+                    }
+                }
+            }
     }
 
     private fun verify() {
