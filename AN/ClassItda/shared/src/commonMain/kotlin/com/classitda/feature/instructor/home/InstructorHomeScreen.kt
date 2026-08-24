@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_check
+import classitda.shared.generated.resources.ic_close
 import classitda.shared.generated.resources.ic_expand_more
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppShape
@@ -149,7 +150,7 @@ private fun InstructorTimelineItem(
     onScheduleClick: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding)) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(28.dp)) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(16.dp)) {
             InstructorTimelineIndicator(session.status, isNext)
             if (!isLast) {
                 Box(Modifier.width(1.dp).fillMaxHeight().background(InsColors.Divider))
@@ -196,31 +197,50 @@ private fun InstructorTimelineIndicator(
     isNext: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val indicatorModifier =
-        when {
-            status == ClassSessionStatus.COMPLETED -> Modifier.background(InsColors.Gray200, CircleShape)
-            isNext -> Modifier.background(InsColors.Black, CircleShape)
-            status == ClassSessionStatus.CANCELLED -> Modifier.border(1.dp, InsColors.RedLight, CircleShape)
-            else -> Modifier.border(1.dp, InsColors.DividerStrong, CircleShape)
-        }
-
-    Box(
-        modifier = modifier.size(28.dp).then(indicatorModifier).clip(CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        when {
-            status == ClassSessionStatus.COMPLETED -> {
+    when {
+        status == ClassSessionStatus.COMPLETED -> {
+            Box(
+                modifier = modifier.size(16.dp).clip(CircleShape).background(InsColors.Gray400).border(2.dp, InsColors.White, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_check),
                     contentDescription = "완료",
-                    tint = InsColors.TextSecondary,
-                    modifier = Modifier.size(14.dp),
+                    tint = InsColors.White,
+                    modifier = Modifier.size(10.dp),
                 )
             }
+        }
 
-            status == ClassSessionStatus.CANCELLED -> {
-                Box(Modifier.size(6.dp).background(InsColors.Red, CircleShape))
+        isNext -> {
+            Box(
+                modifier = modifier.size(24.dp).clip(CircleShape).background(InsColors.Gray100),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier = Modifier.size(16.dp).clip(CircleShape).background(InsColors.Black).border(2.dp, InsColors.White, CircleShape),
+                )
             }
+        }
+
+        status == ClassSessionStatus.CANCELLED -> {
+            Box(
+                modifier = modifier.size(16.dp).clip(CircleShape).background(InsColors.Gray100).border(2.dp, InsColors.White, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_close),
+                    contentDescription = "취소됨",
+                    tint = InsColors.Red,
+                    modifier = Modifier.size(10.dp),
+                )
+            }
+        }
+
+        else -> {
+            Box(
+                modifier = modifier.size(16.dp).clip(CircleShape).background(InsColors.Gray100).border(2.dp, InsColors.White, CircleShape),
+            )
         }
     }
 }
