@@ -1,4 +1,4 @@
-# ADR-0015: 회원 탈퇴 시 기존 Access Token을 자연 만료시킨다
+# ADR-0016: 회원 탈퇴 시 기존 Access Token을 자연 만료시킨다
 
 ## Status
 
