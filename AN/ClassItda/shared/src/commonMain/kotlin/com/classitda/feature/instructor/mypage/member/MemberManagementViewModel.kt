@@ -87,6 +87,10 @@ internal class MemberManagementViewModel(
                 confirmDelete()
             }
 
+            MemberManagementAction.DeleteAcknowledged -> {
+                refresh()
+            }
+
             else -> {
                 Unit
             }
@@ -102,34 +106,22 @@ internal class MemberManagementViewModel(
             _uiState.value = MemberManagementUiState.Loading
         }
         viewModelScope.launch {
-            _uiState.value =
-                when (val result = repository.getMembers(query, sort)) {
-                    is InstructorMyPageResult.Success -> {
-                        when {
-                            result.value.totalCount == 0 && query.isBlank() -> {
-                                MemberManagementUiState.Empty(sort.toUiModel())
-                            }
-
-                            result.value.members.isEmpty() -> {
-                                MemberManagementUiState.SearchEmpty(query, sort.toUiModel())
-                            }
-
-                            else -> {
-                                MemberManagementUiState.Content(
-                                    result.value.toMemberListUiModel(),
-                                    query,
-                                    sort.toUiModel(),
-                                )
-                            }
-                        }
-                    }
-
-                    is InstructorMyPageResult.Failure -> {
-                        MemberManagementUiState.Error(result.reason.toListError())
-                    }
-                }
+            _uiState.value = toUiState(repository.getMembers(query, sort))
         }
     }
+
+    private fun toUiState(result: InstructorMyPageResult<com.classitda.domain.model.instructor.mypage.MemberListPage>): MemberManagementUiState =
+        when (result) {
+            is InstructorMyPageResult.Success -> {
+                when {
+                    result.value.totalCount == 0 && query.isBlank() -> MemberManagementUiState.Empty(sort.toUiModel())
+                    result.value.members.isEmpty() -> MemberManagementUiState.SearchEmpty(query, sort.toUiModel())
+                    else -> MemberManagementUiState.Content(result.value.toMemberListUiModel(), query, sort.toUiModel())
+                }
+            }
+
+            is InstructorMyPageResult.Failure -> MemberManagementUiState.Error(result.reason.toListError())
+        }
 
     private fun confirmDelete() {
         val content = _uiState.value as? MemberManagementUiState.Content ?: return
@@ -176,8 +168,20 @@ internal class MemberManagementViewModel(
         viewModelScope.launch {
             when (val result = repository.deleteMember(memberId)) {
                 is InstructorMyPageResult.Success -> {
-                    updateContent {
-                        copy(actionState = MemberManagementActionState.Deleted(memberId))
+                    when (val refreshed = repository.getMembers(query, sort)) {
+                        is InstructorMyPageResult.Success -> {
+                            _uiState.value =
+                                MemberManagementUiState.Content(
+                                    page = refreshed.value.toMemberListUiModel(),
+                                    query = query,
+                                    sortOrder = sort.toUiModel(),
+                                    actionState = MemberManagementActionState.Deleted(memberId),
+                                )
+                        }
+
+                        is InstructorMyPageResult.Failure -> {
+                            _uiState.value = MemberManagementUiState.Error(refreshed.reason.toListError())
+                        }
                     }
                 }
 
