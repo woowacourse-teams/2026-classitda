@@ -114,6 +114,10 @@ internal class FacilityEditViewModel(
                 submit()
             }
 
+            is FacilityEditAction.SuccessAcknowledged -> {
+                Unit
+            }
+
             FacilityEditAction.Retry -> {
                 refresh()
             }

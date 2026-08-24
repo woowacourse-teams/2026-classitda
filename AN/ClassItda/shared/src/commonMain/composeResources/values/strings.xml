@@ -280,6 +280,7 @@
     <string name="instructor_member_edit_save">수정 완료</string>
     <string name="instructor_member_edit_submitting">회원 정보를 저장하는 중입니다.</string>
     <string name="instructor_member_edit_success">회원 정보가 수정되었습니다.</string>
+    <string name="instructor_member_edit_success_title">회원 정보 수정 완료</string>
     <string name="instructor_member_edit_error">회원 정보 수정에 실패했습니다. 입력 내용을 확인해 주세요.</string>
     <string name="instructor_facility_management_title">내 시설 관리</string>
     <string name="instructor_facility_management_back">내 시설 관리 뒤로 가기</string>
@@ -343,6 +344,7 @@
     <string name="instructor_facility_edit_submit">수정 완료</string>
     <string name="instructor_facility_edit_submitting">시설 정보를 수정하는 중입니다.</string>
     <string name="instructor_facility_edit_success">시설 정보가 수정되었습니다.</string>
+    <string name="instructor_facility_edit_success_title">시설 정보 수정 완료</string>
     <string name="instructor_facility_edit_error">시설 정보 수정에 실패했습니다. 입력 내용을 확인한 뒤 다시 시도해 주세요.</string>
     <string name="instructor_facility_detail_title">시설 상세</string>
     <string name="instructor_facility_detail_back">시설 상세 뒤로 가기</string>

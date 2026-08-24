@@ -25,6 +25,10 @@ fun FacilityEditScreen(
         onAction = { action -> onAction(action.toEditAction()) },
         modifier = modifier,
         isEditing = true,
+        onSuccessAcknowledged = {
+            val success = uiState as? FacilityEditUiState.Success
+            success?.let { onAction(FacilityEditAction.SuccessAcknowledged(it.facilityId)) }
+        },
     )
 }
 

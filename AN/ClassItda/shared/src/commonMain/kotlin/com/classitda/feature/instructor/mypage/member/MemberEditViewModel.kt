@@ -32,6 +32,7 @@ internal class MemberEditViewModel(
             is MemberEditAction.NameChanged -> update { copy(name = action.name) }
             is MemberEditAction.PhoneNumberChanged -> update { copy(phoneNumber = action.phoneNumber) }
             MemberEditAction.Submit -> submit()
+            is MemberEditAction.SuccessAcknowledged -> Unit
             MemberEditAction.Retry -> refresh()
             MemberEditAction.Back -> Unit
         }

@@ -245,13 +245,10 @@ internal fun InstructorMemberEditRoute(
         ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(uiState) {
-        val success = uiState as? com.classitda.feature.instructor.mypage.contract.MemberEditUiState.Success
-        success?.let { onSaved(it.memberId) }
-    }
     MemberEditScreen(uiState, onAction = { action ->
         when (action) {
             MemberEditAction.Back -> onBack()
+            is MemberEditAction.SuccessAcknowledged -> onSaved(action.memberId)
             else -> viewModel.onAction(action)
         }
     }, modifier = modifier)
@@ -320,13 +317,10 @@ internal fun InstructorFacilityEditRoute(
         ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(uiState) {
-        val success = uiState as? com.classitda.feature.instructor.mypage.contract.FacilityEditUiState.Success
-        success?.let { onSaved(it.facilityId) }
-    }
     FacilityEditScreen(uiState, onAction = { action ->
         when (action) {
             FacilityEditAction.Back -> onBack()
+            is FacilityEditAction.SuccessAcknowledged -> onSaved(action.facilityId)
             else -> viewModel.onAction(action)
         }
     }, modifier = modifier)

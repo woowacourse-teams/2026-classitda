@@ -83,5 +83,9 @@ sealed interface FacilityEditAction {
 
     data object Submit : FacilityEditAction
 
+    data class SuccessAcknowledged(
+        val facilityId: InstructorFacilityId,
+    ) : FacilityEditAction
+
     data object Retry : FacilityEditAction
 }

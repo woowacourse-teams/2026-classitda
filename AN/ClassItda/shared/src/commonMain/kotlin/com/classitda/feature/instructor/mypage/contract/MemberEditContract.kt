@@ -55,6 +55,10 @@ sealed interface MemberEditAction {
 
     data object Submit : MemberEditAction
 
+    data class SuccessAcknowledged(
+        val memberId: InstructorMemberId,
+    ) : MemberEditAction
+
     data object Retry : MemberEditAction
 }
 
