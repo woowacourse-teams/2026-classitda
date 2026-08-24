@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,10 +42,6 @@ internal fun SignupScreen(
     val scope = rememberCoroutineScope()
     var selectedTerm by remember { mutableStateOf<SignupTermLink?>(null) }
 
-    LaunchedEffect(state.page) {
-        if (state.page == SignupPage.Completed) onSignupCompleted()
-    }
-
     if (selectedTerm == null) {
         SignupScreenStateless(
             state = state,
@@ -58,7 +53,11 @@ internal fun SignupScreen(
                             .onFailure(viewModel::showError)
                     }
                 } else {
-                    viewModel.onAction(action)
+                    when (action) {
+                        SignupAction.Close -> onSignupCompleted()
+                        SignupAction.OpenProfile -> Unit
+                        else -> viewModel.onAction(action)
+                    }
                 }
             },
             modifier = modifier,

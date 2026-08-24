@@ -68,13 +68,14 @@ internal fun SignupCompletedScreen(
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         TextButton(
+            enabled = false,
             onClick = { onAction(SignupAction.OpenProfile) },
             modifier = Modifier.fillMaxWidth(),
         ) {
             Text(
                 text = "프로필 설정하러 가기",
                 style = appTypography().labelMedium,
-                color = StuColors.TextSecondary,
+                color = StuColors.Gray300,
             )
         }
         Spacer(modifier = Modifier.height(AppSpacing.xl))

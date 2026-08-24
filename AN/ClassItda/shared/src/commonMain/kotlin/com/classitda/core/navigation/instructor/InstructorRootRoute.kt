@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import com.classitda.feature.instructor.InstructorBottomBar
 import com.classitda.feature.instructor.InstructorBottomTab
 import com.classitda.feature.instructor.home.InstructorHomeRoute
 import com.classitda.feature.instructor.management.lesson.ClassManagementRoute
@@ -16,24 +15,17 @@ import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
 fun InstructorRootRoute(modifier: Modifier = Modifier) {
     var selectedTab by remember { mutableStateOf(InstructorBottomTab.HOME) }
 
-    val bottomBar: @Composable () -> Unit = {
-        InstructorBottomBar(
-            selectedTab = selectedTab,
-            onTabSelected = { selectedTab = it },
-        )
-    }
-
     when (selectedTab) {
         InstructorBottomTab.HOME -> {
             InstructorHomeRoute(
                 onScheduleClick = { selectedTab = InstructorBottomTab.SCHEDULE },
-                bottomBar = bottomBar,
+                bottomBar = {},
                 modifier = modifier,
             )
         }
 
         InstructorBottomTab.SCHEDULE -> {
-            InstructorScheduleRoute(bottomBar = bottomBar, modifier = modifier)
+            InstructorScheduleRoute(bottomBar = {}, modifier = modifier)
         }
 
         InstructorBottomTab.MANAGEMENT -> {
@@ -44,13 +36,13 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
                 onTemplateCardClick = {},
                 onTemplateEditClick = {},
                 onSessionCardClick = {},
-                bottomBar = bottomBar,
+                bottomBar = {},
                 modifier = modifier,
             )
         }
 
         InstructorBottomTab.CHAT,
         InstructorBottomTab.MY,
-        -> InstructorHomeRoute(onScheduleClick = {}, bottomBar = bottomBar, modifier = modifier)
+        -> InstructorHomeRoute(onScheduleClick = {}, bottomBar = {}, modifier = modifier)
     }
 }
