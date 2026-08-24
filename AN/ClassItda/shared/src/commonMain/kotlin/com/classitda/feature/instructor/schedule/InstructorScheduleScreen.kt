@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,15 +35,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.domain.model.instructor.management.ClassSession
+import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.feature.instructor.management.lesson.component.ClassSessionStatusBadge
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.number
@@ -55,7 +61,34 @@ internal fun InstructorScheduleRoute(
     modifier: Modifier = Modifier,
     viewModel: InstructorScheduleViewModel = koinViewModel(),
 ) {
+    InstructorScheduleStateful(
+        bottomBar = bottomBar,
+        modifier = modifier,
+        viewModel = viewModel,
+    )
+}
+
+@Composable
+internal fun InstructorScheduleStateful(
+    bottomBar: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: InstructorScheduleViewModel,
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val sessions = (uiState as? InstructorScheduleUiState.Success)?.sessions.orEmpty()
+    val firstSessionDate = sessions.minOfOrNull { it.startAt.date } ?: LocalDate(2026, 8, 1)
+    var displayedYear by remember { mutableStateOf(firstSessionDate.year) }
+    var displayedMonth by remember { mutableStateOf(firstSessionDate.month.number) }
+    var selectedDate by remember { mutableStateOf(firstSessionDate) }
+
+    LaunchedEffect(sessions) {
+        if (sessions.isNotEmpty()) {
+            val sessionDate = sessions.minOf { it.startAt.date }
+            displayedYear = sessionDate.year
+            displayedMonth = sessionDate.month.number
+            selectedDate = sessionDate
+        }
+    }
 
     Scaffold(
         modifier = modifier,
@@ -65,20 +98,45 @@ internal fun InstructorScheduleRoute(
         when (val state = uiState) {
             InstructorScheduleUiState.Loading -> ScheduleLoading(Modifier.padding(contentPadding))
             is InstructorScheduleUiState.Error -> ScheduleError(state.message, viewModel::retry, Modifier.padding(contentPadding))
-            is InstructorScheduleUiState.Success -> InstructorScheduleScreen(state.sessions, Modifier.padding(contentPadding))
+            is InstructorScheduleUiState.Success -> InstructorScheduleStateless(
+                sessions = state.sessions,
+                displayedYear = displayedYear,
+                displayedMonth = displayedMonth,
+                selectedDate = selectedDate,
+                onDateSelected = { selectedDate = it },
+                onPreviousMonth = {
+                    if (displayedMonth == 1) {
+                        displayedYear -= 1
+                        displayedMonth = 12
+                    } else {
+                        displayedMonth -= 1
+                    }
+                },
+                onNextMonth = {
+                    if (displayedMonth == 12) {
+                        displayedYear += 1
+                        displayedMonth = 1
+                    } else {
+                        displayedMonth += 1
+                    }
+                },
+                modifier = Modifier.padding(contentPadding),
+            )
         }
     }
 }
 
 @Composable
-private fun InstructorScheduleScreen(
+internal fun InstructorScheduleStateless(
     sessions: List<ClassSession>,
+    displayedYear: Int,
+    displayedMonth: Int,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val firstSessionDate = sessions.minOfOrNull { it.startAt.date } ?: LocalDate(2026, 8, 1)
-    var displayedYear by remember { mutableStateOf(firstSessionDate.year) }
-    var displayedMonth by remember { mutableStateOf(firstSessionDate.month.number) }
-    var selectedDate by remember { mutableStateOf(firstSessionDate) }
     val selectedSessions = sessions.filter { it.startAt.date == selectedDate }.sortedBy { it.startAt }
 
     LazyColumn(
@@ -98,28 +156,14 @@ private fun InstructorScheduleScreen(
                 displayedMonth = displayedMonth,
                 selectedDate = selectedDate,
                 sessionDates = sessions.map { it.startAt.date }.toSet(),
-                onDateSelected = { selectedDate = it },
-                onPreviousMonth = {
-                    if (displayedMonth == 1) {
-                        displayedYear -= 1
-                        displayedMonth = 12
-                    } else {
-                        displayedMonth -= 1
-                    }
-                },
-                onNextMonth = {
-                    if (displayedMonth == 12) {
-                        displayedYear += 1
-                        displayedMonth = 1
-                    } else {
-                        displayedMonth += 1
-                    }
-                },
+                onDateSelected = onDateSelected,
+                onPreviousMonth = onPreviousMonth,
+                onNextMonth = onNextMonth,
             )
         }
         item {
             Text(
-                text = "${selectedDate.monthNumber}월 ${selectedDate.dayOfMonth}일 수업",
+                text = "${selectedDate.month.number}월 ${selectedDate.day}일 수업",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
@@ -153,7 +197,7 @@ private fun InstructorCalendar(
     val firstDay = calendarMonth.firstDay
     val days = buildList<LocalDate?> {
         repeat(firstDay.dayOfWeek.ordinal) { add(null) }
-        repeat(calendarMonth.lastDay.dayOfMonth) { add(firstDay.plus(DatePeriod(days = it))) }
+        repeat(calendarMonth.lastDay.day) { add(firstDay.plus(DatePeriod(days = it))) }
         while (size % 7 != 0) add(null)
     }
 
@@ -200,7 +244,7 @@ private fun CalendarDay(
                     modifier = Modifier.size(32.dp).clip(AppShape.Pill).background(if (isSelected) InsColors.Primary else Color.Transparent),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(date.dayOfMonth.toString(), color = if (isSelected) InsColors.White else InsColors.TextPrimary)
+                    Text(date.day.toString(), color = if (isSelected) InsColors.White else InsColors.TextPrimary)
                 }
                 if (hasSession) Box(Modifier.size(4.dp).clip(AppShape.Pill).background(InsColors.Purple))
             }
@@ -211,7 +255,7 @@ private fun CalendarDay(
 @Composable
 private fun InstructorScheduleCard(session: ClassSession) {
     Card(
-        colors = CardDefaults.cardColors(containerColor = InsColors.Surface),
+        colors = CardDefaults.cardColors(containerColor = InsColors.White),
         modifier = Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.xs).fillMaxWidth(),
     ) {
         Column(Modifier.padding(AppSpacing.cardPadding)) {
@@ -225,6 +269,46 @@ private fun InstructorScheduleCard(session: ClassSession) {
             Spacer(Modifier.height(AppSpacing.xs))
             Text("예약 ${session.reservedCount} / ${session.capacity}명", color = InsColors.TextSecondary)
         }
+    }
+}
+
+@Preview(name = "강사 일정", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun InstructorScheduleStatelessPreview() {
+    val selectedDate = LocalDate(2026, 8, 5)
+
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorScheduleStateless(
+            sessions =
+                listOf(
+                    ClassSession(
+                        id = "1",
+                        tags = listOf("그룹 수업"),
+                        title = "체어 밸런스",
+                        startAt = LocalDateTime(2026, 8, 5, 14, 0),
+                        endAt = LocalDateTime(2026, 8, 5, 14, 50),
+                        reservedCount = 7,
+                        capacity = 8,
+                        status = ClassSessionStatus.SCHEDULED,
+                    ),
+                    ClassSession(
+                        id = "2",
+                        tags = listOf("개인 수업"),
+                        title = "리포머 밸런스",
+                        startAt = LocalDateTime(2026, 8, 5, 19, 30),
+                        endAt = LocalDateTime(2026, 8, 5, 20, 20),
+                        reservedCount = 6,
+                        capacity = 6,
+                        status = ClassSessionStatus.COMPLETED,
+                    ),
+                ),
+            displayedYear = selectedDate.year,
+            displayedMonth = selectedDate.month.number,
+            selectedDate = selectedDate,
+            onDateSelected = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+        )
     }
 }
 
