@@ -5,11 +5,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
 import com.classitda.feature.instructor.mypage.contract.FacilityEditUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityEditUiState
+import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
@@ -92,7 +92,7 @@ private val facilityEditPreviewState =
     FacilityEditUiState.Editing(
         facilityId = InstructorFacilityId("facility-edit-preview"),
         draft =
-            FacilityRegistrationDraft(
+            FacilityInputUiModel(
                 name = "클래스잇다 스튜디오",
                 address = "서울특별시 강남구 테헤란로",
                 detailAddress = "5층 501호",

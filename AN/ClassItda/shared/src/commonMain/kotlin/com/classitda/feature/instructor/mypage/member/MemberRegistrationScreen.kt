@@ -63,7 +63,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
+import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
@@ -229,7 +229,7 @@ private fun MemberRegistrationTopBar(onBack: () -> Unit) {
 
 @Composable
 private fun MemberRegistrationForm(
-    draft: MemberRegistrationDraft,
+    draft: MemberInputUiModel,
     fieldErrors: Set<MemberRegistrationField>,
     errorMessage: String?,
     onAction: (MemberRegistrationAction) -> Unit,
@@ -448,19 +448,19 @@ private fun MemberRegistrationStatusContent(
 
 private val memberRegistrationEmptyState =
     MemberRegistrationUiState.Editing(
-        draft = MemberRegistrationDraft(),
+        draft = MemberInputUiModel(),
         canSubmit = false,
     )
 
 private val memberRegistrationInputState =
     MemberRegistrationUiState.Editing(
-        draft = MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678"),
+        draft = MemberInputUiModel(name = "김민지", phoneNumber = "01012345678"),
         canSubmit = true,
     )
 
 private val memberRegistrationErrorState =
     MemberRegistrationUiState.Editing(
-        draft = MemberRegistrationDraft(name = "", phoneNumber = "010"),
+        draft = MemberInputUiModel(name = "", phoneNumber = "010"),
         canSubmit = false,
         fieldErrors = setOf(MemberRegistrationField.NAME, MemberRegistrationField.PHONE_NUMBER),
     )

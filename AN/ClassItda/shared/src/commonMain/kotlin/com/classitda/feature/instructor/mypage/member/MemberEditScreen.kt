@@ -78,10 +78,10 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.feature.instructor.mypage.contract.MemberEditAction
 import com.classitda.feature.instructor.mypage.contract.MemberEditField
 import com.classitda.feature.instructor.mypage.contract.MemberEditUiState
+import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -111,7 +111,7 @@ fun MemberEditScreen(
             is MemberEditUiState.Editing -> uiState.draft
             is MemberEditUiState.Submitting -> uiState.draft
             is MemberEditUiState.Error -> uiState.draft
-            else -> MemberRegistrationDraft()
+            else -> MemberInputUiModel()
         }
     val errors = editing?.fieldErrors.orEmpty()
     Scaffold(
@@ -270,7 +270,7 @@ private fun MemberEditSuccessDialog(onClose: () -> Unit) {
 
 @Composable
 private fun MemberEditForm(
-    draft: MemberRegistrationDraft,
+    draft: MemberInputUiModel,
     errors: Set<MemberEditField>,
     onAction: (MemberEditAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -401,7 +401,7 @@ private fun MemberEditScreenPreview() {
         MemberEditScreen(
             MemberEditUiState.Editing(
                 memberId = InstructorMemberId("member-edit-preview"),
-                draft = MemberRegistrationDraft("김민지", "01012345678"),
+                draft = MemberInputUiModel("김민지", "01012345678"),
                 canSubmit = true,
             ),
             onAction = {},

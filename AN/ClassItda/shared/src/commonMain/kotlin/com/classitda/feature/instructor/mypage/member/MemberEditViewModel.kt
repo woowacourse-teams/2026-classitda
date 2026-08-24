@@ -3,14 +3,16 @@ package com.classitda.feature.instructor.mypage.member
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.MemberEditAction
 import com.classitda.feature.instructor.mypage.contract.MemberEditUiState
+import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
 import com.classitda.feature.instructor.mypage.contract.isMemberEditValid
 import com.classitda.feature.instructor.mypage.contract.memberEditFieldErrors
 import com.classitda.feature.instructor.mypage.toMemberEditError
+import com.classitda.feature.instructor.mypage.toMemberInputUiModel
+import com.classitda.feature.instructor.mypage.toMemberRegistrationDraft
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,14 +47,14 @@ internal class MemberEditViewModel(
                 when (val result = repository.getMember(memberId)) {
                     is InstructorMyPageResult.Success -> {
                         editing(
-                            MemberRegistrationDraft(result.value.name, result.value.phoneNumber),
+                            result.value.toMemberInputUiModel(),
                         )
                     }
 
                     is InstructorMyPageResult.Failure -> {
                         MemberEditUiState.Error(
                             memberId = memberId,
-                            draft = MemberRegistrationDraft(),
+                            draft = MemberInputUiModel(),
                             reason = result.reason.toMemberEditError(),
                         )
                     }
@@ -60,12 +62,12 @@ internal class MemberEditViewModel(
         }
     }
 
-    private fun update(change: MemberRegistrationDraft.() -> MemberRegistrationDraft) {
+    private fun update(change: MemberInputUiModel.() -> MemberInputUiModel) {
         val state = _uiState.value as? MemberEditUiState.Editing ?: return
         _uiState.value = editing(state.draft.change()).copy(fieldErrors = emptySet())
     }
 
-    private fun editing(draft: MemberRegistrationDraft) =
+    private fun editing(draft: MemberInputUiModel) =
         MemberEditUiState.Editing(
             memberId = memberId,
             draft = draft,
@@ -79,10 +81,11 @@ internal class MemberEditViewModel(
             _uiState.value = state.copy(canSubmit = false, fieldErrors = fieldErrors)
             return
         }
+        val domainDraft = state.draft.toMemberRegistrationDraft()
         _uiState.value = MemberEditUiState.Submitting(memberId, state.draft)
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.updateMember(memberId, state.draft)) {
+                when (val result = repository.updateMember(memberId, domainDraft)) {
                     is InstructorMyPageResult.Success -> {
                         MemberEditUiState.Success(result.value.id)
                     }

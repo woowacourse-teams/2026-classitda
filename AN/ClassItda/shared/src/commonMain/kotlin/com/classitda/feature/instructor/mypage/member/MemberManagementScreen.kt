@@ -96,14 +96,14 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.ManagedMember
-import com.classitda.domain.model.instructor.mypage.MemberListPage
-import com.classitda.domain.model.instructor.mypage.MemberSortOrder
+import com.classitda.feature.instructor.mypage.contract.MemberListUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementActionState
 import com.classitda.feature.instructor.mypage.contract.MemberManagementDeleteError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
+import com.classitda.feature.instructor.mypage.contract.MemberSortOption
+import com.classitda.feature.instructor.mypage.contract.MemberUiModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -113,7 +113,7 @@ fun MemberManagementScreen(
     onAction: (MemberManagementAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var actionMember by remember { mutableStateOf<ManagedMember?>(null) }
+    var actionMember by remember { mutableStateOf<MemberUiModel?>(null) }
     var deleteSuccessVisible by remember { mutableStateOf(false) }
     var deleteSuccessPresented by remember { mutableStateOf(false) }
     LaunchedEffect(uiState) {
@@ -267,10 +267,10 @@ private fun MemberManagementTopBar(
 private fun MemberManagementListContent(
     totalCount: Int?,
     query: String,
-    members: List<ManagedMember>,
-    sortOrder: MemberSortOrder,
+    members: List<MemberUiModel>,
+    sortOrder: MemberSortOption,
     emptyState: MemberListEmptyState?,
-    onLongPress: (ManagedMember) -> Unit = {},
+    onLongPress: (MemberUiModel) -> Unit = {},
     onAction: (MemberManagementAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -309,7 +309,7 @@ private fun MemberManagementListContent(
                 items = members,
                 key = { member -> member.id.value },
             ) { member ->
-                ManagedMemberCard(
+                MemberCard(
                     member = member,
                     onLongPress = { onLongPress(member) },
                 )
@@ -393,8 +393,8 @@ private fun MemberSearchField(
 
 @Composable
 private fun MemberListHeader(
-    sortOrder: MemberSortOrder,
-    onSortOrderChanged: (MemberSortOrder) -> Unit,
+    sortOrder: MemberSortOption,
+    onSortOrderChanged: (MemberSortOption) -> Unit,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     Row(
@@ -457,8 +457,8 @@ private fun MemberListHeader(
 }
 
 @Composable
-private fun ManagedMemberCard(
-    member: ManagedMember,
+private fun MemberCard(
+    member: MemberUiModel,
     onLongPress: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -490,7 +490,7 @@ private fun ManagedMemberCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = maskPhoneNumber(member.phoneNumber),
+                    text = member.phoneNumber,
                     style = appTypography().bodyLarge,
                     color = InsColors.TextSecondary,
                     maxLines = 1,
@@ -872,62 +872,54 @@ private enum class MemberListEmptyState {
 }
 
 @Composable
-private fun MemberSortOrder.labelResource(): String =
+private fun MemberSortOption.labelResource(): String =
     when (this) {
-        MemberSortOrder.RECENTLY_REGISTERED -> stringResource(Res.string.instructor_member_management_sort_recent)
-        MemberSortOrder.NAME_ASC -> stringResource(Res.string.instructor_member_management_sort_name)
+        MemberSortOption.RECENTLY_REGISTERED -> stringResource(Res.string.instructor_member_management_sort_recent)
+        MemberSortOption.NAME_ASC -> stringResource(Res.string.instructor_member_management_sort_name)
     }
 
 private val memberSortOptions =
     listOf(
-        MemberSortOrder.RECENTLY_REGISTERED,
-        MemberSortOrder.NAME_ASC,
+        MemberSortOption.RECENTLY_REGISTERED,
+        MemberSortOption.NAME_ASC,
     )
 
-private fun maskPhoneNumber(phoneNumber: String): String {
-    val digits = phoneNumber.filter { it in '0'..'9' }
-    return when {
-        digits.length == 11 -> "${digits.take(3)}-${digits.substring(3, 5)}**-${digits.takeLast(4)}"
-        digits.length == 10 -> "${digits.take(3)}-${digits.substring(3, 4)}**-${digits.takeLast(4)}"
-        digits.length > 7 -> "${digits.take(3)}-****-${digits.takeLast(4)}"
-        else -> "****"
-    }
-}
-
 private val memberManagementPreviewPage =
-    MemberListPage(
+    MemberListUiModel(
         totalCount = 128,
         members =
             listOf(
-                ManagedMember(InstructorMemberId("member-1"), "김민지", "01012345678"),
-                ManagedMember(InstructorMemberId("member-2"), "이서윤", "01098765432"),
-                ManagedMember(InstructorMemberId("member-3"), "박지수", "01055556666"),
-                ManagedMember(InstructorMemberId("member-4"), "정유나", "01011112222"),
+                MemberUiModel(InstructorMemberId("member-1"), "김민지", "010-****-5678", "김"),
+                MemberUiModel(InstructorMemberId("member-2"), "이서윤", "010-****-5432", "이"),
+                MemberUiModel(InstructorMemberId("member-3"), "박지수", "010-****-6666", "박"),
+                MemberUiModel(InstructorMemberId("member-4"), "정유나", "010-****-1222", "정"),
             ),
     )
 
 private val memberManagementLongNamePage =
-    MemberListPage(
+    MemberListUiModel(
         totalCount = 1,
         members =
             listOf(
-                ManagedMember(
+                MemberUiModel(
                     id = InstructorMemberId("member-long"),
                     name = "김민지 필라테스 스튜디오 대표 회원 이름이 아주 깁니다",
-                    phoneNumber = "01012345678",
+                    phoneNumber = "010-****-5678",
+                    avatarFallback = "김",
                 ),
             ),
     )
 
 private val memberManagementManyMembersPage =
-    MemberListPage(
+    MemberListUiModel(
         totalCount = 128,
         members =
             List(12) { index ->
-                ManagedMember(
+                MemberUiModel(
                     id = InstructorMemberId("member-${index + 1}"),
                     name = listOf("김민지", "이서윤", "박지수", "정유나")[index % 4],
-                    phoneNumber = "010${12340000 + index}".take(11),
+                    phoneNumber = "010-****-${(4000 + index).toString().padStart(4, '0')}",
+                    avatarFallback = "회",
                 )
             },
     )

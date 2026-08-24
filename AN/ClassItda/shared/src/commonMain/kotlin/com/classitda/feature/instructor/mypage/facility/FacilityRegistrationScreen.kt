@@ -110,8 +110,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
+import com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel
+import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
@@ -146,7 +146,7 @@ fun FacilityRegistrationScreen(
         when (uiState) {
             is FacilityRegistrationUiState.Editing -> uiState.draft
             is FacilityRegistrationUiState.Error -> uiState.draft
-            else -> FacilityRegistrationDraft()
+            else -> FacilityInputUiModel()
         }
     val fieldErrors =
         (uiState as? FacilityRegistrationUiState.Editing)?.fieldErrors.orEmpty()
@@ -362,7 +362,7 @@ private fun FacilityRegistrationTopBar(
 
 @Composable
 private fun FacilityRegistrationForm(
-    draft: FacilityRegistrationDraft,
+    draft: FacilityInputUiModel,
     fieldErrors: Set<FacilityRegistrationField>,
     isSubmitting: Boolean,
     errorMessage: String?,
@@ -567,7 +567,7 @@ private fun FacilityRegistrationForm(
 
 @Composable
 private fun FacilityImageSection(
-    images: List<FacilityImageDraft>,
+    images: List<FacilityImageInputUiModel>,
     enabled: Boolean,
     onRequestImages: () -> Unit,
 ) {
@@ -588,7 +588,7 @@ private fun FacilityImageSection(
             modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
         ) {
-            if (images.size < FacilityRegistrationDraft.MAX_IMAGE_COUNT) {
+            if (images.size < FacilityInputUiModel.MAX_IMAGE_COUNT) {
                 FacilityImageTile(
                     image = null,
                     count = images.size,
@@ -596,7 +596,7 @@ private fun FacilityImageSection(
                     onClick = onRequestImages,
                 )
             }
-            images.take(FacilityRegistrationDraft.MAX_IMAGE_COUNT).forEach { image ->
+            images.take(FacilityInputUiModel.MAX_IMAGE_COUNT).forEach { image ->
                 FacilityImageTile(
                     image = image,
                     count = null,
@@ -610,7 +610,7 @@ private fun FacilityImageSection(
 
 @Composable
 private fun FacilityImageTile(
-    image: FacilityImageDraft?,
+    image: FacilityImageInputUiModel?,
     count: Int?,
     enabled: Boolean,
     onClick: () -> Unit,
@@ -816,14 +816,14 @@ private fun Modifier.clickableIf(
 
 private val emptyFacilityRegistrationState =
     FacilityRegistrationUiState.Editing(
-        draft = FacilityRegistrationDraft(),
+        draft = FacilityInputUiModel(),
         canSubmit = false,
     )
 
 private val filledFacilityRegistrationState =
     FacilityRegistrationUiState.Editing(
         draft =
-            FacilityRegistrationDraft(
+            FacilityInputUiModel(
                 name = "더 에이치 휘트니스 강남점",
                 address = "서울 강남구 테헤란로 123",
                 detailAddress = "2층",
@@ -838,8 +838,8 @@ private val fiveImageFacilityRegistrationState =
         draft =
             filledFacilityRegistrationState.draft.copy(
                 images =
-                    (1..FacilityRegistrationDraft.MAX_IMAGE_COUNT).map {
-                        FacilityImageDraft("image-$it", "fixture-image-$it")
+                    (1..FacilityInputUiModel.MAX_IMAGE_COUNT).map {
+                        FacilityImageInputUiModel("image-$it", "fixture-image-$it")
                     },
             ),
         canSubmit = true,
@@ -895,7 +895,7 @@ private fun FacilityRegistrationScreenPreview_Errors() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         FacilityRegistrationScreen(
             FacilityRegistrationUiState.Editing(
-                draft = FacilityRegistrationDraft(name = "", phoneNumber = "010"),
+                draft = FacilityInputUiModel(name = "", phoneNumber = "010"),
                 canSubmit = false,
                 fieldErrors =
                     setOf(

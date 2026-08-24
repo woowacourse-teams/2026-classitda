@@ -1,22 +1,21 @@
 package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 
 sealed interface MemberRegistrationUiState {
     data class Editing(
-        val draft: MemberRegistrationDraft,
+        val draft: MemberInputUiModel,
         val canSubmit: Boolean,
         val fieldErrors: Set<MemberRegistrationField> = emptySet(),
     ) : MemberRegistrationUiState
 
     data class Confirmation(
-        val draft: MemberRegistrationDraft,
+        val draft: MemberInputUiModel,
     ) : MemberRegistrationUiState
 
     /** Draft is retained while the confirmation dialog is submitting. */
     data class Submitting(
-        val draft: MemberRegistrationDraft,
+        val draft: MemberInputUiModel,
     ) : MemberRegistrationUiState
 
     data class Success(
@@ -24,7 +23,7 @@ sealed interface MemberRegistrationUiState {
     ) : MemberRegistrationUiState
 
     data class Error(
-        val draft: MemberRegistrationDraft,
+        val draft: MemberInputUiModel,
         val reason: MemberRegistrationUiError,
     ) : MemberRegistrationUiState
 }
@@ -65,7 +64,7 @@ sealed interface MemberRegistrationAction {
     ) : MemberRegistrationAction
 }
 
-internal fun memberRegistrationFieldErrors(draft: MemberRegistrationDraft): Set<MemberRegistrationField> =
+internal fun memberRegistrationFieldErrors(draft: MemberInputUiModel): Set<MemberRegistrationField> =
     buildSet {
         if (draft.name.isBlank()) add(MemberRegistrationField.NAME)
         if (draft.phoneNumber.filter(Char::isDigit).length !in 10..11) {
@@ -73,5 +72,4 @@ internal fun memberRegistrationFieldErrors(draft: MemberRegistrationDraft): Set<
         }
     }
 
-internal fun MemberRegistrationDraft.isMemberRegistrationValid(): Boolean =
-    memberRegistrationFieldErrors(this).isEmpty()
+internal fun MemberInputUiModel.isMemberRegistrationValid(): Boolean = memberRegistrationFieldErrors(this).isEmpty()

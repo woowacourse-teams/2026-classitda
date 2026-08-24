@@ -1,13 +1,12 @@
 package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
 
 sealed interface FacilityDetailUiState {
     data object Loading : FacilityDetailUiState
 
     data class Content(
-        val facility: ManagedFacility,
+        val facility: FacilityUiModel,
         val deleteState: FacilityDeleteState = FacilityDeleteState.Hidden,
     ) : FacilityDetailUiState
 

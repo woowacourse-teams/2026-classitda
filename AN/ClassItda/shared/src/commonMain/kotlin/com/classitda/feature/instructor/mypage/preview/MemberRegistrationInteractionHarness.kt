@@ -36,7 +36,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
+import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
@@ -48,7 +48,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier) {
     val actions = remember { mutableStateListOf<MemberRegistrationAction>() }
-    val emptyDraft = MemberRegistrationDraft()
+    val emptyDraft = MemberInputUiModel()
     var uiState by remember {
         mutableStateOf<MemberRegistrationUiState>(
             MemberRegistrationUiState.Editing(
@@ -123,7 +123,7 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
                 onClick = {
                     uiState =
                         editingState(
-                            MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678"),
+                            MemberInputUiModel(name = "김민지", phoneNumber = "01012345678"),
                         )
                 },
             ) {
@@ -133,7 +133,7 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
                 onClick = {
                     uiState =
                         MemberRegistrationUiState.Editing(
-                            draft = MemberRegistrationDraft(phoneNumber = "010"),
+                            draft = MemberInputUiModel(phoneNumber = "010"),
                             canSubmit = false,
                             fieldErrors =
                                 setOf(
@@ -150,14 +150,14 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
         ) {
-            TextButton(onClick = { uiState = editingState(MemberRegistrationDraft()) }) {
+            TextButton(onClick = { uiState = editingState(MemberInputUiModel()) }) {
                 Text(stringResource(Res.string.instructor_member_registration_harness_disabled))
             }
             TextButton(
                 onClick = {
                     uiState =
                         MemberRegistrationUiState.Confirmation(
-                            MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678"),
+                            MemberInputUiModel(name = "김민지", phoneNumber = "01012345678"),
                         )
                 },
             ) {
@@ -167,7 +167,7 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
                 onClick = {
                     uiState =
                         MemberRegistrationUiState.Submitting(
-                            MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678"),
+                            MemberInputUiModel(name = "김민지", phoneNumber = "01012345678"),
                         )
                 },
             ) {
@@ -177,7 +177,7 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
                 onClick = {
                     uiState =
                         MemberRegistrationUiState.Error(
-                            draft = MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678"),
+                            draft = MemberInputUiModel(name = "김민지", phoneNumber = "01012345678"),
                             reason = com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiError.NETWORK,
                         )
                 },
@@ -226,16 +226,16 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
     }
 }
 
-private fun MemberRegistrationUiState.draftOrEmpty(): MemberRegistrationDraft =
+private fun MemberRegistrationUiState.draftOrEmpty(): MemberInputUiModel =
     when (this) {
         is MemberRegistrationUiState.Editing -> draft
         is MemberRegistrationUiState.Error -> draft
         is MemberRegistrationUiState.Confirmation -> draft
         is MemberRegistrationUiState.Submitting -> draft
-        else -> MemberRegistrationDraft()
+        else -> MemberInputUiModel()
     }
 
-private fun editingState(draft: MemberRegistrationDraft): MemberRegistrationUiState =
+private fun editingState(draft: MemberInputUiModel): MemberRegistrationUiState =
     MemberRegistrationUiState.Editing(
         draft = draft,
         canSubmit = draft.isMemberRegistrationValid(),

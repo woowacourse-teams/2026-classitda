@@ -25,14 +25,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
-import com.classitda.domain.model.instructor.mypage.ManagedMember
-import com.classitda.domain.model.instructor.mypage.MemberListPage
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
-import com.classitda.domain.repository.instructor.mypage.FacilityList
 import com.classitda.feature.common.profile.PhoneNumberChangeScreen
 import com.classitda.feature.common.profile.ProfileEditScreen
 import com.classitda.feature.common.profile.ProfileViewScreen
@@ -44,17 +38,23 @@ import com.classitda.feature.common.profile.contract.ProfileEditUiState
 import com.classitda.feature.common.profile.contract.ProfileViewAction
 import com.classitda.feature.common.profile.contract.ProfileViewUiState
 import com.classitda.feature.instructor.mypage.InstructorMyPageScreen
+import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
+import com.classitda.feature.instructor.mypage.contract.FacilityListUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.FacilityUiModel
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiModel
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiState
+import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
+import com.classitda.feature.instructor.mypage.contract.MemberListUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.MemberUiModel
 import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
 import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
@@ -75,14 +75,14 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
         mutableStateOf<MemberManagementUiState>(MemberManagementUiState.Content(memberPageFixture))
     }
     var registrationState by remember {
-        mutableStateOf<MemberRegistrationUiState>(MemberRegistrationUiState.Editing(MemberRegistrationDraft(), false))
+        mutableStateOf<MemberRegistrationUiState>(MemberRegistrationUiState.Editing(MemberInputUiModel(), false))
     }
     var facilityState by remember {
         mutableStateOf<FacilityManagementUiState>(FacilityManagementUiState.Content(facilityPageFixture))
     }
     var facilityRegistrationState by remember {
         mutableStateOf<FacilityRegistrationUiState>(
-            FacilityRegistrationUiState.Editing(FacilityRegistrationDraft(), false),
+            FacilityRegistrationUiState.Editing(FacilityInputUiModel(), false),
         )
     }
 
@@ -269,7 +269,7 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             registrationState =
                                 MemberRegistrationUiState.Confirmation(
                                     (registrationState as? MemberRegistrationUiState.Editing)?.draft
-                                        ?: MemberRegistrationDraft(),
+                                        ?: MemberInputUiModel(),
                                 )
                             lastEvent =
                                 "OpenConfirmation:F07"
@@ -278,7 +278,7 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                         MemberRegistrationAction.CancelConfirmation -> {
                             registrationState =
                                 MemberRegistrationUiState.Editing(
-                                    MemberRegistrationDraft("홍길동", "01012345678"),
+                                    MemberInputUiModel("홍길동", "01012345678"),
                                     true,
                                 )
                             lastEvent =
@@ -301,7 +301,7 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                         is MemberRegistrationAction.NameChanged -> {
                             registrationState =
                                 MemberRegistrationUiState.Editing(
-                                    MemberRegistrationDraft(action.name, "01012345678"),
+                                    MemberInputUiModel(action.name, "01012345678"),
                                     action.name.isNotBlank(),
                                 )
                             lastEvent =
@@ -370,7 +370,7 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             lastEvent = "AddressSelected:${action.address}"
                             facilityRegistrationState =
                                 FacilityRegistrationUiState.Editing(
-                                    FacilityRegistrationDraft(
+                                    FacilityInputUiModel(
                                         address = action.address,
                                         detailAddress = action.detailAddress,
                                     ),
@@ -427,17 +427,21 @@ private val profileEditFixture =
         false,
     )
 private val memberPageFixture =
-    MemberListPage(2, listOf(ManagedMember(InstructorMemberId("member-1"), "김민지", "01012345678")))
+    MemberListUiModel(
+        totalCount = 2,
+        members = listOf(MemberUiModel(InstructorMemberId("member-1"), "김민지", "010-1234-5678", "김")),
+    )
 private val facilityPageFixture =
-    FacilityList(
-        1,
-        listOf(
-            ManagedFacility(
-                InstructorFacilityId("facility-1"),
-                "클래스잇다 스튜디오",
-                "서울특별시 강남구 테헤란로",
+    FacilityListUiModel(
+        totalCount = 1,
+        facilities =
+            listOf(
+                FacilityUiModel(
+                    InstructorFacilityId("facility-1"),
+                    "클래스잇다 스튜디오",
+                    "서울특별시 강남구 테헤란로",
+                ),
             ),
-        ),
     )
 
 private fun ProfileEditUiState.editName(name: String) =

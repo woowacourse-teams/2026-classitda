@@ -1,21 +1,20 @@
 package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 
 sealed interface MemberEditUiState {
     data object Loading : MemberEditUiState
 
     data class Editing(
         val memberId: InstructorMemberId,
-        val draft: MemberRegistrationDraft,
+        val draft: MemberInputUiModel,
         val canSubmit: Boolean,
         val fieldErrors: Set<MemberEditField> = emptySet(),
     ) : MemberEditUiState
 
     data class Submitting(
         val memberId: InstructorMemberId,
-        val draft: MemberRegistrationDraft,
+        val draft: MemberInputUiModel,
     ) : MemberEditUiState
 
     data class Success(
@@ -24,7 +23,7 @@ sealed interface MemberEditUiState {
 
     data class Error(
         val memberId: InstructorMemberId,
-        val draft: MemberRegistrationDraft,
+        val draft: MemberInputUiModel,
         val reason: MemberEditUiError,
     ) : MemberEditUiState
 }
@@ -62,7 +61,7 @@ sealed interface MemberEditAction {
     data object Retry : MemberEditAction
 }
 
-internal fun memberEditFieldErrors(draft: MemberRegistrationDraft): Set<MemberEditField> =
+internal fun memberEditFieldErrors(draft: MemberInputUiModel): Set<MemberEditField> =
     buildSet {
         if (draft.name.isBlank()) add(MemberEditField.NAME)
         if (draft.phoneNumber.filter(Char::isDigit).length !in 10..11) {
@@ -70,4 +69,4 @@ internal fun memberEditFieldErrors(draft: MemberRegistrationDraft): Set<MemberEd
         }
     }
 
-internal fun MemberRegistrationDraft.isMemberEditValid(): Boolean = memberEditFieldErrors(this).isEmpty()
+internal fun MemberInputUiModel.isMemberEditValid(): Boolean = memberEditFieldErrors(this).isEmpty()

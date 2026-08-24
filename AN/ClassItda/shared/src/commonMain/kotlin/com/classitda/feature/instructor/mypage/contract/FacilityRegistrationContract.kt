@@ -1,14 +1,12 @@
 package com.classitda.feature.instructor.mypage.contract
 
-import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 
 sealed interface FacilityRegistrationUiState {
     data object Loading : FacilityRegistrationUiState
 
     data class Editing(
-        val draft: FacilityRegistrationDraft,
+        val draft: FacilityInputUiModel,
         val canSubmit: Boolean,
         val fieldErrors: Set<FacilityRegistrationField> = emptySet(),
     ) : FacilityRegistrationUiState
@@ -20,7 +18,7 @@ sealed interface FacilityRegistrationUiState {
     ) : FacilityRegistrationUiState
 
     data class Error(
-        val draft: FacilityRegistrationDraft,
+        val draft: FacilityInputUiModel,
         val reason: FacilityRegistrationUiError,
     ) : FacilityRegistrationUiState
 }
@@ -77,7 +75,7 @@ sealed interface FacilityRegistrationAction {
     data object RequestImages : FacilityRegistrationAction
 
     data class ImagesSelected(
-        val images: List<FacilityImageDraft>,
+        val images: List<FacilityImageInputUiModel>,
     ) : FacilityRegistrationAction
 
     data object RequestAddressSearch : FacilityRegistrationAction
@@ -92,7 +90,7 @@ sealed interface FacilityRegistrationAction {
     data object Retry : FacilityRegistrationAction
 }
 
-internal fun facilityRegistrationFieldErrors(draft: FacilityRegistrationDraft): Set<FacilityRegistrationField> =
+internal fun facilityRegistrationFieldErrors(draft: FacilityInputUiModel): Set<FacilityRegistrationField> =
     buildSet {
         if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
         if (draft.address.isBlank()) add(FacilityRegistrationField.ADDRESS)
@@ -105,7 +103,7 @@ internal fun facilityRegistrationFieldErrors(draft: FacilityRegistrationDraft): 
         }
     }
 
-internal fun FacilityRegistrationDraft.isFacilityRegistrationValid(): Boolean =
+internal fun FacilityInputUiModel.isFacilityRegistrationValid(): Boolean =
     facilityRegistrationFieldErrors(this).isEmpty()
 
 internal fun isFacilityPhoneNumberValid(value: String): Boolean {

@@ -35,11 +35,11 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.ManagedMember
-import com.classitda.domain.model.instructor.mypage.MemberListPage
+import com.classitda.feature.instructor.mypage.contract.MemberListUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
+import com.classitda.feature.instructor.mypage.contract.MemberUiModel
 import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
 import org.jetbrains.compose.resources.stringResource
 
@@ -47,11 +47,11 @@ import org.jetbrains.compose.resources.stringResource
 internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
     val actions = remember { mutableStateListOf<MemberManagementAction>() }
     val page =
-        MemberListPage(
+        MemberListUiModel(
             totalCount = 128,
             members =
                 listOf(
-                    ManagedMember(
+                    MemberUiModel(
                         id = InstructorMemberId("member-1"),
                         name = "김민지",
                         phoneNumber = "01012345678",

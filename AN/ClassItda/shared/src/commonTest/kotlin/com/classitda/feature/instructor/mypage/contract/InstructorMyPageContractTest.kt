@@ -1,11 +1,7 @@
 package com.classitda.feature.instructor.mypage.contract
 
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.MemberListPage
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
-import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -23,9 +19,9 @@ class InstructorMyPageContractTest {
 
     @Test
     fun memberSortActionCarriesSelectedOrder() {
-        val action = MemberManagementAction.SortOrderChanged(MemberSortOrder.NAME_ASC)
+        val action = MemberManagementAction.SortOrderChanged(MemberSortOption.NAME_ASC)
 
-        assertEquals(MemberSortOrder.NAME_ASC, action.sortOrder)
+        assertEquals(MemberSortOption.NAME_ASC, action.sortOrder)
     }
 
     @Test
@@ -52,7 +48,7 @@ class InstructorMyPageContractTest {
 
     @Test
     fun memberRegistrationStatesCarryDraftAcrossConfirmationAndFailure() {
-        val draft = MemberRegistrationDraft(name = "Member", phoneNumber = "01012345678")
+        val draft = MemberInputUiModel(name = "Member", phoneNumber = "01012345678")
         val confirmation: MemberRegistrationUiState = MemberRegistrationUiState.Confirmation(draft)
         val submitting: MemberRegistrationUiState = MemberRegistrationUiState.Submitting(draft)
         val failure: MemberRegistrationUiState =
@@ -68,8 +64,8 @@ class InstructorMyPageContractTest {
 
     @Test
     fun memberRegistrationValidationOnlyMarksFieldsAfterSubmitAttempt() {
-        val emptyDraft = MemberRegistrationDraft()
-        val validDraft = MemberRegistrationDraft(name = "Member", phoneNumber = "01012345678")
+        val emptyDraft = MemberInputUiModel()
+        val validDraft = MemberInputUiModel(name = "Member", phoneNumber = "01012345678")
 
         assertEquals(
             setOf(MemberRegistrationField.NAME, MemberRegistrationField.PHONE_NUMBER),
@@ -104,7 +100,7 @@ class InstructorMyPageContractTest {
 
     @Test
     fun facilityRegistrationActionsExposeExternalSelectionBoundaries() {
-        val draft = FacilityRegistrationDraft()
+        val draft = FacilityInputUiModel()
         val images = FacilityRegistrationAction.ImagesSelected(draft.images)
         val address = FacilityRegistrationAction.AddressSelected("Seoul", "Jongno")
 
@@ -115,9 +111,9 @@ class InstructorMyPageContractTest {
 
     @Test
     fun facilityRegistrationValidationKeepsInitialFieldsNeutralUntilSubmit() {
-        val emptyDraft = FacilityRegistrationDraft()
+        val emptyDraft = FacilityInputUiModel()
         val validDraft =
-            FacilityRegistrationDraft(
+            FacilityInputUiModel(
                 name = "Facility",
                 address = "Seoul",
                 phoneNumber = "0212345678",
@@ -153,7 +149,7 @@ class InstructorMyPageContractTest {
 
     @Test
     fun memberContentKeepsRepositoryPageAndQueryTogether() {
-        val page = MemberListPage(totalCount = 0, members = emptyList())
+        val page = MemberListUiModel(totalCount = 0, members = emptyList())
         val state = MemberManagementUiState.Content(page = page, query = "query")
 
         assertEquals(page, state.page)
@@ -167,7 +163,7 @@ class InstructorMyPageContractTest {
         val state =
             FacilityDetailUiState.Content(
                 facility =
-                    com.classitda.domain.model.instructor.mypage.ManagedFacility(
+                    FacilityUiModel(
                         id = facility,
                         name = "클래스잇다 스튜디오",
                         address = "서울",

@@ -29,8 +29,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
+import com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel
+import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiError
@@ -42,7 +42,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifier) {
-    val emptyDraft = FacilityRegistrationDraft()
+    val emptyDraft = FacilityInputUiModel()
     var uiState by remember { mutableStateOf(editingState(emptyDraft, canSubmit = false)) }
     var lastEvent by remember { mutableStateOf<String?>(null) }
 
@@ -102,7 +102,7 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
                         uiState =
                             editingState(
                                 uiState.draftOrEmpty().copy(
-                                    images = action.images.take(FacilityRegistrationDraft.MAX_IMAGE_COUNT),
+                                    images = action.images.take(FacilityInputUiModel.MAX_IMAGE_COUNT),
                                 ),
                             )
                     }
@@ -168,7 +168,7 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
                 onClick = {
                     uiState =
                         FacilityRegistrationUiState.Editing(
-                            draft = FacilityRegistrationDraft(name = "", phoneNumber = "010"),
+                            draft = FacilityInputUiModel(name = "", phoneNumber = "010"),
                             canSubmit = false,
                             fieldErrors = setOf(FacilityRegistrationField.NAME, FacilityRegistrationField.PHONE_NUMBER),
                         )
@@ -201,20 +201,20 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
     }
 }
 
-private fun FacilityRegistrationUiState.draftOrEmpty(): FacilityRegistrationDraft =
+private fun FacilityRegistrationUiState.draftOrEmpty(): FacilityInputUiModel =
     when (this) {
         is FacilityRegistrationUiState.Editing -> draft
         is FacilityRegistrationUiState.Error -> draft
-        else -> FacilityRegistrationDraft()
+        else -> FacilityInputUiModel()
     }
 
 private fun editingState(
-    draft: FacilityRegistrationDraft,
+    draft: FacilityInputUiModel,
     canSubmit: Boolean = draft.isFacilityRegistrationValid(),
 ): FacilityRegistrationUiState = FacilityRegistrationUiState.Editing(draft = draft, canSubmit = canSubmit)
 
 private val filledFacilityDraft =
-    FacilityRegistrationDraft(
+    FacilityInputUiModel(
         name = "더 에이치 휘트니스 강남점",
         address = "서울 강남구 테헤란로 123",
         detailAddress = "2층",
@@ -227,8 +227,8 @@ private val filledFacilityDraft =
 private val fiveImageFacilityDraft =
     filledFacilityDraft.copy(
         images =
-            (1..FacilityRegistrationDraft.MAX_IMAGE_COUNT).map {
-                FacilityImageDraft("harness-image-$it", "harness-image-reference-$it")
+            (1..FacilityInputUiModel.MAX_IMAGE_COUNT).map {
+                FacilityImageInputUiModel("harness-image-$it", "harness-image-reference-$it")
             },
     )
 

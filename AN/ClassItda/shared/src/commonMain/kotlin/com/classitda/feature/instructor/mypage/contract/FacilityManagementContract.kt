@@ -1,13 +1,12 @@
 package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
-import com.classitda.domain.repository.instructor.mypage.FacilityList
 
 sealed interface FacilityManagementUiState {
     data object Loading : FacilityManagementUiState
 
     data class Content(
-        val page: FacilityList,
+        val page: FacilityListUiModel,
         val successNotice: FacilitySuccessNotice = FacilitySuccessNotice.Hidden,
     ) : FacilityManagementUiState
 

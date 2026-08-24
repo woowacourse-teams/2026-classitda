@@ -66,11 +66,11 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
-import com.classitda.domain.repository.instructor.mypage.FacilityList
+import com.classitda.feature.instructor.mypage.contract.FacilityListUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
 import com.classitda.feature.instructor.mypage.contract.FacilitySuccessNotice
+import com.classitda.feature.instructor.mypage.contract.FacilityUiModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -153,7 +153,7 @@ private fun FacilityManagementTopBar(onBack: () -> Unit) {
 
 @Composable
 private fun FacilityManagementContent(
-    page: FacilityList,
+    page: FacilityListUiModel,
     showSuccessNotice: Boolean,
     onAction: (FacilityManagementAction) -> Unit,
     modifier: Modifier = Modifier,
@@ -182,7 +182,7 @@ private fun FacilityManagementContent(
                 items = page.facilities,
                 key = { facility -> facility.id.value },
             ) { facility ->
-                ManagedFacilityCard(
+                FacilityCard(
                     facility = facility,
                     onEdit = { onAction(FacilityManagementAction.EditFacility(facility.id)) },
                     onDetail = { onAction(FacilityManagementAction.OpenFacilityDetail(facility.id)) },
@@ -246,8 +246,8 @@ private fun FacilityCount(count: Int) {
 }
 
 @Composable
-private fun ManagedFacilityCard(
-    facility: ManagedFacility,
+private fun FacilityCard(
+    facility: FacilityUiModel,
     onEdit: () -> Unit,
     onDetail: () -> Unit,
     modifier: Modifier = Modifier,
@@ -338,7 +338,7 @@ private fun ManagedFacilityCard(
     }
 }
 
-private fun formatFacilityOperatingHours(facility: ManagedFacility): String =
+private fun formatFacilityOperatingHours(facility: FacilityUiModel): String =
     listOf(facility.openingTime, facility.closingTime)
         .filter(String::isNotBlank)
         .joinToString(" - ")
@@ -498,19 +498,21 @@ private fun FacilityManagementError(
 }
 
 private val facilityManagementFixture =
-    FacilityList(
+    FacilityListUiModel(
         totalCount = 2,
         facilities =
             listOf(
-                ManagedFacility(
+                FacilityUiModel(
                     id = InstructorFacilityId("facility-1"),
                     name = "더 에이치 휘트니스 강남점",
                     address = "서울 강남구 테헤란로 123",
+                    phoneNumber = "02-1234-5678",
                 ),
-                ManagedFacility(
+                FacilityUiModel(
                     id = InstructorFacilityId("facility-2"),
                     name = "린 필라테스 스튜디오",
                     address = "서울 강남구 압구정로 45",
+                    phoneNumber = "02-9876-5432",
                 ),
             ),
     )
@@ -549,14 +551,15 @@ private fun FacilityManagementScreenPreview_LongValues() {
             uiState =
                 FacilityManagementUiState.Content(
                     page =
-                        FacilityList(
+                        FacilityListUiModel(
                             totalCount = 1,
                             facilities =
                                 listOf(
-                                    ManagedFacility(
+                                    FacilityUiModel(
                                         id = InstructorFacilityId("facility-long"),
                                         name = "정말 긴 시설 이름이 들어와도 카드 너비를 벗어나지 않는 테스트 시설",
                                         address = "서울특별시 강남구 테헤란로를 따라 이어지는 아주 긴 시설 주소 테스트",
+                                        phoneNumber = "02-1234-5678",
                                     ),
                                 ),
                         ),

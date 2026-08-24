@@ -28,11 +28,11 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
-import com.classitda.domain.repository.instructor.mypage.FacilityList
+import com.classitda.feature.instructor.mypage.contract.FacilityListUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
 import com.classitda.feature.instructor.mypage.contract.FacilitySuccessNotice
+import com.classitda.feature.instructor.mypage.contract.FacilityUiModel
 import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
 import org.jetbrains.compose.resources.stringResource
 
@@ -118,16 +118,16 @@ internal fun FacilityManagementInteractionHarness(modifier: Modifier = Modifier)
 }
 
 private val facilityHarnessPage =
-    FacilityList(
+    FacilityListUiModel(
         totalCount = 2,
         facilities =
             listOf(
-                ManagedFacility(
+                FacilityUiModel(
                     id = InstructorFacilityId("facility-harness-1"),
                     name = "더 에이치 휘트니스 강남점",
                     address = "서울 강남구 테헤란로 123",
                 ),
-                ManagedFacility(
+                FacilityUiModel(
                     id = InstructorFacilityId("facility-harness-2"),
                     name = "린 필라테스 스튜디오",
                     address = "서울 강남구 압구정로 45",

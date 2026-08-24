@@ -1,26 +1,24 @@
 package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.MemberListPage
-import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 
 sealed interface MemberManagementUiState {
     data object Loading : MemberManagementUiState
 
     data class Content(
-        val page: MemberListPage,
+        val page: MemberListUiModel,
         val query: String = "",
-        val sortOrder: MemberSortOrder = MemberSortOrder.RECENTLY_REGISTERED,
+        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
         val actionState: MemberManagementActionState = MemberManagementActionState.Hidden,
     ) : MemberManagementUiState
 
     data class Empty(
-        val sortOrder: MemberSortOrder = MemberSortOrder.RECENTLY_REGISTERED,
+        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
     ) : MemberManagementUiState
 
     data class SearchEmpty(
         val query: String,
-        val sortOrder: MemberSortOrder = MemberSortOrder.RECENTLY_REGISTERED,
+        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
     ) : MemberManagementUiState
 
     data class Error(
@@ -41,7 +39,7 @@ sealed interface MemberManagementAction {
     ) : MemberManagementAction
 
     data class SortOrderChanged(
-        val sortOrder: MemberSortOrder,
+        val sortOrder: MemberSortOption,
     ) : MemberManagementAction
 
     data class EditMember(

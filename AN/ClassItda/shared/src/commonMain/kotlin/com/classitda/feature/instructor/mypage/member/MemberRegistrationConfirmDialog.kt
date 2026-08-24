@@ -42,7 +42,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
+import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
@@ -113,7 +113,7 @@ internal fun MemberRegistrationConfirmDialog(
                         textAlign = TextAlign.Center,
                     )
                     Text(
-                        text = formatPhoneNumber(dialogState.draft.phoneNumber),
+                        text = dialogState.draft.displayPhoneNumber,
                         style = appTypography().bodyMedium,
                         color = InsColors.TextSecondary,
                     )
@@ -144,22 +144,22 @@ internal fun MemberRegistrationConfirmDialog(
 }
 
 private sealed interface ConfirmationDialogState {
-    val draft: MemberRegistrationDraft
+    val draft: MemberInputUiModel
 }
 
 private data class ConfirmationDialogStateImpl(
-    override val draft: MemberRegistrationDraft,
+    override val draft: MemberInputUiModel,
 ) : ConfirmationDialogState
 
 private data class SubmittingDialogState(
-    override val draft: MemberRegistrationDraft,
+    override val draft: MemberInputUiModel,
 ) : ConfirmationDialogState
 
 private data class FailedDialogState(
-    override val draft: MemberRegistrationDraft,
+    override val draft: MemberInputUiModel,
 ) : ConfirmationDialogState
 
-private fun confirmationDialogState(draft: MemberRegistrationDraft): ConfirmationDialogState =
+private fun confirmationDialogState(draft: MemberInputUiModel): ConfirmationDialogState =
     ConfirmationDialogStateImpl(draft)
 
 @Composable
@@ -256,17 +256,8 @@ private fun RegistrationConfirmationActions(
     }
 }
 
-private fun formatPhoneNumber(phoneNumber: String): String {
-    val digits = phoneNumber.filter(Char::isDigit)
-    return when {
-        digits.length == 11 -> "${digits.take(3)}-${digits.substring(3, 7)}-${digits.takeLast(4)}"
-        digits.length == 10 -> "${digits.take(3)}-${digits.substring(3, 6)}-${digits.takeLast(4)}"
-        else -> phoneNumber
-    }
-}
-
 private val memberRegistrationConfirmDraft =
-    MemberRegistrationDraft(name = "김민지", phoneNumber = "01012345678")
+    MemberInputUiModel(name = "김민지", phoneNumber = "01012345678")
 
 @Preview(
     name = "Waiting · Instructor",

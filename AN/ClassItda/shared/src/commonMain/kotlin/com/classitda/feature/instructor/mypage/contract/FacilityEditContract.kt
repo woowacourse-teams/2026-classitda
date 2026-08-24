@@ -1,7 +1,5 @@
 package com.classitda.feature.instructor.mypage.contract
 
-import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 
 sealed interface FacilityEditUiState {
@@ -9,14 +7,14 @@ sealed interface FacilityEditUiState {
 
     data class Editing(
         val facilityId: InstructorFacilityId,
-        val draft: FacilityRegistrationDraft,
+        val draft: FacilityInputUiModel,
         val canSubmit: Boolean,
         val fieldErrors: Set<FacilityRegistrationField> = emptySet(),
     ) : FacilityEditUiState
 
     data class Submitting(
         val facilityId: InstructorFacilityId,
-        val draft: FacilityRegistrationDraft,
+        val draft: FacilityInputUiModel,
     ) : FacilityEditUiState
 
     data class Success(
@@ -25,7 +23,7 @@ sealed interface FacilityEditUiState {
 
     data class Error(
         val facilityId: InstructorFacilityId,
-        val draft: FacilityRegistrationDraft,
+        val draft: FacilityInputUiModel,
         val reason: FacilityEditUiError,
     ) : FacilityEditUiState
 }
@@ -71,7 +69,7 @@ sealed interface FacilityEditAction {
     data object RequestImages : FacilityEditAction
 
     data class ImagesSelected(
-        val images: List<FacilityImageDraft>,
+        val images: List<FacilityImageInputUiModel>,
     ) : FacilityEditAction
 
     data object RequestAddressSearch : FacilityEditAction

@@ -83,11 +83,11 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
 import com.classitda.feature.instructor.mypage.contract.FacilityDeleteError
 import com.classitda.feature.instructor.mypage.contract.FacilityDeleteState
 import com.classitda.feature.instructor.mypage.contract.FacilityDetailAction
 import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiState
+import com.classitda.feature.instructor.mypage.contract.FacilityUiModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -196,7 +196,7 @@ private fun FacilityDetailTopBar(onBack: () -> Unit) {
 
 @Composable
 private fun FacilityDetailContent(
-    facility: ManagedFacility,
+    facility: FacilityUiModel,
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
@@ -239,7 +239,7 @@ private fun FacilityDetailContent(
                     )
                     FacilityDetailRow(
                         label = stringResource(Res.string.instructor_facility_detail_phone),
-                        value = formatFacilityPhone(facility.phoneNumber),
+                        value = facility.phoneNumber.ifBlank { "-" },
                     )
                     FacilityDetailRow(
                         label = stringResource(Res.string.instructor_facility_detail_operating_hours),
@@ -587,22 +587,13 @@ private fun FacilityDetailError(
     }
 }
 
-private fun formatFacilityPhone(value: String): String {
-    val digits = value.filter(Char::isDigit)
-    return when {
-        digits.length == 11 -> "${digits.take(3)}-${digits.substring(3, 7)}-${digits.takeLast(4)}"
-        digits.length == 10 -> "${digits.take(3)}-${digits.substring(3, 6)}-${digits.takeLast(4)}"
-        else -> value.ifBlank { "-" }
-    }
-}
-
 private val facilityDetailFixture =
-    ManagedFacility(
+    FacilityUiModel(
         id = InstructorFacilityId("facility-preview"),
         name = "클래스잇다 스튜디오",
         address = "서울특별시 강남구 테헤란로",
         detailAddress = "5층 501호",
-        phoneNumber = "0212345678",
+        phoneNumber = "02-1234-5678",
         description = "회원들이 편하게 운동할 수 있도록 운영하는 시설입니다.",
         openingTime = "09:00",
         closingTime = "22:00",
