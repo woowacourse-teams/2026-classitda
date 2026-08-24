@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -87,6 +88,13 @@ fun FacilityManagementScreen(
                 onBack = { onAction(FacilityManagementAction.Back) },
             )
         },
+        bottomBar = {
+            if (uiState !is FacilityManagementUiState.Loading) {
+                FacilityManagementBottomBar(
+                    onAdd = { onAction(FacilityManagementAction.OpenFacilityRegistration) },
+                )
+            }
+        },
     ) { innerPadding ->
         when (uiState) {
             FacilityManagementUiState.Loading -> {
@@ -95,7 +103,6 @@ fun FacilityManagementScreen(
 
             FacilityManagementUiState.Empty -> {
                 FacilityManagementEmpty(
-                    onAdd = { onAction(FacilityManagementAction.OpenFacilityRegistration) },
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -112,7 +119,6 @@ fun FacilityManagementScreen(
             is FacilityManagementUiState.Error -> {
                 FacilityManagementError(
                     onRetry = { onAction(FacilityManagementAction.Retry) },
-                    onAdd = { onAction(FacilityManagementAction.OpenFacilityRegistration) },
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -169,10 +175,7 @@ private fun FacilityManagementContent(
         item { FacilityCount(count = page.totalCount) }
         if (page.facilities.isEmpty()) {
             item {
-                FacilityEmptyMessage(
-                    onAdd = { onAction(FacilityManagementAction.OpenFacilityRegistration) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                FacilityEmptyMessage(modifier = Modifier.fillMaxWidth())
             }
         } else {
             items(
@@ -185,11 +188,6 @@ private fun FacilityManagementContent(
                     onDetail = { onAction(FacilityManagementAction.OpenFacilityDetail(facility.id)) },
                 )
             }
-        }
-        item {
-            FacilityAddButton(
-                onClick = { onAction(FacilityManagementAction.OpenFacilityRegistration) },
-            )
         }
     }
 }
@@ -381,10 +379,26 @@ private fun FacilityImageFallback(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun FacilityAddButton(onClick: () -> Unit) {
+private fun FacilityManagementBottomBar(onAdd: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth().navigationBarsPadding(),
+        color = InsColors.Background,
+    ) {
+        FacilityAddButton(
+            onClick = onAdd,
+            modifier = Modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+        )
+    }
+}
+
+@Composable
+private fun FacilityAddButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Button(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().heightIn(min = AppSpacing.xxxl + AppSpacing.lg),
+        modifier = modifier.fillMaxWidth().heightIn(min = AppSpacing.xxxl + AppSpacing.lg),
         shape = AppShape.Card,
         colors =
             ButtonDefaults.buttonColors(
@@ -400,24 +414,18 @@ private fun FacilityAddButton(onClick: () -> Unit) {
 }
 
 @Composable
-private fun FacilityManagementEmpty(
-    onAdd: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun FacilityManagementEmpty(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxSize().padding(AppSpacing.screenPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        FacilityEmptyMessage(onAdd = onAdd)
+        FacilityEmptyMessage()
     }
 }
 
 @Composable
-private fun FacilityEmptyMessage(
-    onAdd: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun FacilityEmptyMessage(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -435,7 +443,6 @@ private fun FacilityEmptyMessage(
             color = InsColors.TextSecondary,
             textAlign = TextAlign.Center,
         )
-        FacilityAddButton(onClick = onAdd)
     }
 }
 
@@ -459,7 +466,6 @@ private fun FacilityManagementLoading(modifier: Modifier = Modifier) {
 @Composable
 private fun FacilityManagementError(
     onRetry: () -> Unit,
-    onAdd: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -486,9 +492,6 @@ private fun FacilityManagementError(
         ) {
             TextButton(onClick = onRetry) {
                 Text(stringResource(Res.string.instructor_facility_management_retry))
-            }
-            TextButton(onClick = onAdd) {
-                Text(stringResource(Res.string.instructor_facility_management_add))
             }
         }
     }
