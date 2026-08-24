@@ -82,7 +82,18 @@ internal class FacilityEditViewModel(
             }
 
             FacilityEditAction.Retry -> {
-                refresh()
+                when (val current = _uiState.value) {
+                    is FacilityEditUiState.Error -> {
+                        if (current.isSubmitFailure) {
+                            _uiState.value = editing(current.draft)
+                            submit()
+                        } else {
+                            refresh()
+                        }
+                    }
+
+                    else -> refresh()
+                }
             }
 
             FacilityEditAction.Back,
@@ -147,6 +158,7 @@ internal class FacilityEditViewModel(
                             facilityId = facilityId,
                             draft = state.draft,
                             reason = result.reason.toFacilityEditError(),
+                            isSubmitFailure = true,
                         )
                     }
                 }

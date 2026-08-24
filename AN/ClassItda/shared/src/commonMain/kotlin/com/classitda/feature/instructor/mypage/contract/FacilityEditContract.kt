@@ -25,6 +25,7 @@ sealed interface FacilityEditUiState {
         val facilityId: InstructorFacilityId,
         val draft: FacilityInputUiModel,
         val reason: FacilityEditUiError,
+        val isSubmitFailure: Boolean = false,
     ) : FacilityEditUiState
 }
 
