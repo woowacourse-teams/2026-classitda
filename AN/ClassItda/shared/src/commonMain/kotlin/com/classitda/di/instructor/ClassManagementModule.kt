@@ -4,6 +4,7 @@ import com.classitda.data.repository.instructor.management.FakeClassManagementRe
 import com.classitda.domain.repository.instructor.management.ClassManagementRepository
 import com.classitda.feature.instructor.classsession.detail.ClassSessionDetailViewModel
 import com.classitda.feature.instructor.classsession.edit.ClassSessionEditViewModel
+import com.classitda.feature.instructor.classsession.member.edit.ClassSessionMemberEditViewModel
 import com.classitda.feature.instructor.management.lesson.ClassManagementViewModel
 import com.classitda.feature.instructor.management.lesson.create.ClassSessionCreateViewModel
 import com.classitda.feature.instructor.management.lesson.create.ClassTemplateCreateViewModel
@@ -16,6 +17,7 @@ internal val classManagementModule =
         viewModel { ClassManagementViewModel(get()) }
         viewModel { ClassSessionDetailViewModel(get()) }
         viewModel { ClassSessionEditViewModel(get()) }
+        viewModel { ClassSessionMemberEditViewModel(get()) }
         viewModel { parameters ->
             ClassTemplateCreateViewModel(
                 templateId = parameters.getOrNull(),
