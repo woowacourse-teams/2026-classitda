@@ -107,8 +107,19 @@ internal fun ClassSessionCapacityChangeDialog(onConfirmClick: () -> Unit) {
 }
 
 @Composable
+@Preview(name = "작성 중인 내용 확인", showBackground = true)
+private fun ClassSessionEditExitDialogPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionEditExitDialog(
+            onDismissRequest = {},
+            onLeaveClick = {},
+        )
+    }
+}
+
+@Composable
 @Preview(name = "정원 변경 제한", showBackground = true)
-private fun ClassSessionEditDialogsPreview() {
+private fun ClassSessionCapacityChangeDialogPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         ClassSessionCapacityChangeDialog(onConfirmClick = {})
     }

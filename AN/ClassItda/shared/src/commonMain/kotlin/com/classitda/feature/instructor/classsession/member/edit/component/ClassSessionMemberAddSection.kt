@@ -15,10 +15,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.instructor.classsession.member.edit.model.MemberAddType
 import com.classitda.feature.instructor.management.lesson.create.component.OutlinedSegmentedToggle
 
@@ -118,3 +121,33 @@ private fun memberEditTextFieldColors() =
         unfocusedBorderColor = InsColors.Divider,
         cursorColor = InsColors.Purple,
     )
+
+@Preview(name = "회원 추가 - 기존 회원", showBackground = true, widthDp = 350)
+@Composable
+private fun ClassSessionMemberAddSectionExistingPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionMemberAddSection(
+            addType = MemberAddType.EXISTING,
+            temporaryName = "",
+            onAddTypeChange = {},
+            onTemporaryNameChange = {},
+            onExistingAddClick = {},
+            onTemporaryAddClick = {},
+        )
+    }
+}
+
+@Preview(name = "회원 추가 - 임시 회원", showBackground = true, widthDp = 350)
+@Composable
+private fun ClassSessionMemberAddSectionTemporaryPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionMemberAddSection(
+            addType = MemberAddType.TEMPORARY,
+            temporaryName = "박지수",
+            onAddTypeChange = {},
+            onTemporaryNameChange = {},
+            onExistingAddClick = {},
+            onTemporaryAddClick = {},
+        )
+    }
+}

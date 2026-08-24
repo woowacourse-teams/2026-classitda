@@ -13,9 +13,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
+import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionDetailUiModel
 
 @Composable
@@ -110,6 +114,29 @@ private fun DetailDescription(
             text = value,
             style = MaterialTheme.typography.bodySmall,
             color = InsColors.TextSecondary,
+        )
+    }
+}
+
+@Preview(name = "수업 상세 정보 카드", showBackground = true, widthDp = 350)
+@Composable
+private fun ClassSessionDetailInfoCardPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionDetailInfoCard(
+            detail =
+                ClassSessionDetailUiModel(
+                    id = "session-1",
+                    dateText = "2026.08.05 (수)",
+                    tags = listOf("그룹 수업", "필라테스"),
+                    title = "리포머 밸런스",
+                    timeText = "오후 7:30 ~ 8:40",
+                    reservedCount = 3,
+                    capacity = 8,
+                    description = "체어룸에서 할 예정",
+                    location = "체어룸",
+                    status = ClassSessionStatus.SCHEDULED,
+                    members = emptyList(),
+                ),
         )
     }
 }

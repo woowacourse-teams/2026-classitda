@@ -15,11 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_expand_more
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -42,5 +45,13 @@ internal fun InstructorHomeHeader(modifier: Modifier = Modifier) {
                 )
             }
         }
+    }
+}
+
+@Preview(name = "강사 홈 헤더", showBackground = true, widthDp = 390)
+@Composable
+private fun InstructorHomeHeaderPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorHomeHeader()
     }
 }

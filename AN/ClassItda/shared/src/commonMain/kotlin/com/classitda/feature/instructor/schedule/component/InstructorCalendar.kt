@@ -24,12 +24,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_arrow_forward
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
@@ -235,3 +237,43 @@ internal val DayOfWeek.koreanName: String
             DayOfWeek.SATURDAY -> "토요일"
             DayOfWeek.SUNDAY -> "일요일"
         }
+
+@Preview(name = "강사 일정 캘린더 - 월간", showBackground = true, widthDp = 390)
+@Composable
+private fun InstructorCalendarMonthPreview() {
+    AppTheme(theme = com.classitda.core.designsystem.ThemeType.INSTRUCTOR) {
+        InstructorCalendar(
+            displayedYear = 2026,
+            displayedMonth = 8,
+            selectedDate = LocalDate(2026, 8, 5),
+            isMonthMode = true,
+            scheduledDates = setOf(LocalDate(2026, 8, 5), LocalDate(2026, 8, 6)),
+            completedDates = setOf(LocalDate(2026, 8, 4)),
+            onDateSelected = {},
+            onModeChange = {},
+            onTodayClick = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+        )
+    }
+}
+
+@Preview(name = "강사 일정 캘린더 - 주간", showBackground = true, widthDp = 390)
+@Composable
+private fun InstructorCalendarWeekPreview() {
+    AppTheme(theme = com.classitda.core.designsystem.ThemeType.INSTRUCTOR) {
+        InstructorCalendar(
+            displayedYear = 2026,
+            displayedMonth = 8,
+            selectedDate = LocalDate(2026, 8, 5),
+            isMonthMode = false,
+            scheduledDates = setOf(LocalDate(2026, 8, 5), LocalDate(2026, 8, 6)),
+            completedDates = setOf(LocalDate(2026, 8, 4)),
+            onDateSelected = {},
+            onModeChange = {},
+            onTodayClick = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+        )
+    }
+}

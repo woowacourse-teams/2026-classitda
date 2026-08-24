@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
@@ -23,6 +24,8 @@ import classitda.shared.generated.resources.ic_edit
 import classitda.shared.generated.resources.ic_more
 import classitda.shared.generated.resources.ic_person
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.ThemeType
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -100,5 +103,35 @@ internal fun ClassSessionDetailTopBar(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "수업 상세 상단바", showBackground = true, widthDp = 390)
+@Composable
+private fun ClassSessionDetailTopBarPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionDetailTopBar(
+            isMenuExpanded = false,
+            onBackClick = {},
+            onMoreClick = {},
+            onDismissMenu = {},
+            onEditClick = {},
+            onMemberEditClick = {},
+        )
+    }
+}
+
+@Preview(name = "수업 상세 상단바 - 메뉴", showBackground = true, widthDp = 390)
+@Composable
+private fun ClassSessionDetailTopBarMenuPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionDetailTopBar(
+            isMenuExpanded = true,
+            onBackClick = {},
+            onMoreClick = {},
+            onDismissMenu = {},
+            onEditClick = {},
+            onMemberEditClick = {},
+        )
     }
 }

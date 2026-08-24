@@ -15,13 +15,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_close
 import classitda.shared.generated.resources.ic_person
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionMemberUiModel
 import org.jetbrains.compose.resources.painterResource
 
@@ -88,5 +91,27 @@ internal fun ClassSessionMemberEditBookedRow(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "회원 수정 행", showBackground = true, widthDp = 350)
+@Composable
+private fun ClassSessionMemberEditBookedRowPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionMemberEditBookedRow(
+            member = ClassSessionMemberUiModel(id = "member-1", name = "김민지"),
+            onRemoveClick = {},
+        )
+    }
+}
+
+@Preview(name = "회원 수정 행 - 임시 회원", showBackground = true, widthDp = 350)
+@Composable
+private fun ClassSessionMemberEditBookedRowTemporaryPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionMemberEditBookedRow(
+            member = ClassSessionMemberUiModel(id = "member-2", name = "박지수", isTemporary = true),
+            onRemoveClick = {},
+        )
     }
 }

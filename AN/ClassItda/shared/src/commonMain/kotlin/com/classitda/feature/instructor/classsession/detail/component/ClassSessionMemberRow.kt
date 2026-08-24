@@ -15,11 +15,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_person
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionMemberUiModel
 import org.jetbrains.compose.resources.painterResource
 
@@ -73,5 +76,25 @@ internal fun ClassSessionMemberRow(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "예약 회원", showBackground = true, widthDp = 350)
+@Composable
+private fun ClassSessionMemberRowPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionMemberRow(
+            member = ClassSessionMemberUiModel(id = "member-1", name = "김민지"),
+        )
+    }
+}
+
+@Preview(name = "예약 회원 - 임시 회원", showBackground = true, widthDp = 350)
+@Composable
+private fun ClassSessionMemberRowTemporaryPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionMemberRow(
+            member = ClassSessionMemberUiModel(id = "member-2", name = "박지수", isTemporary = true),
+        )
     }
 }

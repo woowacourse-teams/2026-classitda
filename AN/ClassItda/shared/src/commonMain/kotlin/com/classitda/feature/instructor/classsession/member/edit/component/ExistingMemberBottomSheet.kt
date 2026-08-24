@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_add
@@ -34,7 +35,9 @@ import classitda.shared.generated.resources.ic_check
 import classitda.shared.generated.resources.ic_person
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionMemberUiModel
 import org.jetbrains.compose.resources.painterResource
 
@@ -167,5 +170,38 @@ private fun ExistingMemberRow(
                 modifier = Modifier.size(24.dp),
             )
         }
+    }
+}
+
+@Preview(name = "기존 회원 선택 행", showBackground = true, widthDp = 350)
+@Composable
+private fun ExistingMemberRowPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ExistingMemberRow(
+            member = ClassSessionMemberUiModel(id = "member-4", name = "최유진"),
+            isSelected = true,
+            onClick = {},
+        )
+    }
+}
+
+@Preview(name = "기존 회원 추가 바텀시트", showBackground = true, widthDp = 390, heightDp = 600)
+@Composable
+private fun ExistingMemberBottomSheetPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ExistingMemberBottomSheet(
+            members =
+                listOf(
+                    ClassSessionMemberUiModel(id = "member-4", name = "최유진"),
+                    ClassSessionMemberUiModel(id = "member-5", name = "정하늘"),
+                    ClassSessionMemberUiModel(id = "member-6", name = "김서연"),
+                ),
+            query = "",
+            selectedMemberIds = setOf("member-4"),
+            onQueryChange = {},
+            onMemberClick = {},
+            onConfirmClick = {},
+            onDismissRequest = {},
+        )
     }
 }
