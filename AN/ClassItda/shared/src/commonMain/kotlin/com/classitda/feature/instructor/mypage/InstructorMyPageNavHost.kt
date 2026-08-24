@@ -21,6 +21,7 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
     var profileRefreshToken by remember { mutableStateOf(0) }
     var memberRefreshToken by remember { mutableStateOf(0) }
     var facilityRefreshToken by remember { mutableStateOf(0) }
+    var currentPhoneNumber by remember { mutableStateOf("") }
 
     NavHost(
         navController = navController,
@@ -51,14 +52,17 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
             InstructorProfileEditRoute(
                 onBack = { navController.popBackStack() },
                 onRequestPhotoChange = {},
-                onOpenPhoneNumberChange = { navController.navigate(InstructorMyPageDestination.F04) },
+                onOpenPhoneNumberChange = { phoneNumber ->
+                    currentPhoneNumber = phoneNumber
+                    navController.navigate(InstructorMyPageDestination.F04)
+                },
                 onProfileRefreshRequested = { profileRefreshToken++ },
             )
         }
 
         composable(InstructorMyPageDestination.F04) {
             InstructorPhoneNumberChangeRoute(
-                initialPhoneNumber = "01012345678",
+                initialPhoneNumber = currentPhoneNumber,
                 onBack = { navController.popBackStack() },
                 onComplete = {
                     profileRefreshToken++
