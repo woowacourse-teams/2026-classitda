@@ -56,11 +56,13 @@ import kotlin.time.Clock
 @Composable
 internal fun InstructorScheduleRoute(
     bottomBar: @Composable () -> Unit,
+    onSessionClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: InstructorScheduleViewModel = koinViewModel(),
 ) {
     InstructorScheduleStateful(
         bottomBar = bottomBar,
+        onSessionClick = onSessionClick,
         modifier = modifier,
         viewModel = viewModel,
     )
@@ -69,6 +71,7 @@ internal fun InstructorScheduleRoute(
 @Composable
 internal fun InstructorScheduleStateful(
     bottomBar: @Composable () -> Unit,
+    onSessionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InstructorScheduleViewModel,
 ) {
@@ -157,6 +160,7 @@ internal fun InstructorScheduleStateful(
                             displayedMonth += 1
                         }
                     },
+                    onSessionClick = onSessionClick,
                     modifier = Modifier.padding(contentPadding),
                 )
             }
@@ -176,6 +180,7 @@ internal fun InstructorScheduleStateless(
     onTodayClick: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onSessionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val selectedSessions = sessions.filter { it.startAt.date == selectedDate }.sortedBy { it.startAt }
@@ -237,7 +242,12 @@ internal fun InstructorScheduleStateless(
                 )
             }
         } else {
-            items(selectedSessions, key = { it.id }) { session -> InstructorScheduleCard(session) }
+            items(selectedSessions, key = { it.id }) { session ->
+                InstructorScheduleCard(
+                    session = session,
+                    onClick = { onSessionClick(session.id) },
+                )
+            }
         }
     }
 }
@@ -283,6 +293,7 @@ private fun InstructorScheduleStatelessPreview() {
             onTodayClick = { selectedDate = today },
             onPreviousMonth = {},
             onNextMonth = {},
+            onSessionClick = {},
         )
     }
 }

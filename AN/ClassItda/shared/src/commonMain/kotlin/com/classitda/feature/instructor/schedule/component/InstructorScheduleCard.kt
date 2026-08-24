@@ -24,9 +24,11 @@ import com.classitda.feature.instructor.component.ClassSessionStatusBadge
 @Composable
 internal fun InstructorScheduleCard(
     session: ClassSession,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Card(
+        onClick = onClick,
         colors = CardDefaults.cardColors(containerColor = InsColors.White),
         modifier = modifier.padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.xs).fillMaxWidth(),
     ) {
