@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -58,7 +59,10 @@ internal fun ClassSessionMemberEditRoute(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     when (val state = uiState) {
-        ClassSessionMemberEditUiState.Loading -> ClassSessionMemberEditLoading(modifier)
+        ClassSessionMemberEditUiState.Loading -> {
+            ClassSessionMemberEditLoading(modifier)
+        }
+
         is ClassSessionMemberEditUiState.Error -> {
             ClassSessionMemberEditError(
                 message = state.message,
@@ -114,11 +118,11 @@ private fun ClassSessionMemberEditStateful(
             if (temporaryName.isNotBlank()) {
                 bookedMembers =
                     bookedMembers +
-                        ClassSessionMemberUiModel(
-                            id = "temporary-${bookedMembers.size}-${temporaryName.trim()}",
-                            name = temporaryName.trim(),
-                            isTemporary = true,
-                        )
+                    ClassSessionMemberUiModel(
+                        id = "temporary-${bookedMembers.size}-${temporaryName.trim()}",
+                        name = temporaryName.trim(),
+                        isTemporary = true,
+                    )
                 temporaryName = ""
             }
         },
@@ -252,7 +256,7 @@ private fun RowSectionTitle(
             style = MaterialTheme.typography.titleSmall,
             color = InsColors.TextPrimary,
         )
-        androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+        Spacer(Modifier.weight(1f))
         Text(
             text = count,
             style = MaterialTheme.typography.bodySmall,

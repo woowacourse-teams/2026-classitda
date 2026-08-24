@@ -35,6 +35,9 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.component.NavigateBackTopBar
+import com.classitda.feature.instructor.classsession.edit.component.ClassSessionCapacityChangeDialog
+import com.classitda.feature.instructor.classsession.edit.component.ClassSessionEditExitDialog
+import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
 import com.classitda.feature.instructor.management.lesson.create.component.CategoryChipSelector
 import com.classitda.feature.instructor.management.lesson.create.component.ClassStartTimeField
 import com.classitda.feature.instructor.management.lesson.create.component.ClassTimePickerDialog
@@ -42,9 +45,6 @@ import com.classitda.feature.instructor.management.lesson.create.component.Creat
 import com.classitda.feature.instructor.management.lesson.create.component.DatePickerField
 import com.classitda.feature.instructor.management.lesson.create.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.lesson.create.model.ClassType
-import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
-import com.classitda.feature.instructor.classsession.edit.component.ClassSessionCapacityChangeDialog
-import com.classitda.feature.instructor.classsession.edit.component.ClassSessionEditExitDialog
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
@@ -402,12 +402,20 @@ private fun LocalTime.plusMinutesClamped(minutes: Int): LocalTime {
 
 private fun LocalTime.toAmPmText(): String {
     val amPm = if (hour < 12) "오전" else "오후"
-    val hour12 = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+    val hour12 =
+        when {
+            hour == 0 -> 12
+            hour > 12 -> hour - 12
+            else -> hour
+        }
     return "$amPm $hour12:${minute.toString().padStart(2, '0')}"
 }
 
-private fun LocalDate.toDateText(): String =
-    "${year}.${month.number.toString().padStart(2, '0')}.${day.toString().padStart(2, '0')} (${dayOfWeek.toKoreanShort()})"
+private fun LocalDate.toDateText(): String {
+    val monthText = month.number.toString().padStart(2, '0')
+    val dayText = day.toString().padStart(2, '0')
+    return "$year.$monthText.$dayText (${dayOfWeek.toKoreanShort()})"
+}
 
 private fun kotlinx.datetime.DayOfWeek.toKoreanShort(): String =
     when (this) {

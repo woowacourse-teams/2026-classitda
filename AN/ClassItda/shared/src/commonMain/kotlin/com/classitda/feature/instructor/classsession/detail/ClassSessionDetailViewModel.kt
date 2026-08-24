@@ -58,14 +58,16 @@ private val demoMembers =
         ClassSessionMemberUiModel(id = "member-3", name = "박지수", isTemporary = true),
     )
 
-private fun LocalDate.toInstructorDateText(): String =
-    "${year}.${month.number.toString().padStart(2, '0')}.${day.toString().padStart(2, '0')} (${dayOfWeek.toKoreanShort()})"
+private fun LocalDate.toInstructorDateText(): String {
+    val monthText = month.number.toString().padStart(2, '0')
+    val dayText = day.toString().padStart(2, '0')
+    return "$year.$monthText.$dayText (${dayOfWeek.toKoreanShort()})"
+}
 
 private fun LocalTime.toAmPmText(): String =
     "${if (hour < 12) "오전" else "오후"} ${to12HourText()}:${minute.toString().padStart(2, '0')}"
 
-private fun LocalTime.toPlainText(): String =
-    "${to12HourText()}:${minute.toString().padStart(2, '0')}"
+private fun LocalTime.toPlainText(): String = "${to12HourText()}:${minute.toString().padStart(2, '0')}"
 
 private fun LocalTime.to12HourText(): String =
     when {
