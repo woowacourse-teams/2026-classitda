@@ -64,7 +64,7 @@ sealed interface MemberEditAction {
 internal fun memberEditFieldErrors(draft: MemberInputUiModel): Set<MemberEditField> =
     buildSet {
         if (draft.name.isBlank()) add(MemberEditField.NAME)
-        if (draft.phoneNumber.filter(Char::isDigit).length !in 10..11) {
+        if (!isMemberPhoneNumberValid(draft.phoneNumber)) {
             add(MemberEditField.PHONE_NUMBER)
         }
     }

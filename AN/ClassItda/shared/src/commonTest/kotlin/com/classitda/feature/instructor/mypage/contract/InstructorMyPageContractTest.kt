@@ -4,6 +4,7 @@ import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -73,6 +74,8 @@ class InstructorMyPageContractTest {
         )
         assertTrue(memberRegistrationFieldErrors(validDraft).isEmpty())
         assertTrue(validDraft.isMemberRegistrationValid())
+        assertFalse(memberRegistrationFieldErrors(validDraft.copy(phoneNumber = "010-1234-5678x")).isEmpty())
+        assertTrue(memberEditFieldErrors(validDraft.copy(phoneNumber = "010 1234 5678")).isEmpty())
     }
 
     @Test

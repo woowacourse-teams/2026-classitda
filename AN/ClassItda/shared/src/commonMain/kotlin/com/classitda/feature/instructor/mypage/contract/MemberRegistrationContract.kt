@@ -67,9 +67,16 @@ sealed interface MemberRegistrationAction {
 internal fun memberRegistrationFieldErrors(draft: MemberInputUiModel): Set<MemberRegistrationField> =
     buildSet {
         if (draft.name.isBlank()) add(MemberRegistrationField.NAME)
-        if (draft.phoneNumber.filter(Char::isDigit).length !in 10..11) {
+        if (!isMemberPhoneNumberValid(draft.phoneNumber)) {
             add(MemberRegistrationField.PHONE_NUMBER)
         }
     }
 
 internal fun MemberInputUiModel.isMemberRegistrationValid(): Boolean = memberRegistrationFieldErrors(this).isEmpty()
+
+internal fun isMemberPhoneNumberValid(value: String): Boolean {
+    val digits = value.filter(Char::isDigit)
+    return value.isNotBlank() &&
+        value.all { it.isDigit() || it == '-' || it == ' ' } &&
+        digits.length in 10..11
+}
