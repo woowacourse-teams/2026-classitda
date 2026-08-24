@@ -4,9 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.di.instructor.mypage.instructorMyPageDemoModule
-import com.classitda.di.instructor.mypage.instructorMyPageModule
-import com.classitda.feature.instructor.mypage.InstructorMyPageNavHost
+import com.classitda.core.navigation.student.StudentRootRoute
+import com.classitda.di.home.homeModule
+import com.classitda.di.mypage.myPageModule
+import com.classitda.di.myschedule.myScheduleModule
+import com.classitda.di.reservation.reservationModule
 import org.koin.compose.KoinApplication
 import org.koin.dsl.koinConfiguration
 
@@ -16,11 +18,11 @@ fun App() {
     KoinApplication(
         configuration =
             koinConfiguration {
-                modules(instructorMyPageModule, instructorMyPageDemoModule)
+                modules(homeModule, reservationModule, myScheduleModule, myPageModule)
             },
     ) {
-        AppTheme(theme = ThemeType.INSTRUCTOR) {
-            InstructorMyPageNavHost()
+        AppTheme(theme = ThemeType.STUDENT) {
+            StudentRootRoute()
         }
     }
 }
