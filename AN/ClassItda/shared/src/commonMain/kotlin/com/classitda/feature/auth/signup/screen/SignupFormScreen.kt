@@ -92,6 +92,7 @@ internal fun SignupFormScreen(
                 placeholder = "성함을 입력해 주세요",
                 onValueChange = { onAction(SignupAction.ChangeName(it)) },
                 keyboardType = KeyboardType.Text,
+                errorText = state.nameError,
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             SignupTextFieldWithAction(
@@ -121,6 +122,7 @@ internal fun SignupFormScreen(
                             state.phoneNumber != state.verificationPhoneNumber ||
                                 (!state.isPhoneVerified && state.resendRemainingSeconds == 0L)
                         ),
+                errorText = state.phoneNumberError,
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             SignupTextField(
@@ -133,6 +135,7 @@ internal fun SignupFormScreen(
                     ),
                 onValueChange = { onAction(SignupAction.ChangeVerificationCode(it)) },
                 keyboardType = KeyboardType.Number,
+                errorText = state.verificationCodeError,
             )
             Spacer(modifier = Modifier.height(AppSpacing.xl))
         }

@@ -41,6 +41,7 @@ internal fun SignupTextField(
     onValueChange: (String) -> Unit,
     keyboardType: KeyboardType,
     trailingText: String? = null,
+    errorText: String? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
         Text(
@@ -76,6 +77,13 @@ internal fun SignupTextField(
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Next),
             colors = signupTextFieldColors(),
         )
+        errorText?.let {
+            Text(
+                text = it,
+                style = appTypography().labelSmall,
+                color = StuColors.Red,
+            )
+        }
     }
 }
 
@@ -89,6 +97,7 @@ internal fun SignupTextFieldWithAction(
     onAction: () -> Unit,
     keyboardType: KeyboardType,
     enabled: Boolean = true,
+    errorText: String? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
         Text(
@@ -128,6 +137,13 @@ internal fun SignupTextFieldWithAction(
                     color = StuColors.White,
                 )
             }
+        }
+        errorText?.let {
+            Text(
+                text = it,
+                style = appTypography().labelSmall,
+                color = StuColors.Red,
+            )
         }
     }
 }

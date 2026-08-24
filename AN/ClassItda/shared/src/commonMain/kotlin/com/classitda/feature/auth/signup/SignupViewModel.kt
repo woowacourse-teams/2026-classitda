@@ -39,7 +39,7 @@ internal class SignupViewModel(
             }
 
             is SignupAction.ChangeName -> {
-                update { copy(name = action.value, errorMessage = null) }
+                update { copy(name = action.value, nameError = null, errorMessage = null) }
             }
 
             is SignupAction.ChangePhoneNumber -> {
@@ -49,6 +49,8 @@ internal class SignupViewModel(
                         phoneNumber = action.value,
                         verificationCode = "",
                         isPhoneVerified = isRequestedPhone && isPhoneVerified,
+                        phoneNumberError = null,
+                        verificationCodeError = null,
                         errorMessage = null,
                     )
                 }
@@ -58,6 +60,7 @@ internal class SignupViewModel(
                 update {
                     copy(
                         verificationCode = action.value,
+                        verificationCodeError = null,
                         errorMessage = null,
                     )
                 }
@@ -110,24 +113,75 @@ internal class SignupViewModel(
 
     fun showError(error: Throwable) {
         val message = error.message ?: "요청에 실패했습니다."
-        if (message.contains("410") || message.contains("PHONE-003")) {
-            update {
-                copy(
-                    isLoading = false,
-                    verificationId = null,
-                    verificationCode = "",
-                    isPhoneVerified = false,
-                    errorMessage = "인증번호가 만료되었거나 이미 처리되었습니다. 재요청해 주세요.",
-                )
+        val normalizedMessage = message.lowercase()
+        when {
+            message.contains("410") || message.contains("PHONE-003") -> {
+                update {
+                    copy(
+                        isLoading = false,
+                        verificationId = null,
+                        verificationCode = "",
+                        isPhoneVerified = false,
+                        verificationCodeError = "인증번호가 만료되었거나 이미 처리되었습니다. 재요청해 주세요.",
+                        errorMessage = null,
+                    )
+                }
             }
-        } else {
-            update { copy(isLoading = false, errorMessage = message) }
+
+            message.contains("이미 가입") || normalizedMessage.contains("already registered") -> {
+                update {
+                    copy(
+                        isLoading = false,
+                        phoneNumberError = "이미 가입된 전화번호입니다.",
+                        errorMessage = null,
+                    )
+                }
+            }
+
+            message.contains("6자리") ||
+                normalizedMessage.contains("verification code") ||
+                normalizedMessage.contains("otp") -> {
+                update {
+                    copy(
+                        isLoading = false,
+                        verificationCodeError = "인증번호는 6자리 숫자로 입력해 주세요.",
+                        errorMessage = null,
+                    )
+                }
+            }
+
+            message.contains("이름") -> {
+                update {
+                    copy(
+                        isLoading = false,
+                        nameError = "이름을 올바르게 입력해 주세요.",
+                        errorMessage = null,
+                    )
+                }
+            }
+
+            message.contains("휴대전화") || normalizedMessage.contains("phone") || normalizedMessage.contains("010") -> {
+                update {
+                    copy(
+                        isLoading = false,
+                        phoneNumberError = "휴대전화 번호를 올바르게 입력해 주세요.",
+                        errorMessage = null,
+                    )
+                }
+            }
+
+            else -> {
+                update { copy(isLoading = false, errorMessage = "요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.") }
+            }
         }
     }
 
     private fun requestVerification() {
         val state = _uiState.value
         val token = state.signupToken ?: return showError(IllegalStateException("Google 로그인이 필요합니다."))
+        if (!Regex("^010[0-9]{8}$").matches(state.phoneNumber)) {
+            return showError(IllegalStateException("휴대전화 번호를 올바르게 입력해 주세요."))
+        }
         viewModelScope.launch {
             update {
                 copy(
@@ -182,6 +236,9 @@ internal class SignupViewModel(
     private fun confirmVerification() {
         val state = _uiState.value
         val token = state.signupToken ?: return showError(IllegalStateException("Google 로그인이 필요합니다."))
+        if (!Regex("^[0-9]{6}$").matches(state.verificationCode)) {
+            return showError(IllegalStateException("인증번호는 6자리 숫자로 입력해 주세요."))
+        }
         if (state.verificationRemainingSeconds <= 0L) {
             return showError(IllegalStateException("인증번호가 만료되었습니다. 재요청해 주세요."))
         }
