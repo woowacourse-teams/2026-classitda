@@ -2,6 +2,7 @@ package com.classitda.studio.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
@@ -50,7 +51,7 @@ class StudioPolicyControllerTest {
     }
 
     @Test
-    void 운영_정책을_등록하면_201과_정책_정보를_반환한다() {
+    void 운영_정책을_등록하면_201과_빈_본문을_반환하고_서비스에_위임한다() {
         // given
         when(studioPolicyService.save(anyLong(), anyLong(), any(StudioPolicyCreateRequest.class)))
                 .thenReturn(new StudioPolicyResponse(1L, 60, 1440, 30));
@@ -65,11 +66,8 @@ class StudioPolicyControllerTest {
 
         // then
         result.expectStatus().isCreated()
-                .expectBody()
-                .json("""
-                        {"id":1,"reservationCloseMinutesBefore":60,
-                         "freeCancelMinutesBefore":1440,"waitingOfferResponseMinutes":30}
-                        """, JsonCompareMode.STRICT);
+                .expectBody().isEmpty();
+        verify(studioPolicyService).save(anyLong(), anyLong(), any(StudioPolicyCreateRequest.class));
     }
 
     @Test
@@ -199,7 +197,7 @@ class StudioPolicyControllerTest {
     }
 
     @Test
-    void 운영_정책을_수정하면_200과_정책_정보를_반환한다() {
+    void 운영_정책을_수정하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
         // given
         when(studioPolicyService.update(anyLong(), anyLong(), any(StudioPolicyUpdateRequest.class)))
                 .thenReturn(new StudioPolicyResponse(1L, 60, 180, 30));
@@ -213,12 +211,9 @@ class StudioPolicyControllerTest {
                 .exchange();
 
         // then
-        result.expectStatus().isOk()
-                .expectBody()
-                .json("""
-                        {"id":1,"reservationCloseMinutesBefore":60,
-                         "freeCancelMinutesBefore":180,"waitingOfferResponseMinutes":30}
-                        """, JsonCompareMode.STRICT);
+        result.expectStatus().isNoContent()
+                .expectBody().isEmpty();
+        verify(studioPolicyService).update(anyLong(), anyLong(), any(StudioPolicyUpdateRequest.class));
     }
 
     @Test

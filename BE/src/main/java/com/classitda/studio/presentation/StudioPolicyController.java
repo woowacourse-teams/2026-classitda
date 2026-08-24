@@ -26,14 +26,13 @@ public class StudioPolicyController implements StudioPolicyControllerApi {
 
     @Override
     @PostMapping(version = "1")
-    public ResponseEntity<StudioPolicyResponse> save(
+    public ResponseEntity<Void> save(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @Valid @RequestBody StudioPolicyCreateRequest request
     ) {
-        StudioPolicyResponse response = studioPolicyService.save(memberId, studioId, request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(response);
+        studioPolicyService.save(memberId, studioId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
@@ -44,11 +43,12 @@ public class StudioPolicyController implements StudioPolicyControllerApi {
 
     @Override
     @PatchMapping(version = "1")
-    public StudioPolicyResponse update(
+    public ResponseEntity<Void> update(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @Valid @RequestBody StudioPolicyUpdateRequest request
     ) {
-        return studioPolicyService.update(memberId, studioId, request);
+        studioPolicyService.update(memberId, studioId, request);
+        return ResponseEntity.noContent().build();
     }
 }

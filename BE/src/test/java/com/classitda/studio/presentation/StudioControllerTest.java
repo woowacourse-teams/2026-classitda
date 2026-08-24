@@ -2,6 +2,7 @@ package com.classitda.studio.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
@@ -50,7 +51,7 @@ class StudioControllerTest {
     }
 
     @Test
-    void 시설을_생성하면_201과_시설_정보를_반환한다() {
+    void 시설을_생성하면_201과_빈_본문을_반환하고_서비스에_위임한다() {
         // given
         StudioResponse response = StudioResponse.from(StudioFixture.기본_시설(StudioFixture.기본_소유자()));
         when(studioService.save(anyLong(), any(StudioCreateRequest.class))).thenReturn(response);
@@ -73,10 +74,24 @@ class StudioControllerTest {
 
         // then
         result.expectStatus().isCreated()
-                .expectBody()
-                .json("""
-                        {"name":"클래스잇다 스튜디오","address":"서울시 강남구 테헤란로 1","openTime":"09:00:00","closeTime":"22:00:00"}
-                        """, JsonCompareMode.LENIENT);
+                .expectBody().isEmpty();
+        verify(studioService).save(anyLong(), any(StudioCreateRequest.class));
+    }
+
+    @Test
+    void 시설을_수정하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
+        // given / when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri("/api/studios/1")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(StudioFixture.이름만_바꾸는_수정_요청("바뀐 스튜디오"))
+                .exchange();
+
+        // then
+        result.expectStatus().isNoContent()
+                .expectBody().isEmpty();
+        verify(studioService).update(anyLong(), anyLong(), any(StudioUpdateRequest.class));
     }
 
     @Test

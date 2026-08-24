@@ -27,13 +27,12 @@ public class StudioController implements StudioControllerApi {
 
     @Override
     @PostMapping(version = "1")
-    public ResponseEntity<StudioResponse> save(
+    public ResponseEntity<Void> save(
             @CurrentMemberId Long memberId,
             @Valid @RequestBody StudioCreateRequest request
     ) {
-        StudioResponse response = studioService.save(memberId, request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(response);
+        studioService.save(memberId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
@@ -54,11 +53,12 @@ public class StudioController implements StudioControllerApi {
 
     @Override
     @PatchMapping(path = "/{studioId}", version = "1")
-    public StudioResponse update(
+    public ResponseEntity<Void> update(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @Valid @RequestBody StudioUpdateRequest request
     ) {
-        return studioService.update(memberId, studioId, request);
+        studioService.update(memberId, studioId, request);
+        return ResponseEntity.noContent().build();
     }
 }
