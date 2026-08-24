@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
+import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 
 /** Temporary feature graph used until the app-level instructor graph is assembled. */
 @Composable
@@ -19,6 +20,7 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
     var memberRefreshToken by remember { mutableStateOf(0) }
     var facilityRefreshToken by remember { mutableStateOf(0) }
     var selectedFacilityId by remember { mutableStateOf<InstructorFacilityId?>(null) }
+    var selectedMemberId by remember { mutableStateOf<InstructorMemberId?>(null) }
 
     NavHost(
         navController = navController,
@@ -68,7 +70,10 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
         composable(InstructorMyPageDestination.F05) {
             InstructorMemberManagementRoute(
                 onBack = { navController.popBackStack() },
-                onOpenMember = {},
+                onOpenMember = { memberId ->
+                    selectedMemberId = memberId
+                    navController.navigate(InstructorMyPageDestination.F12)
+                },
                 onOpenMemberRegistration = { navController.navigate(InstructorMyPageDestination.F06) },
                 refreshToken = memberRefreshToken,
             )
@@ -78,6 +83,34 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
             InstructorMemberRegistrationRoute(
                 onBack = { navController.popBackStack() },
                 onSuccess = {
+                    memberRefreshToken++
+                    navController.popBackStack(InstructorMyPageDestination.F05, false)
+                },
+            )
+        }
+
+        composable(InstructorMyPageDestination.F12) {
+            val memberId = selectedMemberId ?: return@composable
+            InstructorMemberDetailRoute(
+                memberId = memberId,
+                onBack = { navController.popBackStack() },
+                onOpenEdit = { id ->
+                    selectedMemberId = id
+                    navController.navigate(InstructorMyPageDestination.F13)
+                },
+                onDeleted = {
+                    memberRefreshToken++
+                    navController.popBackStack(InstructorMyPageDestination.F05, false)
+                },
+            )
+        }
+
+        composable(InstructorMyPageDestination.F13) {
+            val memberId = selectedMemberId ?: return@composable
+            InstructorMemberEditRoute(
+                memberId = memberId,
+                onBack = { navController.popBackStack() },
+                onSaved = {
                     memberRefreshToken++
                     navController.popBackStack(InstructorMyPageDestination.F05, false)
                 },
@@ -147,6 +180,8 @@ private object InstructorMyPageDestination {
     const val F04 = "instructor_phone_change"
     const val F05 = "instructor_member_management"
     const val F06 = "instructor_member_registration"
+    const val F12 = "instructor_member_detail"
+    const val F13 = "instructor_member_edit"
     const val F08 = "instructor_facility_management"
     const val F09 = "instructor_facility_registration"
     const val F10 = "instructor_facility_detail"

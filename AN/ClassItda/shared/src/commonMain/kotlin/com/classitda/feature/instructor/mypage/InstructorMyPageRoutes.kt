@@ -20,6 +20,9 @@ import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
+import com.classitda.feature.instructor.mypage.contract.MemberDetailAction
+import com.classitda.feature.instructor.mypage.contract.MemberDetailUiState
+import com.classitda.feature.instructor.mypage.contract.MemberEditAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.facility.FacilityDetailScreen
@@ -30,6 +33,10 @@ import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
 import com.classitda.feature.instructor.mypage.facility.FacilityManagementViewModel
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationViewModel
+import com.classitda.feature.instructor.mypage.member.MemberDetailScreen
+import com.classitda.feature.instructor.mypage.member.MemberDetailViewModel
+import com.classitda.feature.instructor.mypage.member.MemberEditScreen
+import com.classitda.feature.instructor.mypage.member.MemberEditViewModel
 import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
 import com.classitda.feature.instructor.mypage.member.MemberManagementViewModel
 import com.classitda.feature.instructor.mypage.member.MemberRegistrationScreen
@@ -225,6 +232,58 @@ internal fun InstructorMemberRegistrationRoute(
             else -> {
                 viewModel.onAction(action)
             }
+        }
+    }, modifier = modifier)
+}
+
+@Composable
+internal fun InstructorMemberDetailRoute(
+    memberId: com.classitda.domain.model.instructor.mypage.InstructorMemberId,
+    onBack: () -> Unit,
+    onOpenEdit: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
+    onDeleted: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: MemberDetailViewModel =
+        koinViewModel(
+            key = "instructor-member-detail-${memberId.value}",
+            parameters = { parametersOf(memberId) },
+        ),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState) {
+        val deleted = uiState as? MemberDetailUiState.Deleted
+        deleted?.let { onDeleted(it.memberId) }
+    }
+    MemberDetailScreen(uiState, onAction = { action ->
+        when (action) {
+            MemberDetailAction.Back -> onBack()
+            MemberDetailAction.OpenEdit -> onOpenEdit(memberId)
+            else -> viewModel.onAction(action)
+        }
+    }, modifier = modifier)
+}
+
+@Composable
+internal fun InstructorMemberEditRoute(
+    memberId: com.classitda.domain.model.instructor.mypage.InstructorMemberId,
+    onBack: () -> Unit,
+    onSaved: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: MemberEditViewModel =
+        koinViewModel(
+            key = "instructor-member-edit-${memberId.value}",
+            parameters = { parametersOf(memberId) },
+        ),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(uiState) {
+        val success = uiState as? com.classitda.feature.instructor.mypage.contract.MemberEditUiState.Success
+        success?.let { onSaved(it.memberId) }
+    }
+    MemberEditScreen(uiState, onAction = { action ->
+        when (action) {
+            MemberEditAction.Back -> onBack()
+            else -> viewModel.onAction(action)
         }
     }, modifier = modifier)
 }
