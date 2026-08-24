@@ -28,78 +28,61 @@ internal fun ClassSessionEditExitDialog(
     onLeaveClick: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = AppShape.Card,
-            color = InsColors.White,
-        ) {
-            Column(
-                modifier = Modifier.padding(AppSpacing.xxl),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
-            ) {
-                Text(
-                    text = "작성 중인 내용이 있습니다.",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = InsColors.TextPrimary,
-                )
-                Text(
-                    text = "지금까지 작성한 내용이 사라집니다. 나가시겠습니까?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = InsColors.TextSecondary,
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
-                ) {
-                    TextButton(
-                        onClick = onDismissRequest,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text("취소", color = InsColors.TextSecondary)
-                    }
-                    Button(
-                        onClick = onLeaveClick,
-                        modifier = Modifier.weight(1f),
-                        shape = AppShape.Card,
-                        colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary),
-                    ) {
-                        Text("나가기")
-                    }
-                }
-            }
-        }
+        ClassSessionEditExitDialogContent(
+            onDismissRequest = onDismissRequest,
+            onLeaveClick = onLeaveClick,
+        )
     }
 }
 
 @Composable
 internal fun ClassSessionCapacityChangeDialog(onConfirmClick: () -> Unit) {
     Dialog(onDismissRequest = onConfirmClick) {
-        Surface(
-            modifier = Modifier.fillMaxWidth(),
-            shape = AppShape.Card,
-            color = InsColors.White,
+        ClassSessionCapacityChangeDialogContent(onConfirmClick = onConfirmClick)
+    }
+}
+
+@Composable
+private fun ClassSessionEditExitDialogContent(
+    onDismissRequest: () -> Unit,
+    onLeaveClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AppShape.Card,
+        color = InsColors.White,
+    ) {
+        Column(
+            modifier = Modifier.padding(AppSpacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
         ) {
-            Column(
-                modifier = Modifier.padding(AppSpacing.xxl),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+            Text(
+                text = "작성 중인 내용이 있습니다.",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = InsColors.TextPrimary,
+            )
+            Text(
+                text = "지금까지 작성한 내용이 사라집니다. 나가시겠습니까?",
+                style = MaterialTheme.typography.bodyMedium,
+                color = InsColors.TextSecondary,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
             ) {
-                Text(
-                    text = "정원을 변경할 수 없습니다.",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = InsColors.TextPrimary,
-                )
-                Text(
-                    text = "이미 예약한 회원 수보다 작은 정원으로 변경할 수 없습니다. 정원을 다시 확인해 주세요.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = InsColors.TextSecondary,
-                )
-                Button(
-                    onClick = onConfirmClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = AppShape.Card,
-                    colors = ButtonDefaults.buttonColors(containerColor = InsColors.Red),
+                TextButton(
+                    onClick = onDismissRequest,
+                    modifier = Modifier.weight(1f),
                 ) {
-                    Text("확인")
+                    Text("취소", color = InsColors.TextSecondary)
+                }
+                Button(
+                    onClick = onLeaveClick,
+                    modifier = Modifier.weight(1f),
+                    shape = AppShape.Card,
+                    colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary),
+                ) {
+                    Text("나가기")
                 }
             }
         }
@@ -107,10 +90,43 @@ internal fun ClassSessionCapacityChangeDialog(onConfirmClick: () -> Unit) {
 }
 
 @Composable
-@Preview(name = "작성 중인 내용 확인", showBackground = true)
+private fun ClassSessionCapacityChangeDialogContent(onConfirmClick: () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AppShape.Card,
+        color = InsColors.White,
+    ) {
+        Column(
+            modifier = Modifier.padding(AppSpacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+        ) {
+            Text(
+                text = "정원을 변경할 수 없습니다.",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = InsColors.TextPrimary,
+            )
+            Text(
+                text = "이미 예약한 회원 수보다 작은 정원으로 변경할 수 없습니다. 정원을 다시 확인해 주세요.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = InsColors.TextSecondary,
+            )
+            Button(
+                onClick = onConfirmClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = AppShape.Card,
+                colors = ButtonDefaults.buttonColors(containerColor = InsColors.Red),
+            ) {
+                Text("확인")
+            }
+        }
+    }
+}
+
+@Composable
+@Preview(name = "작성 중인 내용 확인", showBackground = true, widthDp = 390)
 private fun ClassSessionEditExitDialogPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
-        ClassSessionEditExitDialog(
+        ClassSessionEditExitDialogContent(
             onDismissRequest = {},
             onLeaveClick = {},
         )
@@ -118,9 +134,9 @@ private fun ClassSessionEditExitDialogPreview() {
 }
 
 @Composable
-@Preview(name = "정원 변경 제한", showBackground = true)
+@Preview(name = "정원 변경 제한", showBackground = true, widthDp = 390)
 private fun ClassSessionCapacityChangeDialogPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
-        ClassSessionCapacityChangeDialog(onConfirmClick = {})
+        ClassSessionCapacityChangeDialogContent(onConfirmClick = {})
     }
 }
