@@ -157,34 +157,58 @@ private fun InstructorTimelineItem(
             }
         }
         Spacer(Modifier.width(AppSpacing.md))
-        Card(
-            onClick = onScheduleClick,
-            colors = CardDefaults.cardColors(containerColor = InsColors.Surface),
-            modifier = Modifier.fillMaxWidth().padding(bottom = AppSpacing.md),
-        ) {
-            Column(Modifier.padding(AppSpacing.cardPadding)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(session.timeText(), style = MaterialTheme.typography.bodySmall, color = InsColors.TextSecondary)
-                    Spacer(Modifier.weight(1f))
-                    if (isNext) {
-                        Surface(shape = AppShape.Pill, color = InsColors.PurpleLight) {
-                            Text("다음 수업", color = InsColors.Purple, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
-                        }
-                    }
+        if (isNext) {
+            Card(
+                onClick = onScheduleClick,
+                colors = CardDefaults.cardColors(containerColor = InsColors.Surface),
+                modifier = Modifier.fillMaxWidth().padding(bottom = AppSpacing.md),
+            ) {
+                InstructorTimelineItemContent(
+                    session = session,
+                    isNext = isNext,
+                    onScheduleClick = onScheduleClick,
+                    modifier = Modifier.padding(AppSpacing.cardPadding),
+                )
+            }
+        } else {
+            InstructorTimelineItemContent(
+                session = session,
+                isNext = isNext,
+                onScheduleClick = onScheduleClick,
+                modifier = Modifier.padding(bottom = AppSpacing.md),
+            )
+        }
+    }
+}
+
+@Composable
+private fun InstructorTimelineItemContent(
+    session: ClassSession,
+    isNext: Boolean,
+    onScheduleClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(session.timeText(), style = MaterialTheme.typography.bodySmall, color = InsColors.TextSecondary)
+            Spacer(Modifier.weight(1f))
+            if (isNext) {
+                Surface(shape = AppShape.Pill, color = InsColors.PurpleLight) {
+                    Text("다음 수업", color = InsColors.Purple, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
                 }
-                Spacer(Modifier.height(AppSpacing.xs))
-                Text(session.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(AppSpacing.sm))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("예약 ${session.reservedCount}명", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.width(AppSpacing.md))
-                    Text("정원 ${session.capacity}명", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
-                    Spacer(Modifier.weight(1f))
-                    if (isNext) {
-                        Surface(shape = AppShape.Card, color = InsColors.Primary, modifier = Modifier.clickable(onClick = onScheduleClick)) {
-                            Text("수업 상세", color = InsColors.White, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm))
-                        }
-                    }
+            }
+        }
+        Spacer(Modifier.height(AppSpacing.xs))
+        Text(session.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(AppSpacing.sm))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("예약 ${session.reservedCount}명", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.width(AppSpacing.md))
+            Text("정원 ${session.capacity}명", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Spacer(Modifier.weight(1f))
+            if (isNext) {
+                Surface(shape = AppShape.Card, color = InsColors.Primary, modifier = Modifier.clickable(onClick = onScheduleClick)) {
+                    Text("수업 상세", color = InsColors.White, style = MaterialTheme.typography.labelMedium, modifier = Modifier.padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm))
                 }
             }
         }
