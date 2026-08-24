@@ -19,12 +19,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +61,7 @@ import classitda.shared.generated.resources.instructor_member_management_search_
 import classitda.shared.generated.resources.instructor_member_management_search_empty_title
 import classitda.shared.generated.resources.instructor_member_management_search_label
 import classitda.shared.generated.resources.instructor_member_management_search_placeholder
+import classitda.shared.generated.resources.instructor_member_management_sort_name
 import classitda.shared.generated.resources.instructor_member_management_sort_recent
 import classitda.shared.generated.resources.instructor_member_management_title
 import classitda.shared.generated.resources.instructor_member_management_total_count
@@ -99,12 +106,12 @@ fun MemberManagementScreen(
                 )
             }
 
-            MemberManagementUiState.Empty -> {
+            is MemberManagementUiState.Empty -> {
                 MemberManagementListContent(
                     totalCount = 0,
                     query = "",
                     members = emptyList(),
-                    sortOrder = MemberSortOrder.RECENTLY_REGISTERED,
+                    sortOrder = uiState.sortOrder,
                     emptyState = MemberListEmptyState.Empty,
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
@@ -128,7 +135,7 @@ fun MemberManagementScreen(
                     totalCount = null,
                     query = uiState.query,
                     members = emptyList(),
-                    sortOrder = MemberSortOrder.RECENTLY_REGISTERED,
+                    sortOrder = uiState.sortOrder,
                     emptyState = MemberListEmptyState.SearchEmpty,
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
@@ -218,7 +225,10 @@ private fun MemberManagementListContent(
             )
         }
         item {
-            MemberListHeader(sortOrder = sortOrder)
+            MemberListHeader(
+                sortOrder = sortOrder,
+                onSortOrderChanged = { onAction(MemberManagementAction.SortOrderChanged(it)) },
+            )
         }
         if (emptyState == null) {
             items(
@@ -308,7 +318,11 @@ private fun MemberSearchField(
 }
 
 @Composable
-private fun MemberListHeader(sortOrder: MemberSortOrder) {
+private fun MemberListHeader(
+    sortOrder: MemberSortOrder,
+    onSortOrderChanged: (MemberSortOrder) -> Unit,
+) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -319,17 +333,52 @@ private fun MemberListHeader(sortOrder: MemberSortOrder) {
             color = InsColors.TextPrimary,
         )
         Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = sortOrder.labelResource(),
-            style = appTypography().titleMedium,
-            color = InsColors.TextSecondary,
-        )
-        Icon(
-            painter = painterResource(Res.drawable.ic_expand_more),
-            contentDescription = null,
-            tint = InsColors.TextSecondary,
-            modifier = Modifier.size(AppSpacing.xxl),
-        )
+        Box {
+            Row(
+                modifier =
+                    Modifier
+                        .clickable(role = Role.Button) { isMenuExpanded = true }
+                        .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+            ) {
+                Text(
+                    text = sortOrder.labelResource(),
+                    style = appTypography().titleMedium,
+                    color = InsColors.TextSecondary,
+                )
+                Icon(
+                    painter = painterResource(Res.drawable.ic_expand_more),
+                    contentDescription = null,
+                    tint = InsColors.TextSecondary,
+                    modifier = Modifier.size(AppSpacing.xxl),
+                )
+            }
+            DropdownMenu(
+                expanded = isMenuExpanded,
+                onDismissRequest = { isMenuExpanded = false },
+            ) {
+                memberSortOptions.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = option.labelResource(),
+                                color =
+                                    if (option == sortOrder) {
+                                        InsColors.Purple
+                                    } else {
+                                        InsColors.TextPrimary
+                                    },
+                            )
+                        },
+                        onClick = {
+                            isMenuExpanded = false
+                            if (option != sortOrder) onSortOrderChanged(option)
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -536,7 +585,14 @@ private enum class MemberListEmptyState {
 private fun MemberSortOrder.labelResource(): String =
     when (this) {
         MemberSortOrder.RECENTLY_REGISTERED -> stringResource(Res.string.instructor_member_management_sort_recent)
+        MemberSortOrder.NAME_ASC -> stringResource(Res.string.instructor_member_management_sort_name)
     }
+
+private val memberSortOptions =
+    listOf(
+        MemberSortOrder.RECENTLY_REGISTERED,
+        MemberSortOrder.NAME_ASC,
+    )
 
 private fun maskPhoneNumber(phoneNumber: String): String {
     val digits = phoneNumber.filter { it in '0'..'9' }
@@ -661,7 +717,7 @@ private fun MemberManagementScreenPreview_Loading() {
 private fun MemberManagementScreenPreview_Empty() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         MemberManagementScreen(
-            uiState = MemberManagementUiState.Empty,
+            uiState = MemberManagementUiState.Empty(),
             onAction = {},
         )
     }

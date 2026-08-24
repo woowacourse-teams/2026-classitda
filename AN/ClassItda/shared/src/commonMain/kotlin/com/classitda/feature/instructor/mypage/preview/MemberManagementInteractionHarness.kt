@@ -71,6 +71,15 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
                 if (action == MemberManagementAction.Retry) {
                     uiState = MemberManagementUiState.Content(page)
                 }
+                if (action is MemberManagementAction.SortOrderChanged) {
+                    uiState =
+                        when (val state = uiState) {
+                            is MemberManagementUiState.Content -> state.copy(sortOrder = action.sortOrder)
+                            is MemberManagementUiState.Empty -> state.copy(sortOrder = action.sortOrder)
+                            is MemberManagementUiState.SearchEmpty -> state.copy(sortOrder = action.sortOrder)
+                            else -> state
+                        }
+                }
             },
             modifier = Modifier.weight(1f),
         )
@@ -84,7 +93,7 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
             TextButton(onClick = { uiState = MemberManagementUiState.Loading }) {
                 Text(stringResource(Res.string.instructor_member_management_harness_loading))
             }
-            TextButton(onClick = { uiState = MemberManagementUiState.Empty }) {
+            TextButton(onClick = { uiState = MemberManagementUiState.Empty() }) {
                 Text(stringResource(Res.string.instructor_member_management_harness_empty))
             }
         }

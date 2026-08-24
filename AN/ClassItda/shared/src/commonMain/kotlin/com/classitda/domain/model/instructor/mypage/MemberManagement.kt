@@ -27,4 +27,5 @@ data class MemberRegistrationDraft(
 
 enum class MemberSortOrder {
     RECENTLY_REGISTERED,
+    NAME_ASC,
 }

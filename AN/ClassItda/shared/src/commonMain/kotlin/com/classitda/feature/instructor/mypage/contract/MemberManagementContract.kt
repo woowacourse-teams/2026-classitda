@@ -13,10 +13,13 @@ sealed interface MemberManagementUiState {
         val sortOrder: MemberSortOrder = MemberSortOrder.RECENTLY_REGISTERED,
     ) : MemberManagementUiState
 
-    data object Empty : MemberManagementUiState
+    data class Empty(
+        val sortOrder: MemberSortOrder = MemberSortOrder.RECENTLY_REGISTERED,
+    ) : MemberManagementUiState
 
     data class SearchEmpty(
         val query: String,
+        val sortOrder: MemberSortOrder = MemberSortOrder.RECENTLY_REGISTERED,
     ) : MemberManagementUiState
 
     data class Error(

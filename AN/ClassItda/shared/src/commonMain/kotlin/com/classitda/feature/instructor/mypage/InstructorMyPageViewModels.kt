@@ -324,8 +324,8 @@ internal class MemberManagementViewModel(
                 when (val result = repository.getMembers(query, sort)) {
                     is InstructorMyPageResult.Success -> {
                         when {
-                            result.value.totalCount == 0 && query.isBlank() -> MemberManagementUiState.Empty
-                            result.value.members.isEmpty() -> MemberManagementUiState.SearchEmpty(query)
+                            result.value.totalCount == 0 && query.isBlank() -> MemberManagementUiState.Empty(sort)
+                            result.value.members.isEmpty() -> MemberManagementUiState.SearchEmpty(query, sort)
                             else -> MemberManagementUiState.Content(result.value, query, sort)
                         }
                     }

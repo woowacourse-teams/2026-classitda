@@ -71,7 +71,12 @@ internal class DemoInstructorMyPageRepository : InstructorMyPageRepository {
         sortOrder: MemberSortOrder,
     ): InstructorMyPageResult<MemberListPage> {
         val filtered = members.filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
-        return InstructorMyPageResult.Success(MemberListPage(filtered.size, filtered))
+        val sorted =
+            when (sortOrder) {
+                MemberSortOrder.RECENTLY_REGISTERED -> filtered
+                MemberSortOrder.NAME_ASC -> filtered.sortedBy { it.name }
+            }
+        return InstructorMyPageResult.Success(MemberListPage(sorted.size, sorted))
     }
 
     override suspend fun registerMember(draft: MemberRegistrationDraft): MemberRegistrationResult {

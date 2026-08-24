@@ -5,6 +5,7 @@ import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.domain.model.instructor.mypage.MemberListPage
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
+import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -18,6 +19,13 @@ class InstructorMyPageContractTest {
         val action = MemberManagementAction.OpenMember(id)
 
         assertEquals(id, action.memberId)
+    }
+
+    @Test
+    fun memberSortActionCarriesSelectedOrder() {
+        val action = MemberManagementAction.SortOrderChanged(MemberSortOrder.NAME_ASC)
+
+        assertEquals(MemberSortOrder.NAME_ASC, action.sortOrder)
     }
 
     @Test
@@ -35,7 +43,7 @@ class InstructorMyPageContractTest {
 
     @Test
     fun listStatesKeepEmptyAndSearchEmptyMutuallyExclusive() {
-        val empty: MemberManagementUiState = MemberManagementUiState.Empty
+        val empty: MemberManagementUiState = MemberManagementUiState.Empty()
         val searchEmpty: MemberManagementUiState = MemberManagementUiState.SearchEmpty("missing")
 
         assertIs<MemberManagementUiState.Empty>(empty)
