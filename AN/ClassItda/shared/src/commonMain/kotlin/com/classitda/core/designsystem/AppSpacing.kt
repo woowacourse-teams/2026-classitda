@@ -18,6 +18,9 @@ object AppSpacing {
     val chipHorizontalPadding = md // statusChip 가로 padding
     val chipIconGap = sm // statusChip 내 component 간격
 
+    val pillChipVerticalPadding = xs // pillChip(필터용) 세로 padding
+    val pillChipHorizontalPadding = sm // pillChip(필터용) 가로 padding
+
     val cardGap = md // card 리스트에서의 gap
     val cardItemVerticalGap = sm // card 내 세로 component 간격
     val cardItemHorizontalGap = xs // card 내 가로 component 간격
