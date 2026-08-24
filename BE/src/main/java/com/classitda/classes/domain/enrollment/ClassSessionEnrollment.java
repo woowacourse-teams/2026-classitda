@@ -96,6 +96,24 @@ public class ClassSessionEnrollment extends BaseEntity {
         );
     }
 
+    /**
+     * MVP 단계에서 수강권 없이 등록 가능하다.
+     */
+    public static ClassSessionEnrollment reservedWithoutPassProduct(
+            StudioMembership membership,
+            ClassSession classSession,
+            LocalDateTime occurredAt
+    ) {
+        requireMembership(membership);
+        requireClassSession(classSession);
+        return new ClassSessionEnrollment(
+                membership,
+                classSession,
+                null,
+                EnrollmentState.reserved(occurredAt)
+        );
+    }
+
     public void offer(LocalDateTime occurredAt, LocalDateTime expiresAt) {
         state = state.offer(occurredAt, expiresAt);
     }

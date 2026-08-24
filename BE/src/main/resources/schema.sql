@@ -372,13 +372,15 @@ CREATE TABLE class_session_enrollment
                 AND offer_expires_at > enrollment_status_changed_at)
             OR (enrollment_status <> 'OFFERED' AND offer_expires_at IS NULL)
         ),
+    -- ADR-0015: 'RESERVED' 는 원래 member_pass_product_id 가 필수다.
+    -- 수강권 발급·차감 기능이 없는 MVP 기간에만 해제한 상태이며, 수강권 도입 시 아래로 복원한다.
+    --     OR (enrollment_status = 'RESERVED' AND member_pass_product_id IS NOT NULL)
+    --     OR enrollment_status = 'CANCELED'
     CONSTRAINT chk_enrollment_pass
         CHECK (
             (enrollment_status IN ('WAITING', 'OFFERED', 'EXPIRED')
                 AND member_pass_product_id IS NULL)
-            OR (enrollment_status = 'RESERVED'
-                AND member_pass_product_id IS NOT NULL)
-            OR enrollment_status = 'CANCELED'
+            OR enrollment_status IN ('RESERVED', 'CANCELED')
         ),
     CONSTRAINT chk_enrollment_attendance_result
         CHECK (attendance_result IN ('NOT_RECORDED', 'ATTENDED', 'ABSENT')),
