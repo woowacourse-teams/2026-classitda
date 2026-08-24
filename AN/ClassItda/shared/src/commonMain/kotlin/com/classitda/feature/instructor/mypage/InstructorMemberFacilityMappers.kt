@@ -121,6 +121,10 @@ private fun formatPhoneNumber(phoneNumber: String): String {
             "${digits.take(2)}-${digits.substring(2, 6)}-${digits.takeLast(4)}"
         }
 
+        digits.length == 9 && digits.startsWith("02") -> {
+            "${digits.take(2)}-${digits.substring(2, 5)}-${digits.takeLast(4)}"
+        }
+
         digits.length == 10 -> {
             "${digits.take(3)}-${digits.substring(3, 6)}-${digits.takeLast(4)}"
         }
