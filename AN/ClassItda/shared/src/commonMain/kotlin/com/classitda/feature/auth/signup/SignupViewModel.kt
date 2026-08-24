@@ -139,12 +139,21 @@ internal class SignupViewModel(
             }
 
             message.contains("6자리") ||
-                normalizedMessage.contains("verification code") ||
-                normalizedMessage.contains("otp") -> {
+                normalizedMessage.contains("verification code") -> {
                 update {
                     copy(
                         isLoading = false,
                         verificationCodeError = "인증번호는 6자리 숫자로 입력해 주세요.",
+                        errorMessage = null,
+                    )
+                }
+            }
+
+            message.contains("인증번호") || normalizedMessage.contains("otp") -> {
+                update {
+                    copy(
+                        isLoading = false,
+                        verificationCodeError = "인증번호가 올바르지 않습니다.",
                         errorMessage = null,
                     )
                 }
@@ -160,7 +169,7 @@ internal class SignupViewModel(
                 }
             }
 
-            message.contains("휴대전화") || normalizedMessage.contains("phone") || normalizedMessage.contains("010") -> {
+            message.contains("휴대전화") || message.contains("전화번호") || normalizedMessage.contains("phone") -> {
                 update {
                     copy(
                         isLoading = false,
