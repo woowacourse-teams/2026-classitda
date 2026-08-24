@@ -34,6 +34,13 @@ private val StudentScheme =
         onSurface = StuColors.TextPrimary,
         surfaceVariant = StuColors.SurfaceVariant,
         onSurfaceVariant = StuColors.TextSecondary,
+        surfaceTint = StuColors.Green,
+        // DropdownMenu, DatePickerDialog 등 팝업 배경에 쓰이는 톤
+        surfaceContainerLowest = StuColors.White,
+        surfaceContainerLow = StuColors.Background,
+        surfaceContainer = StuColors.White,
+        surfaceContainerHigh = StuColors.SurfaceVariant,
+        surfaceContainerHighest = StuColors.Gray200,
         // Outline / Divider
         outline = StuColors.DividerStrong,
         outlineVariant = StuColors.Divider,
@@ -61,6 +68,13 @@ private val InstructorScheme =
         onSurface = InsColors.TextPrimary,
         surfaceVariant = InsColors.SurfaceVariant,
         onSurfaceVariant = InsColors.TextSecondary,
+        surfaceTint = InsColors.Purple,
+        // DropdownMenu, DatePickerDialog 등 팝업 배경에 쓰이는 톤
+        surfaceContainerLowest = InsColors.White,
+        surfaceContainerLow = InsColors.Background,
+        surfaceContainer = InsColors.White,
+        surfaceContainerHigh = InsColors.SurfaceVariant,
+        surfaceContainerHighest = InsColors.Gray200,
         // Outline / Divider
         outline = InsColors.DividerStrong,
         outlineVariant = InsColors.Divider,
