@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -58,69 +59,89 @@ internal fun ExistingMemberBottomSheet(
         containerColor = InsColors.White,
         modifier = modifier,
     ) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(horizontal = AppSpacing.screenPadding)
-                    .padding(bottom = AppSpacing.xl),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+        ExistingMemberBottomSheetContent(
+            members = members,
+            query = query,
+            selectedMemberIds = selectedMemberIds,
+            onQueryChange = onQueryChange,
+            onMemberClick = onMemberClick,
+            onConfirmClick = onConfirmClick,
+        )
+    }
+}
+
+@Composable
+internal fun ExistingMemberBottomSheetContent(
+    members: List<ClassSessionMemberUiModel>,
+    query: String,
+    selectedMemberIds: Set<String>,
+    onQueryChange: (String) -> Unit,
+    onMemberClick: (String) -> Unit,
+    onConfirmClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = AppSpacing.screenPadding)
+                .padding(bottom = AppSpacing.xl),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+    ) {
+        Text(
+            text = "기존 회원 추가",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+            color = InsColors.TextPrimary,
+        )
+        Text(
+            text = "수업에 추가할 회원을 선택하세요.",
+            style = MaterialTheme.typography.bodySmall,
+            color = InsColors.TextSecondary,
+        )
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("회원 이름 검색") },
+            singleLine = true,
+            shape = AppShape.Card,
+            keyboardOptions = KeyboardOptions.Default,
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = InsColors.White,
+                    unfocusedContainerColor = InsColors.White,
+                    focusedBorderColor = InsColors.Purple,
+                    unfocusedBorderColor = InsColors.Divider,
+                    cursorColor = InsColors.Purple,
+                ),
+        )
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth().heightIn(max = 240.dp),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
-            Text(
-                text = "기존 회원 추가",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                color = InsColors.TextPrimary,
-            )
-            Text(
-                text = "수업에 추가할 회원을 선택하세요.",
-                style = MaterialTheme.typography.bodySmall,
-                color = InsColors.TextSecondary,
-            )
-            OutlinedTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("회원 이름 검색") },
-                singleLine = true,
-                shape = AppShape.Card,
-                keyboardOptions = KeyboardOptions.Default,
-                colors =
-                    OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = InsColors.White,
-                        unfocusedContainerColor = InsColors.White,
-                        focusedBorderColor = InsColors.Purple,
-                        unfocusedBorderColor = InsColors.Divider,
-                        cursorColor = InsColors.Purple,
-                    ),
-            )
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
-            ) {
-                items(members, key = { it.id }) { member ->
-                    ExistingMemberRow(
-                        member = member,
-                        isSelected = member.id in selectedMemberIds,
-                        onClick = { onMemberClick(member.id) },
-                    )
-                }
+            items(members, key = { it.id }) { member ->
+                ExistingMemberRow(
+                    member = member,
+                    isSelected = member.id in selectedMemberIds,
+                    onClick = { onMemberClick(member.id) },
+                )
             }
-            Button(
-                onClick = onConfirmClick,
-                enabled = selectedMemberIds.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth(),
-                shape = AppShape.Card,
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = InsColors.Primary,
-                        contentColor = InsColors.White,
-                        disabledContainerColor = InsColors.Gray200,
-                        disabledContentColor = InsColors.TextTertiary,
-                    ),
-            ) {
-                Text("회원 추가")
-            }
+        }
+        Button(
+            onClick = onConfirmClick,
+            enabled = selectedMemberIds.isNotEmpty(),
+            modifier = Modifier.fillMaxWidth(),
+            shape = AppShape.Card,
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = InsColors.Primary,
+                    contentColor = InsColors.White,
+                    disabledContainerColor = InsColors.Gray200,
+                    disabledContentColor = InsColors.TextTertiary,
+                ),
+        ) {
+            Text("회원 추가")
         }
     }
 }
@@ -189,7 +210,7 @@ private fun ExistingMemberRowPreview() {
 @Composable
 private fun ExistingMemberBottomSheetPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
-        ExistingMemberBottomSheet(
+        ExistingMemberBottomSheetContent(
             members =
                 listOf(
                     ClassSessionMemberUiModel(id = "member-4", name = "최유진"),
@@ -201,7 +222,6 @@ private fun ExistingMemberBottomSheetPreview() {
             onQueryChange = {},
             onMemberClick = {},
             onConfirmClick = {},
-            onDismissRequest = {},
         )
     }
 }

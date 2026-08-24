@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_search
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -24,6 +26,7 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.feature.instructor.classsession.member.edit.model.MemberAddType
 import com.classitda.feature.instructor.management.lesson.create.component.OutlinedSegmentedToggle
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun ClassSessionMemberAddSection(
@@ -58,10 +61,17 @@ internal fun ClassSessionMemberAddSection(
                     value = "",
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.weight(1f).clickable(onClick = onExistingAddClick),
+                    modifier = Modifier.fillMaxWidth().clickable(onClick = onExistingAddClick),
+                    leadingIcon = {
+                        androidx.compose.material3.Icon(
+                            painter = painterResource(Res.drawable.ic_search),
+                            contentDescription = null,
+                            tint = InsColors.TextSecondary,
+                        )
+                    },
                     placeholder = {
                         Text(
-                            text = "회원 이름을 검색해 주세요",
+                            text = "회원 이름 검색",
                             style = MaterialTheme.typography.bodySmall,
                             color = InsColors.TextTertiary,
                         )
@@ -71,42 +81,42 @@ internal fun ClassSessionMemberAddSection(
                     colors = memberEditTextFieldColors(),
                 )
             } else {
-                OutlinedTextField(
-                    value = temporaryName,
-                    onValueChange = onTemporaryNameChange,
-                    modifier = Modifier.weight(1f),
-                    placeholder = {
-                        Text(
-                            text = "이름을 입력하세요",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = InsColors.TextTertiary,
-                        )
-                    },
-                    singleLine = true,
-                    shape = AppShape.Card,
-                    keyboardOptions = KeyboardOptions.Default,
-                    colors = memberEditTextFieldColors(),
-                )
-            }
-            Button(
-                onClick =
-                    if (addType == MemberAddType.EXISTING) {
-                        onExistingAddClick
-                    } else {
-                        onTemporaryAddClick
-                    },
-                enabled = addType == MemberAddType.EXISTING || temporaryName.isNotBlank(),
-                modifier = Modifier.padding(top = 4.dp),
-                shape = AppShape.Card,
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = InsColors.Purple,
-                        contentColor = InsColors.White,
-                        disabledContainerColor = InsColors.Gray200,
-                        disabledContentColor = InsColors.TextTertiary,
-                    ),
-            ) {
-                Text("추가")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+                ) {
+                    OutlinedTextField(
+                        value = temporaryName,
+                        onValueChange = onTemporaryNameChange,
+                        modifier = Modifier.weight(1f),
+                        placeholder = {
+                            Text(
+                                text = "이름을 입력하세요",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = InsColors.TextTertiary,
+                            )
+                        },
+                        singleLine = true,
+                        shape = AppShape.Card,
+                        keyboardOptions = KeyboardOptions.Default,
+                        colors = memberEditTextFieldColors(),
+                    )
+                    Button(
+                        onClick = onTemporaryAddClick,
+                        enabled = temporaryName.isNotBlank(),
+                        modifier = Modifier.padding(top = 4.dp),
+                        shape = AppShape.Card,
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = InsColors.Purple,
+                                contentColor = InsColors.White,
+                                disabledContainerColor = InsColors.Gray200,
+                                disabledContentColor = InsColors.TextTertiary,
+                            ),
+                    ) {
+                        Text("추가")
+                    }
+                }
             }
         }
     }
