@@ -80,6 +80,14 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
                             else -> state
                         }
                 }
+                if (action is MemberManagementAction.QueryChanged) {
+                    uiState =
+                        when (val state = uiState) {
+                            is MemberManagementUiState.Content -> state.copy(query = action.query)
+                            is MemberManagementUiState.SearchEmpty -> state.copy(query = action.query)
+                            else -> state
+                        }
+                }
             },
             modifier = Modifier.weight(1f),
         )
