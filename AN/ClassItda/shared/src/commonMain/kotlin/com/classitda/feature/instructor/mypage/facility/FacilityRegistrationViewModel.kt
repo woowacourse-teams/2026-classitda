@@ -74,9 +74,9 @@ internal class FacilityRegistrationViewModel(
             }
 
             FacilityRegistrationAction.Retry -> {
-                (_uiState.value as? FacilityRegistrationUiState.Error)?.let {
-                    _uiState.value =
-                        editing(it.draft)
+                (_uiState.value as? FacilityRegistrationUiState.Error)?.let { error ->
+                    _uiState.value = editing(error.draft)
+                    submit()
                 }
             }
 
