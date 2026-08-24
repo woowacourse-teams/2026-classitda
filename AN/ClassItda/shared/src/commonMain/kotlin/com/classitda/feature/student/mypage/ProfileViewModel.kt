@@ -2,10 +2,12 @@ package com.classitda.feature.student.mypage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.domain.repository.student.mypage.MyPageFailureReason
 import com.classitda.domain.repository.student.mypage.MyPageRepository
 import com.classitda.domain.repository.student.mypage.MyPageResult
-import com.classitda.feature.student.mypage.contract.ProfileViewAction
-import com.classitda.feature.student.mypage.contract.ProfileViewUiState
+import com.classitda.feature.common.profile.contract.ProfileUiError
+import com.classitda.feature.common.profile.contract.ProfileViewAction
+import com.classitda.feature.common.profile.contract.ProfileViewUiState
 import com.classitda.feature.student.mypage.mapper.MyPageUiMapper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +33,10 @@ internal class ProfileViewModel(
         }
     }
 
+    fun refresh() {
+        loadProfile()
+    }
+
     private fun loadProfile() {
         if (isLoading) return
         isLoading = true
@@ -41,16 +47,24 @@ internal class ProfileViewModel(
                 when (val result = repository.getProfile()) {
                     is MyPageResult.Success -> {
                         ProfileViewUiState.Content(
-                            profile = result.value,
-                            uiModel = mapper.mapProfile(result.value),
+                            profile = mapper.mapProfile(result.value),
                         )
                     }
 
                     is MyPageResult.Failure -> {
-                        ProfileViewUiState.Error(result.reason)
+                        ProfileViewUiState.Error(result.reason.toProfileUiError())
                     }
                 }
             isLoading = false
         }
     }
 }
+
+private fun MyPageFailureReason.toProfileUiError(): ProfileUiError =
+    when (this) {
+        MyPageFailureReason.NETWORK -> ProfileUiError.NETWORK
+        MyPageFailureReason.NOT_FOUND -> ProfileUiError.NOT_FOUND
+        MyPageFailureReason.CONFLICT -> ProfileUiError.CONFLICT
+        MyPageFailureReason.INVALID_REQUEST -> ProfileUiError.INVALID_REQUEST
+        else -> ProfileUiError.UNKNOWN
+    }

@@ -1,4 +1,4 @@
-package com.classitda.feature.student.mypage
+package com.classitda.feature.common.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -24,6 +25,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -70,15 +72,13 @@ import classitda.shared.generated.resources.profile_edit_saving
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
-import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.student.mypage.MemberId
-import com.classitda.domain.model.student.mypage.MemberProfile
-import com.classitda.domain.repository.student.mypage.MyPageFailureReason
-import com.classitda.feature.student.mypage.contract.ProfileEditAction
-import com.classitda.feature.student.mypage.contract.ProfileEditUiState
-import com.classitda.feature.student.mypage.preview.MyPageProfileBoundaryFixture
+import com.classitda.feature.common.profile.contract.MemberProfileUiModel
+import com.classitda.feature.common.profile.contract.ProfileEditAction
+import com.classitda.feature.common.profile.contract.ProfileEditUiState
+import com.classitda.feature.common.profile.contract.ProfileUiError
+import com.classitda.feature.common.profile.preview.ProfileBoundaryPreviewFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -98,7 +98,7 @@ fun ProfileEditScreen(
 
     Scaffold(
         modifier = modifier,
-        containerColor = StuColors.Background,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             ProfileEditTopBar(
                 isSaveEnabled = canSave && !isSaving,
@@ -118,6 +118,7 @@ fun ProfileEditScreen(
             is ProfileEditUiState.Editing -> {
                 ProfileEditContent(
                     profile = uiState.profile,
+                    phoneNumber = uiState.phoneNumber,
                     draftName = uiState.draftName,
                     isSaving = false,
                     saveFailureMessage = null,
@@ -129,6 +130,7 @@ fun ProfileEditScreen(
             is ProfileEditUiState.Saving -> {
                 ProfileEditContent(
                     profile = uiState.profile,
+                    phoneNumber = uiState.phoneNumber,
                     draftName = uiState.draftName,
                     isSaving = true,
                     saveFailureMessage = null,
@@ -140,6 +142,7 @@ fun ProfileEditScreen(
             is ProfileEditUiState.SaveFailed -> {
                 ProfileEditContent(
                     profile = uiState.profile,
+                    phoneNumber = uiState.phoneNumber,
                     draftName = uiState.draftName,
                     isSaving = false,
                     saveFailureMessage = stringResource(Res.string.profile_edit_save_failed),
@@ -171,6 +174,7 @@ private fun ProfileEditTopBar(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -179,7 +183,7 @@ private fun ProfileEditTopBar(
                 painter = painterResource(Res.drawable.ic_arrow_back),
                 contentDescription = stringResource(Res.string.profile_edit_back),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = StuColors.TextPrimary,
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
         Spacer(modifier = Modifier.weight(1f))
@@ -188,8 +192,8 @@ private fun ProfileEditTopBar(
             onClick = onSave,
             colors =
                 ButtonDefaults.textButtonColors(
-                    contentColor = StuColors.TextPrimary,
-                    disabledContentColor = StuColors.TextTertiary,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    disabledContentColor = MaterialTheme.colorScheme.outline,
                 ),
         ) {
             Text(
@@ -207,7 +211,8 @@ private fun ProfileEditTopBar(
 
 @Composable
 private fun ProfileEditContent(
-    profile: MemberProfile,
+    profile: MemberProfileUiModel,
+    phoneNumber: String,
     draftName: String,
     isSaving: Boolean,
     saveFailureMessage: String?,
@@ -250,7 +255,7 @@ private fun ProfileEditContent(
         )
         Spacer(modifier = Modifier.height(AppSpacing.xl))
         PhoneNumberField(
-            phoneNumber = profile.phoneNumber,
+            phoneNumber = phoneNumber,
             enabled = !isSaving,
             onChange = {
                 clearEditingFocus()
@@ -268,7 +273,7 @@ private fun ProfileEditContent(
                         .fillMaxWidth()
                         .semantics { error(saveFailureMessage) },
                 style = typography.bodyMedium,
-                color = StuColors.Red,
+                color = MaterialTheme.colorScheme.error,
                 textAlign = TextAlign.Center,
             )
         }
@@ -297,20 +302,21 @@ private fun EditableProfileAvatar(
                     contentDescription = photoChangeDescription
                 },
     ) {
+        val avatarInitial = name.firstOrNull { !it.isWhitespace() }?.toString() ?: "?"
         Box(
             modifier =
                 Modifier
                     .fillMaxSize()
                     .background(
-                        color = StuColors.SurfaceVariant,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         shape = CircleShape,
                     ),
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                text = name.first { !it.isWhitespace() }.toString(),
+                text = avatarInitial,
                 style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                color = StuColors.TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
             )
         }
         Surface(
@@ -320,11 +326,11 @@ private fun EditableProfileAvatar(
                     .offset(x = AppSpacing.sm, y = AppSpacing.sm)
                     .size(AppSpacing.xxxl),
             shape = CircleShape,
-            color = StuColors.Surface,
+            color = MaterialTheme.colorScheme.surface,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = StuColors.Divider,
+                    color = MaterialTheme.colorScheme.outlineVariant,
                 ),
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -332,7 +338,7 @@ private fun EditableProfileAvatar(
                     painter = painterResource(Res.drawable.ic_camera),
                     contentDescription = null,
                     modifier = Modifier.size(AppSpacing.xl),
-                    tint = StuColors.TextSecondary,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -380,13 +386,13 @@ private fun EditableNameField(
             keyboardActions = KeyboardActions(onDone = { onDone() }),
             colors =
                 OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = StuColors.SurfaceVariant,
-                    unfocusedContainerColor = StuColors.SurfaceVariant,
-                    disabledContainerColor = StuColors.SurfaceVariant,
-                    focusedBorderColor = StuColors.TextPrimary,
-                    unfocusedBorderColor = StuColors.Divider,
-                    disabledBorderColor = StuColors.Divider,
-                    cursorColor = StuColors.TextPrimary,
+                    focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                    cursorColor = MaterialTheme.colorScheme.onSurface,
                 ),
         )
     }
@@ -415,11 +421,11 @@ private fun PhoneNumberField(
                         onClick = onChange,
                     ),
             shape = AppShape.Card,
-            color = StuColors.SurfaceVariant,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = StuColors.Divider,
+                    color = MaterialTheme.colorScheme.outlineVariant,
                 ),
         ) {
             Row(
@@ -431,11 +437,11 @@ private fun PhoneNumberField(
                     text = phoneNumber,
                     modifier = Modifier.weight(1f),
                     style = typography.bodyLarge,
-                    color = StuColors.TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Surface(
                     shape = AppShape.Pill,
-                    color = StuColors.PrimaryColor,
+                    color = MaterialTheme.colorScheme.onSurface,
                 ) {
                     Text(
                         text = stringResource(Res.string.profile_edit_phone_number_change),
@@ -445,7 +451,7 @@ private fun PhoneNumberField(
                                 vertical = AppSpacing.sm,
                             ),
                         style = typography.labelLarge,
-                        color = StuColors.White,
+                        color = MaterialTheme.colorScheme.surface,
                     )
                 }
             }
@@ -468,18 +474,18 @@ private fun ReadOnlyEmailField(email: String) {
                     .fillMaxWidth()
                     .semantics(mergeDescendants = true) {},
             shape = AppShape.Card,
-            color = StuColors.SurfaceVariant,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = StuColors.Divider,
+                    color = MaterialTheme.colorScheme.outlineVariant,
                 ),
         ) {
             Text(
                 text = email,
                 modifier = Modifier.padding(horizontal = AppSpacing.lg, vertical = AppSpacing.md),
                 style = typography.bodyLarge,
-                color = StuColors.TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -492,7 +498,7 @@ private fun ProfileEditFieldLabel(text: String) {
     Text(
         text = text,
         style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        color = StuColors.TextPrimary,
+        color = MaterialTheme.colorScheme.onSurface,
     )
 }
 
@@ -505,12 +511,12 @@ private fun ProfileEditLoadingContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(color = StuColors.Green)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = stringResource(Res.string.profile_edit_loading),
             style = typography.bodyMedium,
-            color = StuColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -534,7 +540,7 @@ private fun ProfileEditErrorContent(
             text = stringResource(Res.string.profile_edit_error_title),
             modifier = Modifier.fillMaxWidth(),
             style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -542,7 +548,7 @@ private fun ProfileEditErrorContent(
             text = stringResource(Res.string.profile_edit_error_description),
             modifier = Modifier.fillMaxWidth(),
             style = typography.bodyMedium,
-            color = StuColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
@@ -564,42 +570,47 @@ private fun ProfileEditAction.previewLabel(): String =
 
 private object ProfileEditPreviewFixture {
     val profile =
-        MemberProfile(
-            id = MemberId("member-profile-edit-preview"),
+        MemberProfileUiModel(
             name = "김민지",
-            phoneNumber = "010-1234-5678",
+            phoneNumberLabel = "010-1234-5678",
             email = "class12345@gmail.com",
             profileImageUrl = null,
         )
+    const val PHONE_NUMBER = "01012345678"
 
     val default =
         ProfileEditUiState.Editing(
             profile = profile,
+            phoneNumber = PHONE_NUMBER,
             draftName = profile.name,
             canSave = false,
         )
     val changed =
         ProfileEditUiState.Editing(
             profile = profile,
+            phoneNumber = PHONE_NUMBER,
             draftName = "김민정",
             canSave = true,
         )
     val unavailable =
         ProfileEditUiState.Editing(
             profile = profile,
+            phoneNumber = PHONE_NUMBER,
             draftName = "",
             canSave = false,
         )
     val saving =
         ProfileEditUiState.Saving(
             profile = profile,
+            phoneNumber = PHONE_NUMBER,
             draftName = "김민정",
         )
     val saveFailed =
         ProfileEditUiState.SaveFailed(
             profile = profile,
+            phoneNumber = PHONE_NUMBER,
             draftName = "김민정",
-            reason = MyPageFailureReason.NETWORK,
+            reason = ProfileUiError.NETWORK,
         )
 }
 
@@ -612,6 +623,22 @@ private object ProfileEditPreviewFixture {
 @Composable
 private fun ProfileEditScreenPreview_Default_Student_SaveDisabled() {
     AppTheme(theme = ThemeType.STUDENT) {
+        ProfileEditScreen(
+            uiState = ProfileEditPreviewFixture.default,
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Default · Instructor · Save disabled",
+    group = "Screen/ProfileEdit",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun ProfileEditScreenPreview_Default_Instructor_SaveDisabled() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
         ProfileEditScreen(
             uiState = ProfileEditPreviewFixture.default,
             onAction = {},
@@ -710,6 +737,7 @@ private fun ProfileEditScreenPreview_Actions_Student_Interactive() {
                 uiState =
                     ProfileEditUiState.Editing(
                         profile = ProfileEditPreviewFixture.profile,
+                        phoneNumber = ProfileEditPreviewFixture.PHONE_NUMBER,
                         draftName = draftName,
                         canSave = draftName.isNotBlank() && draftName != ProfileEditPreviewFixture.profile.name,
                     ),
@@ -736,7 +764,7 @@ private fun ProfileEditScreenPreview_Actions_Student_Interactive() {
 private fun ProfileEditScreenPreview_Boundary_LongContent_LargeFont_SmallScreen() {
     AppTheme(theme = ThemeType.STUDENT) {
         ProfileEditScreen(
-            uiState = MyPageProfileBoundaryFixture.profileEditState,
+            uiState = ProfileBoundaryPreviewFixture.profileEditState,
             onAction = {},
         )
     }

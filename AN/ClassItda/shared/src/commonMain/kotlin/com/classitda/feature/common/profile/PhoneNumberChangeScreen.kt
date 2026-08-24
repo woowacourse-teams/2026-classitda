@@ -1,4 +1,4 @@
-package com.classitda.feature.student.mypage
+package com.classitda.feature.common.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -24,6 +25,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -69,15 +71,13 @@ import classitda.shared.generated.resources.phone_number_change_verifying
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
-import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.core.designsystem.component.PrimaryButton
-import com.classitda.domain.model.student.mypage.PhoneVerificationId
-import com.classitda.domain.repository.student.mypage.MyPageFailureReason
-import com.classitda.feature.student.mypage.contract.PhoneNumberChangeAction
-import com.classitda.feature.student.mypage.contract.PhoneNumberChangeUiState
-import com.classitda.feature.student.mypage.preview.MyPageProfileBoundaryFixture
+import com.classitda.feature.common.profile.component.ProfilePrimaryButton
+import com.classitda.feature.common.profile.contract.PhoneNumberChangeAction
+import com.classitda.feature.common.profile.contract.PhoneNumberChangeUiError
+import com.classitda.feature.common.profile.contract.PhoneNumberChangeUiState
+import com.classitda.feature.common.profile.preview.ProfileBoundaryPreviewFixture
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -96,17 +96,17 @@ fun PhoneNumberChangeScreen(
                 topStart = AppSpacing.xxl,
                 topEnd = AppSpacing.xxl,
             ),
-        color = StuColors.Background,
+        color = MaterialTheme.colorScheme.background,
     ) {
         Scaffold(
-            containerColor = StuColors.Background,
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 PhoneNumberChangeTopBar(
                     onClose = { onAction(PhoneNumberChangeAction.Back) },
                 )
             },
             bottomBar = {
-                PrimaryButton(
+                ProfilePrimaryButton(
                     text = stringResource(Res.string.phone_number_change_complete),
                     onClick = { onAction(PhoneNumberChangeAction.Complete) },
                     enabled = isVerified,
@@ -147,6 +147,7 @@ private fun PhoneNumberChangeTopBar(onClose: () -> Unit) {
         modifier =
             Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs),
         horizontalArrangement = Arrangement.End,
     ) {
@@ -155,7 +156,7 @@ private fun PhoneNumberChangeTopBar(onClose: () -> Unit) {
                 painter = painterResource(Res.drawable.ic_close),
                 contentDescription = stringResource(Res.string.phone_number_change_close),
                 modifier = Modifier.size(AppSpacing.xxl),
-                tint = StuColors.TextPrimary,
+                tint = MaterialTheme.colorScheme.onSurface,
             )
         }
     }
@@ -188,7 +189,7 @@ private fun PhoneNumberChangeContent(
                     .fillMaxWidth()
                     .semantics { heading() },
             style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = StuColors.TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxxl * 2))
@@ -238,7 +239,7 @@ private fun PhoneNumberChangeContent(
                 text = stringResource(Res.string.phone_number_change_verifying),
                 modifier = Modifier.fillMaxWidth(),
                 style = typography.bodyMedium,
-                color = StuColors.TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
         }
@@ -251,7 +252,7 @@ private fun PhoneNumberChangeContent(
                         .fillMaxWidth()
                         .semantics { error(errorMessage) },
                 style = typography.bodyMedium,
-                color = StuColors.Red,
+                color = MaterialTheme.colorScheme.error,
                 textAlign = TextAlign.Center,
             )
         }
@@ -280,11 +281,11 @@ private fun PhoneNumberInput(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = AppShape.Pill,
-            color = StuColors.Surface,
+            color = MaterialTheme.colorScheme.surface,
             border =
                 BorderStroke(
                     width = AppSpacing.xs / 4,
-                    color = if (isError) StuColors.Red else StuColors.Divider,
+                    color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outlineVariant,
                 ),
         ) {
             Row(
@@ -304,9 +305,14 @@ private fun PhoneNumberInput(
                     singleLine = true,
                     textStyle =
                         typography.bodyLarge.copy(
-                            color = if (enabled) StuColors.TextPrimary else StuColors.TextTertiary,
+                            color =
+                                if (enabled) {
+                                    MaterialTheme.colorScheme.onSurface
+                                } else {
+                                    MaterialTheme.colorScheme.outline
+                                },
                         ),
-                    cursorBrush = SolidColor(StuColors.TextPrimary),
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
                     keyboardOptions =
                         KeyboardOptions(
                             keyboardType = KeyboardType.Phone,
@@ -319,7 +325,7 @@ private fun PhoneNumberInput(
                                 Text(
                                     text = stringResource(Res.string.phone_number_change_phone_input),
                                     style = typography.bodyLarge,
-                                    color = StuColors.TextTertiary,
+                                    color = MaterialTheme.colorScheme.outline,
                                 )
                             }
                             innerTextField()
@@ -337,10 +343,10 @@ private fun PhoneNumberInput(
                     shape = AppShape.Pill,
                     colors =
                         ButtonDefaults.buttonColors(
-                            containerColor = StuColors.PrimaryColor,
-                            contentColor = StuColors.White,
-                            disabledContainerColor = StuColors.DividerStrong,
-                            disabledContentColor = StuColors.TextTertiary,
+                            containerColor = MaterialTheme.colorScheme.onSurface,
+                            contentColor = MaterialTheme.colorScheme.surface,
+                            disabledContainerColor = MaterialTheme.colorScheme.outlineVariant,
+                            disabledContentColor = MaterialTheme.colorScheme.outline,
                         ),
                     contentPadding = PaddingValues(horizontal = AppSpacing.sm),
                 ) {
@@ -398,7 +404,7 @@ private fun VerificationCodeInput(
                             Text(
                                 text = formatRemainingTime(remainingSeconds),
                                 style = typography.bodyLarge,
-                                color = StuColors.Red,
+                                color = MaterialTheme.colorScheme.error,
                             )
                             Button(
                                 onClick = onVerify,
@@ -414,10 +420,10 @@ private fun VerificationCodeInput(
                                 shape = AppShape.Pill,
                                 colors =
                                     ButtonDefaults.buttonColors(
-                                        containerColor = StuColors.PrimaryColor,
-                                        contentColor = StuColors.White,
-                                        disabledContainerColor = StuColors.DividerStrong,
-                                        disabledContentColor = StuColors.TextTertiary,
+                                        containerColor = MaterialTheme.colorScheme.onSurface,
+                                        contentColor = MaterialTheme.colorScheme.surface,
+                                        disabledContainerColor = MaterialTheme.colorScheme.outlineVariant,
+                                        disabledContentColor = MaterialTheme.colorScheme.outline,
                                     ),
                                 contentPadding = PaddingValues(horizontal = AppSpacing.sm),
                             ) {
@@ -453,13 +459,13 @@ private fun VerificationCompletedChip() {
                 height = VERIFICATION_BUTTON_HEIGHT,
             ),
         shape = AppShape.Pill,
-        color = StuColors.PrimaryColor,
+        color = MaterialTheme.colorScheme.onSurface,
     ) {
         Box(contentAlignment = Alignment.Center) {
             Text(
                 text = stringResource(Res.string.phone_number_change_verified),
                 style = typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                color = StuColors.White,
+                color = MaterialTheme.colorScheme.surface,
             )
         }
     }
@@ -472,21 +478,21 @@ private fun PhoneNumberChangeLabel(text: String) {
     Text(
         text = text,
         style = typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-        color = StuColors.TextSecondary,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
 @Composable
 private fun phoneNumberChangeTextFieldColors() =
     OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = StuColors.Surface,
-        unfocusedContainerColor = StuColors.Surface,
-        disabledContainerColor = StuColors.Surface,
-        focusedBorderColor = StuColors.TextPrimary,
-        unfocusedBorderColor = StuColors.Divider,
-        disabledBorderColor = StuColors.Divider,
-        cursorColor = StuColors.TextPrimary,
-        errorBorderColor = StuColors.Red,
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        disabledContainerColor = MaterialTheme.colorScheme.surface,
+        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+        disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+        cursorColor = MaterialTheme.colorScheme.onSurface,
+        errorBorderColor = MaterialTheme.colorScheme.error,
     )
 
 @Composable
@@ -498,12 +504,12 @@ private fun PhoneNumberChangeLoadingContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        CircularProgressIndicator(color = StuColors.Green)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = stringResource(Res.string.phone_number_change_loading),
             style = typography.bodyMedium,
-            color = StuColors.TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -523,20 +529,16 @@ private fun PhoneNumberChangeRenderState.errorMessage(): String? =
             null
         }
 
-        MyPageFailureReason.VERIFICATION_EXPIRED -> {
+        PhoneNumberChangeUiError.VERIFICATION_EXPIRED -> {
             stringResource(Res.string.phone_number_change_expired)
         }
 
-        MyPageFailureReason.VERIFICATION_FAILED -> {
+        PhoneNumberChangeUiError.VERIFICATION_FAILED -> {
             stringResource(Res.string.phone_number_change_verification_failed)
         }
 
-        MyPageFailureReason.NETWORK -> {
-            if (verificationId == null) {
-                stringResource(Res.string.phone_number_change_request_failed)
-            } else {
-                stringResource(Res.string.phone_number_change_verification_failed)
-            }
+        PhoneNumberChangeUiError.REQUEST_FAILED -> {
+            stringResource(Res.string.phone_number_change_request_failed)
         }
 
         else -> {
@@ -547,9 +549,8 @@ private fun PhoneNumberChangeRenderState.errorMessage(): String? =
 private data class PhoneNumberChangeRenderState(
     val phoneNumber: String,
     val verificationCode: String,
-    val verificationId: PhoneVerificationId?,
     val remainingSeconds: Int?,
-    val errorReason: MyPageFailureReason?,
+    val errorReason: PhoneNumberChangeUiError?,
     val isPhoneInputEnabled: Boolean,
     val isCodeInputEnabled: Boolean,
     val isRequestEnabled: Boolean,
@@ -559,10 +560,12 @@ private data class PhoneNumberChangeRenderState(
     val shouldRetry: Boolean,
 ) {
     val isRequestError: Boolean
-        get() = errorReason != null && verificationId == null
+        get() = errorReason == PhoneNumberChangeUiError.REQUEST_FAILED
 
     val isVerificationError: Boolean
-        get() = errorReason != null && verificationId != null
+        get() =
+            errorReason == PhoneNumberChangeUiError.VERIFICATION_EXPIRED ||
+                errorReason == PhoneNumberChangeUiError.VERIFICATION_FAILED
 }
 
 private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderState =
@@ -571,7 +574,6 @@ private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderSta
             PhoneNumberChangeRenderState(
                 phoneNumber = phoneNumber,
                 verificationCode = verificationCode,
-                verificationId = null,
                 remainingSeconds = null,
                 errorReason = null,
                 isPhoneInputEnabled = true,
@@ -588,7 +590,6 @@ private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderSta
             PhoneNumberChangeRenderState(
                 phoneNumber = phoneNumber,
                 verificationCode = verificationCode,
-                verificationId = null,
                 remainingSeconds = null,
                 errorReason = null,
                 isPhoneInputEnabled = false,
@@ -605,7 +606,6 @@ private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderSta
             PhoneNumberChangeRenderState(
                 phoneNumber = phoneNumber,
                 verificationCode = verificationCode,
-                verificationId = verificationId,
                 remainingSeconds = remainingSeconds,
                 errorReason = null,
                 isPhoneInputEnabled = false,
@@ -622,7 +622,6 @@ private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderSta
             PhoneNumberChangeRenderState(
                 phoneNumber = phoneNumber,
                 verificationCode = verificationCode,
-                verificationId = verificationId,
                 remainingSeconds = remainingSeconds,
                 errorReason = null,
                 isPhoneInputEnabled = false,
@@ -639,7 +638,6 @@ private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderSta
             PhoneNumberChangeRenderState(
                 phoneNumber = phoneNumber,
                 verificationCode = verificationCode,
-                verificationId = null,
                 remainingSeconds = null,
                 errorReason = null,
                 isPhoneInputEnabled = false,
@@ -653,12 +651,11 @@ private fun PhoneNumberChangeUiState.toRenderState(): PhoneNumberChangeRenderSta
         }
 
         is PhoneNumberChangeUiState.Error -> {
-            val isExpired = reason == MyPageFailureReason.VERIFICATION_EXPIRED
-            val isRequestFailure = verificationId == null
+            val isExpired = reason == PhoneNumberChangeUiError.VERIFICATION_EXPIRED
+            val isRequestFailure = reason == PhoneNumberChangeUiError.REQUEST_FAILED
             PhoneNumberChangeRenderState(
                 phoneNumber = phoneNumber,
                 verificationCode = verificationCode,
-                verificationId = verificationId,
                 remainingSeconds = remainingSeconds ?: if (isExpired) 0 else null,
                 errorReason = reason,
                 isPhoneInputEnabled = isRequestFailure,
@@ -722,7 +719,6 @@ private fun PhoneNumberChangeUiState.reduceForPreview(action: PhoneNumberChangeA
             PhoneNumberChangeUiState.CodeEntry(
                 phoneNumber = phoneNumberForPreview(),
                 verificationCode = "",
-                verificationId = PhoneNumberChangePreviewFixture.verificationId,
                 remainingSeconds = PREVIEW_REMAINING_SECONDS,
             )
         }
@@ -767,7 +763,6 @@ private fun PhoneNumberChangeUiState.verificationCodeForPreview(): String =
 private object PhoneNumberChangePreviewFixture {
     const val PHONE_NUMBER = "01012345678"
     const val VERIFICATION_CODE = "123456"
-    val verificationId = PhoneVerificationId("verification-preview")
 
     val beforeRequest =
         PhoneNumberChangeUiState.Editing(
@@ -783,21 +778,18 @@ private object PhoneNumberChangePreviewFixture {
         PhoneNumberChangeUiState.CodeEntry(
             phoneNumber = PHONE_NUMBER,
             verificationCode = "123",
-            verificationId = verificationId,
             remainingSeconds = PREVIEW_REMAINING_SECONDS,
         )
     val codeEntryReady =
         PhoneNumberChangeUiState.CodeEntry(
             phoneNumber = PHONE_NUMBER,
             verificationCode = VERIFICATION_CODE,
-            verificationId = verificationId,
             remainingSeconds = PREVIEW_REMAINING_SECONDS,
         )
     val verifying =
         PhoneNumberChangeUiState.Verifying(
             phoneNumber = PHONE_NUMBER,
             verificationCode = VERIFICATION_CODE,
-            verificationId = verificationId,
             remainingSeconds = 125,
         )
     val verified =
@@ -809,22 +801,19 @@ private object PhoneNumberChangePreviewFixture {
         PhoneNumberChangeUiState.Error(
             phoneNumber = PHONE_NUMBER,
             verificationCode = VERIFICATION_CODE,
-            verificationId = verificationId,
-            reason = MyPageFailureReason.VERIFICATION_EXPIRED,
+            reason = PhoneNumberChangeUiError.VERIFICATION_EXPIRED,
         )
     val requestFailed =
         PhoneNumberChangeUiState.Error(
             phoneNumber = PHONE_NUMBER,
             verificationCode = "",
-            verificationId = null,
-            reason = MyPageFailureReason.NETWORK,
+            reason = PhoneNumberChangeUiError.REQUEST_FAILED,
         )
     val verificationFailed =
         PhoneNumberChangeUiState.Error(
             phoneNumber = PHONE_NUMBER,
             verificationCode = VERIFICATION_CODE,
-            verificationId = verificationId,
-            reason = MyPageFailureReason.VERIFICATION_FAILED,
+            reason = PhoneNumberChangeUiError.VERIFICATION_FAILED,
             remainingSeconds = 125,
         )
 }
@@ -892,6 +881,22 @@ private fun PhoneNumberChangeScreenPreview_CodeEntry_Student_FixedTimer() {
 @Composable
 private fun PhoneNumberChangeScreenPreview_CodeEntry_Student_ConfirmEnabled() {
     AppTheme(theme = ThemeType.STUDENT) {
+        PhoneNumberChangeScreen(
+            uiState = PhoneNumberChangePreviewFixture.codeEntryReady,
+            onAction = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Code entry · Instructor · Confirm enabled",
+    group = "Screen/PhoneNumberChange",
+    widthDp = 390,
+    heightDp = 840,
+)
+@Composable
+private fun PhoneNumberChangeScreenPreview_CodeEntry_Instructor_ConfirmEnabled() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
         PhoneNumberChangeScreen(
             uiState = PhoneNumberChangePreviewFixture.codeEntryReady,
             onAction = {},
@@ -1025,7 +1030,7 @@ private fun PhoneNumberChangeScreenPreview_Actions_Student_Interactive() {
 private fun PhoneNumberChangeScreenPreview_Boundary_LongContent_LargeFont_SmallScreen() {
     AppTheme(theme = ThemeType.STUDENT) {
         PhoneNumberChangeScreen(
-            uiState = MyPageProfileBoundaryFixture.phoneNumberChangeState,
+            uiState = ProfileBoundaryPreviewFixture.phoneNumberChangeState,
             onAction = {},
         )
     }

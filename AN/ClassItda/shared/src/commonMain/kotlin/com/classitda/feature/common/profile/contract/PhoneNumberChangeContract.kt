@@ -1,7 +1,11 @@
-package com.classitda.feature.student.mypage.contract
+package com.classitda.feature.common.profile.contract
 
-import com.classitda.domain.model.student.mypage.PhoneVerificationId
-import com.classitda.domain.repository.student.mypage.MyPageFailureReason
+enum class PhoneNumberChangeUiError {
+    REQUEST_FAILED,
+    VERIFICATION_EXPIRED,
+    VERIFICATION_FAILED,
+    UNKNOWN,
+}
 
 sealed interface PhoneNumberChangeUiState {
     data object Loading : PhoneNumberChangeUiState
@@ -19,14 +23,12 @@ sealed interface PhoneNumberChangeUiState {
     data class CodeEntry(
         val phoneNumber: String,
         val verificationCode: String,
-        val verificationId: PhoneVerificationId,
         val remainingSeconds: Int,
     ) : PhoneNumberChangeUiState
 
     data class Verifying(
         val phoneNumber: String,
         val verificationCode: String,
-        val verificationId: PhoneVerificationId,
         val remainingSeconds: Int,
     ) : PhoneNumberChangeUiState
 
@@ -38,8 +40,7 @@ sealed interface PhoneNumberChangeUiState {
     data class Error(
         val phoneNumber: String,
         val verificationCode: String,
-        val verificationId: PhoneVerificationId?,
-        val reason: MyPageFailureReason,
+        val reason: PhoneNumberChangeUiError,
         val remainingSeconds: Int? = null,
     ) : PhoneNumberChangeUiState
 }

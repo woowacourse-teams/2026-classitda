@@ -1,4 +1,4 @@
-package com.classitda.feature.student.mypage
+package com.classitda.feature.common.profile
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

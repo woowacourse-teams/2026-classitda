@@ -62,6 +62,9 @@ internal fun MyPageDemoNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
+    var profileViewRefreshToken by remember { mutableStateOf(0) }
+    var profileEditRefreshToken by remember { mutableStateOf(0) }
+
     fun navigateToMyPage() {
         navController.navigate(MyPageDestination) {
             popUpTo(navController.graph.id) { inclusive = true }
@@ -129,6 +132,7 @@ internal fun MyPageDemoNavHost(
                     onLogout()
                 },
                 onRequestWithdrawal = { onExternalAction("RequestWithdrawal") },
+                refreshToken = profileViewRefreshToken,
             )
         }
 
@@ -139,12 +143,14 @@ internal fun MyPageDemoNavHost(
                     navigateToProfileView()
                 },
                 onRequestPhotoChange = { onExternalAction("RequestPhotoChange") },
+                onProfileRefreshRequested = { profileViewRefreshToken += 1 },
                 onOpenPhoneNumberChange = { phoneNumber ->
                     onExternalAction("onOpenPhoneNumberChange")
                     navController.navigate(
                         PhoneNumberChangeDestination(initialPhoneNumber = phoneNumber),
                     )
                 },
+                refreshToken = profileEditRefreshToken,
             )
         }
 
@@ -158,6 +164,8 @@ internal fun MyPageDemoNavHost(
                 },
                 onComplete = {
                     onExternalAction("onComplete/PhoneNumberChange")
+                    profileViewRefreshToken += 1
+                    profileEditRefreshToken += 1
                     navigateToProfileEdit()
                 },
             )

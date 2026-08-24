@@ -17,8 +17,8 @@ import com.classitda.domain.model.student.mypage.MemberProfile
 import com.classitda.domain.model.student.mypage.MyPageSummary
 import com.classitda.domain.model.student.mypage.NotificationPreferences
 import com.classitda.domain.model.student.mypage.NotificationSettingType
+import com.classitda.feature.common.profile.contract.MemberProfileUiModel
 import com.classitda.feature.student.mypage.contract.ConnectedFacilityUiModel
-import com.classitda.feature.student.mypage.contract.MemberProfileUiModel
 import com.classitda.feature.student.mypage.contract.MyPageSummaryUiModel
 import com.classitda.feature.student.mypage.contract.NotificationSettingUiModel
 import com.classitda.feature.student.mypage.contract.NotificationSettingsUiModel
@@ -35,7 +35,6 @@ internal class MyPageUiMapper {
 
     fun mapProfile(profile: MemberProfile): MemberProfileUiModel =
         MemberProfileUiModel(
-            id = profile.id,
             name = profile.name,
             phoneNumberLabel = formatPhoneNumber(profile.phoneNumber),
             email = profile.email,
