@@ -59,10 +59,14 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.time.Clock
 
 @Composable
 internal fun InstructorScheduleRoute(
@@ -89,6 +93,7 @@ internal fun InstructorScheduleStateful(
     var displayedYear by remember { mutableStateOf(firstSessionDate.year) }
     var displayedMonth by remember { mutableStateOf(firstSessionDate.month.number) }
     var selectedDate by remember { mutableStateOf(firstSessionDate) }
+    var isMonthMode by remember { mutableStateOf(true) }
 
     LaunchedEffect(sessions) {
         if (sessions.isNotEmpty()) {
@@ -96,6 +101,7 @@ internal fun InstructorScheduleStateful(
             displayedYear = sessionDate.year
             displayedMonth = sessionDate.month.number
             selectedDate = sessionDate
+            isMonthMode = true
         }
     }
 
@@ -112,9 +118,25 @@ internal fun InstructorScheduleStateful(
                 displayedYear = displayedYear,
                 displayedMonth = displayedMonth,
                 selectedDate = selectedDate,
-                onDateSelected = { selectedDate = it },
+                isMonthMode = isMonthMode,
+                onDateSelected = {
+                    selectedDate = it
+                    displayedYear = it.year
+                    displayedMonth = it.month.number
+                },
+                onModeChange = { isMonthMode = it },
+                onTodayClick = {
+                    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                    selectedDate = today
+                    displayedYear = today.year
+                    displayedMonth = today.month.number
+                },
                 onPreviousMonth = {
-                    if (displayedMonth == 1) {
+                    if (!isMonthMode) {
+                        selectedDate = selectedDate.minus(DatePeriod(days = 7))
+                        displayedYear = selectedDate.year
+                        displayedMonth = selectedDate.month.number
+                    } else if (displayedMonth == 1) {
                         displayedYear -= 1
                         displayedMonth = 12
                     } else {
@@ -122,7 +144,11 @@ internal fun InstructorScheduleStateful(
                     }
                 },
                 onNextMonth = {
-                    if (displayedMonth == 12) {
+                    if (!isMonthMode) {
+                        selectedDate = selectedDate.plus(DatePeriod(days = 7))
+                        displayedYear = selectedDate.year
+                        displayedMonth = selectedDate.month.number
+                    } else if (displayedMonth == 12) {
                         displayedYear += 1
                         displayedMonth = 1
                     } else {
@@ -141,7 +167,10 @@ internal fun InstructorScheduleStateless(
     displayedYear: Int,
     displayedMonth: Int,
     selectedDate: LocalDate,
+    isMonthMode: Boolean,
     onDateSelected: (LocalDate) -> Unit,
+    onModeChange: (Boolean) -> Unit,
+    onTodayClick: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
     modifier: Modifier = Modifier,
@@ -160,9 +189,12 @@ internal fun InstructorScheduleStateless(
                 displayedYear = displayedYear,
                 displayedMonth = displayedMonth,
                 selectedDate = selectedDate,
+                isMonthMode = isMonthMode,
                 scheduledDates = sessions.filter { it.status == ClassSessionStatus.SCHEDULED }.map { it.startAt.date }.toSet(),
                 completedDates = sessions.filter { it.status == ClassSessionStatus.COMPLETED }.map { it.startAt.date }.toSet(),
                 onDateSelected = onDateSelected,
+                onModeChange = onModeChange,
+                onTodayClick = onTodayClick,
                 onPreviousMonth = onPreviousMonth,
                 onNextMonth = onNextMonth,
             )
@@ -200,19 +232,24 @@ private fun InstructorCalendar(
     displayedYear: Int,
     displayedMonth: Int,
     selectedDate: LocalDate,
+    isMonthMode: Boolean,
     scheduledDates: Set<LocalDate>,
     completedDates: Set<LocalDate>,
     onDateSelected: (LocalDate) -> Unit,
+    onModeChange: (Boolean) -> Unit,
+    onTodayClick: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
 ) {
     val calendarMonth = YearMonth(displayedYear, Month.entries[displayedMonth - 1])
     val firstDay = calendarMonth.firstDay
-    val days = buildList<LocalDate?> {
+    val monthDays = buildList<LocalDate?> {
         repeat(firstDay.dayOfWeek.ordinal) { add(null) }
         repeat(calendarMonth.lastDay.day) { add(firstDay.plus(DatePeriod(days = it))) }
         while (size % 7 != 0) add(null)
     }
+    val weekStart = selectedDate.minus(DatePeriod(days = selectedDate.dayOfWeek.ordinal))
+    val weekDays = List(7) { index -> weekStart.plus(DatePeriod(days = index)) }
 
     Column(
         modifier = Modifier.fillMaxWidth().background(InsColors.White).padding(AppSpacing.screenPadding),
@@ -237,10 +274,20 @@ private fun InstructorCalendar(
             Spacer(Modifier.weight(1f))
             Surface(shape = AppShape.Card, color = InsColors.SurfaceVariant) {
                 Row(Modifier.padding(2.dp)) {
-                    Surface(shape = AppShape.Card, color = InsColors.White) {
-                        Text("월", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
+                    Surface(
+                        shape = AppShape.Card,
+                        color = if (isMonthMode) InsColors.White else Color.Transparent,
+                        modifier = Modifier.clickable { onModeChange(true) },
+                    ) {
+                        Text("월", color = if (isMonthMode) InsColors.TextPrimary else InsColors.TextSecondary, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
                     }
-                    Text("주", color = InsColors.TextSecondary, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
+                    Surface(
+                        shape = AppShape.Card,
+                        color = if (isMonthMode) Color.Transparent else InsColors.White,
+                        modifier = Modifier.clickable { onModeChange(false) },
+                    ) {
+                        Text("주", color = if (isMonthMode) InsColors.TextSecondary else InsColors.TextPrimary, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs))
+                    }
                 }
             }
         }
@@ -249,7 +296,8 @@ private fun InstructorCalendar(
                 Text(day, modifier = Modifier.weight(1f), color = InsColors.TextTertiary, style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center)
             }
         }
-        days.chunked(7).forEach { week ->
+        val visibleWeeks: List<List<LocalDate?>> = if (isMonthMode) monthDays.chunked(7) else listOf(weekDays)
+        visibleWeeks.forEach { week ->
             Row(Modifier.fillMaxWidth()) {
                 week.forEach { date ->
                     CalendarDay(
@@ -270,7 +318,7 @@ private fun InstructorCalendar(
             CalendarLegendDot(InsColors.Gray400)
             Text("완료 수업", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
             Spacer(Modifier.weight(1f))
-            Text("오늘", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall)
+            Text("오늘", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodySmall, modifier = Modifier.clickable(onClick = onTodayClick))
         }
     }
 }
@@ -348,7 +396,9 @@ private fun InstructorScheduleCard(session: ClassSession) {
 @Preview(name = "강사 일정", showBackground = true, widthDp = 390, heightDp = 844)
 @Composable
 private fun InstructorScheduleStatelessPreview() {
-    val selectedDate = LocalDate(2026, 8, 5)
+    val today = LocalDate(2026, 8, 5)
+    var selectedDate by remember { mutableStateOf(today) }
+    var isMonthMode by remember { mutableStateOf(true) }
 
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         InstructorScheduleStateless(
@@ -378,7 +428,10 @@ private fun InstructorScheduleStatelessPreview() {
             displayedYear = selectedDate.year,
             displayedMonth = selectedDate.month.number,
             selectedDate = selectedDate,
-            onDateSelected = {},
+            isMonthMode = isMonthMode,
+            onDateSelected = { selectedDate = it },
+            onModeChange = { isMonthMode = it },
+            onTodayClick = { selectedDate = today },
             onPreviousMonth = {},
             onNextMonth = {},
         )
