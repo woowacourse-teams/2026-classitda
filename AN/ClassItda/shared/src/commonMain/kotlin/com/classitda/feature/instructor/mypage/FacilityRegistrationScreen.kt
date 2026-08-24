@@ -121,7 +121,8 @@ fun FacilityRegistrationScreen(
         }
     val fieldErrors =
         (uiState as? FacilityRegistrationUiState.Editing)?.fieldErrors.orEmpty()
-    val canSubmit = (uiState as? FacilityRegistrationUiState.Editing)?.canSubmit == true
+    val canAttemptSubmit =
+        uiState is FacilityRegistrationUiState.Editing || uiState is FacilityRegistrationUiState.Error
 
     Scaffold(
         modifier = modifier,
@@ -152,7 +153,7 @@ fun FacilityRegistrationScreen(
                 FacilityRegistrationBottomBar(
                     isSubmitting = isSubmitting,
                     isFailed = uiState is FacilityRegistrationUiState.Error,
-                    enabled = canSubmit,
+                    enabled = canAttemptSubmit,
                     label =
                         stringResource(
                             if (isEditing) {
@@ -289,11 +290,6 @@ private fun FacilityRegistrationForm(
                 .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.xxl),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.xxl),
     ) {
-        Text(
-            text = stringResource(Res.string.instructor_facility_registration_step),
-            style = appTypography().headlineMedium.copy(fontWeight = FontWeight.Bold),
-            color = InsColors.Purple,
-        )
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
             Text(
                 text = stringResource(Res.string.instructor_facility_registration_intro_title),
@@ -332,7 +328,7 @@ private fun FacilityRegistrationForm(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
-            verticalAlignment = Alignment.Bottom,
+            verticalAlignment = Alignment.Top,
         ) {
             FacilityTextField(
                 label = stringResource(Res.string.instructor_facility_registration_address),
@@ -354,6 +350,7 @@ private fun FacilityRegistrationForm(
             TextButton(
                 onClick = { onAction(FacilityRegistrationAction.RequestAddressSearch) },
                 enabled = !isSubmitting,
+                modifier = Modifier.padding(top = AppSpacing.xxl + AppSpacing.sm),
             ) {
                 Icon(
                     painter = painterResource(Res.drawable.ic_location_on),

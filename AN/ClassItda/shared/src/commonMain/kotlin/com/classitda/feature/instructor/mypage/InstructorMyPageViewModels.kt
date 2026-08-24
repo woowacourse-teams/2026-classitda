@@ -32,7 +32,6 @@ import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
@@ -46,6 +45,10 @@ import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
+import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
+import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -348,13 +351,12 @@ internal class MemberRegistrationViewModel(
             }
 
             MemberRegistrationAction.OpenConfirmation -> {
-                if ((_uiState.value as? MemberRegistrationUiState.Editing)?.canSubmit ==
-                    true
-                ) {
-                    _uiState.value =
-                        MemberRegistrationUiState.Confirmation(
-                            ((_uiState.value) as MemberRegistrationUiState.Editing).draft,
-                        )
+                val state = _uiState.value as? MemberRegistrationUiState.Editing ?: return
+                val fieldErrors = memberRegistrationFieldErrors(state.draft)
+                if (fieldErrors.isEmpty()) {
+                    _uiState.value = MemberRegistrationUiState.Confirmation(state.draft)
+                } else {
+                    _uiState.value = state.copy(canSubmit = false, fieldErrors = fieldErrors)
                 }
             }
 
@@ -390,11 +392,7 @@ internal class MemberRegistrationViewModel(
     private fun editing(draft: MemberRegistrationDraft) =
         MemberRegistrationUiState.Editing(
             draft,
-            draft.name.isNotBlank() && draft.phoneNumber.isNotBlank(),
-            buildSet {
-                if (draft.name.isBlank()) add(MemberRegistrationField.NAME)
-                if (draft.phoneNumber.isBlank()) add(MemberRegistrationField.PHONE_NUMBER)
-            },
+            draft.isMemberRegistrationValid(),
         )
 
     private fun confirm() {
@@ -684,18 +682,16 @@ internal class FacilityEditViewModel(
         FacilityEditUiState.Editing(
             facilityId = facilityId,
             draft = draft,
-            canSubmit = draft.name.isNotBlank() && draft.address.isNotBlank() && draft.phoneNumber.isNotBlank(),
-            fieldErrors =
-                buildSet {
-                    if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
-                    if (draft.address.isBlank()) add(FacilityRegistrationField.ADDRESS)
-                    if (draft.phoneNumber.isBlank()) add(FacilityRegistrationField.PHONE_NUMBER)
-                },
+            canSubmit = draft.isFacilityRegistrationValid(),
         )
 
     private fun submit() {
         val state = _uiState.value as? FacilityEditUiState.Editing ?: return
-        if (!state.canSubmit) return
+        val fieldErrors = facilityRegistrationFieldErrors(state.draft)
+        if (fieldErrors.isNotEmpty()) {
+            _uiState.value = state.copy(canSubmit = false, fieldErrors = fieldErrors)
+            return
+        }
         _uiState.value = FacilityEditUiState.Submitting(facilityId, state.draft)
         viewModelScope.launch {
             _uiState.value =
@@ -791,18 +787,17 @@ internal class FacilityRegistrationViewModel(
     private fun editing(draft: FacilityRegistrationDraft) =
         FacilityRegistrationUiState.Editing(
             draft,
-            draft.name.isNotBlank() && draft.address.isNotBlank() && draft.phoneNumber.isNotBlank(),
-            buildSet {
-                if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
-                if (draft.address.isBlank()) add(FacilityRegistrationField.ADDRESS)
-                if (draft.phoneNumber.isBlank()) add(FacilityRegistrationField.PHONE_NUMBER)
-            },
+            draft.isFacilityRegistrationValid(),
         )
 
     private fun submit() {
         val state =
             _uiState.value as? FacilityRegistrationUiState.Editing ?: return
-        if (!state.canSubmit) return
+        val fieldErrors = facilityRegistrationFieldErrors(state.draft)
+        if (fieldErrors.isNotEmpty()) {
+            _uiState.value = state.copy(canSubmit = false, fieldErrors = fieldErrors)
+            return
+        }
         _uiState.value =
             FacilityRegistrationUiState.Submitting
         viewModelScope.launch {

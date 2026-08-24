@@ -89,3 +89,13 @@ sealed interface FacilityRegistrationAction {
 
     data object Retry : FacilityRegistrationAction
 }
+
+internal fun facilityRegistrationFieldErrors(draft: FacilityRegistrationDraft): Set<FacilityRegistrationField> =
+    buildSet {
+        if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
+        if (draft.address.isBlank()) add(FacilityRegistrationField.ADDRESS)
+        if (draft.phoneNumber.isBlank()) add(FacilityRegistrationField.PHONE_NUMBER)
+    }
+
+internal fun FacilityRegistrationDraft.isFacilityRegistrationValid(): Boolean =
+    facilityRegistrationFieldErrors(this).isEmpty()

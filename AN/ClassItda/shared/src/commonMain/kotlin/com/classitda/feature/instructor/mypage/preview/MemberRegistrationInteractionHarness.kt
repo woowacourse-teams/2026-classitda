@@ -41,6 +41,8 @@ import com.classitda.feature.instructor.mypage.MemberRegistrationScreen
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
+import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -79,8 +81,16 @@ internal fun MemberRegistrationInteractionHarness(modifier: Modifier = Modifier)
 
                     MemberRegistrationAction.OpenConfirmation -> {
                         val draft = uiState.draftOrEmpty()
-                        if (draft.name.isNotBlank() && draft.phoneNumber.isNotBlank()) {
+                        val fieldErrors = memberRegistrationFieldErrors(draft)
+                        if (fieldErrors.isEmpty()) {
                             uiState = MemberRegistrationUiState.Confirmation(draft)
+                        } else {
+                            uiState =
+                                MemberRegistrationUiState.Editing(
+                                    draft = draft,
+                                    canSubmit = false,
+                                    fieldErrors = fieldErrors,
+                                )
                         }
                     }
 
@@ -228,7 +238,7 @@ private fun MemberRegistrationUiState.draftOrEmpty(): MemberRegistrationDraft =
 private fun editingState(draft: MemberRegistrationDraft): MemberRegistrationUiState =
     MemberRegistrationUiState.Editing(
         draft = draft,
-        canSubmit = draft.name.isNotBlank() && draft.phoneNumber.isNotBlank(),
+        canSubmit = draft.isMemberRegistrationValid(),
     )
 
 @Preview(

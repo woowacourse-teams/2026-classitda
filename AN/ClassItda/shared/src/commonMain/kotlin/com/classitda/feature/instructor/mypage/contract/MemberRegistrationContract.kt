@@ -60,3 +60,14 @@ sealed interface MemberRegistrationAction {
 
     data object Retry : MemberRegistrationAction
 }
+
+internal fun memberRegistrationFieldErrors(draft: MemberRegistrationDraft): Set<MemberRegistrationField> =
+    buildSet {
+        if (draft.name.isBlank()) add(MemberRegistrationField.NAME)
+        if (draft.phoneNumber.filter(Char::isDigit).length !in 10..11) {
+            add(MemberRegistrationField.PHONE_NUMBER)
+        }
+    }
+
+internal fun MemberRegistrationDraft.isMemberRegistrationValid(): Boolean =
+    memberRegistrationFieldErrors(this).isEmpty()

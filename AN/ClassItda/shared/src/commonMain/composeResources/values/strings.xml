@@ -224,7 +224,7 @@
     <string name="instructor_member_registration_phone">전화번호 *</string>
     <string name="instructor_member_registration_phone_placeholder">전화번호를 입력해 주세요</string>
     <string name="instructor_member_registration_name_error">이름을 입력해 주세요.</string>
-    <string name="instructor_member_registration_phone_error">전화번호를 입력해 주세요.</string>
+    <string name="instructor_member_registration_phone_error">전화번호 형식이 올바르지 않습니다.</string>
     <string name="instructor_member_registration_register">회원 등록</string>
     <string name="instructor_member_registration_submitting">회원을 등록하는 중입니다.</string>
     <string name="instructor_member_registration_success">회원 등록이 완료되었습니다.</string>

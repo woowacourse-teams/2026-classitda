@@ -74,12 +74,7 @@ fun MemberRegistrationScreen(
     onAction: (MemberRegistrationAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val canSubmit =
-        when (uiState) {
-            is MemberRegistrationUiState.Editing -> uiState.canSubmit
-            is MemberRegistrationUiState.Error -> false
-            else -> false
-        }
+    val canAttemptRegistration = uiState is MemberRegistrationUiState.Editing
     Scaffold(
         modifier = modifier,
         containerColor = InsColors.Background,
@@ -90,7 +85,7 @@ fun MemberRegistrationScreen(
         },
         bottomBar = {
             MemberRegistrationBottomBar(
-                enabled = canSubmit,
+                enabled = canAttemptRegistration,
                 onRegister = { onAction(MemberRegistrationAction.OpenConfirmation) },
                 modifier = Modifier.navigationBarsPadding().imePadding(),
             )

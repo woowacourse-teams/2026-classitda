@@ -36,6 +36,8 @@ import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationActi
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -122,7 +124,18 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
 
                     FacilityRegistrationAction.Submit -> {
                         lastEvent = "Submit"
-                        uiState = FacilityRegistrationUiState.Submitting
+                        val draft = uiState.draftOrEmpty()
+                        val fieldErrors = facilityRegistrationFieldErrors(draft)
+                        uiState =
+                            if (fieldErrors.isEmpty()) {
+                                FacilityRegistrationUiState.Submitting
+                            } else {
+                                FacilityRegistrationUiState.Editing(
+                                    draft = draft,
+                                    canSubmit = false,
+                                    fieldErrors = fieldErrors,
+                                )
+                            }
                     }
 
                     FacilityRegistrationAction.Retry -> {
@@ -197,7 +210,7 @@ private fun FacilityRegistrationUiState.draftOrEmpty(): FacilityRegistrationDraf
 
 private fun editingState(
     draft: FacilityRegistrationDraft,
-    canSubmit: Boolean = draft.name.isNotBlank() && draft.address.isNotBlank() && draft.phoneNumber.isNotBlank(),
+    canSubmit: Boolean = draft.isFacilityRegistrationValid(),
 ): FacilityRegistrationUiState = FacilityRegistrationUiState.Editing(draft = draft, canSubmit = canSubmit)
 
 private val filledFacilityDraft =

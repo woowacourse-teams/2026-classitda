@@ -8,6 +8,7 @@ import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class InstructorMyPageContractTest {
     @Test
@@ -58,6 +59,19 @@ class InstructorMyPageContractTest {
     }
 
     @Test
+    fun memberRegistrationValidationOnlyMarksFieldsAfterSubmitAttempt() {
+        val emptyDraft = MemberRegistrationDraft()
+        val validDraft = MemberRegistrationDraft(name = "Member", phoneNumber = "01012345678")
+
+        assertEquals(
+            setOf(MemberRegistrationField.NAME, MemberRegistrationField.PHONE_NUMBER),
+            memberRegistrationFieldErrors(emptyDraft),
+        )
+        assertTrue(memberRegistrationFieldErrors(validDraft).isEmpty())
+        assertTrue(validDraft.isMemberRegistrationValid())
+    }
+
+    @Test
     fun successStatesExposeStableRegistrationIds() {
         val memberId = InstructorMemberId("member-1")
         val facilityId = InstructorFacilityId("facility-1")
@@ -82,6 +96,28 @@ class InstructorMyPageContractTest {
         assertEquals(draft.images, images.images)
         assertEquals("Seoul", address.address)
         assertEquals("Jongno", address.detailAddress)
+    }
+
+    @Test
+    fun facilityRegistrationValidationKeepsInitialFieldsNeutralUntilSubmit() {
+        val emptyDraft = FacilityRegistrationDraft()
+        val validDraft =
+            FacilityRegistrationDraft(
+                name = "Facility",
+                address = "Seoul",
+                phoneNumber = "0212345678",
+            )
+
+        assertEquals(
+            setOf(
+                FacilityRegistrationField.NAME,
+                FacilityRegistrationField.ADDRESS,
+                FacilityRegistrationField.PHONE_NUMBER,
+            ),
+            facilityRegistrationFieldErrors(emptyDraft),
+        )
+        assertTrue(facilityRegistrationFieldErrors(validDraft).isEmpty())
+        assertTrue(validDraft.isFacilityRegistrationValid())
     }
 
     @Test
