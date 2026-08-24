@@ -1,6 +1,7 @@
 package com.classitda.feature.instructor.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_check
 import classitda.shared.generated.resources.ic_expand_more
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppShape
@@ -147,11 +149,8 @@ private fun InstructorTimelineItem(
     onScheduleClick: () -> Unit,
 ) {
     Row(Modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding)) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(24.dp)) {
-            Spacer(Modifier.height(AppSpacing.sm))
-            Box(
-                modifier = Modifier.size(12.dp).clip(CircleShape).background(if (isNext) InsColors.Black else InsColors.Gray200),
-            )
+        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(28.dp)) {
+            InstructorTimelineIndicator(session.status, isNext)
             if (!isLast) {
                 Box(Modifier.width(1.dp).fillMaxHeight().background(InsColors.Divider))
             }
@@ -186,6 +185,41 @@ private fun InstructorTimelineItem(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InstructorTimelineIndicator(
+    status: ClassSessionStatus,
+    isNext: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val indicatorModifier =
+        when {
+            status == ClassSessionStatus.COMPLETED -> Modifier.background(InsColors.Gray200, CircleShape)
+            isNext -> Modifier.background(InsColors.Black, CircleShape)
+            status == ClassSessionStatus.CANCELLED -> Modifier.border(1.dp, InsColors.RedLight, CircleShape)
+            else -> Modifier.border(1.dp, InsColors.DividerStrong, CircleShape)
+        }
+
+    Box(
+        modifier = modifier.size(28.dp).then(indicatorModifier).clip(CircleShape),
+        contentAlignment = Alignment.Center,
+    ) {
+        when {
+            status == ClassSessionStatus.COMPLETED -> {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_check),
+                    contentDescription = "완료",
+                    tint = InsColors.TextSecondary,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
+
+            status == ClassSessionStatus.CANCELLED -> {
+                Box(Modifier.size(6.dp).background(InsColors.Red, CircleShape))
             }
         }
     }
