@@ -43,6 +43,30 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
     );
 
     @Query("""
+            SELECT COUNT(enrollment.id)
+            FROM ClassSessionEnrollment enrollment
+            WHERE enrollment.classSession.id = :classSessionId
+              AND enrollment.state.status IN (
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED,
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED
+              )
+            """)
+    long countOccupied(@Param("classSessionId") Long classSessionId);
+
+    @Query("""
+            SELECT enrollment
+            FROM ClassSessionEnrollment enrollment
+            WHERE enrollment.id = :enrollmentId
+              AND enrollment.classSession.id = :classSessionId
+              AND enrollment.classSession.studioId = :studioId
+            """)
+    Optional<ClassSessionEnrollment> findByIdAndClassSessionIdAndStudioId(
+            @Param("enrollmentId") Long enrollmentId,
+            @Param("classSessionId") Long classSessionId,
+            @Param("studioId") Long studioId
+    );
+
+    @Query("""
             SELECT enrollment.classSession.classForm AS classForm,
                    classType.id AS classTypeId,
                    enrollment.classSession.startAt AS startAt,
