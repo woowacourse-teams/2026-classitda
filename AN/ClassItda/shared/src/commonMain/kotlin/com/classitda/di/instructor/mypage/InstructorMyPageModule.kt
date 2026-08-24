@@ -5,7 +5,6 @@ import com.classitda.feature.instructor.mypage.facility.FacilityDetailViewModel
 import com.classitda.feature.instructor.mypage.facility.FacilityEditViewModel
 import com.classitda.feature.instructor.mypage.facility.FacilityManagementViewModel
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationViewModel
-import com.classitda.feature.instructor.mypage.member.MemberDetailViewModel
 import com.classitda.feature.instructor.mypage.member.MemberEditViewModel
 import com.classitda.feature.instructor.mypage.member.MemberManagementViewModel
 import com.classitda.feature.instructor.mypage.member.MemberRegistrationViewModel
@@ -27,7 +26,6 @@ internal val instructorMyPageModule =
         viewModel { parameters -> InstructorPhoneNumberChangeViewModel(get(), parameters.get()) }
         viewModel { MemberManagementViewModel(get()) }
         viewModel { MemberRegistrationViewModel(get()) }
-        viewModel { parameters -> MemberDetailViewModel(get(), parameters.get()) }
         viewModel { parameters -> MemberEditViewModel(get(), parameters.get()) }
         viewModel { FacilityManagementViewModel(get()) }
         viewModel { FacilityRegistrationViewModel(get()) }

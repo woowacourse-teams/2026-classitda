@@ -38,10 +38,9 @@ import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiError
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiModel
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiState
-import com.classitda.feature.instructor.mypage.contract.MemberDeleteError
-import com.classitda.feature.instructor.mypage.contract.MemberDetailUiError
 import com.classitda.feature.instructor.mypage.contract.MemberEditUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
+import com.classitda.feature.instructor.mypage.contract.MemberManagementDeleteError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
@@ -131,18 +130,11 @@ internal fun InstructorMyPageFailureReason.toMemberRegistrationError() =
         else -> MemberRegistrationUiError.UNKNOWN
     }
 
-internal fun InstructorMyPageFailureReason.toMemberDetailError() =
+internal fun InstructorMyPageFailureReason.toMemberManagementDeleteError() =
     when (this) {
-        InstructorMyPageFailureReason.NETWORK -> MemberDetailUiError.NETWORK
-        InstructorMyPageFailureReason.NOT_FOUND -> MemberDetailUiError.NOT_FOUND
-        else -> MemberDetailUiError.UNKNOWN
-    }
-
-internal fun InstructorMyPageFailureReason.toMemberDeleteError() =
-    when (this) {
-        InstructorMyPageFailureReason.NETWORK -> MemberDeleteError.NETWORK
-        InstructorMyPageFailureReason.NOT_FOUND -> MemberDeleteError.NOT_FOUND
-        else -> MemberDeleteError.UNKNOWN
+        InstructorMyPageFailureReason.NETWORK -> MemberManagementDeleteError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> MemberManagementDeleteError.NOT_FOUND
+        else -> MemberManagementDeleteError.UNKNOWN
     }
 
 internal fun InstructorMyPageFailureReason.toMemberEditError() =

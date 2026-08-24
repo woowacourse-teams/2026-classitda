@@ -20,8 +20,6 @@ import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
-import com.classitda.feature.instructor.mypage.contract.MemberDetailAction
-import com.classitda.feature.instructor.mypage.contract.MemberDetailUiState
 import com.classitda.feature.instructor.mypage.contract.MemberEditAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
@@ -33,8 +31,6 @@ import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
 import com.classitda.feature.instructor.mypage.facility.FacilityManagementViewModel
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationViewModel
-import com.classitda.feature.instructor.mypage.member.MemberDetailScreen
-import com.classitda.feature.instructor.mypage.member.MemberDetailViewModel
 import com.classitda.feature.instructor.mypage.member.MemberEditScreen
 import com.classitda.feature.instructor.mypage.member.MemberEditViewModel
 import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
@@ -187,7 +183,7 @@ internal fun InstructorPhoneNumberChangeRoute(
 @Composable
 internal fun InstructorMemberManagementRoute(
     onBack: () -> Unit,
-    onOpenMember: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
+    onEditMember: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
     onOpenMemberRegistration: () -> Unit,
     refreshToken: Int = 0,
     modifier: Modifier = Modifier,
@@ -198,7 +194,7 @@ internal fun InstructorMemberManagementRoute(
     MemberManagementScreen(uiState, onAction = { action ->
         when (action) {
             MemberManagementAction.Back -> onBack()
-            is MemberManagementAction.OpenMember -> onOpenMember(action.memberId)
+            is MemberManagementAction.EditMember -> onEditMember(action.memberId)
             MemberManagementAction.OpenMemberRegistration -> onOpenMemberRegistration()
             else -> viewModel.onAction(action)
         }
@@ -232,33 +228,6 @@ internal fun InstructorMemberRegistrationRoute(
             else -> {
                 viewModel.onAction(action)
             }
-        }
-    }, modifier = modifier)
-}
-
-@Composable
-internal fun InstructorMemberDetailRoute(
-    memberId: com.classitda.domain.model.instructor.mypage.InstructorMemberId,
-    onBack: () -> Unit,
-    onOpenEdit: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
-    onDeleted: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: MemberDetailViewModel =
-        koinViewModel(
-            key = "instructor-member-detail-${memberId.value}",
-            parameters = { parametersOf(memberId) },
-        ),
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(uiState) {
-        val deleted = uiState as? MemberDetailUiState.Deleted
-        deleted?.let { onDeleted(it.memberId) }
-    }
-    MemberDetailScreen(uiState, onAction = { action ->
-        when (action) {
-            MemberDetailAction.Back -> onBack()
-            MemberDetailAction.OpenEdit -> onOpenEdit(memberId)
-            else -> viewModel.onAction(action)
         }
     }, modifier = modifier)
 }
