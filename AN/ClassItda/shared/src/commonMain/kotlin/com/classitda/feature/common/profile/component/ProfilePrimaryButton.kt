@@ -14,6 +14,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
+import com.classitda.core.designsystem.appTypography
 
 @Composable
 internal fun ProfilePrimaryButton(
@@ -40,7 +41,7 @@ internal fun ProfilePrimaryButton(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+            style = appTypography().bodyLarge.copy(fontWeight = FontWeight.Bold),
         )
     }
 }
