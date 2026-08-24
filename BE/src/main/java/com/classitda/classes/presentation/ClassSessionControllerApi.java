@@ -36,6 +36,7 @@ public interface ClassSessionControllerApi {
             description = """
                     MVP용 수업 회차 등록 API입니다.
 
+                    - **API 버전**: `X-API-Version` 헤더에 `1`을 전달합니다.
                     - 인증된 회원 본인을 담당 강사로 지정합니다.
                     - 요청에 담당 강사 소속 ID를 받지 않습니다.
                     - 단일 수업과 반복 수업을 등록할 수 있습니다.
@@ -58,8 +59,11 @@ public interface ClassSessionControllerApi {
     );
 
     @Operation(
+            hidden = true,
             summary = "수업 회차 등록(v2)",
             description = """
+                    - **API 버전**: `X-API-Version` 헤더에 `2`를 전달합니다.
+
                     - **단일 수업**: classDate에 한 회차를 생성합니다.
 
                     - **반복 수업**: 반복 기간 안에서 recurringDays에 해당하는 날짜마다 독립적인 회차를 생성합니다.
