@@ -43,6 +43,19 @@ internal fun ClassSessionCapacityChangeDialog(onConfirmClick: () -> Unit) {
 }
 
 @Composable
+internal fun ClassSessionDeleteConfirmDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmClick: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismissRequest) {
+        ClassSessionDeleteConfirmDialogContent(
+            onDismissRequest = onDismissRequest,
+            onConfirmClick = onConfirmClick,
+        )
+    }
+}
+
+@Composable
 private fun ClassSessionEditExitDialogContent(
     onDismissRequest: () -> Unit,
     onLeaveClick: () -> Unit,
@@ -123,6 +136,53 @@ private fun ClassSessionCapacityChangeDialogContent(onConfirmClick: () -> Unit) 
 }
 
 @Composable
+private fun ClassSessionDeleteConfirmDialogContent(
+    onDismissRequest: () -> Unit,
+    onConfirmClick: () -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = AppShape.Card,
+        color = InsColors.White,
+    ) {
+        Column(
+            modifier = Modifier.padding(AppSpacing.xxl),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+        ) {
+            Text(
+                text = "수업을 삭제하시겠어요?",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = InsColors.TextPrimary,
+            )
+            Text(
+                text = "삭제하면 되돌릴 수 없어요.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = InsColors.TextSecondary,
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+            ) {
+                TextButton(
+                    onClick = onDismissRequest,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("취소", color = InsColors.TextSecondary)
+                }
+                Button(
+                    onClick = onConfirmClick,
+                    modifier = Modifier.weight(1f),
+                    shape = AppShape.Card,
+                    colors = ButtonDefaults.buttonColors(containerColor = InsColors.Red),
+                ) {
+                    Text("삭제")
+                }
+            }
+        }
+    }
+}
+
+@Composable
 @Preview(name = "작성 중인 내용 확인", showBackground = true, widthDp = 390)
 private fun ClassSessionEditExitDialogPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
@@ -138,5 +198,16 @@ private fun ClassSessionEditExitDialogPreview() {
 private fun ClassSessionCapacityChangeDialogPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         ClassSessionCapacityChangeDialogContent(onConfirmClick = {})
+    }
+}
+
+@Composable
+@Preview(name = "수업 삭제 확인", showBackground = true, widthDp = 390)
+private fun ClassSessionDeleteConfirmDialogPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassSessionDeleteConfirmDialogContent(
+            onDismissRequest = {},
+            onConfirmClick = {},
+        )
     }
 }

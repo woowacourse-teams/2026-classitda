@@ -36,6 +36,8 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.component.NavigateBackTopBar
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionCapacityChangeDialog
+import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDatePickerDialog
+import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDeleteConfirmDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionEditExitDialog
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
 import com.classitda.feature.instructor.management.lesson.create.component.CategoryChipSelector
@@ -109,8 +111,10 @@ private fun ClassSessionEditStateful(
     var sessionDate by remember(initialForm.id) { mutableStateOf(initialForm.sessionDate) }
     var description by remember(initialForm.id) { mutableStateOf(initialForm.description) }
     var isTimePickerVisible by remember { mutableStateOf(false) }
+    var isDatePickerVisible by remember { mutableStateOf(false) }
     var isExitDialogVisible by remember { mutableStateOf(false) }
     var isCapacityDialogVisible by remember { mutableStateOf(false) }
+    var isDeleteDialogVisible by remember { mutableStateOf(false) }
 
     val durationMinutes = durationText.toIntOrNull() ?: 0
     val endTime = startTime.plusMinutesClamped(durationMinutes)
@@ -159,9 +163,9 @@ private fun ClassSessionEditStateful(
         onCapacityChange = { capacityText = it.filter(Char::isDigit) },
         onDurationChange = { durationText = it.filter(Char::isDigit) },
         onStartTimeClick = { isTimePickerVisible = true },
-        onDateClick = {},
+        onDateClick = { isDatePickerVisible = true },
         onDescriptionChange = { description = it },
-        onDeleteClick = onDeleted,
+        onDeleteClick = { isDeleteDialogVisible = true },
         onSaveClick = ::requestSave,
         modifier = modifier,
     )
@@ -173,6 +177,16 @@ private fun ClassSessionEditStateful(
             onConfirm = {
                 startTime = it
                 isTimePickerVisible = false
+            },
+        )
+    }
+    if (isDatePickerVisible) {
+        ClassSessionDatePickerDialog(
+            initialDate = sessionDate,
+            onDismissRequest = { isDatePickerVisible = false },
+            onConfirm = {
+                sessionDate = it
+                isDatePickerVisible = false
             },
         )
     }
@@ -188,6 +202,15 @@ private fun ClassSessionEditStateful(
     if (isCapacityDialogVisible) {
         ClassSessionCapacityChangeDialog(
             onConfirmClick = { isCapacityDialogVisible = false },
+        )
+    }
+    if (isDeleteDialogVisible) {
+        ClassSessionDeleteConfirmDialog(
+            onDismissRequest = { isDeleteDialogVisible = false },
+            onConfirmClick = {
+                isDeleteDialogVisible = false
+                onDeleted()
+            },
         )
     }
 }
