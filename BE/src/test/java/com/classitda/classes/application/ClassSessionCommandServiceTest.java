@@ -688,52 +688,7 @@ class ClassSessionCommandServiceTest {
     }
 
     @Test
-    void 전달하지_않은_수업_회차_필드는_유지하고_전달한_필드만_수정한다() {
-        // given
-        Member owner = 회원을_저장한다("partial-update-owner");
-        StudioContext context = 시설과_대표_소속을_저장한다(owner, "부분 수정 시설");
-        ClassType classType = 수업_종류를_저장한다(context.studio(), "부분 수정 요가");
-        ClassSession classSession = 수업을_저장한다(
-                context,
-                classType,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                60,
-                "기존 수업",
-                "기존 수업 안내"
-        );
-        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
-                null,
-                null,
-                "이름만 수정",
-                null,
-                90,
-                null,
-                null
-        );
-
-        // when
-        commandService.update(
-                owner.getId(), context.studio().getId(), classSession.getId(), request);
-        entityManager.flush();
-        entityManager.clear();
-
-        // then
-        ClassSession updated = classSessionRepository.findById(classSession.getId()).orElseThrow();
-        assertThat(updated.getName()).isEqualTo("이름만 수정");
-        assertThat(updated.getDescription()).isEqualTo("기존 수업 안내");
-        assertThat(updated.getClassForm()).isEqualTo(ClassForm.GROUP);
-        assertThat(updated.getCapacity()).isEqualTo(10);
-        assertThat(updated.getDurationMinutes()).isEqualTo(90);
-        assertThat(updated.getStartAt()).isEqualTo(LocalDateTime.of(2026, 8, 17, 20, 0));
-        assertThat(updated.getEndAt()).isEqualTo(LocalDateTime.of(2026, 8, 17, 21, 30));
-        assertThat(classSessionClassTypeRepository.findByClassSessionId(classSession.getId()))
-                .get()
-                .extracting(ClassSessionClassType::getClassTypeId)
-                .isEqualTo(classType.getId());
-    }
-
-    @Test
-    void 빈_문자열을_전달하면_수업_안내를_비운다() {
+    void null을_전달하면_수업_안내를_삭제한다() {
         // given
         Member owner = 회원을_저장한다("clear-description-owner");
         StudioContext context = 시설과_대표_소속을_저장한다(owner, "수업 안내 삭제 시설");
@@ -747,7 +702,14 @@ class ClassSessionCommandServiceTest {
                 "삭제할 수업 안내"
         );
         ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
-                null, null, null, null, null, null, "");
+                ClassForm.GROUP,
+                classType.getId(),
+                "수업 안내 삭제 대상",
+                10,
+                60,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                null
+        );
 
         // when
         commandService.update(
@@ -757,7 +719,7 @@ class ClassSessionCommandServiceTest {
 
         // then
         ClassSession updated = classSessionRepository.findById(classSession.getId()).orElseThrow();
-        assertThat(updated.getDescription()).isEmpty();
+        assertThat(updated.getDescription()).isNull();
     }
 
     @Test

@@ -41,7 +41,6 @@ import com.classitda.studio.exception.StudioException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -124,22 +123,20 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 일부_필드만_전달해_수업_회차를_수정할_수_있다() {
-        // given
-        ClassSessionUpdateRequest expected = ClassSessionUpdateRequest.of(
-                null, null, "이름만 수정", null, null, null, null);
-
+    void 필수_필드를_누락하면_COMMON_001을_반환하고_명령_서비스를_호출하지_않는다() {
         // when
-        RestTestClient.ResponseSpec result = client.patch()
+        RestTestClient.ResponseSpec result = client.put()
                 .uri("/api/studios/7/class-sessions/11")
                 .header("X-API-Version", "1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("className", "이름만 수정"))
+                .body("""
+                        {"className":"이름만 수정"}
+                        """)
                 .exchange();
 
         // then
-        result.expectStatus().isNoContent().expectBody().isEmpty();
-        verify(commandService).update(1L, 7L, 11L, expected);
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
     }
 
     @Test
@@ -742,7 +739,7 @@ class ClassSessionControllerTest {
             String version,
             ClassSessionUpdateRequest request
     ) {
-        return client.patch()
+        return client.put()
                 .uri(
                         "/api/studios/{studioId}/class-sessions/{classSessionId}",
                         studioId,

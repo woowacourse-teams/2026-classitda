@@ -248,7 +248,7 @@ class ClassSessionSecurityTest {
         ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
 
         // when
-        RestTestClient.ResponseSpec result = client.patch()
+        RestTestClient.ResponseSpec result = client.put()
                 .uri(UPDATE_URI)
                 .header("X-API-Version", "1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -267,7 +267,7 @@ class ClassSessionSecurityTest {
         ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
 
         // when
-        RestTestClient.ResponseSpec result = client.patch()
+        RestTestClient.ResponseSpec result = client.put()
                 .uri(UPDATE_URI)
                 .header("X-API-Version", "1")
                 .header("Authorization", "Bearer signup-token")
@@ -287,7 +287,7 @@ class ClassSessionSecurityTest {
         ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
 
         // when
-        RestTestClient.ResponseSpec result = client.patch()
+        RestTestClient.ResponseSpec result = client.put()
                 .uri(UPDATE_URI)
                 .header("X-API-Version", "1")
                 .header("Authorization", "Bearer access-token")

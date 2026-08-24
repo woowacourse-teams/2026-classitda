@@ -1,12 +1,11 @@
 package com.classitda.classes.application;
 
-import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.session.ClassSession;
-import com.classitda.classes.domain.session.ClassSessionClassType;
-import com.classitda.classes.domain.session.ClassSessionDatePlan;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.session.ClassSessionClassType;
+import com.classitda.classes.domain.session.ClassSessionDatePlan;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
@@ -84,10 +83,9 @@ public class ClassSessionCommandService {
                 memberId
         );
 
+        validateClassType(studioId, request.classTypeId());
         updateClassSessionDetails(classSession, request);
-        if (request.classTypeId() != null) {
-            updateClassSessionClassType(studioId, classSessionId, request.classTypeId());
-        }
+        updateClassSessionClassType(classSessionId, request.classTypeId());
     }
 
     public void cancel(Long memberId, Long studioId, Long classSessionId) {
@@ -172,26 +170,16 @@ public class ClassSessionCommandService {
             ClassSession classSession,
             ClassSessionUpdateRequest request
     ) {
-        String name = resolve(request.className(), classSession.getName());
-        String description = resolve(request.description(), classSession.getDescription());
-        ClassForm classForm = resolve(request.classForm(), classSession.getClassForm());
-        int durationMinutes = resolve(
-                request.durationMinutes(), classSession.getDurationMinutes());
-        int capacity = resolve(request.capacity(), classSession.getCapacity());
-        LocalDateTime startAt = resolve(request.startAt(), classSession.getStartAt());
-
-        if (request.startAt() != null || request.durationMinutes() != null) {
-            LocalDateTime endAt = calculateEndAt(startAt, durationMinutes);
-            validateNoInstructorTimeConflictExcluding(classSession, startAt, endAt);
-        }
+        LocalDateTime endAt = calculateEndAt(request.startAt(), request.durationMinutes());
+        validateNoInstructorTimeConflictExcluding(classSession, request.startAt(), endAt);
 
         classSession.updateDetails(
-                name,
-                description,
-                classForm,
-                durationMinutes,
-                capacity,
-                startAt
+                request.className(),
+                request.description(),
+                request.classForm(),
+                request.durationMinutes(),
+                request.capacity(),
+                request.startAt()
         );
     }
 
@@ -263,9 +251,7 @@ public class ClassSessionCommandService {
         classSessionClassTypeRepository.saveAll(classSessionClassTypes);
     }
 
-    private void updateClassSessionClassType(Long studioId, Long classSessionId, Long classTypeId) {
-        validateClassType(studioId, classTypeId);
-
+    private void updateClassSessionClassType(Long classSessionId, Long classTypeId) {
         ClassSessionClassType classSessionClassType = classSessionClassTypeRepository
                 .findByClassSessionId(classSessionId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
@@ -288,7 +274,4 @@ public class ClassSessionCommandService {
         }
     }
 
-    private <T> T resolve(T requested, T current) {
-        return requested != null ? requested : current;
-    }
 }
