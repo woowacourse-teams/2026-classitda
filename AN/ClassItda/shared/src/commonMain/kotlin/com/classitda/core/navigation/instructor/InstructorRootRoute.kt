@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.classitda.feature.instructor.InstructorBottomTab
 import com.classitda.feature.instructor.classsession.detail.ClassSessionDetailRoute
+import com.classitda.feature.instructor.classsession.edit.ClassSessionEditRoute
 import com.classitda.feature.instructor.home.InstructorHomeRoute
 import com.classitda.feature.instructor.management.lesson.ClassManagementRoute
 import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
@@ -16,13 +17,27 @@ import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
 fun InstructorRootRoute(modifier: Modifier = Modifier) {
     var selectedTab by remember { mutableStateOf(InstructorBottomTab.HOME) }
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
+    var isSessionEditing by remember { mutableStateOf(false) }
 
     val sessionId = selectedSessionId
-    if (sessionId != null) {
+    if (sessionId != null && isSessionEditing) {
+        ClassSessionEditRoute(
+            sessionId = sessionId,
+            categories = listOf("필라테스", "요가", "그룹 PT"),
+            onBackClick = { isSessionEditing = false },
+            onSaved = { isSessionEditing = false },
+            onDeleted = {
+                isSessionEditing = false
+                selectedSessionId = null
+                selectedTab = InstructorBottomTab.SCHEDULE
+            },
+            modifier = modifier,
+        )
+    } else if (sessionId != null) {
         ClassSessionDetailRoute(
             sessionId = sessionId,
             onBackClick = { selectedSessionId = null },
-            onEditClick = {},
+            onEditClick = { isSessionEditing = true },
             onMemberEditClick = {},
             modifier = modifier,
         )
