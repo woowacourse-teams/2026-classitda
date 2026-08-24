@@ -27,6 +27,8 @@ import com.classitda.feature.instructor.mypage.toUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal class MemberManagementViewModel(
@@ -36,25 +38,31 @@ internal class MemberManagementViewModel(
     val uiState: StateFlow<MemberManagementUiState> = _uiState.asStateFlow()
     private var query = ""
     private var sort = MemberSortOrder.RECENTLY_REGISTERED
+    private var queryJob: Job? = null
 
     init {
-        load()
+        load(showLoading = true)
     }
 
     fun onAction(action: MemberManagementAction) {
         when (action) {
             is MemberManagementAction.QueryChanged -> {
                 query = action.query
-                load()
+                queryJob?.cancel()
+                queryJob =
+                    viewModelScope.launch {
+                        delay(300)
+                        load(showLoading = false)
+                    }
             }
 
             is MemberManagementAction.SortOrderChanged -> {
                 sort = action.sortOrder.toDomain()
-                load()
+                load(showLoading = false)
             }
 
             MemberManagementAction.Retry -> {
-                load()
+                load(showLoading = true)
             }
 
             is MemberManagementAction.RequestDelete -> {
@@ -86,12 +94,13 @@ internal class MemberManagementViewModel(
     }
 
     fun refresh() {
-        load()
+        load(showLoading = false)
     }
 
-    private fun load() {
-        _uiState.value =
-            MemberManagementUiState.Loading
+    private fun load(showLoading: Boolean) {
+        if (showLoading) {
+            _uiState.value = MemberManagementUiState.Loading
+        }
         viewModelScope.launch {
             _uiState.value =
                 when (val result = repository.getMembers(query, sort)) {
