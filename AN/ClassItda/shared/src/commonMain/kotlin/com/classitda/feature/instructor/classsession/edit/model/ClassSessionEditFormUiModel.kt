@@ -10,6 +10,7 @@ internal data class ClassSessionEditFormUiModel(
     val categories: List<String>,
     val title: String,
     val capacity: Int,
+    val reservedCount: Int,
     val durationMinutes: Int,
     val startTime: LocalTime,
     val sessionDate: LocalDate,

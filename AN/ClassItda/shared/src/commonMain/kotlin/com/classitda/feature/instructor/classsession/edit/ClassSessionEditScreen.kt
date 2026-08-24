@@ -43,6 +43,8 @@ import com.classitda.feature.instructor.management.lesson.create.component.DateP
 import com.classitda.feature.instructor.management.lesson.create.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.lesson.create.model.ClassType
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
+import com.classitda.feature.instructor.classsession.edit.component.ClassSessionCapacityChangeDialog
+import com.classitda.feature.instructor.classsession.edit.component.ClassSessionEditExitDialog
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
@@ -107,9 +109,37 @@ private fun ClassSessionEditStateful(
     var sessionDate by remember(initialForm.id) { mutableStateOf(initialForm.sessionDate) }
     var description by remember(initialForm.id) { mutableStateOf(initialForm.description) }
     var isTimePickerVisible by remember { mutableStateOf(false) }
+    var isExitDialogVisible by remember { mutableStateOf(false) }
+    var isCapacityDialogVisible by remember { mutableStateOf(false) }
 
     val durationMinutes = durationText.toIntOrNull() ?: 0
     val endTime = startTime.plusMinutesClamped(durationMinutes)
+    val hasUnsavedChanges =
+        classType != initialForm.classType ||
+            selectedCategories != initialForm.categories ||
+            title != initialForm.title ||
+            capacityText != initialForm.capacity.toString() ||
+            durationText != initialForm.durationMinutes.toString() ||
+            startTime != initialForm.startTime ||
+            sessionDate != initialForm.sessionDate ||
+            description != initialForm.description
+
+    fun requestBack() {
+        if (hasUnsavedChanges) {
+            isExitDialogVisible = true
+        } else {
+            onBackClick()
+        }
+    }
+
+    fun requestSave() {
+        val capacity = capacityText.toIntOrNull() ?: 0
+        if (capacity < initialForm.reservedCount) {
+            isCapacityDialogVisible = true
+        } else {
+            onSaved()
+        }
+    }
 
     ClassSessionEditStateless(
         classType = classType,
@@ -122,7 +152,7 @@ private fun ClassSessionEditStateful(
         endTime = endTime,
         sessionDate = sessionDate,
         description = description,
-        onBackClick = onBackClick,
+        onBackClick = ::requestBack,
         onClassTypeChange = { classType = it },
         onCategoriesChange = { selectedCategories = it },
         onTitleChange = { title = it },
@@ -132,7 +162,7 @@ private fun ClassSessionEditStateful(
         onDateClick = {},
         onDescriptionChange = { description = it },
         onDeleteClick = onDeleted,
-        onSaveClick = onSaved,
+        onSaveClick = ::requestSave,
         modifier = modifier,
     )
 
@@ -144,6 +174,20 @@ private fun ClassSessionEditStateful(
                 startTime = it
                 isTimePickerVisible = false
             },
+        )
+    }
+    if (isExitDialogVisible) {
+        ClassSessionEditExitDialog(
+            onDismissRequest = { isExitDialogVisible = false },
+            onLeaveClick = {
+                isExitDialogVisible = false
+                onBackClick()
+            },
+        )
+    }
+    if (isCapacityDialogVisible) {
+        ClassSessionCapacityChangeDialog(
+            onConfirmClick = { isCapacityDialogVisible = false },
         )
     }
 }

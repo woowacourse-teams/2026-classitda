@@ -44,6 +44,7 @@ private fun ClassSession.toEditForm(): ClassSessionEditFormUiModel {
         categories = categories,
         title = title,
         capacity = capacity,
+        reservedCount = reservedCount,
         durationMinutes = durationMinutes,
         startTime = startAt.time,
         sessionDate = startAt.date,
