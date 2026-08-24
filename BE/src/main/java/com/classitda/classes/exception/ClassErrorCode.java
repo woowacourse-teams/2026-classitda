@@ -161,6 +161,26 @@ public enum ClassErrorCode implements ErrorCode {
             "수업 신청을 찾을 수 없습니다.",
             HttpStatus.NOT_FOUND
     ),
+    ENROLLMENT_MEMBER_NOT_FOUND(
+            "CLASS_SESSION_ENROLLMENT-010",
+            "예약할 회원 소속을 찾을 수 없습니다.",
+            HttpStatus.NOT_FOUND
+    ),
+    ENROLLMENT_SESSION_NOT_SCHEDULED(
+            "CLASS_SESSION_ENROLLMENT-011",
+            "예정 상태인 수업 회차에만 예약할 수 있습니다.",
+            HttpStatus.CONFLICT
+    ),
+    ENROLLMENT_CAPACITY_EXCEEDED(
+            "CLASS_SESSION_ENROLLMENT-012",
+            "수업 회차의 정원이 모두 찼습니다.",
+            HttpStatus.CONFLICT
+    ),
+    ENROLLMENT_ALREADY_EXISTS(
+            "CLASS_SESSION_ENROLLMENT-013",
+            "이미 해당 수업 회차에 신청한 회원입니다.",
+            HttpStatus.CONFLICT
+    ),
 
     // ATTENDANCE
     INVALID_ATTENDANCE_TRANSITION(

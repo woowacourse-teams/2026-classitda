@@ -78,7 +78,7 @@ public interface RoomControllerApi {
                     )
             )
     })
-    ResponseEntity<RoomResponse> save(
+    ResponseEntity<Void> save(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")
@@ -145,7 +145,7 @@ public interface RoomControllerApi {
             security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "204", description = "수정 성공"),
             @ApiResponse(
                     responseCode = "400",
                     description = "요청 값이 올바르지 않거나 API 버전 헤더가 없음",
@@ -198,7 +198,7 @@ public interface RoomControllerApi {
                     )
             )
     })
-    RoomResponse update(
+    ResponseEntity<Void> update(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "시설 ID", required = true, example = "1")

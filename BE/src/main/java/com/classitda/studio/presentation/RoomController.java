@@ -28,14 +28,13 @@ public class RoomController implements RoomControllerApi {
 
     @Override
     @PostMapping(version = "1")
-    public ResponseEntity<RoomResponse> save(
+    public ResponseEntity<Void> save(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @Valid @RequestBody RoomCreateRequest request
     ) {
-        RoomResponse response = roomService.save(memberId, studioId, request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(response);
+        roomService.save(memberId, studioId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
@@ -50,12 +49,13 @@ public class RoomController implements RoomControllerApi {
 
     @Override
     @PatchMapping(path = "/{roomId}", version = "1")
-    public RoomResponse update(
+    public ResponseEntity<Void> update(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long roomId,
             @Valid @RequestBody RoomUpdateRequest request
     ) {
-        return roomService.update(memberId, studioId, roomId, request);
+        roomService.update(memberId, studioId, roomId, request);
+        return ResponseEntity.noContent().build();
     }
 }

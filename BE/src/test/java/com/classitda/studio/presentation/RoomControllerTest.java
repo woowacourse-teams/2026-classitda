@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.classitda.common.pagination.CursorResponse;
@@ -54,7 +55,7 @@ class RoomControllerTest {
     }
 
     @Test
-    void 룸을_등록하면_201과_룸_정보를_반환한다() {
+    void 룸을_등록하면_201과_빈_본문을_반환하고_서비스에_위임한다() {
         // given
         when(roomService.save(anyLong(), anyLong(), any(RoomCreateRequest.class)))
                 .thenReturn(new RoomResponse(1L, "A룸"));
@@ -69,10 +70,8 @@ class RoomControllerTest {
 
         // then
         result.expectStatus().isCreated()
-                .expectBody()
-                .json("""
-                        {"id":1,"name":"A룸"}
-                        """, JsonCompareMode.STRICT);
+                .expectBody().isEmpty();
+        verify(roomService).save(anyLong(), anyLong(), any(RoomCreateRequest.class));
     }
 
     @Test
@@ -159,7 +158,7 @@ class RoomControllerTest {
     }
 
     @Test
-    void 룸을_수정하면_200과_룸_정보를_반환한다() {
+    void 룸을_수정하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
         // given
         when(roomService.update(anyLong(), anyLong(), anyLong(), any(RoomUpdateRequest.class)))
                 .thenReturn(new RoomResponse(1L, "B룸"));
@@ -173,11 +172,9 @@ class RoomControllerTest {
                 .exchange();
 
         // then
-        result.expectStatus().isOk()
-                .expectBody()
-                .json("""
-                        {"id":1,"name":"B룸"}
-                        """, JsonCompareMode.STRICT);
+        result.expectStatus().isNoContent()
+                .expectBody().isEmpty();
+        verify(roomService).update(anyLong(), anyLong(), anyLong(), any(RoomUpdateRequest.class));
     }
 
     @Test
