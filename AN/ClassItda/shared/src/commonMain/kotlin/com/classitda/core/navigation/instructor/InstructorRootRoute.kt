@@ -22,6 +22,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
     var isMemberEditing by remember { mutableStateOf(false) }
     var scheduleRefreshKey by remember { mutableStateOf(0) }
     var detailRefreshKey by remember { mutableStateOf(0) }
+    var studioRefreshKey by remember { mutableStateOf(0) }
 
     val sessionId = selectedSessionId
     if (sessionId != null && isMemberEditing) {
@@ -67,7 +68,9 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             InstructorBottomTab.HOME -> {
                 InstructorHomeRoute(
                     onSessionClick = { selectedSessionId = it },
+                    onStudioChanged = { studioRefreshKey++ },
                     bottomBar = {},
+                    refreshKey = studioRefreshKey,
                     modifier = modifier,
                 )
             }
@@ -76,7 +79,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
                 InstructorScheduleRoute(
                     bottomBar = {},
                     onSessionClick = { selectedSessionId = it },
-                    refreshKey = scheduleRefreshKey,
+                    refreshKey = scheduleRefreshKey + studioRefreshKey,
                     modifier = modifier,
                 )
             }
