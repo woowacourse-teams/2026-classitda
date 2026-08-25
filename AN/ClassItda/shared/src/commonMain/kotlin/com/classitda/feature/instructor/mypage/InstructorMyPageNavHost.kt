@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.feature.common.privacypolicy.PrivacyPolicyRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -28,6 +29,9 @@ private data class InstructorFacilityDetailDestination(
 private data class InstructorFacilityEditDestination(
     val facilityId: String,
 )
+
+@Serializable
+private data object InstructorPrivacyPolicyDestination
 
 /** Temporary feature graph used until the app-level instructor graph is assembled. */
 @Composable
@@ -49,7 +53,11 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
                 onOpenProfile = { navController.navigate(InstructorMyPageDestination.F02) },
                 onOpenMemberManagement = { navController.navigate(InstructorMyPageDestination.F05) },
                 onOpenFacilityManagement = { navController.navigate(InstructorMyPageDestination.F08) },
-                onOpenPrivacyPolicy = {},
+                onOpenPrivacyPolicy = {
+                    navController.navigate(InstructorPrivacyPolicyDestination) {
+                        launchSingleTop = true
+                    }
+                },
             )
         }
 
@@ -170,6 +178,10 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
                     navController.popBackStack(InstructorMyPageDestination.F08, false)
                 },
             )
+        }
+
+        composable<InstructorPrivacyPolicyDestination> {
+            PrivacyPolicyRoute(onBack = navController::popBackStack)
         }
     }
 }

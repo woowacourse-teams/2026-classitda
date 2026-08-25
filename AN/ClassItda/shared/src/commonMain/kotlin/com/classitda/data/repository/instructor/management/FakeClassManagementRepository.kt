@@ -175,5 +175,5 @@ private val demoMembers =
     listOf(
         ClassSessionMember(id = "member-1", name = "김민지"),
         ClassSessionMember(id = "member-2", name = "이서윤"),
-        ClassSessionMember(id = "member-3", name = "박지수", isTemporary = true),
+        ClassSessionMember(id = "member-3", name = "박지수"),
     )

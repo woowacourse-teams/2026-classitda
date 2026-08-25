@@ -74,8 +74,8 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
         when (selectedTab) {
             InstructorBottomTab.HOME -> {
                 InstructorHomeRoute(
-                    onScheduleClick = { selectedTab = InstructorBottomTab.SCHEDULE },
-                    bottomBar = topLevelBottomBar,
+                    onSessionClick = { selectedSessionId = it },
+                    bottomBar = {},
                     modifier = modifier,
                 )
             }
@@ -96,7 +96,11 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             InstructorBottomTab.CHAT,
             InstructorBottomTab.MY,
             -> {
-                InstructorHomeRoute(onScheduleClick = {}, bottomBar = topLevelBottomBar, modifier = modifier)
+                InstructorHomeRoute(
+                    onSessionClick = { selectedSessionId = it },
+                    bottomBar = {},
+                    modifier = modifier,
+                )
             }
         }
     }

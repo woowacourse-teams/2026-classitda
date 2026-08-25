@@ -58,23 +58,6 @@ internal fun ClassSessionMemberRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = InsColors.TextPrimary,
             )
-            if (member.isTemporary) {
-                Surface(
-                    shape = AppShape.Pill,
-                    color = InsColors.PurpleLight,
-                ) {
-                    Text(
-                        text = "임시 회원",
-                        color = InsColors.Purple,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier =
-                            Modifier.padding(
-                                horizontal = AppSpacing.sm,
-                                vertical = AppSpacing.xs,
-                            ),
-                    )
-                }
-            }
         }
     }
 }
@@ -85,16 +68,6 @@ private fun ClassSessionMemberRowPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         ClassSessionMemberRow(
             member = ClassSessionMemberUiModel(id = "member-1", name = "김민지"),
-        )
-    }
-}
-
-@Preview(name = "예약 회원 - 임시 회원", showBackground = true, widthDp = 350)
-@Composable
-private fun ClassSessionMemberRowTemporaryPreview() {
-    AppTheme(theme = ThemeType.INSTRUCTOR) {
-        ClassSessionMemberRow(
-            member = ClassSessionMemberUiModel(id = "member-2", name = "박지수", isTemporary = true),
         )
     }
 }

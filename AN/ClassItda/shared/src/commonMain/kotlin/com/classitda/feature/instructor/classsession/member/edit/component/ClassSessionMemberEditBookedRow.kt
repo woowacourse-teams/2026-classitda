@@ -62,23 +62,6 @@ internal fun ClassSessionMemberEditBookedRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = InsColors.TextPrimary,
             )
-            if (member.isTemporary) {
-                Surface(
-                    shape = AppShape.Pill,
-                    color = InsColors.PurpleLight,
-                ) {
-                    Text(
-                        text = "임시 회원",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = InsColors.Purple,
-                        modifier =
-                            Modifier.padding(
-                                horizontal = AppSpacing.sm,
-                                vertical = AppSpacing.xs,
-                            ),
-                    )
-                }
-            }
             IconButton(
                 onClick = onRemoveClick,
                 modifier = Modifier.size(40.dp),
@@ -100,17 +83,6 @@ private fun ClassSessionMemberEditBookedRowPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         ClassSessionMemberEditBookedRow(
             member = ClassSessionMemberUiModel(id = "member-1", name = "김민지"),
-            onRemoveClick = {},
-        )
-    }
-}
-
-@Preview(name = "회원 수정 행 - 임시 회원", showBackground = true, widthDp = 350)
-@Composable
-private fun ClassSessionMemberEditBookedRowTemporaryPreview() {
-    AppTheme(theme = ThemeType.INSTRUCTOR) {
-        ClassSessionMemberEditBookedRow(
-            member = ClassSessionMemberUiModel(id = "member-2", name = "박지수", isTemporary = true),
             onRemoveClick = {},
         )
     }
