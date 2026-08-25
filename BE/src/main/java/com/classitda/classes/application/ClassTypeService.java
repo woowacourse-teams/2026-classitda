@@ -58,7 +58,7 @@ public class ClassTypeService {
 
     @Transactional(readOnly = true)
     public List<ClassTypeResponse> findAll(Long memberId, Long studioId) {
-        getManageableStudio(memberId, studioId);
+        validateReadableStudio(memberId, studioId);
 
         return classTypeRepository.findAllByStudioIdOrderByIdAsc(studioId).stream()
                 .map(classType -> ClassTypeResponse.of(classType.getId(), classType.getName()))
@@ -101,5 +101,12 @@ public class ClassTypeService {
         studioPermissionService.validate(studio, memberId, PermissionCode.CLASS_TYPE_MANAGE);
 
         return studio;
+    }
+
+    private void validateReadableStudio(Long memberId, Long studioId) {
+        Studio studio = studioRepository.findById(studioId)
+                .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
+
+        studioPermissionService.validateStaff(studio, memberId);
     }
 }

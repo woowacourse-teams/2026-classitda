@@ -24,7 +24,8 @@ public interface ClassTypeControllerApi {
     @Operation(
             summary = "수업 종류 목록 조회",
             description = "시설에 속한 모든 수업 종류를 id 오름차순으로 조회한다. "
-                    + "드롭다운 전체 옵션용 데이터로 페이지네이션을 적용하지 않으며, 수업 종류 관리 권한이 필요하다."
+                    + "드롭다운과 수업 목록 필터의 전체 옵션용 데이터로 페이지네이션을 적용하지 않는다. "
+                    + "시설의 활성 강사와 직원은 별도 관리 권한 없이 조회할 수 있다."
     )
     @ApiResponses({
             @ApiResponse(
