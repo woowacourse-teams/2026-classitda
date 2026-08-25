@@ -1,6 +1,5 @@
 package com.classitda.feature.instructor.mypage
 
-import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.ManagedFacility
 import com.classitda.domain.model.instructor.mypage.ManagedMember
@@ -59,9 +58,7 @@ internal fun ManagedFacility.toFacilityUiModel(): FacilityUiModel =
         id = id,
         name = name,
         address = address,
-        representativeImageReference = representativeImageReference,
-        images = images.map { FacilityImageUiModel(it.id, it.previewReference) },
-        detailAddress = detailAddress,
+        image = image?.let(::FacilityImageUiModel),
         phoneNumber = formatPhoneNumber(phoneNumber),
         description = description,
         openingTime = openingTime,
@@ -76,10 +73,9 @@ internal fun FacilityList.toFacilityListUiModel(): FacilityListUiModel =
 
 internal fun ManagedFacility.toFacilityInputUiModel(): FacilityInputUiModel =
     FacilityInputUiModel(
-        images = images.map { FacilityImageInputUiModel(it.id, it.previewReference) },
+        image = image?.let(::FacilityImageInputUiModel),
         name = name,
         address = address,
-        detailAddress = detailAddress,
         phoneNumber = phoneNumber,
         description = description,
         openingTime = openingTime,
@@ -88,18 +84,14 @@ internal fun ManagedFacility.toFacilityInputUiModel(): FacilityInputUiModel =
 
 internal fun FacilityInputUiModel.toFacilityRegistrationDraft(): FacilityRegistrationDraft =
     FacilityRegistrationDraft(
-        images = images.map { FacilityImageDraft(it.id, it.previewReference) },
+        image = image?.selection,
         name = name,
         address = address,
-        detailAddress = detailAddress,
         phoneNumber = phoneNumber,
         description = description,
         openingTime = openingTime,
         closingTime = closingTime,
     )
-
-internal fun FacilityImageInputUiModel.toDomain(): FacilityImageDraft =
-    FacilityImageDraft(id = id, previewReference = previewReference)
 
 private fun maskPhoneNumber(phoneNumber: String): String {
     val digits = phoneNumber.filter(Char::isDigit)

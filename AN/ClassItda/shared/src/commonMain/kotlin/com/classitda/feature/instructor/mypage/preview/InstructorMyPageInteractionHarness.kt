@@ -387,17 +387,16 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             lastEvent = "Back:F09"
                         }
 
-                        FacilityRegistrationAction.RequestImages -> {
-                            lastEvent = "RequestImages"
+                        FacilityRegistrationAction.RequestImageSource -> {
+                            lastEvent = "RequestImageSource"
                         }
 
                         FacilityRegistrationAction.RequestAddressSearch -> {
                             lastEvent = "RequestAddressSearch"
                         }
 
-                        is FacilityRegistrationAction.ImagesSelected -> {
-                            lastEvent =
-                                "ImagesSelected:${action.images.size.coerceAtMost(5)}"
+                        is FacilityRegistrationAction.ImageSelected -> {
+                            lastEvent = "ImageSelected"
                         }
 
                         is FacilityRegistrationAction.AddressSelected -> {
@@ -406,7 +405,6 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                                 FacilityRegistrationUiState.Editing(
                                     FacilityInputUiModel(
                                         address = action.address,
-                                        detailAddress = action.detailAddress,
                                     ),
                                     false,
                                 )
@@ -473,7 +471,9 @@ private val facilityPageFixture =
                 FacilityUiModel(
                     InstructorFacilityId("facility-1"),
                     "클래스잇다 스튜디오",
-                    "서울특별시 강남구 테헤란로",
+                    com.classitda.domain.model.instructor.mypage.FacilityAddress(
+                        roadAddress = "서울특별시 강남구 테헤란로",
+                    ),
                 ),
             ),
     )

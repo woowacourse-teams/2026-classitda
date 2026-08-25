@@ -1,6 +1,6 @@
 package com.classitda.feature.instructor.mypage.contract
 
-import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
 
 sealed interface FacilityRegistrationUiState {
     data object Loading : FacilityRegistrationUiState
@@ -13,9 +13,7 @@ sealed interface FacilityRegistrationUiState {
 
     data object Submitting : FacilityRegistrationUiState
 
-    data class Success(
-        val facilityId: InstructorFacilityId,
-    ) : FacilityRegistrationUiState
+    data object Success : FacilityRegistrationUiState
 
     data class Error(
         val draft: FacilityInputUiModel,
@@ -31,7 +29,7 @@ enum class FacilityRegistrationField {
     OPENING_TIME,
     CLOSING_TIME,
     DESCRIPTION,
-    IMAGES,
+    IMAGE,
 }
 
 enum class FacilityRegistrationUiError {
@@ -72,21 +70,18 @@ sealed interface FacilityRegistrationAction {
         val description: String,
     ) : FacilityRegistrationAction
 
-    data object RequestImages : FacilityRegistrationAction
+    data object RequestImageSource : FacilityRegistrationAction
 
-    data class ImagesSelected(
-        val images: List<FacilityImageInputUiModel>,
+    data class ImageSelected(
+        val image: FacilityImageInputUiModel,
     ) : FacilityRegistrationAction
 
-    data class RemoveImage(
-        val imageId: String,
-    ) : FacilityRegistrationAction
+    data object RemoveImage : FacilityRegistrationAction
 
     data object RequestAddressSearch : FacilityRegistrationAction
 
     data class AddressSelected(
-        val address: String,
-        val detailAddress: String = "",
+        val address: FacilityAddress,
     ) : FacilityRegistrationAction
 
     data object Submit : FacilityRegistrationAction
@@ -97,7 +92,7 @@ sealed interface FacilityRegistrationAction {
 internal fun facilityRegistrationFieldErrors(draft: FacilityInputUiModel): Set<FacilityRegistrationField> =
     buildSet {
         if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
-        if (draft.address.isBlank()) add(FacilityRegistrationField.ADDRESS)
+        if (!draft.address.hasBaseAddress) add(FacilityRegistrationField.ADDRESS)
         if (!isFacilityPhoneNumberValid(draft.phoneNumber)) add(FacilityRegistrationField.PHONE_NUMBER)
         if (draft.openingTime.isNotBlank() && !isFacilityTimeValid(draft.openingTime)) {
             add(FacilityRegistrationField.OPENING_TIME)

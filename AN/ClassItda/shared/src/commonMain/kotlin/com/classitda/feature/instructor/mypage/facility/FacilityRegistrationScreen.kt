@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -111,6 +110,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
@@ -409,10 +410,10 @@ private fun FacilityRegistrationForm(
             )
         }
         FacilityImageSection(
-            images = draft.images,
+            image = draft.image,
             enabled = !isSubmitting,
-            onRequestImages = { onAction(FacilityRegistrationAction.RequestImages) },
-            onRemoveImage = { onAction(FacilityRegistrationAction.RemoveImage(it)) },
+            onRequestImageSource = { onAction(FacilityRegistrationAction.RequestImageSource) },
+            onRemoveImage = { onAction(FacilityRegistrationAction.RemoveImage) },
         )
         FacilityTextField(
             label = stringResource(Res.string.instructor_facility_registration_name),
@@ -439,7 +440,7 @@ private fun FacilityRegistrationForm(
         ) {
             FacilityTextField(
                 label = stringResource(Res.string.instructor_facility_registration_address),
-                value = draft.address,
+                value = draft.address.displayAddress,
                 placeholder = stringResource(Res.string.instructor_facility_registration_address_placeholder),
                 isError = addressError,
                 errorMessage =
@@ -474,7 +475,7 @@ private fun FacilityRegistrationForm(
         }
         FacilityTextField(
             label = stringResource(Res.string.instructor_facility_registration_detail_address),
-            value = draft.detailAddress,
+            value = draft.address.detailAddress,
             placeholder = stringResource(Res.string.instructor_facility_registration_detail_address_placeholder),
             isError = detailAddressError,
             errorMessage = null,
@@ -577,10 +578,10 @@ private fun FacilityRegistrationForm(
 
 @Composable
 private fun FacilityImageSection(
-    images: List<FacilityImageInputUiModel>,
+    image: FacilityImageInputUiModel?,
     enabled: Boolean,
-    onRequestImages: () -> Unit,
-    onRemoveImage: (String) -> Unit,
+    onRequestImageSource: () -> Unit,
+    onRemoveImage: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -596,26 +597,15 @@ private fun FacilityImageSection(
             )
         }
         Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
         ) {
-            if (images.size < FacilityInputUiModel.MAX_IMAGE_COUNT) {
-                FacilityImageTile(
-                    image = null,
-                    count = images.size,
-                    enabled = enabled,
-                    onClick = onRequestImages,
-                )
-            }
-            images.take(FacilityInputUiModel.MAX_IMAGE_COUNT).forEach { image ->
-                FacilityImageTile(
-                    image = image,
-                    count = null,
-                    enabled = enabled,
-                    onClick = {},
-                    onRemove = { onRemoveImage(image.id) },
-                )
-            }
+            FacilityImageTile(
+                image = image,
+                count = if (image == null) 0 else null,
+                enabled = enabled,
+                onClick = onRequestImageSource,
+                onRemove = if (image == null) null else onRemoveImage,
+            )
         }
     }
 }
@@ -853,22 +843,31 @@ private val filledFacilityRegistrationState =
         draft =
             FacilityInputUiModel(
                 name = "더 에이치 휘트니스 강남점",
-                address = "서울 강남구 테헤란로 123",
-                detailAddress = "2층",
+                address =
+                    FacilityAddress(
+                        roadAddress = "서울 강남구 테헤란로 123",
+                        detailAddress = "2층",
+                    ),
                 phoneNumber = "0212345678",
                 description = "회원들이 편하게 운동할 수 있는 시설입니다.",
             ),
         canSubmit = true,
     )
 
-private val fiveImageFacilityRegistrationState =
+private val singleImageFacilityRegistrationState =
     FacilityRegistrationUiState.Editing(
         draft =
             filledFacilityRegistrationState.draft.copy(
-                images =
-                    (1..FacilityInputUiModel.MAX_IMAGE_COUNT).map {
-                        FacilityImageInputUiModel("image-$it", "fixture-image-$it")
-                    },
+                image =
+                    FacilityImageInputUiModel(
+                        FacilityImageSelection.Local(
+                            handle = "fixture-image-handle",
+                            previewReference = "fixture-image-reference",
+                            mimeType = "image/jpeg",
+                            fileName = "facility.jpg",
+                            sizeBytes = 1024,
+                        ),
+                    ),
             ),
         canSubmit = true,
     )
@@ -900,15 +899,15 @@ private fun FacilityRegistrationScreenPreview_Filled() {
 }
 
 @Preview(
-    name = "Five images · Instructor",
+    name = "Single image · Instructor",
     group = "Screen/FacilityRegistration",
     widthDp = 390,
     heightDp = 1043,
 )
 @Composable
-private fun FacilityRegistrationScreenPreview_FiveImages() {
+private fun FacilityRegistrationScreenPreview_SingleImage() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
-        FacilityRegistrationScreen(fiveImageFacilityRegistrationState, onAction = {})
+        FacilityRegistrationScreen(singleImageFacilityRegistrationState, onAction = {})
     }
 }
 

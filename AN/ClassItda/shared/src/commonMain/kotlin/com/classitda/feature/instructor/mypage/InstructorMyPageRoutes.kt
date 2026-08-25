@@ -327,7 +327,7 @@ internal fun InstructorFacilityEditRoute(
 @Composable
 internal fun InstructorFacilityRegistrationRoute(
     onBack: () -> Unit,
-    onSuccess: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit = {},
+    onSuccess: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: FacilityRegistrationViewModel = koinViewModel(),
 ) {
@@ -340,5 +340,5 @@ internal fun InstructorFacilityRegistrationRoute(
         }
     }, modifier = modifier)
     val success = uiState as? com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState.Success
-    LaunchedEffect(success?.facilityId) { success?.facilityId?.let(onSuccess) }
+    LaunchedEffect(success) { if (success != null) onSuccess() }
 }

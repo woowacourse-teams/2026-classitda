@@ -20,7 +20,6 @@ import classitda.shared.generated.resources.instructor_facility_registration_har
 import classitda.shared.generated.resources.instructor_facility_registration_harness_errors
 import classitda.shared.generated.resources.instructor_facility_registration_harness_failed
 import classitda.shared.generated.resources.instructor_facility_registration_harness_filled
-import classitda.shared.generated.resources.instructor_facility_registration_harness_five_images
 import classitda.shared.generated.resources.instructor_facility_registration_harness_last_event
 import classitda.shared.generated.resources.instructor_facility_registration_harness_no_event
 import classitda.shared.generated.resources.instructor_facility_registration_harness_submitting
@@ -29,6 +28,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
@@ -65,12 +66,14 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
 
                     is FacilityRegistrationAction.AddressChanged -> {
                         lastEvent = "AddressChanged"
-                        uiState = editingState(uiState.draftOrEmpty().copy(address = action.address))
+                        val address = uiState.draftOrEmpty().address.copy(roadAddress = action.address)
+                        uiState = editingState(uiState.draftOrEmpty().copy(address = address))
                     }
 
                     is FacilityRegistrationAction.DetailAddressChanged -> {
                         lastEvent = "DetailAddressChanged"
-                        uiState = editingState(uiState.draftOrEmpty().copy(detailAddress = action.detailAddress))
+                        val address = uiState.draftOrEmpty().address.copy(detailAddress = action.detailAddress)
+                        uiState = editingState(uiState.draftOrEmpty().copy(address = address))
                     }
 
                     is FacilityRegistrationAction.PhoneNumberChanged -> {
@@ -93,26 +96,26 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
                         uiState = editingState(uiState.draftOrEmpty().copy(description = action.description))
                     }
 
-                    FacilityRegistrationAction.RequestImages -> {
-                        lastEvent = "RequestImages"
+                    FacilityRegistrationAction.RequestImageSource -> {
+                        lastEvent = "RequestImageSource"
                     }
 
-                    is FacilityRegistrationAction.ImagesSelected -> {
-                        lastEvent = "ImagesSelected:${action.images.size}"
+                    is FacilityRegistrationAction.ImageSelected -> {
+                        lastEvent = "ImageSelected"
                         uiState =
                             editingState(
                                 uiState.draftOrEmpty().copy(
-                                    images = action.images.take(FacilityInputUiModel.MAX_IMAGE_COUNT),
+                                    image = action.image,
                                 ),
                             )
                     }
 
-                    is FacilityRegistrationAction.RemoveImage -> {
-                        lastEvent = "RemoveImage:${action.imageId}"
+                    FacilityRegistrationAction.RemoveImage -> {
+                        lastEvent = "RemoveImage"
                         uiState =
                             editingState(
                                 uiState.draftOrEmpty().copy(
-                                    images = uiState.draftOrEmpty().images.filterNot { it.id == action.imageId },
+                                    image = null,
                                 ),
                             )
                     }
@@ -127,7 +130,6 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
                             editingState(
                                 uiState.draftOrEmpty().copy(
                                     address = action.address,
-                                    detailAddress = action.detailAddress,
                                 ),
                             )
                     }
@@ -166,8 +168,8 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
             TextButton(onClick = { uiState = editingState(filledFacilityDraft) }) {
                 Text(stringResource(Res.string.instructor_facility_registration_harness_filled))
             }
-            TextButton(onClick = { uiState = editingState(fiveImageFacilityDraft) }) {
-                Text(stringResource(Res.string.instructor_facility_registration_harness_five_images))
+            TextButton(onClick = { uiState = editingState(singleImageFacilityDraft) }) {
+                Text("단일 이미지")
             }
         }
         Row(
@@ -226,20 +228,25 @@ private fun editingState(
 private val filledFacilityDraft =
     FacilityInputUiModel(
         name = "더 에이치 휘트니스 강남점",
-        address = "서울 강남구 테헤란로 123",
-        detailAddress = "2층",
+        address = FacilityAddress(roadAddress = "서울 강남구 테헤란로 123", detailAddress = "2층"),
         phoneNumber = "0212345678",
         description = "회원들이 편하게 운동할 수 있는 시설입니다.",
         openingTime = "09:00",
         closingTime = "22:00",
     )
 
-private val fiveImageFacilityDraft =
+private val singleImageFacilityDraft =
     filledFacilityDraft.copy(
-        images =
-            (1..FacilityInputUiModel.MAX_IMAGE_COUNT).map {
-                FacilityImageInputUiModel("harness-image-$it", "harness-image-reference-$it")
-            },
+        image =
+            FacilityImageInputUiModel(
+                FacilityImageSelection.Local(
+                    handle = "harness-image-handle",
+                    previewReference = "harness-image-reference",
+                    mimeType = "image/jpeg",
+                    fileName = "facility.jpg",
+                    sizeBytes = 1024,
+                ),
+            ),
     )
 
 @Preview(

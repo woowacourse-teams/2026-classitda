@@ -2,7 +2,7 @@ package com.classitda.feature.instructor.mypage.facility
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiError
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class FacilityManagementViewModel(
-    private val repository: InstructorMyPageRepository,
+    private val repository: InstructorFacilityRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<FacilityManagementUiState>(FacilityManagementUiState.Loading)
     val uiState: StateFlow<FacilityManagementUiState> = _uiState.asStateFlow()

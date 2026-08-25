@@ -64,7 +64,6 @@ import classitda.shared.generated.resources.instructor_facility_delete_success_t
 import classitda.shared.generated.resources.instructor_facility_delete_title
 import classitda.shared.generated.resources.instructor_facility_detail_address
 import classitda.shared.generated.resources.instructor_facility_detail_back
-import classitda.shared.generated.resources.instructor_facility_detail_delete
 import classitda.shared.generated.resources.instructor_facility_detail_description
 import classitda.shared.generated.resources.instructor_facility_detail_edit
 import classitda.shared.generated.resources.instructor_facility_detail_error
@@ -83,6 +82,7 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
+import com.classitda.feature.instructor.mypage.contract.FACILITY_DELETE_ENABLED
 import com.classitda.feature.instructor.mypage.contract.FacilityDeleteError
 import com.classitda.feature.instructor.mypage.contract.FacilityDeleteState
 import com.classitda.feature.instructor.mypage.contract.FacilityDetailAction
@@ -112,7 +112,7 @@ fun FacilityDetailScreen(
         }
     }
     val content = uiState as? FacilityDetailUiState.Content
-    val isDeleting = content?.deleteState is FacilityDeleteState.Submitting
+    val isDeleting = FACILITY_DELETE_ENABLED && content?.deleteState is FacilityDeleteState.Submitting
 
     Scaffold(
         modifier = modifier,
@@ -159,14 +159,14 @@ fun FacilityDetailScreen(
         }
     }
 
-    if (content != null) {
+    if (FACILITY_DELETE_ENABLED && content != null) {
         FacilityDeleteDialog(
             facilityName = content.facility.name,
             state = content.deleteState,
             onAction = onAction,
         )
     }
-    if (uiState is FacilityDetailUiState.Deleted && deleteSuccessVisible) {
+    if (FACILITY_DELETE_ENABLED && uiState is FacilityDetailUiState.Deleted && deleteSuccessVisible) {
         FacilityDeleteSuccessDialog(onClose = { deleteSuccessVisible = false })
     }
 }
@@ -206,7 +206,7 @@ private fun FacilityDetailContent(
     ) {
         item {
             FacilityDetailImage(
-                reference = facility.images.firstOrNull()?.previewReference ?: facility.representativeImageReference,
+                reference = facility.image?.previewReference,
                 modifier = Modifier.fillMaxWidth().heightIn(min = AppSpacing.xxxl * 5),
             )
         }
@@ -233,8 +233,8 @@ private fun FacilityDetailContent(
                         label = stringResource(Res.string.instructor_facility_detail_address),
                         value =
                             listOf(
-                                facility.address,
-                                facility.detailAddress,
+                                facility.address.displayAddress,
+                                facility.address.detailAddress,
                             ).filter(String::isNotBlank).joinToString(" "),
                     )
                     FacilityDetailRow(
@@ -284,19 +284,9 @@ private fun FacilityDetailActions(onAction: (FacilityDetailAction) -> Unit) {
         modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(AppSpacing.screenPadding),
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
     ) {
-        TextButton(
-            onClick = { onAction(FacilityDetailAction.RequestDelete) },
-            modifier = Modifier.weight(1f).heightIn(min = AppSpacing.xxxl + AppSpacing.lg),
-        ) {
-            Text(
-                text = stringResource(Res.string.instructor_facility_detail_delete),
-                color = InsColors.Red,
-                style = appTypography().bodyLarge.copy(fontWeight = FontWeight.Bold),
-            )
-        }
         Button(
             onClick = { onAction(FacilityDetailAction.OpenEdit) },
-            modifier = Modifier.weight(1f).heightIn(min = AppSpacing.xxxl + AppSpacing.lg),
+            modifier = Modifier.fillMaxWidth().heightIn(min = AppSpacing.xxxl + AppSpacing.lg),
             colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary, contentColor = InsColors.White),
             shape = AppShape.Card,
         ) {
@@ -591,8 +581,11 @@ private val facilityDetailFixture =
     FacilityUiModel(
         id = InstructorFacilityId("facility-preview"),
         name = "클래스잇다 스튜디오",
-        address = "서울특별시 강남구 테헤란로",
-        detailAddress = "5층 501호",
+        address =
+            com.classitda.domain.model.instructor.mypage.FacilityAddress(
+                roadAddress = "서울특별시 강남구 테헤란로",
+                detailAddress = "5층 501호",
+            ),
         phoneNumber = "02-1234-5678",
         description = "회원들이 편하게 운동할 수 있도록 운영하는 시설입니다.",
         openingTime = "09:00",

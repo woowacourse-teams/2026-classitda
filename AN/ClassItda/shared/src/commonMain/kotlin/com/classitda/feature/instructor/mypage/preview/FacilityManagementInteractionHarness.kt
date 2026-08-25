@@ -27,6 +27,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.feature.instructor.mypage.contract.FacilityListUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
@@ -125,12 +126,12 @@ private val facilityHarnessPage =
                 FacilityUiModel(
                     id = InstructorFacilityId("facility-harness-1"),
                     name = "더 에이치 휘트니스 강남점",
-                    address = "서울 강남구 테헤란로 123",
+                    address = FacilityAddress(roadAddress = "서울 강남구 테헤란로 123"),
                 ),
                 FacilityUiModel(
                     id = InstructorFacilityId("facility-harness-2"),
                     name = "린 필라테스 스튜디오",
-                    address = "서울 강남구 압구정로 45",
+                    address = FacilityAddress(roadAddress = "서울 강남구 압구정로 45"),
                 ),
             ),
     )

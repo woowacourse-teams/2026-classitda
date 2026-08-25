@@ -2,7 +2,7 @@ package com.classitda.feature.instructor.mypage.facility
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class FacilityRegistrationViewModel(
-    private val repository: InstructorMyPageRepository,
+    private val repository: InstructorFacilityRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<FacilityRegistrationUiState>(editing(FacilityInputUiModel()))
     val uiState: StateFlow<FacilityRegistrationUiState> = _uiState.asStateFlow()
@@ -29,11 +29,11 @@ internal class FacilityRegistrationViewModel(
             }
 
             is FacilityRegistrationAction.AddressChanged -> {
-                update { copy(address = action.address) }
+                update { copy(address = address.copy(roadAddress = action.address)) }
             }
 
             is FacilityRegistrationAction.DetailAddressChanged -> {
-                update { copy(detailAddress = action.detailAddress) }
+                update { copy(address = address.copy(detailAddress = action.detailAddress)) }
             }
 
             is FacilityRegistrationAction.PhoneNumberChanged -> {
@@ -52,21 +52,16 @@ internal class FacilityRegistrationViewModel(
                 update { copy(description = action.description) }
             }
 
-            is FacilityRegistrationAction.ImagesSelected -> {
-                update { copy(images = action.images.take(FacilityInputUiModel.MAX_IMAGE_COUNT)) }
+            is FacilityRegistrationAction.ImageSelected -> {
+                update { copy(image = action.image) }
             }
 
-            is FacilityRegistrationAction.RemoveImage -> {
-                update { copy(images = images.filterNot { it.id == action.imageId }) }
+            FacilityRegistrationAction.RemoveImage -> {
+                update { copy(image = null) }
             }
 
             is FacilityRegistrationAction.AddressSelected -> {
-                update {
-                    copy(
-                        address = action.address,
-                        detailAddress = action.detailAddress.ifBlank { detailAddress },
-                    )
-                }
+                update { copy(address = action.address.copy(detailAddress = "")) }
             }
 
             FacilityRegistrationAction.Submit -> {
@@ -113,7 +108,7 @@ internal class FacilityRegistrationViewModel(
             _uiState.value =
                 when (val result = repository.registerFacility(domainDraft)) {
                     is InstructorMyPageResult.Success -> {
-                        FacilityRegistrationUiState.Success(result.value)
+                        FacilityRegistrationUiState.Success
                     }
 
                     is InstructorMyPageResult.Failure -> {

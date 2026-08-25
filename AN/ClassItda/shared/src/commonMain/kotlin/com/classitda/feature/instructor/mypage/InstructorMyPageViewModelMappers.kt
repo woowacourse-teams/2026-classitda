@@ -2,10 +2,8 @@ package com.classitda.feature.instructor.mypage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
@@ -25,13 +23,11 @@ import com.classitda.feature.instructor.mypage.contract.FacilityDeleteState
 import com.classitda.feature.instructor.mypage.contract.FacilityDetailAction
 import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
 import com.classitda.feature.instructor.mypage.contract.FacilityEditUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityEditUiState
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
@@ -69,18 +65,6 @@ internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfi
 
 internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfile.toEditingState() =
     ProfileEditUiState.Editing(toProfileUiModel(), phoneNumber, name, false)
-
-internal fun ManagedFacility.toDraft() =
-    FacilityRegistrationDraft(
-        images = images,
-        name = name,
-        address = address,
-        detailAddress = detailAddress,
-        phoneNumber = phoneNumber,
-        description = description,
-        openingTime = openingTime,
-        closingTime = closingTime,
-    )
 
 private fun maskProfilePhoneNumber(value: String): String {
     val digits = value.filter(Char::isDigit)

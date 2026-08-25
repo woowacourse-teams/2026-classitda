@@ -3,7 +3,7 @@ package com.classitda.feature.instructor.mypage.facility
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
-import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
 import com.classitda.feature.instructor.mypage.contract.FacilityEditUiError
@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class FacilityEditViewModel(
-    private val repository: InstructorMyPageRepository,
+    private val repository: InstructorFacilityRepository,
     private val facilityId: InstructorFacilityId,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<FacilityEditUiState>(FacilityEditUiState.Loading)
@@ -37,11 +37,11 @@ internal class FacilityEditViewModel(
             }
 
             is FacilityEditAction.AddressChanged -> {
-                update { copy(address = action.address) }
+                update { copy(address = address.copy(roadAddress = action.address)) }
             }
 
             is FacilityEditAction.DetailAddressChanged -> {
-                update { copy(detailAddress = action.detailAddress) }
+                update { copy(address = address.copy(detailAddress = action.detailAddress)) }
             }
 
             is FacilityEditAction.PhoneNumberChanged -> {
@@ -60,21 +60,16 @@ internal class FacilityEditViewModel(
                 update { copy(description = action.description) }
             }
 
-            is FacilityEditAction.ImagesSelected -> {
-                update { copy(images = action.images.take(FacilityInputUiModel.MAX_IMAGE_COUNT)) }
+            is FacilityEditAction.ImageSelected -> {
+                update { copy(image = action.image) }
             }
 
-            is FacilityEditAction.RemoveImage -> {
-                update { copy(images = images.filterNot { it.id == action.imageId }) }
+            FacilityEditAction.RemoveImage -> {
+                update { copy(image = null) }
             }
 
             is FacilityEditAction.AddressSelected -> {
-                update {
-                    copy(
-                        address = action.address,
-                        detailAddress = action.detailAddress.ifBlank { detailAddress },
-                    )
-                }
+                update { copy(address = action.address.copy(detailAddress = "")) }
             }
 
             FacilityEditAction.Submit -> {
@@ -103,7 +98,7 @@ internal class FacilityEditViewModel(
             }
 
             FacilityEditAction.Back,
-            FacilityEditAction.RequestImages,
+            FacilityEditAction.RequestImageSource,
             FacilityEditAction.RequestAddressSearch,
             -> {
                 Unit
@@ -156,7 +151,7 @@ internal class FacilityEditViewModel(
             _uiState.value =
                 when (val result = repository.updateFacility(facilityId, domainDraft)) {
                     is InstructorMyPageResult.Success -> {
-                        FacilityEditUiState.Success(result.value.id)
+                        FacilityEditUiState.Success(facilityId)
                     }
 
                     is InstructorMyPageResult.Failure -> {

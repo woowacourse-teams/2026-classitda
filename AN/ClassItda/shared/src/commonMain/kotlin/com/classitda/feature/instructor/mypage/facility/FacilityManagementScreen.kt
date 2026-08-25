@@ -263,7 +263,7 @@ private fun FacilityCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 FacilityImage(
-                    reference = facility.representativeImageReference,
+                    reference = facility.image?.previewReference,
                     modifier = Modifier.size(AppSpacing.xxxl * 3),
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.lg))
@@ -279,7 +279,7 @@ private fun FacilityCard(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = facility.address,
+                        text = facility.address.displayAddress,
                         style = appTypography().bodyLarge,
                         color = InsColors.TextSecondary,
                         maxLines = 2,
@@ -505,13 +505,19 @@ private val facilityManagementFixture =
                 FacilityUiModel(
                     id = InstructorFacilityId("facility-1"),
                     name = "더 에이치 휘트니스 강남점",
-                    address = "서울 강남구 테헤란로 123",
+                    address =
+                        com.classitda.domain.model.instructor.mypage.FacilityAddress(
+                            roadAddress = "서울 강남구 테헤란로 123",
+                        ),
                     phoneNumber = "02-1234-5678",
                 ),
                 FacilityUiModel(
                     id = InstructorFacilityId("facility-2"),
                     name = "린 필라테스 스튜디오",
-                    address = "서울 강남구 압구정로 45",
+                    address =
+                        com.classitda.domain.model.instructor.mypage.FacilityAddress(
+                            roadAddress = "서울 강남구 압구정로 45",
+                        ),
                     phoneNumber = "02-9876-5432",
                 ),
             ),
@@ -558,7 +564,11 @@ private fun FacilityManagementScreenPreview_LongValues() {
                                     FacilityUiModel(
                                         id = InstructorFacilityId("facility-long"),
                                         name = "정말 긴 시설 이름이 들어와도 카드 너비를 벗어나지 않는 테스트 시설",
-                                        address = "서울특별시 강남구 테헤란로를 따라 이어지는 아주 긴 시설 주소 테스트",
+                                        address =
+                                            com.classitda.domain.model.instructor.mypage.FacilityAddress(
+                                                roadAddress =
+                                                    "서울특별시 강남구 테헤란로를 따라 이어지는 아주 긴 시설 주소 테스트",
+                                            ),
                                         phoneNumber = "02-1234-5678",
                                     ),
                                 ),

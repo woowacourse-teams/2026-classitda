@@ -1,20 +1,21 @@
 package com.classitda.feature.instructor.mypage.contract
 
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 
 data class FacilityImageUiModel(
-    val id: String,
-    val previewReference: String,
-)
+    val selection: FacilityImageSelection,
+) {
+    val previewReference: String get() = selection.previewReference
+}
 
 /** Immutable facility data prepared for rendering. */
 data class FacilityUiModel(
     val id: InstructorFacilityId,
     val name: String,
-    val address: String,
-    val representativeImageReference: String? = null,
-    val images: List<FacilityImageUiModel> = emptyList(),
-    val detailAddress: String = "",
+    val address: FacilityAddress = FacilityAddress(),
+    val image: FacilityImageUiModel? = null,
     val phoneNumber: String = "",
     val description: String = "",
     val openingTime: String = "",
@@ -28,21 +29,17 @@ data class FacilityListUiModel(
 
 /** Form values owned by the UI. A ViewModel converts this to the repository draft. */
 data class FacilityInputUiModel(
-    val images: List<FacilityImageInputUiModel> = emptyList(),
+    val image: FacilityImageInputUiModel? = null,
     val name: String = "",
-    val address: String = "",
-    val detailAddress: String = "",
+    val address: FacilityAddress = FacilityAddress(),
     val phoneNumber: String = "",
     val description: String = "",
     val openingTime: String = "",
     val closingTime: String = "",
-) {
-    companion object {
-        const val MAX_IMAGE_COUNT: Int = 5
-    }
-}
+)
 
 data class FacilityImageInputUiModel(
-    val id: String,
-    val previewReference: String,
-)
+    val selection: FacilityImageSelection,
+) {
+    val previewReference: String get() = selection.previewReference
+}

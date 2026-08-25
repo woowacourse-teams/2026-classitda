@@ -2,6 +2,9 @@ package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 
+/** Facility deletion is unavailable until the backend exposes a delete endpoint. */
+internal const val FACILITY_DELETE_ENABLED: Boolean = false
+
 sealed interface FacilityDetailUiState {
     data object Loading : FacilityDetailUiState
 

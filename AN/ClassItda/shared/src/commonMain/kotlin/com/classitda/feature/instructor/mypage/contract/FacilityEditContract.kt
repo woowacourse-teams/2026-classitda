@@ -1,5 +1,6 @@
 package com.classitda.feature.instructor.mypage.contract
 
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 
 sealed interface FacilityEditUiState {
@@ -67,21 +68,18 @@ sealed interface FacilityEditAction {
         val description: String,
     ) : FacilityEditAction
 
-    data object RequestImages : FacilityEditAction
+    data object RequestImageSource : FacilityEditAction
 
-    data class ImagesSelected(
-        val images: List<FacilityImageInputUiModel>,
+    data class ImageSelected(
+        val image: FacilityImageInputUiModel,
     ) : FacilityEditAction
 
-    data class RemoveImage(
-        val imageId: String,
-    ) : FacilityEditAction
+    data object RemoveImage : FacilityEditAction
 
     data object RequestAddressSearch : FacilityEditAction
 
     data class AddressSelected(
-        val address: String,
-        val detailAddress: String = "",
+        val address: FacilityAddress,
     ) : FacilityEditAction
 
     data object Submit : FacilityEditAction

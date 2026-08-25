@@ -51,7 +51,7 @@ private fun FacilityEditUiState.toRegistrationUiState(): FacilityRegistrationUiS
         }
 
         is FacilityEditUiState.Success -> {
-            FacilityRegistrationUiState.Success(facilityId)
+            FacilityRegistrationUiState.Success
         }
 
         is FacilityEditUiState.Error -> {
@@ -72,11 +72,11 @@ private fun FacilityRegistrationAction.toEditAction(): FacilityEditAction =
         is FacilityRegistrationAction.OpeningTimeChanged -> FacilityEditAction.OpeningTimeChanged(openingTime)
         is FacilityRegistrationAction.ClosingTimeChanged -> FacilityEditAction.ClosingTimeChanged(closingTime)
         is FacilityRegistrationAction.DescriptionChanged -> FacilityEditAction.DescriptionChanged(description)
-        FacilityRegistrationAction.RequestImages -> FacilityEditAction.RequestImages
-        is FacilityRegistrationAction.ImagesSelected -> FacilityEditAction.ImagesSelected(images)
-        is FacilityRegistrationAction.RemoveImage -> FacilityEditAction.RemoveImage(imageId)
+        FacilityRegistrationAction.RequestImageSource -> FacilityEditAction.RequestImageSource
+        is FacilityRegistrationAction.ImageSelected -> FacilityEditAction.ImageSelected(image)
+        FacilityRegistrationAction.RemoveImage -> FacilityEditAction.RemoveImage
         FacilityRegistrationAction.RequestAddressSearch -> FacilityEditAction.RequestAddressSearch
-        is FacilityRegistrationAction.AddressSelected -> FacilityEditAction.AddressSelected(address, detailAddress)
+        is FacilityRegistrationAction.AddressSelected -> FacilityEditAction.AddressSelected(address)
         FacilityRegistrationAction.Submit -> FacilityEditAction.Submit
         FacilityRegistrationAction.Retry -> FacilityEditAction.Retry
     }
@@ -95,8 +95,11 @@ private val facilityEditPreviewState =
         draft =
             FacilityInputUiModel(
                 name = "클래스잇다 스튜디오",
-                address = "서울특별시 강남구 테헤란로",
-                detailAddress = "5층 501호",
+                address =
+                    com.classitda.domain.model.instructor.mypage.FacilityAddress(
+                        roadAddress = "서울특별시 강남구 테헤란로",
+                        detailAddress = "5층 501호",
+                    ),
                 phoneNumber = "0212345678",
                 description = "회원들이 편하게 운동할 수 있는 시설입니다.",
                 openingTime = "09:00",
