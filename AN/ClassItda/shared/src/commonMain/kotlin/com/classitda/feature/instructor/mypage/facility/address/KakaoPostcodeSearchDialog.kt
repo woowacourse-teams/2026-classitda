@@ -100,7 +100,8 @@ internal fun KakaoPostcodeSearchDialog(
                             IconButton(onClick = onCancelled) {
                                 Icon(
                                     painter = painterResource(Res.drawable.ic_close),
-                                    contentDescription = stringResource(Res.string.instructor_facility_address_search_close),
+                                    contentDescription =
+                                        stringResource(Res.string.instructor_facility_address_search_close),
                                     tint = InsColors.TextSecondary,
                                 )
                             }
