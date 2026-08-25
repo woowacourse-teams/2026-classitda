@@ -15,6 +15,9 @@ sealed interface InstructorMyPageResult<out T> {
 
 enum class InstructorMyPageFailureReason {
     NETWORK,
+    UNAUTHORIZED,
+    FORBIDDEN,
+    SERVER,
     NOT_FOUND,
     CONFLICT,
     INVALID_REQUEST,
