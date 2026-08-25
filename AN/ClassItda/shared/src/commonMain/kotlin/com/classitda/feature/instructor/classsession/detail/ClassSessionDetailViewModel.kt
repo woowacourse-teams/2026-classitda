@@ -2,10 +2,12 @@ package com.classitda.feature.instructor.classsession.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.classitda.domain.model.instructor.management.ClassSession
-import com.classitda.domain.repository.instructor.management.ClassManagementRepository
+import com.classitda.core.studio.InstructorStudioContext
+import com.classitda.domain.model.instructor.session.InstructorSessionDetail
+import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionDetailUiModel
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionMemberUiModel
+import com.classitda.feature.instructor.session.toUiStatus
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +20,8 @@ import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
 
 internal class ClassSessionDetailViewModel(
-    private val repository: ClassManagementRepository,
+    private val repository: InstructorSessionRepository,
+    private val studioContext: InstructorStudioContext,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ClassSessionDetailUiState>(ClassSessionDetailUiState.Loading)
     val uiState: StateFlow<ClassSessionDetailUiState> = _uiState.asStateFlow()
@@ -30,10 +33,9 @@ internal class ClassSessionDetailViewModel(
         loadJob =
             viewModelScope.launch {
                 try {
-                    val session = repository.getSessions().firstOrNull { it.id == sessionId }
-                    _uiState.value =
-                        session?.let { ClassSessionDetailUiState.Success(it.toDetailUiModel()) }
-                            ?: ClassSessionDetailUiState.Error("수업 정보를 찾을 수 없어요")
+                    val studio = studioContext.getSelectedStudio()
+                    val session = repository.getSession(studio.id, sessionId)
+                    _uiState.value = ClassSessionDetailUiState.Success(session.toDetailUiModel())
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
@@ -43,26 +45,19 @@ internal class ClassSessionDetailViewModel(
     }
 }
 
-private fun ClassSession.toDetailUiModel(): ClassSessionDetailUiModel =
+private fun InstructorSessionDetail.toDetailUiModel(): ClassSessionDetailUiModel =
     ClassSessionDetailUiModel(
         id = id,
         dateText = startAt.date.toInstructorDateText(),
-        tags = tags,
-        title = title,
+        tags = listOf(classType.name),
+        title = className,
         timeText = "${startAt.time.toAmPmText()} ~ ${endAt.time.toPlainText()}",
-        reservedCount = reservedCount,
+        reservedCount = 0,
         capacity = capacity,
-        description = "체어룸에서 할 예정",
-        location = "체어룸",
-        status = status,
-        members =
-            members.map { member ->
-                ClassSessionMemberUiModel(
-                    id = member.id,
-                    name = member.name,
-                    isTemporary = member.isTemporary,
-                )
-            },
+        description = description.orEmpty(),
+        location = "장소 정보 없음",
+        status = sessionPhase.toUiStatus(),
+        members = emptyList<ClassSessionMemberUiModel>(),
     )
 
 private fun LocalDate.toInstructorDateText(): String {
