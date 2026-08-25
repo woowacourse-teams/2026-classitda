@@ -16,7 +16,8 @@ import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
-import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.member.domain.Member;
 import com.classitda.member.domain.repository.MemberRepository;
 import com.classitda.studio.domain.MembershipStatus;
@@ -702,11 +703,11 @@ class ClassSessionCommandServiceTest {
                 "기존 수업"
         );
         Long originalInstructorMembershipId = classSession.getInstructorMembership().getId();
-        ClassSessionUpdateRequest request = ClassSessionFixture
+        ClassSessionUpdateV1Request request = ClassSessionFixture
                 .기본_수업_회차_수정_요청(newClassType.getId());
 
         // when
-        commandService.update(
+        commandService.updateV1(
                 owner.getId(), context.studio().getId(), classSession.getId(), request);
         entityManager.flush();
         entityManager.clear();
@@ -729,6 +730,209 @@ class ClassSessionCommandServiceTest {
     }
 
     @Test
+    void V2_대표가_수업_회차의_담당_강사를_변경한다() {
+        // given
+        Member owner = 회원을_저장한다("update-v2-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V2 강사 변경 시설");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        Member nextInstructor = 회원을_저장한다("update-v2-next-instructor");
+        StudioMembership nextInstructorMembership = 소속을_저장한다(
+                context.studio(), nextInstructor, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "V2 필라테스");
+        ClassSession classSession = 수업을_저장한다(
+                context, classType, LocalDateTime.of(2026, 8, 17, 20, 0), 60, "기존 수업");
+        ClassSessionUpdateV2Request request = ClassSessionFixture.기본_수업_회차_V2_수정_요청(
+                nextInstructorMembership.getId(), classType.getId());
+
+        // when
+        commandService.updateV2(
+                owner.getId(), context.studio().getId(), classSession.getId(), request);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassSession updated = classSessionRepository.findById(classSession.getId()).orElseThrow();
+        assertThat(updated.getInstructorMembership().getId()).isEqualTo(nextInstructorMembership.getId());
+        assertThat(updated.getName()).isEqualTo("수정된 개인 수업");
+    }
+
+    @Test
+    void V2_변경할_강사의_다른_수업과_시간이_겹치면_담당_강사를_변경하지_않는다() {
+        // given
+        Member owner = 회원을_저장한다("update-v2-conflict-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V2 강사 충돌 시설");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        Member nextInstructor = 회원을_저장한다("update-v2-conflict-instructor");
+        StudioMembership nextInstructorMembership = 소속을_저장한다(
+                context.studio(), nextInstructor, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "V2 충돌 요가");
+        ClassSession target = 수업을_저장한다(
+                context, classType, LocalDateTime.of(2026, 8, 17, 10, 0), 60, "수정 대상");
+        수업을_저장한다(
+                context,
+                nextInstructorMembership,
+                classType,
+                LocalDateTime.of(2026, 8, 18, 19, 0),
+                60,
+                "새 강사의 기존 수업"
+        );
+        ClassSessionUpdateV2Request request = ClassSessionFixture.기본_수업_회차_V2_수정_요청(
+                nextInstructorMembership.getId(), classType.getId());
+        Long originalInstructorMembershipId = target.getInstructorMembership().getId();
+
+        // when / then
+        assertClassError(
+                () -> commandService.updateV2(
+                        owner.getId(), context.studio().getId(), target.getId(), request),
+                ClassErrorCode.CLASS_SESSION_TIME_CONFLICT
+        );
+        assertThat(target.getInstructorMembership().getId()).isEqualTo(originalInstructorMembershipId);
+        assertThat(target.getName()).isEqualTo("수정 대상");
+    }
+
+    @Test
+    void V2_활성_강사가_아닌_소속으로는_담당_강사를_변경할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("update-v2-invalid-instructor-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V2 강사 검증 시설");
+        StudioRole studentRole = 역할을_저장한다(context.studio(), SystemRole.STUDENT);
+        Member student = 회원을_저장한다("update-v2-invalid-instructor-student");
+        StudioMembership studentMembership = 소속을_저장한다(
+                context.studio(), student, studentRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "V2 강사 검증 요가");
+        ClassSession target = 수업을_저장한다(
+                context, classType, LocalDateTime.of(2026, 8, 17, 20, 0), 60, "수정 대상");
+        ClassSessionUpdateV2Request request = ClassSessionFixture.기본_수업_회차_V2_수정_요청(
+                studentMembership.getId(), classType.getId());
+
+        // when / then
+        assertClassError(
+                () -> commandService.updateV2(
+                        owner.getId(), context.studio().getId(), target.getId(), request),
+                ClassErrorCode.CLASS_SESSION_INSTRUCTOR_NOT_FOUND
+        );
+        assertThat(target.getInstructorMembership().getId()).isEqualTo(context.membership().getId());
+    }
+
+    @Test
+    void V2_본인_수업_관리_권한자는_담당_강사를_유지하면_자기_수업을_수정할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("update-v2-own-unchanged-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V2 본인 권한 유지 시설");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        Member requester = 회원을_저장한다("update-v2-own-unchanged-requester");
+        StudioMembership requesterMembership = 소속을_저장한다(
+                context.studio(), requester, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "V2 본인 권한 유지 요가");
+        ClassSession ownSession = 수업을_저장한다(
+                context,
+                requesterMembership,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "본인 수업"
+        );
+        ClassSessionUpdateV2Request request = ClassSessionFixture.기본_수업_회차_V2_수정_요청(
+                requesterMembership.getId(), classType.getId());
+
+        // when
+        commandService.updateV2(
+                requester.getId(), context.studio().getId(), ownSession.getId(), request);
+
+        // then
+        assertThat(ownSession.getInstructorMembership().getId()).isEqualTo(requesterMembership.getId());
+        assertThat(ownSession.getName()).isEqualTo("수정된 개인 수업");
+    }
+
+    @Test
+    void V2_본인_수업_관리_권한자는_자기_수업을_다른_강사에게_변경할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("update-v2-own-target-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V2 본인 권한 대상 시설");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        Member requester = 회원을_저장한다("update-v2-own-target-requester");
+        StudioMembership requesterMembership = 소속을_저장한다(
+                context.studio(), requester, instructorRole, MembershipStatus.ACTIVE);
+        Member otherInstructor = 회원을_저장한다("update-v2-own-target-other");
+        StudioMembership otherMembership = 소속을_저장한다(
+                context.studio(), otherInstructor, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "V2 본인 권한 요가");
+        ClassSession ownSession = 수업을_저장한다(
+                context,
+                requesterMembership,
+                classType,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                60,
+                "본인 수업"
+        );
+        ClassSessionUpdateV2Request request = ClassSessionFixture.기본_수업_회차_V2_수정_요청(
+                otherMembership.getId(), classType.getId());
+
+        // when / then
+        assertStudioError(
+                () -> commandService.updateV2(
+                        requester.getId(), context.studio().getId(), ownSession.getId(), request),
+                StudioErrorCode.PERMISSION_DENIED
+        );
+        assertThat(ownSession.getInstructorMembership().getId()).isEqualTo(requesterMembership.getId());
+    }
+
+    @Test
+    void V2_본인_수업_관리_권한자는_다른_강사의_수업을_자기에게_변경할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("update-v2-own-source-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V2 본인 권한 기존 시설");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        Member requester = 회원을_저장한다("update-v2-own-source-requester");
+        StudioMembership requesterMembership = 소속을_저장한다(
+                context.studio(), requester, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "V2 본인 권한 기존 요가");
+        ClassSession otherSession = 수업을_저장한다(
+                context, classType, LocalDateTime.of(2026, 8, 17, 20, 0), 60, "다른 강사의 수업");
+        ClassSessionUpdateV2Request request = ClassSessionFixture.기본_수업_회차_V2_수정_요청(
+                requesterMembership.getId(), classType.getId());
+
+        // when / then
+        assertStudioError(
+                () -> commandService.updateV2(
+                        requester.getId(), context.studio().getId(), otherSession.getId(), request),
+                StudioErrorCode.PERMISSION_DENIED
+        );
+        assertThat(otherSession.getInstructorMembership().getId()).isEqualTo(context.membership().getId());
+    }
+
+    @Test
+    void V2_전체_수업_관리_권한자는_다른_강사의_수업을_새_강사에게_변경할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("update-v2-all-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "V2 전체 권한 시설");
+        StudioRole managerRole = 사용자_역할을_저장한다(
+                context.studio(), "V2 전체 수업 관리자", false);
+        권한을_저장한다(managerRole, PermissionCode.CLASS_SESSION_MANAGE_ALL);
+        Member manager = 회원을_저장한다("update-v2-all-manager");
+        소속을_저장한다(context.studio(), manager, managerRole, MembershipStatus.ACTIVE);
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        Member nextInstructor = 회원을_저장한다("update-v2-all-instructor");
+        StudioMembership nextMembership = 소속을_저장한다(
+                context.studio(), nextInstructor, instructorRole, MembershipStatus.ACTIVE);
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "V2 전체 권한 요가");
+        ClassSession target = 수업을_저장한다(
+                context, classType, LocalDateTime.of(2026, 8, 17, 20, 0), 60, "변경 대상");
+        ClassSessionUpdateV2Request request = ClassSessionFixture.기본_수업_회차_V2_수정_요청(
+                nextMembership.getId(), classType.getId());
+
+        // when
+        commandService.updateV2(
+                manager.getId(), context.studio().getId(), target.getId(), request);
+
+        // then
+        assertThat(target.getInstructorMembership().getId()).isEqualTo(nextMembership.getId());
+    }
+
+    @Test
     void null을_전달하면_수업_안내를_삭제한다() {
         // given
         Member owner = 회원을_저장한다("clear-description-owner");
@@ -742,7 +946,7 @@ class ClassSessionCommandServiceTest {
                 "수업 안내 삭제 대상",
                 "삭제할 수업 안내"
         );
-        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+        ClassSessionUpdateV1Request request = ClassSessionUpdateV1Request.of(
                 ClassForm.GROUP,
                 classType.getId(),
                 "수업 안내 삭제 대상",
@@ -753,7 +957,7 @@ class ClassSessionCommandServiceTest {
         );
 
         // when
-        commandService.update(
+        commandService.updateV1(
                 owner.getId(), context.studio().getId(), classSession.getId(), request);
         entityManager.flush();
         entityManager.clear();
@@ -782,11 +986,11 @@ class ClassSessionCommandServiceTest {
                 60,
                 "본인 수업"
         );
-        ClassSessionUpdateRequest request = ClassSessionFixture
+        ClassSessionUpdateV1Request request = ClassSessionFixture
                 .기본_수업_회차_수정_요청(classType.getId());
 
         // when
-        commandService.update(
+        commandService.updateV1(
                 requester.getId(), context.studio().getId(), ownSession.getId(), request);
 
         // then
@@ -810,12 +1014,12 @@ class ClassSessionCommandServiceTest {
                 60,
                 "다른 강사의 수업"
         );
-        ClassSessionUpdateRequest request = ClassSessionFixture
+        ClassSessionUpdateV1Request request = ClassSessionFixture
                 .기본_수업_회차_수정_요청(classType.getId());
 
         // when / then
         assertStudioError(
-                () -> commandService.update(
+                () -> commandService.updateV1(
                         requester.getId(), context.studio().getId(), otherSession.getId(), request),
                 StudioErrorCode.PERMISSION_DENIED
         );
@@ -835,7 +1039,7 @@ class ClassSessionCommandServiceTest {
                 60,
                 "수정 전 이름"
         );
-        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+        ClassSessionUpdateV1Request request = ClassSessionUpdateV1Request.of(
                 ClassForm.GROUP,
                 classType.getId(),
                 "수정 후 이름",
@@ -846,7 +1050,7 @@ class ClassSessionCommandServiceTest {
         );
 
         // when
-        commandService.update(
+        commandService.updateV1(
                 owner.getId(), context.studio().getId(), target.getId(), request);
 
         // then
@@ -874,7 +1078,7 @@ class ClassSessionCommandServiceTest {
                 60,
                 "기존 수업"
         );
-        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+        ClassSessionUpdateV1Request request = ClassSessionUpdateV1Request.of(
                 ClassForm.GROUP,
                 classType.getId(),
                 "충돌하는 변경",
@@ -886,7 +1090,7 @@ class ClassSessionCommandServiceTest {
 
         // when / then
         assertClassError(
-                () -> commandService.update(
+                () -> commandService.updateV1(
                         owner.getId(), context.studio().getId(), target.getId(), request),
                 ClassErrorCode.CLASS_SESSION_TIME_CONFLICT
         );
@@ -908,12 +1112,12 @@ class ClassSessionCommandServiceTest {
                 "취소된 수업"
         );
         canceled.cancel(LocalDateTime.of(2026, 8, 17, 19, 0));
-        ClassSessionUpdateRequest request = ClassSessionFixture
+        ClassSessionUpdateV1Request request = ClassSessionFixture
                 .기본_수업_회차_수정_요청(classType.getId());
 
         // when / then
         assertClassError(
-                () -> commandService.update(
+                () -> commandService.updateV1(
                         owner.getId(), context.studio().getId(), canceled.getId(), request),
                 ClassErrorCode.CLASS_SESSION_CANCELED
         );
@@ -938,7 +1142,7 @@ class ClassSessionCommandServiceTest {
 
         // when / then
         assertClassError(
-                () -> commandService.update(
+                () -> commandService.updateV1(
                         otherOwner.getId(),
                         otherContext.studio().getId(),
                         classSession.getId(),
@@ -947,7 +1151,7 @@ class ClassSessionCommandServiceTest {
                 ClassErrorCode.CLASS_SESSION_NOT_FOUND
         );
         assertClassError(
-                () -> commandService.update(
+                () -> commandService.updateV1(
                         owner.getId(),
                         context.studio().getId(),
                         classSession.getId(),
@@ -977,7 +1181,7 @@ class ClassSessionCommandServiceTest {
         );
 
         // when
-        commandService.update(
+        commandService.updateV1(
                 manager.getId(),
                 context.studio().getId(),
                 classSession.getId(),

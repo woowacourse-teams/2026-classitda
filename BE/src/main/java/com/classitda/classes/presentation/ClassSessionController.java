@@ -10,7 +10,8 @@ import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
-import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
@@ -70,13 +71,25 @@ public class ClassSessionController implements ClassSessionControllerApi {
 
     @Override
     @PutMapping(path = "/{classSessionId}", version = "1")
-    public ResponseEntity<Void> update(
+    public ResponseEntity<Void> updateV1(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long classSessionId,
-            @Valid @RequestBody ClassSessionUpdateRequest request
+            @Valid @RequestBody ClassSessionUpdateV1Request request
     ) {
-        classSessionCommandService.update(memberId, studioId, classSessionId, request);
+        classSessionCommandService.updateV1(memberId, studioId, classSessionId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PutMapping(path = "/{classSessionId}", version = "2")
+    public ResponseEntity<Void> updateV2(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classSessionId,
+            @Valid @RequestBody ClassSessionUpdateV2Request request
+    ) {
+        classSessionCommandService.updateV2(memberId, studioId, classSessionId, request);
         return ResponseEntity.noContent().build();
     }
 

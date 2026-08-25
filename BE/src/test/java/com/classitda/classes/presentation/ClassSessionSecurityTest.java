@@ -17,7 +17,7 @@ import com.classitda.classes.application.instructor.daily.InstructorDailyQuerySe
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.fixture.ClassSessionFixture;
-import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import java.time.Instant;
@@ -245,7 +245,7 @@ class ClassSessionSecurityTest {
     @Test
     void 인증이_없으면_수업_회차를_수정할_수_없다() {
         // given
-        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+        ClassSessionUpdateV1Request request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
 
         // when
         RestTestClient.ResponseSpec result = client.put()
@@ -264,7 +264,7 @@ class ClassSessionSecurityTest {
     void 가입_토큰으로는_수업_회차를_수정할_수_없다() {
         // given
         given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
-        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+        ClassSessionUpdateV1Request request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
 
         // when
         RestTestClient.ResponseSpec result = client.put()
@@ -284,7 +284,7 @@ class ClassSessionSecurityTest {
     void 액세스_토큰으로_수업_회차를_수정할_수_있다() {
         // given
         given(jwtDecoder.decode("access-token")).willReturn(jwt("1", TokenUse.ACCESS));
-        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+        ClassSessionUpdateV1Request request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
 
         // when
         RestTestClient.ResponseSpec result = client.put()
@@ -297,7 +297,7 @@ class ClassSessionSecurityTest {
 
         // then
         result.expectStatus().isNoContent();
-        verify(commandService).update(1L, 7L, 11L, request);
+        verify(commandService).updateV1(1L, 7L, 11L, request);
     }
 
     @Test

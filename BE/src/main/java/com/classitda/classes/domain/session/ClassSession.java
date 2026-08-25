@@ -145,9 +145,31 @@ public class ClassSession extends BaseEntity {
             int capacity,
             LocalDateTime startAt
     ) {
+        updateDetails(
+                instructorMembership,
+                name,
+                description,
+                classForm,
+                durationMinutes,
+                capacity,
+                startAt
+        );
+    }
+
+    public void updateDetails(
+            StudioMembership instructorMembership,
+            String name,
+            String description,
+            ClassForm classForm,
+            int durationMinutes,
+            int capacity,
+            LocalDateTime startAt
+    ) {
         validateUpdatable();
+        validateInstructorMembership(instructorMembership);
         validateDetails(name, classForm, durationMinutes, capacity, startAt);
         LocalDateTime calculatedEndAt = calculateEndAt(startAt, durationMinutes);
+        this.instructorMembership = instructorMembership;
         this.name = name;
         this.description = description;
         this.classForm = classForm;

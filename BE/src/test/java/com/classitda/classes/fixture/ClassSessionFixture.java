@@ -5,7 +5,8 @@ import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.domain.session.ClassSessionClassType;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
-import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.member.domain.Member;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.studio.domain.MembershipStatus;
@@ -138,8 +139,24 @@ public final class ClassSessionFixture {
         );
     }
 
-    public static ClassSessionUpdateRequest 기본_수업_회차_수정_요청(Long classTypeId) {
-        return ClassSessionUpdateRequest.of(
+    public static ClassSessionUpdateV1Request 기본_수업_회차_수정_요청(Long classTypeId) {
+        return ClassSessionUpdateV1Request.of(
+                ClassForm.INDIVIDUAL,
+                classTypeId,
+                "수정된 개인 수업",
+                1,
+                50,
+                LocalDateTime.of(2026, 8, 18, 19, 30),
+                "수정된 수업 안내"
+        );
+    }
+
+    public static ClassSessionUpdateV2Request 기본_수업_회차_V2_수정_요청(
+            Long instructorMembershipId,
+            Long classTypeId
+    ) {
+        return ClassSessionUpdateV2Request.of(
+                instructorMembershipId,
                 ClassForm.INDIVIDUAL,
                 classTypeId,
                 "수정된 개인 수업",
