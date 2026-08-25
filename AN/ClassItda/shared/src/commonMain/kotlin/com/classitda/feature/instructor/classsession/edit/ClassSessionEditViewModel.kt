@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.repository.instructor.management.ClassManagementRepository
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
-import com.classitda.feature.instructor.management.lesson.create.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
