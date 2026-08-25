@@ -55,6 +55,11 @@ internal fun createConfiguredHttpClient(
         installBearerAuth(tokenStorage)
     }
 
+internal fun createObjectStorageHttpClient(engine: HttpClientEngine): HttpClient =
+    HttpClient(engine) {
+        expectSuccess = false
+    }
+
 private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: AuthTokenStorage?) {
     if (tokenStorage == null) return
 
