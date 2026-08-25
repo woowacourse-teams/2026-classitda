@@ -22,7 +22,8 @@ public class InstructorDailyQueryService {
     private final Clock clock;
 
     public List<InstructorDailySessionView> findAll(Long memberId, Long studioId, LocalDate date) {
-        Long requesterMembershipId = accessReader.readRequesterMembershipId(memberId, studioId);
+        Long requesterMembershipId = accessReader.readSessionAccess(memberId, studioId)
+                .requesterMembershipId();
         InstructorDailySchedule schedule = scheduleReader.read(studioId, date);
 
         if (schedule.isEmpty()) {

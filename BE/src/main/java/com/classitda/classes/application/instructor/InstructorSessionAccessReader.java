@@ -20,16 +20,26 @@ public class InstructorSessionAccessReader {
     private final StudioRepository studioRepository;
     private final StudioRolePermissionRepository studioRolePermissionRepository;
 
-    public Long readRequesterMembershipId(Long memberId, Long studioId) {
+    public InstructorSessionAccess readSessionAccess(Long memberId, Long studioId) {
+        return readSessionAccess(memberId, studioId, null);
+    }
+
+    public InstructorSessionAccess readSessionAccess(Long memberId, Long studioId, PermissionCode requiredPermission) {
         Studio studio = getStudio(studioId);
         StudioMembership membership = getActiveMembership(studioId, memberId);
         validateStaffRole(membership);
 
-        if (studio.isOwner(memberId)
-                || hasPermission(membership, PermissionCode.CLASS_SESSION_MANAGE_ALL)
-                || hasPermission(membership, PermissionCode.CLASS_SESSION_MANAGE_OWN)
-        ) {
-            return membership.getId();
+        if (studio.isOwner(memberId)) {
+            return new InstructorSessionAccess(membership.getId(), true);
+        }
+        if (requiredPermission != null && !hasPermission(membership, requiredPermission)) {
+            throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
+        }
+        if (hasPermission(membership, PermissionCode.CLASS_SESSION_MANAGE_ALL)) {
+            return new InstructorSessionAccess(membership.getId(), true);
+        }
+        if (hasPermission(membership, PermissionCode.CLASS_SESSION_MANAGE_OWN)) {
+            return new InstructorSessionAccess(membership.getId(), false);
         }
 
         throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
