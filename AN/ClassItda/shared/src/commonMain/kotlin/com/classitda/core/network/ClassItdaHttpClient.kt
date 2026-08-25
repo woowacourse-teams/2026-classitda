@@ -1,11 +1,14 @@
 package com.classitda.core.network
 
+import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
 import com.classitda.domain.model.auth.signup.LoginTokens
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -47,6 +50,13 @@ internal fun createConfiguredHttpClient(
         expectSuccess = true
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
+        }
+        HttpResponseValidator {
+            handleResponseExceptionWithRequest { cause, request ->
+                if (cause is ResponseException) {
+                    Logger.e("${request.method.value} ${request.url}: ${cause.response.status}", cause)
+                }
+            }
         }
         defaultRequest {
             url.takeFrom(config.baseUrl)

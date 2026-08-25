@@ -1,18 +1,18 @@
-package com.classitda.feature.instructor.classsession.edit.model
+package com.classitda.feature.instructor.management.classtemplates.create.model
 
 import com.classitda.feature.instructor.management.model.ClassType
-import kotlinx.datetime.LocalDate
+import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalTime
 
-internal data class ClassSessionEditFormUiModel(
-    val id: String,
+internal data class ClassTemplateFormValues(
     val classType: ClassType,
     val categories: List<String>,
+    val classTypeIds: List<String>,
     val title: String,
     val capacity: Int,
-    val reservedCount: Int,
     val durationMinutes: Int,
+    val isRepeating: Boolean,
+    val repeatDays: Set<DayOfWeek>,
     val startTime: LocalTime,
-    val sessionDate: LocalDate,
     val description: String,
 )
