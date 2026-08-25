@@ -1,4 +1,4 @@
-# ADR-0016: 시설 이미지를 공유 S3 버킷에 저장하고 CloudFront로 서빙한다
+# ADR-0017: 시설 이미지를 공유 S3 버킷에 저장하고 CloudFront로 서빙한다
 
 ## Status
 
