@@ -2,9 +2,12 @@ package com.classitda.feature.instructor.classsession.member.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionMember
+import com.classitda.domain.model.instructor.member.MembershipStatus
 import com.classitda.domain.repository.instructor.management.ClassManagementRepository
+import com.classitda.domain.repository.instructor.member.InstructorMemberRepository
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionDetailUiModel
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionMemberUiModel
 import com.classitda.feature.instructor.classsession.member.edit.model.ClassSessionMemberEditUiModel
@@ -20,6 +23,8 @@ import kotlinx.datetime.number
 
 internal class ClassSessionMemberEditViewModel(
     private val repository: ClassManagementRepository,
+    private val memberRepository: InstructorMemberRepository,
+    private val studioContext: InstructorStudioContext,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ClassSessionMemberEditUiState>(ClassSessionMemberEditUiState.Loading)
     val uiState: StateFlow<ClassSessionMemberEditUiState> = _uiState.asStateFlow()
@@ -32,8 +37,22 @@ internal class ClassSessionMemberEditViewModel(
             viewModelScope.launch {
                 try {
                     val session = repository.getSessions().firstOrNull { it.id == sessionId }
+                    val studio = studioContext.getSelectedStudio()
+                    val availableMembers =
+                        memberRepository
+                            .getStudents(studio.id)
+                            .items
+                            .filter { it.status == MembershipStatus.ACTIVE }
+                            .map { member ->
+                                ClassSessionMemberUiModel(
+                                    id = member.id,
+                                    name = member.name,
+                                )
+                            }
                     _uiState.value =
-                        session?.let { ClassSessionMemberEditUiState.Success(it.toMemberEditUiModel()) }
+                        session?.let {
+                            ClassSessionMemberEditUiState.Success(it.toMemberEditUiModel(availableMembers))
+                        }
                             ?: ClassSessionMemberEditUiState.Error("수업 정보를 찾을 수 없어요")
                 } catch (exception: CancellationException) {
                     throw exception
@@ -71,7 +90,9 @@ internal class ClassSessionMemberEditViewModel(
     }
 }
 
-private fun ClassSession.toMemberEditUiModel(): ClassSessionMemberEditUiModel {
+private fun ClassSession.toMemberEditUiModel(
+    availableMembers: List<ClassSessionMemberUiModel>,
+): ClassSessionMemberEditUiModel {
     val bookedMembers =
         members.map { member ->
             ClassSessionMemberUiModel(
@@ -96,12 +117,7 @@ private fun ClassSession.toMemberEditUiModel(): ClassSessionMemberEditUiModel {
         )
     return ClassSessionMemberEditUiModel(
         detail = detail,
-        availableMembers =
-            listOf(
-                ClassSessionMemberUiModel(id = "member-4", name = "최유진"),
-                ClassSessionMemberUiModel(id = "member-5", name = "정하늘"),
-                ClassSessionMemberUiModel(id = "member-6", name = "김서연"),
-            ),
+        availableMembers = availableMembers,
     )
 }
 

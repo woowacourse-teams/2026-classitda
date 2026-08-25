@@ -17,7 +17,7 @@ internal val classManagementModule =
         viewModel { ClassManagementViewModel(get()) }
         viewModel { ClassSessionDetailViewModel(get(), get()) }
         viewModel { ClassSessionEditViewModel(get(), get()) }
-        viewModel { ClassSessionMemberEditViewModel(get()) }
+        viewModel { ClassSessionMemberEditViewModel(get(), get(), get()) }
         viewModel { parameters ->
             ClassTemplateCreateViewModel(
                 templateId = parameters.getOrNull(),
