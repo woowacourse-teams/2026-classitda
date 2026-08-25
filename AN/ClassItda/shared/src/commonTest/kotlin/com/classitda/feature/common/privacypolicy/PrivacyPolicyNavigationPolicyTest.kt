@@ -64,13 +64,13 @@ class PrivacyPolicyNavigationPolicyTest {
     @Test
     fun `HTTP downgrade와 위험 scheme을 차단한다`() {
         assertFalse(policy.allows(target(scheme = "http")))
-        assertFalse(policy.allows(target(scheme = "javascript", host = null, path = "")))
-        assertFalse(policy.allows(target(scheme = "intent", host = null, path = "")))
-        assertFalse(policy.allows(target(scheme = "file", host = null, path = "/etc/passwd")))
-        assertFalse(policy.allows(target(scheme = "content", host = null, path = "provider/item")))
-        assertFalse(policy.allows(target(scheme = "data", host = null, path = "text/html,blocked")))
-        assertFalse(policy.allows(target(scheme = "tel", host = null, path = "+821012345678")))
-        assertFalse(policy.allows(target(scheme = "mailto", host = null, path = "support@classitda.com")))
+        assertFalse(policy.allows(target(scheme = "javascript")))
+        assertFalse(policy.allows(target(scheme = "intent")))
+        assertFalse(policy.allows(target(scheme = "file")))
+        assertFalse(policy.allows(target(scheme = "content")))
+        assertFalse(policy.allows(target(scheme = "data")))
+        assertFalse(policy.allows(target(scheme = "tel")))
+        assertFalse(policy.allows(target(scheme = "mailto")))
     }
 
     @Test
