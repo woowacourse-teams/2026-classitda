@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
+@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "룸", description = "시설에 속한 룸 관리 API")
 public interface RoomControllerApi {
 
