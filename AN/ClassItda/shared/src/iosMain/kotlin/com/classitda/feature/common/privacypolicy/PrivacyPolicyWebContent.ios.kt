@@ -117,6 +117,8 @@ private class PrivacyPolicyNavigationDelegate(
     private val onNavigationBlocked: () -> Unit,
 ) : NSObject(),
     WKNavigationDelegateProtocol {
+    private var policyCancellationPending = false
+
     @ObjCSignatureOverride
     override fun webView(
         webView: WKWebView,
@@ -133,7 +135,7 @@ private class PrivacyPolicyNavigationDelegate(
             decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyAllow)
         } else {
             decisionHandler(WKNavigationActionPolicy.WKNavigationActionPolicyCancel)
-            onNavigationBlocked()
+            markPolicyNavigationBlocked()
         }
     }
 
@@ -152,7 +154,7 @@ private class PrivacyPolicyNavigationDelegate(
             decisionHandler(WKNavigationResponsePolicy.WKNavigationResponsePolicyAllow)
         } else {
             decisionHandler(WKNavigationResponsePolicy.WKNavigationResponsePolicyCancel)
-            onNavigationBlocked()
+            markPolicyNavigationBlocked()
         }
     }
 
@@ -183,7 +185,9 @@ private class PrivacyPolicyNavigationDelegate(
         didFailProvisionalNavigation: WKNavigation?,
         withError: NSError,
     ) {
-        onLoadFailed(withError.toPrivacyPolicyError())
+        if (!ignorePolicyCancellation(withError)) {
+            onLoadFailed(withError.toPrivacyPolicyError())
+        }
     }
 
     @ObjCSignatureOverride
@@ -192,7 +196,22 @@ private class PrivacyPolicyNavigationDelegate(
         didFailNavigation: WKNavigation?,
         withError: NSError,
     ) {
-        onLoadFailed(withError.toPrivacyPolicyError())
+        if (!ignorePolicyCancellation(withError)) {
+            onLoadFailed(withError.toPrivacyPolicyError())
+        }
+    }
+
+    private fun markPolicyNavigationBlocked() {
+        policyCancellationPending = true
+        onNavigationBlocked()
+    }
+
+    private fun ignorePolicyCancellation(error: NSError): Boolean {
+        if (!policyCancellationPending) return false
+
+        policyCancellationPending = false
+        return (error.domain == NSURLErrorDomain && error.code == -999L) ||
+            (error.domain == "WebKitErrorDomain" && error.code == 102L)
     }
 }
 
