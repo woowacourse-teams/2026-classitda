@@ -10,6 +10,11 @@ import kotlin.test.assertTrue
 
 class InstructorMyPageContractTest {
     @Test
+    fun myPagePrivacyPolicyActionIsASeparateNavigationContract() {
+        assertIs<InstructorMyPageAction.OpenPrivacyPolicy>(InstructorMyPageAction.OpenPrivacyPolicy)
+    }
+
+    @Test
     fun memberActionCarriesStableMemberId() {
         val id = InstructorMemberId("member-1")
 
