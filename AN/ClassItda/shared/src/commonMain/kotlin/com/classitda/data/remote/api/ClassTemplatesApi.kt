@@ -23,18 +23,17 @@ internal class ClassTemplatesApi(
         return response
     }
 
+    // 201 Created만 내려주고 본문은 없다. body()로 역직렬화하면 안 된다.
     suspend fun createClassTemplate(
         studioId: Long,
         request: ClassTemplateCreateRequestDto,
-    ): ClassTemplateResponseDto {
-        val response: ClassTemplateResponseDto =
-            client
-                .post("api/studios/$studioId/class-templates") {
-                    contentType(ContentType.Application.Json)
-                    setBody(request)
-                }.body()
-        Logger.d("createClassTemplate response: $response")
-        return response
+    ) {
+        val response =
+            client.post("api/studios/$studioId/class-templates") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+        Logger.d("createClassTemplate response: ${response.status}")
     }
 
     suspend fun editClassTemplate(

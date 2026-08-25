@@ -49,7 +49,7 @@ internal fun ClassTemplate.toCreateRequestDto(): ClassTemplateCreateRequestDto {
         description = description.ifBlank { null },
         classForm = classForm.toDto(),
         durationMinutes = durationMinutes,
-        startTime = schedule.startTime.toString(),
+        startTime = schedule.startTime.toApiTimeString(),
         recurringDays = schedule.repeatDays.map { it.toDto() },
         capacity = capacity,
         classTypeIds = classTypeIds.toRequestIds(),
@@ -63,7 +63,7 @@ internal fun ClassTemplate.toUpdateRequestDto(): ClassTemplateUpdateRequestDto {
         description = description.ifBlank { null },
         classForm = classForm.toDto(),
         durationMinutes = durationMinutes,
-        startTime = schedule.startTime.toString(),
+        startTime = schedule.startTime.toApiTimeString(),
         recurringDays = schedule.repeatDays.map { it.toDto() },
         capacity = capacity,
         classTypeIds = classTypeIds.toRequestIds(),
@@ -96,6 +96,10 @@ internal fun String.toStudioId(): Long = toLongOrNull() ?: error("올바르지 �
 internal fun String.toClassTemplateId(): Long = toLongOrNull() ?: error("올바르지 않은 템플릿 ID입니다: $this")
 
 private fun String.toClassTypeId(): Long = toLongOrNull() ?: error("올바르지 않은 수업 종류 ID입니다: $this")
+
+private fun LocalTime.toApiTimeString(): String = "${hour.pad2()}:${minute.pad2()}:${second.pad2()}"
+
+private fun Int.pad2(): String = toString().padStart(2, '0')
 
 private fun LocalTime.plusMinutesClamped(minutes: Int): LocalTime {
     val totalMinutes = ((hour * 60 + minute + minutes) % (24 * 60) + 24 * 60) % (24 * 60)

@@ -6,6 +6,11 @@ import com.classitda.domain.model.instructor.management.ClassType
 interface ClassTemplateManagementRepository {
     suspend fun getTemplates(studioId: String): List<ClassTemplate>
 
+    suspend fun getTemplate(
+        studioId: String,
+        id: String,
+    ): ClassTemplate?
+
     suspend fun createTemplate(
         studioId: String,
         template: ClassTemplate,
