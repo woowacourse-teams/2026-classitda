@@ -4,5 +4,9 @@ import kotlin.jvm.JvmInline
 
 @JvmInline
 value class StudioId(
-    val value: Long,
-)
+    val value: String,
+) {
+    init {
+        require(value.isNotBlank()) { "시설 ID는 비어 있을 수 없습니다." }
+    }
+}
