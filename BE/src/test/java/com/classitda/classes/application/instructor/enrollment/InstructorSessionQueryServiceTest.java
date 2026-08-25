@@ -236,7 +236,7 @@ class InstructorSessionQueryServiceTest {
     }
 
     @Test
-    void 본인_수업_관리_권한이_있는_강사가_다른_강사의_수업을_조회하면_찾을_수_없다() {
+    void 예약_조회_권한이_있는_강사는_다른_강사의_수업도_조회한다() {
         // given
         DetailContext context = 기본_환경("other-detail");
         StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
@@ -246,15 +246,15 @@ class InstructorSessionQueryServiceTest {
         소속을_저장한다(context.studio(), instructor, instructorRole, "타 수업 접근 강사");
         entityManager.clear();
 
-        // when / then
-        assertClassError(
-                () -> queryService.findDetail(
-                        instructor.getId(),
-                        context.studio().getId(),
-                        context.classSession().getId()
-                ),
-                ClassErrorCode.CLASS_SESSION_NOT_FOUND
+        // when
+        InstructorSessionDetailView result = queryService.findDetail(
+                instructor.getId(),
+                context.studio().getId(),
+                context.classSession().getId()
         );
+
+        // then
+        assertThat(result.mine()).isFalse();
     }
 
     @Test

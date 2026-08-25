@@ -45,7 +45,6 @@ public class InstructorSessionQueryService {
         InstructorSessionDetailProjection detail =
                 classSessionRepository.findDetailForInstructor(studioId, classSessionId)
                         .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
-        access.validateAccessTo(detail.getInstructorMembershipId());
 
         ClassSession classSession = detail.getSession();
         StudioPolicy studioPolicy = studioPolicyRepository.findByStudioId(studioId)
