@@ -133,7 +133,7 @@ class InstructorEnrollmentIntegrationTest {
         // when
         RestTestClient.ResponseSpec result = client.post()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/{classSessionId}/enrollments",
+                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments",
                         환경.studioId(),
                         환경.classSessionId()
                 )
@@ -155,7 +155,7 @@ class InstructorEnrollmentIntegrationTest {
         // when
         RestTestClient.ResponseSpec result = client.post()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/{classSessionId}/enrollments",
+                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments",
                         환경.studioId(),
                         환경.classSessionId()
                 )
@@ -182,8 +182,8 @@ class InstructorEnrollmentIntegrationTest {
 
         // then
         assertThat(document)
-                .contains("/api/studios/{studioId}/class-sessions/{classSessionId}/enrollments")
-                .contains("/api/studios/{studioId}/class-sessions/{classSessionId}/enrollments/{enrollmentId}")
+                .contains("/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments")
+                .contains("/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments/{enrollmentId}")
                 .contains("회원 대리 예약")
                 .contains("회원 대리 예약 취소");
     }
@@ -191,7 +191,7 @@ class InstructorEnrollmentIntegrationTest {
     private RestTestClient.ResponseSpec 예약한다(예약_환경 환경, String accessToken, String apiVersion) {
         return client.post()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/{classSessionId}/enrollments",
+                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments",
                         환경.studioId(),
                         환경.classSessionId()
                 )
@@ -210,7 +210,7 @@ class InstructorEnrollmentIntegrationTest {
     ) {
         return client.delete()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/{classSessionId}/enrollments/{enrollmentId}",
+                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments/{enrollmentId}",
                         환경.studioId(),
                         환경.classSessionId(),
                         enrollmentId

@@ -1,6 +1,7 @@
 package com.classitda.classes.presentation;
 
 import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
+import com.classitda.classes.presentation.dto.InstructorSessionDetailResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,8 +15,76 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "수업 회차 대리 예약", description = "시설 관리자가 시설에 등록된 회원을 수업 회차에 예약하거나 예약을 취소합니다.")
+@Tag(name = "강사용 수업 회원 관리", description = "강사용 수업 상세와 예약 회원 명단을 조회하고 회원의 예약을 관리합니다.")
 public interface InstructorEnrollmentControllerApi {
+
+    @Operation(
+            summary = "강사용 수업 상세와 예약 회원 명단 조회",
+            description = """
+                    - **명단 범위**: 현재 `RESERVED` 상태인 회원만 반환합니다.
+
+                    - **정렬**: 예약 시각 오름차순, 신청 ID 오름차순으로 반환합니다.
+
+                    - **권한**: 대표 또는 전체 수업 관리 권한자는 모든 수업을 조회할 수 있습니다. 본인 수업 관리 권한자는 담당 수업만 조회할 수 있습니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "수업 상세와 예약 확정 회원 명단을 반환합니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = InstructorSessionDetailResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "id":10,
+                                      "instructorMembershipId":12,
+                                      "instructorName":"이지은 강사",
+                                      "classForm":"GROUP",
+                                      "classType":{"id":3,"name":"리포머"},
+                                      "className":"리포머 밸런스",
+                                      "description":"체어룸에서 진행합니다.",
+                                      "capacity":8,
+                                      "reservedCount":1,
+                                      "startAt":"2026-08-17T12:00:00",
+                                      "endAt":"2026-08-17T13:00:00",
+                                      "status":"SCHEDULED_BOOKING_OPEN",
+                                      "mine":true,
+                                      "reservedMembers":[{
+                                        "enrollmentId":101,
+                                        "membershipId":31,
+                                        "name":"김민지",
+                                        "profileImageUrl":"https://images.example.com/minji.png"
+                                      }]
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "API 버전 헤더가 유효하지 않습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "활성 소속이 아니거나 예약 조회 권한이 없습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설 또는 조회 가능한 수업 회차를 찾을 수 없습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    InstructorSessionDetailResponse findOne(
+            @Parameter(hidden = true) Long memberId,
+            @Parameter(description = "시설 ID", example = "1") Long studioId,
+            @Parameter(description = "수업 회차 ID", example = "10") Long classSessionId
+    );
 
     @Operation(
             summary = "회원 대리 예약",
@@ -28,7 +97,7 @@ public interface InstructorEnrollmentControllerApi {
 
                     - **정원**: 남은 자리가 없으면 예약할 수 없습니다. 대기 등록은 지원하지 않습니다.
 
-                    - **권한**: 대표이거나 예약 관리 권한이 있어야 합니다.
+                    - **권한**: 대표는 모든 수업을 관리할 수 있습니다. 그 외에는 예약 관리 권한과 본인 또는 전체 수업 관리 권한이 필요합니다.
                     """
     )
     @ApiResponses({
@@ -62,7 +131,7 @@ public interface InstructorEnrollmentControllerApi {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "시설의 활성 소속이 아니거나 예약 관리 권한이 없습니다.",
+                    description = "시설의 활성 소속이 아니거나 예약·수업 관리 권한이 없습니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
@@ -120,7 +189,7 @@ public interface InstructorEnrollmentControllerApi {
 
                     - **제한**: 출결이 기록된 예약은 취소할 수 없습니다. 회원 무료 취소 마감 시각은 적용하지 않습니다.
 
-                    - **권한**: 대표이거나 예약 관리 권한이 있어야 합니다.
+                    - **권한**: 대표는 모든 수업을 관리할 수 있습니다. 그 외에는 예약 관리 권한과 본인 또는 전체 수업 관리 권한이 필요합니다.
                     """
     )
     @ApiResponses({
@@ -152,7 +221,7 @@ public interface InstructorEnrollmentControllerApi {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "시설의 활성 소속이 아니거나 예약 관리 권한이 없습니다.",
+                    description = "시설의 활성 소속이 아니거나 예약·수업 관리 권한이 없습니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
