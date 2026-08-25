@@ -12,6 +12,7 @@ import com.classitda.authentication.exception.AuthException;
 import com.classitda.authentication.infra.security.properties.TokenProperties;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
 import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
+import com.classitda.member.domain.repository.MemberRepository;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class RefreshTokenService {
     private final RefreshTokenVerifier refreshTokenVerifier;
     private final RefreshSessionStore refreshSessionStore;
     private final LoginTokenIssuer loginTokenIssuer;
+    private final MemberRepository memberRepository;
     private final TokenProperties tokenProperties;
 
     public LoginTokenResponse refresh(RefreshTokenRequest request) {
@@ -50,6 +52,9 @@ public class RefreshTokenService {
 
         if (Instant.now().getEpochSecond() >= oldSession.expiresAtEpochSecond()
                 || !refreshTokenVerifier.matches(refreshToken, oldSession.tokenHash())) {
+            throw invalidRefreshToken();
+        }
+        if (!memberRepository.existsByIdAndWithdrawalRequestedAtIsNull(oldSession.memberId())) {
             throw invalidRefreshToken();
         }
 

@@ -3,8 +3,10 @@ package com.classitda.classes.fixture;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.domain.session.ClassSessionClassType;
-import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
-import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.member.domain.Member;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.studio.domain.MembershipStatus;
@@ -78,7 +80,24 @@ public final class ClassSessionFixture {
                 .build();
     }
 
-    public static ClassSessionCreateRequest 기본_단일_수업_회차_생성_요청(
+    public static ClassSessionCreateV1Request 기본_단일_수업_회차_V1_생성_요청(Long classTypeId) {
+        return new ClassSessionCreateV1Request(
+                ClassForm.GROUP,
+                classTypeId,
+                "저녁 요가",
+                12,
+                60,
+                false,
+                LocalTime.of(20, 0),
+                "퇴근 후 진행하는 수업",
+                LocalDate.of(2026, 8, 17),
+                null,
+                null,
+                null
+        );
+    }
+
+    public static ClassSessionCreateV2Request 기본_단일_수업_회차_생성_요청(
             Long instructorMembershipId,
             Long classTypeId
     ) {
@@ -99,7 +118,7 @@ public final class ClassSessionFixture {
         );
     }
 
-    public static ClassSessionCreateRequest 기본_반복_수업_회차_생성_요청(
+    public static ClassSessionCreateV2Request 기본_반복_수업_회차_생성_요청(
             Long instructorMembershipId,
             Long classTypeId
     ) {
@@ -120,8 +139,8 @@ public final class ClassSessionFixture {
         );
     }
 
-    public static ClassSessionUpdateRequest 기본_수업_회차_수정_요청(Long classTypeId) {
-        return ClassSessionUpdateRequest.of(
+    public static ClassSessionUpdateV1Request 기본_수업_회차_수정_요청(Long classTypeId) {
+        return ClassSessionUpdateV1Request.of(
                 ClassForm.INDIVIDUAL,
                 classTypeId,
                 "수정된 개인 수업",
@@ -132,7 +151,23 @@ public final class ClassSessionFixture {
         );
     }
 
-    public static ClassSessionCreateRequest 수업_회차_생성_요청(
+    public static ClassSessionUpdateV2Request 기본_수업_회차_V2_수정_요청(
+            Long instructorMembershipId,
+            Long classTypeId
+    ) {
+        return ClassSessionUpdateV2Request.of(
+                instructorMembershipId,
+                ClassForm.INDIVIDUAL,
+                classTypeId,
+                "수정된 개인 수업",
+                1,
+                50,
+                LocalDateTime.of(2026, 8, 18, 19, 30),
+                "수정된 수업 안내"
+        );
+    }
+
+    public static ClassSessionCreateV2Request 수업_회차_생성_요청(
             Long instructorMembershipId,
             ClassForm classForm,
             Long classTypeId,
@@ -147,7 +182,7 @@ public final class ClassSessionFixture {
             LocalDate repeatStartDate,
             LocalDate repeatEndDate
     ) {
-        return ClassSessionCreateRequest.of(
+        return ClassSessionCreateV2Request.of(
                 instructorMembershipId,
                 classForm,
                 classTypeId,

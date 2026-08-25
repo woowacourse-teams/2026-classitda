@@ -88,6 +88,10 @@ public class Studio extends BaseEntity {
         return owner.getId().equals(memberId);
     }
 
+    public boolean isOwner(StudioMembership membership) {
+        return membership != null && membership.belongsTo(owner);
+    }
+
     public void update(
             String name,
             Address address,

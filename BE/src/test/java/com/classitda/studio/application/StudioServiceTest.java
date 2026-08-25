@@ -8,6 +8,7 @@ import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.domain.MembershipStatus;
+import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.SystemRole;
@@ -123,6 +124,34 @@ class StudioServiceTest {
         assertThat(membership.get().getStudioRole().getName()).isEqualTo(SystemRole.OWNER.getRoleName());
         assertThat(membership.get().isInstructor()).isTrue();
         assertThat(membership.get().getStatus()).isEqualTo(MembershipStatus.ACTIVE);
+    }
+
+    @Test
+    void 대표_소속_판정은_Member_연관을_초기화하지_않는다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        StudioResponse response = studioService.save(
+                owner.getId(), StudioFixture.기본_시설_생성_요청());
+        entityManager.flush();
+        entityManager.clear();
+
+        Studio studio = studioRepository.findById(response.id()).orElseThrow();
+        StudioMembership membership = studioMembershipRepository
+                .findByStudioIdAndMemberId(response.id(), owner.getId())
+                .orElseThrow();
+        var persistenceUnitUtil = entityManager
+                .getEntityManagerFactory()
+                .getPersistenceUnitUtil();
+        assertThat(persistenceUnitUtil.isLoaded(studio, "owner")).isFalse();
+        assertThat(persistenceUnitUtil.isLoaded(membership, "member")).isFalse();
+
+        // when
+        boolean ownerMembership = studio.isOwner(membership);
+
+        // then
+        assertThat(ownerMembership).isTrue();
+        assertThat(persistenceUnitUtil.isLoaded(studio, "owner")).isFalse();
+        assertThat(persistenceUnitUtil.isLoaded(membership, "member")).isFalse();
     }
 
     @Test

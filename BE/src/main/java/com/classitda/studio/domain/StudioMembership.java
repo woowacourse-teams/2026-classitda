@@ -77,6 +77,19 @@ public class StudioMembership extends BaseEntity {
         return studioRole.isInstructor();
     }
 
+    public boolean belongsTo(Member member) {
+        if (this.member == member) {
+            return true;
+        }
+        return member != null
+                && this.member.getId() != null
+                && this.member.getId().equals(member.getId());
+    }
+
+    public void clearPersonalInformation() {
+        name = Member.WITHDRAWN_MEMBER_NAME;
+    }
+
     private void validateName(String name) {
         if (name == null || name.isBlank() || name.length() > MAX_NAME_LENGTH) {
             throw new StudioException(StudioErrorCode.INVALID_MEMBERSHIP_NAME);

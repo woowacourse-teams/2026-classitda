@@ -196,7 +196,7 @@ class PassProductControllerTest {
     @Test
     void 등록_지원하지_않는_버전이면_API_002를_반환한다() {
         // given / when
-        RestTestClient.ResponseSpec result = 수강권을_등록한다(1L, "2", PassProductFixture.기본_수강권_생성_요청());
+        RestTestClient.ResponseSpec result = 수강권을_등록한다(1L, "3", PassProductFixture.기본_수강권_생성_요청());
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");

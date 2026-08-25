@@ -150,7 +150,7 @@ class StudentEnrollmentControllerTest {
     @Test
     void 지원하지_않는_API_버전이면_400을_반환한다() {
         // when
-        RestTestClient.ResponseSpec result = 상세를_조회한다("2");
+        RestTestClient.ResponseSpec result = 상세를_조회한다("3");
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");

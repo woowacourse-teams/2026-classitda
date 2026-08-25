@@ -28,9 +28,11 @@ import com.classitda.classes.domain.session.SessionPhase;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;
-import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
-import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
@@ -41,7 +43,6 @@ import com.classitda.studio.exception.StudioException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -98,54 +99,119 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 수업_회차를_등록하면_201과_빈_본문을_반환하고_명령_서비스에_위임한다() {
+    void V2_수업_회차를_등록하면_201과_빈_본문을_반환하고_명령_서비스에_위임한다() {
         // given
-        ClassSessionCreateRequest request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
+        ClassSessionCreateV2Request request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
 
         // when
-        RestTestClient.ResponseSpec result = 수업_회차를_등록한다(7L, "1", request);
+        RestTestClient.ResponseSpec result = V2_수업_회차를_등록한다(7L, "2", request);
 
         // then
         result.expectStatus().isCreated().expectBody().isEmpty();
-        verify(commandService).save(eq(1L), eq(7L), eq(request));
+        verify(commandService).saveV2(eq(1L), eq(7L), eq(request));
     }
 
     @Test
-    void 수업_회차를_수정하면_204와_빈_본문을_반환하고_명령_서비스에_위임한다() {
+    void V1_수업_회차를_등록하면_강사_ID_없이_명령_서비스에_위임한다() {
         // given
-        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+        ClassSessionCreateV1Request request =
+                ClassSessionFixture.기본_단일_수업_회차_V1_생성_요청(3L);
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/studios/7/class-sessions")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange();
+
+        // then
+        result.expectStatus().isCreated().expectBody().isEmpty();
+        verify(commandService).saveV1(1L, 7L, request);
+    }
+
+    @Test
+    void V1_수업_회차를_수정하면_강사_ID_없이_명령_서비스에_위임한다() {
+        // given
+        ClassSessionUpdateV1Request request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
 
         // when
         RestTestClient.ResponseSpec result = 수업_회차를_수정한다(7L, 11L, "1", request);
 
         // then
         result.expectStatus().isNoContent().expectBody().isEmpty();
-        verify(commandService).update(1L, 7L, 11L, request);
+        verify(commandService).updateV1(1L, 7L, 11L, request);
     }
 
     @Test
-    void 일부_필드만_전달해_수업_회차를_수정할_수_있다() {
+    void V2_수업_회차를_수정하면_강사_ID를_포함해_명령_서비스에_위임한다() {
         // given
-        ClassSessionUpdateRequest expected = ClassSessionUpdateRequest.of(
-                null, null, "이름만 수정", null, null, null, null);
+        ClassSessionUpdateV2Request request =
+                ClassSessionFixture.기본_수업_회차_V2_수정_요청(5L, 3L);
 
         // when
-        RestTestClient.ResponseSpec result = client.patch()
-                .uri("/api/studios/7/class-sessions/11")
-                .header("X-API-Version", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("className", "이름만 수정"))
-                .exchange();
+        RestTestClient.ResponseSpec result = V2_수업_회차를_수정한다(7L, 11L, request);
 
         // then
         result.expectStatus().isNoContent().expectBody().isEmpty();
-        verify(commandService).update(1L, 7L, 11L, expected);
+        verify(commandService).updateV2(1L, 7L, 11L, request);
+    }
+
+    @Test
+    void V2_담당_강사_ID가_누락되면_COMMON_001을_반환한다() {
+        // given
+        ClassSessionUpdateV2Request request =
+                ClassSessionFixture.기본_수업_회차_V2_수정_요청(null, 3L);
+
+        // when
+        RestTestClient.ResponseSpec result = V2_수업_회차를_수정한다(7L, 11L, request);
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(commandService, never()).updateV2(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 수업_회차_수정에서_지원하지_않는_버전이면_API_002를_반환한다() {
+        // given
+        ClassSessionUpdateV2Request request =
+                ClassSessionFixture.기본_수업_회차_V2_수정_요청(5L, 3L);
+
+        // when
+        RestTestClient.ResponseSpec result = client.put()
+                .uri("/api/studios/7/class-sessions/11")
+                .header("X-API-Version", "3")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(commandService, never()).updateV1(anyLong(), anyLong(), anyLong(), any());
+        verify(commandService, never()).updateV2(anyLong(), anyLong(), anyLong(), any());
+    }
+
+    @Test
+    void 필수_필드를_누락하면_COMMON_001을_반환하고_명령_서비스를_호출하지_않는다() {
+        // when
+        RestTestClient.ResponseSpec result = client.put()
+                .uri("/api/studios/7/class-sessions/11")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"className":"이름만 수정"}
+                        """)
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(commandService, never()).updateV1(anyLong(), anyLong(), anyLong(), any());
     }
 
     @Test
     void 전달한_수업_회차_수정값이_유효하지_않으면_COMMON_001을_반환한다() {
         // given
-        ClassSessionUpdateRequest request = ClassSessionUpdateRequest.of(
+        ClassSessionUpdateV1Request request = ClassSessionUpdateV1Request.of(
                 null, null, " ", 0, 0, null, null);
 
         // when
@@ -153,15 +219,15 @@ class ClassSessionControllerTest {
 
         // then
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
-        verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
+        verify(commandService, never()).updateV1(anyLong(), anyLong(), anyLong(), any());
     }
 
     @Test
     void 수업_회차_수정_중_시간이_겹치면_CLASS_SESSION_015를_반환한다() {
         // given
-        ClassSessionUpdateRequest request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+        ClassSessionUpdateV1Request request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
         doThrow(new ClassException(ClassErrorCode.CLASS_SESSION_TIME_CONFLICT))
-                .when(commandService).update(1L, 7L, 11L, request);
+                .when(commandService).updateV1(1L, 7L, 11L, request);
 
         // when
         RestTestClient.ResponseSpec result = 수업_회차를_수정한다(7L, 11L, "1", request);
@@ -315,7 +381,7 @@ class ClassSessionControllerTest {
         RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
                 7L,
                 "date=2026-08-17",
-                "2"
+                "3"
         );
 
         // then
@@ -407,7 +473,7 @@ class ClassSessionControllerTest {
         RestTestClient.ResponseSpec result = 학생용_수업_달력을_조회한다(
                 7L,
                 "from=2026-08-15&to=2026-08-19",
-                "2"
+                "3"
         );
 
         // then
@@ -482,7 +548,7 @@ class ClassSessionControllerTest {
         RestTestClient.ResponseSpec result = 강사용_일별_수업_목록을_조회한다(
                 7L,
                 "date=2026-08-17",
-                "2"
+                "3"
         );
 
         // then
@@ -598,7 +664,7 @@ class ClassSessionControllerTest {
         RestTestClient.ResponseSpec result = 강사용_수업_달력을_조회한다(
                 7L,
                 "from=2026-08-15&to=2026-08-19",
-                "2"
+                "3"
         );
 
         // then
@@ -621,7 +687,7 @@ class ClassSessionControllerTest {
     @Test
     void 상세_조회에서_지원하지_않는_버전이면_API_002를_반환하고_조회_서비스를_호출하지_않는다() {
         // when
-        RestTestClient.ResponseSpec result = 수업_회차_상세를_조회한다(7L, 11L, "2");
+        RestTestClient.ResponseSpec result = 수업_회차_상세를_조회한다(7L, 11L, "3");
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
@@ -662,22 +728,22 @@ class ClassSessionControllerTest {
     @Test
     void 필수_요청값이_유효하지_않으면_COMMON_001을_반환하고_명령_서비스를_호출하지_않는다() {
         // given
-        ClassSessionCreateRequest request = ClassSessionFixture.수업_회차_생성_요청(
+        ClassSessionCreateV2Request request = ClassSessionFixture.수업_회차_생성_요청(
                 null, null, null, " ", 0, 0, null, null,
                 null, null, null, null, null);
 
         // when
-        RestTestClient.ResponseSpec result = 수업_회차를_등록한다(7L, "1", request);
+        RestTestClient.ResponseSpec result = V2_수업_회차를_등록한다(7L, "2", request);
 
         // then
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
-        verify(commandService, never()).save(anyLong(), anyLong(), any());
+        verify(commandService, never()).saveV2(anyLong(), anyLong(), any());
     }
 
     @Test
     void 버전_헤더가_없으면_API_001을_반환하고_명령_서비스를_호출하지_않는다() {
         // given
-        ClassSessionCreateRequest request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
+        ClassSessionCreateV2Request request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
 
         // when
         RestTestClient.ResponseSpec result = client.post()
@@ -688,20 +754,20 @@ class ClassSessionControllerTest {
 
         // then
         오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(commandService, never()).save(anyLong(), anyLong(), any());
+        verify(commandService, never()).saveV2(anyLong(), anyLong(), any());
     }
 
     @Test
     void 지원하지_않는_버전이면_API_002를_반환하고_명령_서비스를_호출하지_않는다() {
         // given
-        ClassSessionCreateRequest request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
+        ClassSessionCreateV2Request request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
 
         // when
-        RestTestClient.ResponseSpec result = 수업_회차를_등록한다(7L, "2", request);
+        RestTestClient.ResponseSpec result = V2_수업_회차를_등록한다(7L, "3", request);
 
         // then
         오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(commandService, never()).save(anyLong(), anyLong(), any());
+        verify(commandService, never()).saveV2(anyLong(), anyLong(), any());
     }
 
     @ParameterizedTest
@@ -713,20 +779,20 @@ class ClassSessionControllerTest {
             String message
     ) {
         // given
-        ClassSessionCreateRequest request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
-        doThrow(exception).when(commandService).save(1L, 7L, request);
+        ClassSessionCreateV2Request request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
+        doThrow(exception).when(commandService).saveV2(1L, 7L, request);
 
         // when
-        RestTestClient.ResponseSpec result = 수업_회차를_등록한다(7L, "1", request);
+        RestTestClient.ResponseSpec result = V2_수업_회차를_등록한다(7L, "2", request);
 
         // then
         오류를_검증한다(result, status, code, message);
     }
 
-    private RestTestClient.ResponseSpec 수업_회차를_등록한다(
+    private RestTestClient.ResponseSpec V2_수업_회차를_등록한다(
             Long studioId,
             String version,
-            ClassSessionCreateRequest request
+            ClassSessionCreateV2Request request
     ) {
         return client.post()
                 .uri("/api/studios/{studioId}/class-sessions", studioId)
@@ -740,15 +806,32 @@ class ClassSessionControllerTest {
             Long studioId,
             Long classSessionId,
             String version,
-            ClassSessionUpdateRequest request
+            ClassSessionUpdateV1Request request
     ) {
-        return client.patch()
+        return client.put()
                 .uri(
                         "/api/studios/{studioId}/class-sessions/{classSessionId}",
                         studioId,
                         classSessionId
                 )
                 .header("X-API-Version", version)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(request)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec V2_수업_회차를_수정한다(
+            Long studioId,
+            Long classSessionId,
+            ClassSessionUpdateV2Request request
+    ) {
+        return client.put()
+                .uri(
+                        "/api/studios/{studioId}/class-sessions/{classSessionId}",
+                        studioId,
+                        classSessionId
+                )
+                .header("X-API-Version", "2")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();

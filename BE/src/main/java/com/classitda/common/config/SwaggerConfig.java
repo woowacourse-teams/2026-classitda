@@ -39,6 +39,9 @@ public class SwaggerConfig {
                 .filter(parameter -> API_VERSION_HEADER.equals(parameter.getName()))
                 .filter(parameter -> "header".equals(parameter.getIn()))
                 .filter(parameter -> parameter.getSchema() != null)
-                .forEach(parameter -> parameter.getSchema().setDefault(DEFAULT_API_VERSION));
+                .forEach(parameter -> {
+                    parameter.setRequired(true);
+                    parameter.getSchema().setDefault(DEFAULT_API_VERSION);
+                });
     }
 }

@@ -2,6 +2,7 @@ package com.classitda.studio.domain.repository;
 
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,8 @@ public interface StudioMembershipRepository extends JpaRepository<StudioMembersh
     Optional<StudioMembership> findByStudioIdAndMemberId(Long studioId, Long memberId);
 
     boolean existsByStudioIdAndMemberId(Long studioId, Long memberId);
+
+    List<StudioMembership> findAllByMemberIdIn(Collection<Long> memberIds);
 
     @Query("select studioMembership from StudioMembership studioMembership "
             + "join fetch studioMembership.member "

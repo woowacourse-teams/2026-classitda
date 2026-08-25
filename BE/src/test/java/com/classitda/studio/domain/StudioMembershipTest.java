@@ -83,6 +83,19 @@ class StudioMembershipTest {
     }
 
     @Test
+    void 개인정보를_정리하면_시설이_부르는_이름을_익명화한다() {
+        // given
+        StudioMembership studioMembership = 소속을_만든다(기본_시설(), "김철수");
+
+        // when
+        studioMembership.clearPersonalInformation();
+
+        // then
+        assertThat(studioMembership.getName()).isEqualTo(Member.WITHDRAWN_MEMBER_NAME);
+        assertThat(studioMembership.getStatus()).isEqualTo(MembershipStatus.ACTIVE);
+    }
+
+    @Test
     void 강사_역할이면_강사로_판정한다() {
         // given
         Studio studio = 기본_시설();

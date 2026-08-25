@@ -106,6 +106,17 @@ public interface AuthControllerApi {
                                     value = "{\"code\":\"AUTH-006\",\"message\":\"Google ID 토큰이 유효하지 않습니다.\"}"
                             )
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "가입된 계정이 탈퇴 처리 중임",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"AUTH-009\",\"message\":\"탈퇴 처리 중인 계정입니다.\"}"
+                            )
+                    )
             )
     })
     LoginResponse loginWithGoogle(
@@ -171,7 +182,7 @@ public interface AuthControllerApi {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Refresh Token이 만료, 위조, 소비되었거나 유효하지 않음",
+                    description = "Refresh Token이 만료, 위조, 소비되었거나 회원이 탈퇴 처리 중이어서 유효하지 않음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),

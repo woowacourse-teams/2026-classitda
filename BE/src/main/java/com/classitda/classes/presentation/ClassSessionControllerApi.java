@@ -1,8 +1,10 @@
 package com.classitda.classes.presentation;
 
-import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
-import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
@@ -31,8 +33,38 @@ import org.springdoc.core.annotations.ParameterObject;
 public interface ClassSessionControllerApi {
 
     @Operation(
-            summary = "수업 회차 등록",
+            summary = "수업 회차 등록(v1)",
             description = """
+                    MVP용 수업 회차 등록 API입니다.
+
+                    - **API 버전**: `X-API-Version` 헤더에 `1`을 전달합니다.
+                    - 인증된 회원 본인을 담당 강사로 지정합니다.
+                    - 요청에 담당 강사 소속 ID를 받지 않습니다.
+                    - 단일 수업과 반복 수업을 등록할 수 있습니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "모든 수업 회차를 정상적으로 등록합니다."),
+            @ApiResponse(responseCode = "400", description = "요청 값이나 반복 조건이 올바르지 않습니다."),
+            @ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않습니다."),
+            @ApiResponse(responseCode = "403", description = "활성 소속이 아니거나 관리 권한이 없습니다."),
+            @ApiResponse(responseCode = "404", description = "시설, 본인의 강사 소속 또는 수업 종류를 찾을 수 없습니다."),
+            @ApiResponse(responseCode = "409", description = "본인의 기존 활성 수업과 시간이 겹칩니다.")
+    })
+    ResponseEntity<Void> saveV1(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            ClassSessionCreateV1Request request
+    );
+
+    @Operation(
+            hidden = true,
+            summary = "수업 회차 등록(v2)",
+            description = """
+                    - **API 버전**: `X-API-Version` 헤더에 `2`를 전달합니다.
+
                     - **단일 수업**: classDate에 한 회차를 생성합니다.
 
                     - **반복 수업**: 반복 기간 안에서 recurringDays에 해당하는 날짜마다 독립적인 회차를 생성합니다.
@@ -119,22 +151,25 @@ public interface ClassSessionControllerApi {
                     )
             )
     })
-    ResponseEntity<Void> save(
+    ResponseEntity<Void> saveV2(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
             Long studioId,
-            ClassSessionCreateRequest request
+            ClassSessionCreateV2Request request
     );
 
     @Operation(
-            summary = "수업 회차 수정",
+            summary = "수업 회차 수정(v1)",
             description = """
-                    생성된 수업 회차 한 건에서 요청에 포함된 정보만 수정합니다.
+                    MVP용 수업 회차 수정 API입니다.
+
+                    - **API 버전**: `X-API-Version` 헤더에 `1`을 전달합니다.
+                    - 생성된 수업 회차 한 건의 수정 가능한 정보를 요청 값으로 교체합니다.
 
                     - 반복 등록으로 생성된 다른 회차에는 변경 사항을 전파하지 않습니다.
-                    - 생략하거나 null로 전달한 필드는 기존 값을 유지합니다.
-                    - description은 빈 문자열을 전달하면 기존 안내를 비웁니다.
+                    - description을 제외한 모든 필드는 필수입니다.
+                    - description은 null을 전달하면 기존 안내를 삭제합니다.
                     - 담당 강사는 변경하지 않습니다.
                     - 변경된 시작 일시와 진행 시간을 기준으로 종료 일시를 다시 계산합니다.
                     - 본인 수업 관리 권한자는 본인이 담당하는 회차만 수정할 수 있습니다.
@@ -217,14 +252,44 @@ public interface ClassSessionControllerApi {
                     )
             )
     })
-    ResponseEntity<Void> update(
+    ResponseEntity<Void> updateV1(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
             Long studioId,
             @Parameter(description = "수정할 수업 회차 ID입니다.", required = true, example = "101")
             Long classSessionId,
-            ClassSessionUpdateRequest request
+            ClassSessionUpdateV1Request request
+    );
+
+    @Operation(
+            hidden = true,
+            summary = "수업 회차 수정(v2)",
+            description = """
+                    - **API 버전**: `X-API-Version` 헤더에 `2`를 전달합니다.
+                    - instructorMembershipId로 같은 시설의 활성 강사를 새 담당 강사로 지정합니다.
+                    - 본인 수업 관리 권한자는 담당 강사를 변경할 수 없습니다.
+                    - 대표 또는 전체 수업 관리 권한자는 담당 강사를 변경할 수 있습니다.
+                    - 변경할 강사의 다른 활성 수업과 시간이 겹치면 요청을 거부합니다.
+                    - 그 외 수정 규칙은 v1과 같습니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "수업 회차와 담당 강사를 정상적으로 수정합니다."),
+            @ApiResponse(responseCode = "400", description = "요청 값이나 API 버전 헤더가 올바르지 않습니다."),
+            @ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않습니다."),
+            @ApiResponse(responseCode = "403", description = "시설의 활성 소속이 아니거나 담당 강사를 변경할 권한이 없습니다."),
+            @ApiResponse(responseCode = "404", description = "시설, 수업 회차, 수업 종류 또는 활성 담당 강사를 찾을 수 없습니다."),
+            @ApiResponse(responseCode = "409", description = "취소된 회차이거나 변경할 강사의 다른 활성 수업과 시간이 겹칩니다.")
+    })
+    ResponseEntity<Void> updateV2(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            @Parameter(description = "수정할 수업 회차 ID입니다.", required = true, example = "101")
+            Long classSessionId,
+            ClassSessionUpdateV2Request request
     );
 
     @Operation(

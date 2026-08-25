@@ -1,6 +1,7 @@
 package com.classitda.authentication.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,6 +15,8 @@ import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
+import com.classitda.authentication.exception.AuthErrorCode;
+import com.classitda.authentication.exception.AuthException;
 import com.classitda.authentication.fixture.AuthAccountFixture;
 import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.login.LoginResponse;
@@ -23,6 +26,7 @@ import com.classitda.member.domain.Member;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -130,6 +134,34 @@ class SocialLoginServiceTest {
         // then
         AuthAccount persistedAccount = findAuthAccount();
         assertThat(persistedAccount.getProviderEmail()).isEqualTo("changed@example.com");
+    }
+
+    @Test
+    void 탈퇴_처리_중인_회원은_구글_로그인과_이메일_갱신이_차단된다() {
+        // given
+        Member member = MemberFixture.기본_회원();
+        member.withdraw(LocalDateTime.of(2026, 8, 24, 15, 30));
+        entityManager.persist(member);
+        entityManager.flush();
+        authAccountRepository.saveAndFlush(AuthAccountFixture.인증_계정(
+                member.getId(),
+                PROVIDER_SUBJECT,
+                PROVIDER_EMAIL));
+        GoogleIdentity identity = GoogleIdentity.of(PROVIDER_SUBJECT, "changed@example.com");
+        given(googleIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+
+        // when / then
+        assertThatThrownBy(() -> socialLoginService.loginWithGoogle(GoogleLoginRequest.from(ID_TOKEN)))
+                .isInstanceOf(AuthException.class)
+                .extracting(exception -> ((AuthException) exception).getErrorCode())
+                .isEqualTo(AuthErrorCode.MEMBER_WITHDRAWAL_PENDING);
+        entityManager.clear();
+        assertThat(findAuthAccount().getProviderEmail()).isEqualTo(PROVIDER_EMAIL);
+        verify(loginTokenIssuer, never()).issueLoginTokens(member.getId());
+        verify(signupTokenIssuer, never()).issueSignupToken(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.anyString());
     }
 
     private AuthAccount saveAuthAccount(String providerEmail) {
