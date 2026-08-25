@@ -3,6 +3,7 @@ package com.classitda.studio.application;
 import com.classitda.classes.application.ClassTypeService;
 import com.classitda.common.image.ImageProperties;
 import com.classitda.member.domain.Member;
+import com.classitda.member.domain.repository.MemberRepository;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
 import com.classitda.studio.domain.PermissionCode;
@@ -22,7 +23,6 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
 import com.classitda.studio.presentation.dto.StudioUpdateRequest;
-import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +45,7 @@ public class StudioService {
     private final ClassTypeService classTypeService;
     private final StudioPermissionService studioPermissionService;
     private final ImageProperties imageProperties;
-    private final EntityManager entityManager;
+    private final MemberRepository memberRepository;
 
     @Transactional
     public StudioResponse save(Long memberId, StudioCreateRequest request) {
@@ -90,13 +90,9 @@ public class StudioService {
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
     }
 
-    // TODO 회원가입 기능이 붙으면 MemberRepository 조회로 바꾼다
     private Member getOwner(Long memberId) {
-        Member owner = entityManager.find(Member.class, memberId);
-        if (owner == null) {
-            throw new StudioException(StudioErrorCode.MEMBER_NOT_FOUND);
-        }
-        return owner;
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new StudioException(StudioErrorCode.MEMBER_NOT_FOUND));
     }
 
     private Address resolveAddress(StudioUpdateRequest request, Studio studio) {
