@@ -7,7 +7,7 @@ import org.koin.dsl.module
 
 internal val instructorModule =
     module {
-        includes(classManagementModule)
+        includes(classManagementModule, studioModule)
         viewModel { InstructorHomeViewModel(get()) }
         viewModel { InstructorScheduleViewModel(get()) }
     }
