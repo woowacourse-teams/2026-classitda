@@ -123,6 +123,7 @@ Accepted (YYYY-MM-DD)
 | [0014](0014-unify-class-session-enrollment.md)                | 수업 신청 생명주기 통합 | 예약과 대기를 한 신청 모델로 관리하고 출결 결과를 분리해요 |
 | [0015](0015-defer-enrollment-pass-product-requirement.md)     | 예약의 수강권 필수 제약 유예 | 수강권 도입 전 MVP 기간에만 해제하고 도입 시 원래 형태로 복원해요 |
 | [0016](0016-allow-withdrawn-member-access-token-to-expire.md) | 탈퇴 회원의 Access Token 처리 | 로그인과 재발급은 즉시 차단하고 기존 Access Token은 자연 만료시켜요 |
+| [0017](0017-store-studio-images-in-s3-behind-cloudfront.md) | 시설 이미지 저장과 서빙 | 공유 버킷의 팀 폴더에 두고 CloudFront로 서빙하며 버킷은 OAC로 닫아둬요 |
 
 ## 다른 문서와의 관계
 

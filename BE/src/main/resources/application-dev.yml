@@ -3,10 +3,6 @@ spring:
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslMode=REQUIRED
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-  jpa:
-    hibernate:
-      ddl-auto: create
-    defer-datasource-initialization: true
   data:
     redis:
       host: ${REDIS_HOST}
@@ -18,7 +14,9 @@ spring:
   sql:
     init:
       mode: always
-      schema-locations: []
+      schema-locations:
+        - classpath:reset-schema.sql
+        - classpath:schema.sql
       data-locations: classpath:dev-data.sql
 
 auth:

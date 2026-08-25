@@ -114,6 +114,10 @@ jobs:
           NCP_SENS_ACCESS_KEY: ${{ secrets.NCP_SENS_ACCESS_KEY }}
           NCP_SENS_SECRET_KEY: ${{ secrets.NCP_SENS_SECRET_KEY }}
           NCP_SENS_SENDER_NUMBER: ${{ secrets.NCP_SENS_SENDER_NUMBER }}
+          IMAGE_BUCKET: ${{ secrets.IMAGE_BUCKET }}
+          IMAGE_KEY_PREFIX: ${{ secrets.IMAGE_KEY_PREFIX }}
+          IMAGE_BASE_URL: ${{ secrets.IMAGE_BASE_URL }}
+          IMAGE_REGION: ${{ secrets.IMAGE_REGION }}
         run: |
           set -eu
           umask 077
@@ -133,6 +137,10 @@ jobs:
             echo "NCP_SENS_ACCESS_KEY=$NCP_SENS_ACCESS_KEY"
             echo "NCP_SENS_SECRET_KEY=$NCP_SENS_SECRET_KEY"
             echo "NCP_SENS_SENDER_NUMBER=$NCP_SENS_SENDER_NUMBER"
+            echo "IMAGE_BUCKET=$IMAGE_BUCKET"
+            echo "IMAGE_KEY_PREFIX=$IMAGE_KEY_PREFIX"
+            echo "IMAGE_BASE_URL=$IMAGE_BASE_URL"
+            echo "IMAGE_REGION=$IMAGE_REGION"
           } > env.tmp
           scp -F ~/.ssh/config env.tmp target:/opt/classitda/.env.new
           ssh -F ~/.ssh/config target 'set -eu; umask 077; cd /opt/classitda; [ -f .env ] && cp .env .env.prev && chmod 600 .env.prev || true; chmod 600 .env.new; mv .env.new .env'

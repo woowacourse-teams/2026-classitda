@@ -2,6 +2,8 @@ package com.classitda.studio.presentation;
 
 import com.classitda.common.exception.ErrorResponse;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
+import com.classitda.common.image.ImageUploadUrlRequest;
+import com.classitda.common.image.ImageUploadUrlResponse;
 import com.classitda.studio.presentation.dto.StudioResponse;
 import com.classitda.studio.presentation.dto.StudioUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,14 +19,86 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 
+@SecurityRequirement(name = "bearerAuth")
 @Tag(name = "시설", description = "시설 생성과 관리 API")
 public interface StudioControllerApi {
 
     @Operation(
+            summary = "시설 대표 이미지 업로드 URL 발급",
+            description = """
+                    - 확장자와 파일 크기(바이트)를 보내면 대표 이미지 한 장에 대한 presigned URL 과 `objectKey` 를 발급합니다.
+
+                    - 클라이언트는 받은 `uploadUrl` 로 파일을 직접 PUT 한 뒤, 시설 생성이나 수정 요청의 `image` 에 `objectKey` 를 담아 보냅니다.
+
+                    - `uploadUrl` 은 짧은 시간 뒤 만료되며, 서명한 `contentType` 과 다른 형식으로 업로드하면 거부됩니다.
+
+                    - 지원 확장자는 `jpg`, `jpeg`, `png`, `webp` 이고, 최대 5MB 입니다.
+
+                    - **파일 크기는 서명에 포함됩니다.** 발급받을 때 알린 크기와 다른 파일을 올리면 S3 가 거부합니다.
+
+                    - **권한**: 대표이거나 시설 수정 권한이 있어야 합니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "업로드 URL 발급 성공"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "요청 값이 올바르지 않거나 지원하지 않는 확장자입니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "요청 값 오류", value = """
+                                            {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 확장자", value = """
+                                            {"code":"IMAGE-001","message":"지원하지 않는 이미지 형식입니다."}"""),
+                                    @ExampleObject(name = "크기 초과", value = """
+                                            {"code":"IMAGE-003","message":"이미지는 5MB 를 넘을 수 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "시설 수정 권한이 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "권한 없음", value = """
+                                    {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설을 찾을 수 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "시설 없음", value = """
+                                    {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}""")
+                    )
+            )
+    })
+    ImageUploadUrlResponse issueImageUploadUrl(ImageUploadUrlRequest request);
+
+    @Operation(
             summary = "시설 생성",
             description = """
-                    새 시설을 만든다. 생성자는 해당 시설의 대표 강사로 등록되고,
-                    시스템 기본 역할(대표 강사, 일반 강사, 회원)이 함께 생성된다.
+                    ### 생성 방식
+
+                    - 생성자는 해당 시설의 대표 강사로 등록되고, 시스템 기본 역할(대표 강사, 일반 강사, 회원)이 함께 생성됩니다.
+
+                    ### 주소
+
+                    - `address` 는 카카오 우편번호 서비스가 돌려준 값을 그대로 담습니다.
+                    - `zonecode` 와 `roadAddress` 는 필수이고, `jibunAddress`, `buildingName`, `detailAddress` 는 생략할 수 있습니다.
+                    - `detailAddress` 는 사용자가 직접 입력하는 상세 주소입니다.
+
+                    ### 대표 이미지
+
+                    - `image` 는 선택이며 한 장만 등록할 수 있습니다.
+                    - 업로드 URL 발급 API 로 받은 `objectKey` 를 그대로 담습니다. 파일이나 URL 을 보내면 안 됩니다.
+                    - 이미 다른 시설이 쓰고 있는 `objectKey` 는 등록할 수 없습니다.
+
+                    ### 운영 시간
+
+                    - `openTime` 과 `closeTime` 은 `HH:mm` 형식이고, `closeTime` 이 `openTime` 보다 늦어야 합니다.
                     """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -48,11 +122,25 @@ public interface StudioControllerApi {
                                                     "message": "운영 종료 시간은 시작 시간보다 늦어야 합니다."}"""
                                     ),
                                     @ExampleObject(
+                                            name = "이미지 키 오류",
+                                            value = """
+                                                    {"code": "STUDIO-007", "message": "이미지 키가 올바르지 않습니다."}"""
+                                    ),
+                                    @ExampleObject(
                                             name = "버전 헤더 누락",
                                             value = """
                                                     {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}"""
                                     )
                             }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 다른 시설에 사용된 이미지",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "이미지 중복", value = """
+                                    {"code": "STUDIO-008", "message": "이미 다른 시설에 사용된 이미지입니다."}""")
                     )
             )
     })
@@ -141,8 +229,22 @@ public interface StudioControllerApi {
     @Operation(
             summary = "시설 정보 수정",
             description = """
-                    시설의 기본 정보를 수정한다. 대표 강사만 수정할 수 있다.
-                    전달한 필드만 변경되고, 보내지 않은 필드는 기존 값을 유지한다.
+                    ### 수정 방식
+
+                    - 대표이거나 시설 수정 권한이 있어야 합니다.
+                    - **전달한 필드만 변경되고, 생략하거나 `null` 로 보낸 필드는 기존 값을 유지합니다.**
+                    - `address` 는 항목별로 합쳐지지 않습니다. 보내면 주소 전체가 교체되므로 바뀌지 않는 항목도 함께 담아야 합니다.
+
+                    ### 대표 이미지
+
+                    - `image` 를 보내면 기존 대표 이미지를 새 `objectKey` 로 교체합니다.
+                    - 업로드 URL 발급 API 로 받은 `objectKey` 를 그대로 담습니다.
+                    - 이미 다른 시설이 쓰고 있는 `objectKey` 로는 교체할 수 없습니다.
+                    - **지울 때는 `DELETE /api/studios/{studioId}/image` 를 씁니다.** 이 API 로는 지울 수 없습니다.
+
+                    ### 운영 시간
+
+                    - `openTime` 이나 `closeTime` 을 바꿀 때도 `closeTime` 이 `openTime` 보다 늦어야 합니다.
                     """,
             security = @SecurityRequirement(name = "bearerAuth")
     )
@@ -164,6 +266,11 @@ public interface StudioControllerApi {
                                             value = """
                                                     {"code": "STUDIO-001", \
                                                     "message": "운영 종료 시간은 시작 시간보다 늦어야 합니다."}"""
+                                    ),
+                                    @ExampleObject(
+                                            name = "이미지 키 오류",
+                                            value = """
+                                                    {"code": "STUDIO-007", "message": "이미지 키가 올바르지 않습니다."}"""
                                     ),
                                     @ExampleObject(
                                             name = "버전 헤더 누락",
@@ -195,6 +302,15 @@ public interface StudioControllerApi {
                             examples = @ExampleObject(name = "시설 없음", value = """
                                     {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}""")
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "이미 다른 시설에 사용된 이미지",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "이미지 중복", value = """
+                                    {"code": "STUDIO-008", "message": "이미 다른 시설에 사용된 이미지입니다."}""")
+                    )
             )
     })
     ResponseEntity<Void> update(
@@ -203,5 +319,61 @@ public interface StudioControllerApi {
             @Parameter(description = "시설 ID", required = true, example = "1")
             Long studioId,
             StudioUpdateRequest request
+    );
+
+    @Operation(
+            summary = "시설 대표 이미지 삭제",
+            description = """
+                    ### 삭제 방식
+
+                    - 시설의 대표 이미지를 지웁니다. 시설 자체는 삭제되지 않습니다.
+                    - **이미 대표 이미지가 없어도 204 를 반환합니다.** 여러 번 호출해도 결과가 같습니다.
+                    - 수정 API 는 `image` 를 생략하거나 `null` 로 보내면 기존 값을 유지하므로, **지울 때는 이 API 를 씁니다.**
+
+                    ### 남는 파일
+
+                    - DB 에서 이미지 연결만 끊고 S3 객체는 남겨 둡니다. 되돌릴 여지를 두기 위해서입니다.
+
+                    ### 권한
+
+                    - 대표이거나 시설 수정 권한이 있어야 합니다.
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "삭제 성공 (대표 이미지가 없던 경우 포함)"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "API 버전 헤더가 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "버전 헤더 누락", value = """
+                                    {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "시설 수정 권한이 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "권한 없음", value = """
+                                    {"code": "PERMISSION-001", "message": "이 작업을 수행할 권한이 없습니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설을 찾을 수 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "시설 없음", value = """
+                                    {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}""")
+                    )
+            )
+    })
+    ResponseEntity<Void> deleteImage(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "시설 ID", required = true, example = "1")
+            Long studioId
     );
 }

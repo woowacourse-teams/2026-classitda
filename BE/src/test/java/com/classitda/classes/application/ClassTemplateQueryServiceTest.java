@@ -199,6 +199,7 @@ class ClassTemplateQueryServiceTest {
                 .name(name)
                 .openTime(LocalTime.of(9, 0))
                 .closeTime(LocalTime.of(22, 0))
+                .address(StudioFixture.기본_주소())
                 .build();
         entityManager.persist(studio);
         entityManager.flush();

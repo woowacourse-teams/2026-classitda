@@ -23,6 +23,7 @@ class StudioTest {
                 .name("스튜디오")
                 .openTime(LocalTime.of(9, 0))
                 .closeTime(LocalTime.of(22, 0))
+                .address(StudioFixture.기본_주소())
                 .build();
 
         // then
@@ -40,6 +41,7 @@ class StudioTest {
                 .name("스튜디오")
                 .openTime(LocalTime.of(22, 0))
                 .closeTime(LocalTime.of(9, 0))
+                .address(StudioFixture.기본_주소())
                 .build())
                 .isInstanceOf(StudioException.class)
                 .hasMessage(StudioErrorCode.INVALID_OPERATING_TIME.getMessage());
@@ -56,6 +58,7 @@ class StudioTest {
                 .name("스튜디오")
                 .openTime(LocalTime.of(9, 0))
                 .closeTime(LocalTime.of(9, 0))
+                .address(StudioFixture.기본_주소())
                 .build())
                 .isInstanceOf(StudioException.class);
     }

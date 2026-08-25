@@ -1,10 +1,13 @@
 package com.classitda.studio.application;
 
 import com.classitda.classes.application.ClassTypeService;
+import com.classitda.common.image.ImageProperties;
 import com.classitda.member.domain.Member;
+import com.classitda.member.domain.repository.MemberRepository;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
 import com.classitda.studio.domain.PermissionCode;
+import com.classitda.studio.domain.Address;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.StudioRole;
@@ -20,12 +23,12 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
 import com.classitda.studio.presentation.dto.StudioUpdateRequest;
-import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,25 +44,26 @@ public class StudioService {
     private final PermissionRepository permissionRepository;
     private final ClassTypeService classTypeService;
     private final StudioPermissionService studioPermissionService;
-    private final EntityManager entityManager;
+    private final ImageProperties imageProperties;
+    private final MemberRepository memberRepository;
 
     @Transactional
     public StudioResponse save(Long memberId, StudioCreateRequest request) {
         Member owner = getOwner(memberId);
-        Studio studio = studioRepository.save(request.toEntity(owner));
+        Studio studio = saveStudio(request.toEntity(owner));
         StudioRole ownerRole = saveSystemRoles(studio);
         saveOwnerMembership(studio, owner, ownerRole);
         classTypeService.saveDefaultClassTypes(studio);
-        return StudioResponse.from(studio);
+        return toResponse(studio);
     }
 
     public StudioResponse findById(Long studioId) {
-        return StudioResponse.from(getStudio(studioId));
+        return toResponse(getStudio(studioId));
     }
 
     public List<StudioResponse> findAllByMemberId(Long memberId) {
         return studioMembershipRepository.findAllStudiosByMemberId(memberId).stream()
-                .map(StudioResponse::from)
+                .map(this::toResponse)
                 .toList();
     }
 
@@ -69,14 +73,23 @@ public class StudioService {
         studioPermissionService.validate(studio, memberId, PermissionCode.STUDIO_UPDATE);
         studio.update(
                 resolve(request.name(), studio.getName()),
-                resolve(request.address(), studio.getAddress()),
+                resolveAddress(request, studio),
                 resolve(request.phoneNumber(), studio.getPhoneNumber()),
-                resolve(request.imageUrl(), studio.getImageUrl()),
+                resolve(request.image(), studio.getImageObjectKey()),
                 resolve(request.description(), studio.getDescription()),
                 resolve(request.openTime(), studio.getOpenTime()),
                 resolve(request.closeTime(), studio.getCloseTime())
         );
-        return StudioResponse.from(studio);
+        flushStudio();
+
+        return toResponse(studio);
+    }
+
+    @Transactional
+    public void deleteImage(Long memberId, Long studioId) {
+        Studio studio = getStudio(studioId);
+        studioPermissionService.validate(studio, memberId, PermissionCode.STUDIO_UPDATE);
+        studio.removeImage();
     }
 
     private Studio getStudio(Long studioId) {
@@ -84,13 +97,45 @@ public class StudioService {
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));
     }
 
-    // TODO 회원가입 기능이 붙으면 MemberRepository 조회로 바꾼다
     private Member getOwner(Long memberId) {
-        Member owner = entityManager.find(Member.class, memberId);
-        if (owner == null) {
-            throw new StudioException(StudioErrorCode.MEMBER_NOT_FOUND);
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new StudioException(StudioErrorCode.MEMBER_NOT_FOUND));
+    }
+
+    private Address resolveAddress(StudioUpdateRequest request, Studio studio) {
+        if (request.address() == null) {
+            return studio.getAddress();
         }
-        return owner;
+        return request.address().toAddress();
+    }
+
+    private Studio saveStudio(Studio studio) {
+        try {
+            Studio saved = studioRepository.save(studio);
+            studioRepository.flush();
+            return saved;
+        } catch (DataIntegrityViolationException exception) {
+            throw new StudioException(StudioErrorCode.IMAGE_ALREADY_USED);
+        }
+    }
+
+    private void flushStudio() {
+        try {
+            studioRepository.flush();
+        } catch (DataIntegrityViolationException exception) {
+            throw new StudioException(StudioErrorCode.IMAGE_ALREADY_USED);
+        }
+    }
+
+    private StudioResponse toResponse(Studio studio) {
+        return StudioResponse.of(studio, toPublicUrl(studio.getImageObjectKey()));
+    }
+
+    private String toPublicUrl(String objectKey) {
+        if (objectKey == null) {
+            return null;
+        }
+        return imageProperties.toPublicUrl(objectKey);
     }
 
     private <T> T resolve(T requested, T current) {

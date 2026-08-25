@@ -20,6 +20,7 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
+import com.classitda.support.ImageTestConfiguration;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
 import java.util.List;
@@ -68,7 +69,9 @@ class StudioServiceTest {
         // then
         assertThat(response.id()).isNotNull();
         assertThat(response.name()).isEqualTo(request.name());
-        assertThat(response.address()).isEqualTo(request.address());
+        assertThat(response.address().zonecode()).isEqualTo(request.address().zonecode());
+        assertThat(response.address().roadAddress()).isEqualTo(request.address().roadAddress());
+        assertThat(response.address().detailAddress()).isEqualTo(request.address().detailAddress());
         assertThat(response.openTime()).isEqualTo(request.openTime());
     }
 
@@ -282,6 +285,201 @@ class StudioServiceTest {
 
         // then
         assertThat(responses).isEmpty();
+    }
+
+    @Test
+    void 시설을_등록할_때_대표_이미지도_함께_저장한다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        String objectKey = "studio-images/first.jpg";
+
+        // when
+        StudioResponse response = studioService.save(
+                owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청(objectKey));
+
+        // then
+        assertThat(response.image())
+                .isEqualTo(ImageTestConfiguration.BASE_URL + "/" + objectKey);
+        assertThat(studioService.findById(response.id()).image())
+                .isEqualTo(ImageTestConfiguration.BASE_URL + "/" + objectKey);
+    }
+
+    @Test
+    void 이미지_없이도_시설을_등록할_수_있다() {
+        // given
+        Member owner = 소유자를_저장한다();
+
+        // when
+        StudioResponse response = studioService.save(
+                owner.getId(), StudioFixture.기본_시설_생성_요청());
+
+        // then
+        assertThat(response.image()).isNull();
+    }
+
+    @Test
+    void 대표_이미지를_공개_URL로_반환한다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        String objectKey = "studio-images/a.jpg";
+
+        // when
+        studioService.update(owner.getId(), studioId, StudioFixture.이미지만_바꾸는_수정_요청(objectKey));
+
+        // then
+        assertThat(studioService.findById(studioId).image())
+                .isEqualTo(ImageTestConfiguration.BASE_URL + "/" + objectKey);
+    }
+
+    @Test
+    void 대표_이미지는_새_이미지로_교체된다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        studioService.update(owner.getId(), studioId,
+                StudioFixture.이미지만_바꾸는_수정_요청("studio-images/a.jpg"));
+
+        // when
+        studioService.update(owner.getId(), studioId,
+                StudioFixture.이미지만_바꾸는_수정_요청("studio-images/b.jpg"));
+
+        // then
+        assertThat(studioService.findById(studioId).image())
+                .isEqualTo(ImageTestConfiguration.BASE_URL + "/studio-images/b.jpg");
+    }
+
+    @Test
+    void 이미지를_보내지_않으면_기존_이미지를_유지한다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        studioService.update(owner.getId(), studioId,
+                StudioFixture.이미지만_바꾸는_수정_요청("studio-images/a.jpg"));
+
+        // when
+        studioService.update(owner.getId(), studioId, StudioFixture.이름만_바꾸는_수정_요청("바뀐 이름"));
+
+        // then
+        assertThat(studioService.findById(studioId).image())
+                .isEqualTo(ImageTestConfiguration.BASE_URL + "/studio-images/a.jpg");
+    }
+
+    @Test
+    void 대표_이미지를_삭제한다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(
+                owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청("studio-images/to-delete.jpg")).id();
+
+        // when
+        studioService.deleteImage(owner.getId(), studioId);
+
+        // then
+        assertThat(studioService.findById(studioId).image()).isNull();
+    }
+
+    @Test
+    void 대표_이미지가_없어도_삭제_요청은_성공한다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+
+        // when
+        studioService.deleteImage(owner.getId(), studioId);
+
+        // then
+        assertThat(studioService.findById(studioId).image()).isNull();
+    }
+
+    @Test
+    void 대표_이미지를_삭제하면_같은_키를_다른_시설이_쓸_수_있다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        String objectKey = "studio-images/reusable.jpg";
+        Long firstId = studioService.save(
+                owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청(objectKey)).id();
+        Long secondId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        studioService.deleteImage(owner.getId(), firstId);
+
+        // when
+        studioService.update(owner.getId(), secondId, StudioFixture.이미지만_바꾸는_수정_요청(objectKey));
+
+        // then
+        assertThat(studioService.findById(secondId).image())
+                .isEqualTo(ImageTestConfiguration.BASE_URL + "/" + objectKey);
+    }
+
+    @Test
+    void 권한이_없으면_대표_이미지를_삭제할_수_없다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Member stranger = 소유자를_저장한다();
+        Long studioId = studioService.save(
+                owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청("studio-images/guarded.jpg")).id();
+
+        // when / then
+        assertThatThrownBy(() -> studioService.deleteImage(stranger.getId(), studioId))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.NOT_MEMBERSHIP.getMessage());
+    }
+
+    @Test
+    void 업로드_네임스페이스_밖의_키는_저장할_수_없다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        String outsideKey = "studios/1/images/a.jpg";
+
+        // when / then
+        assertThatThrownBy(() -> studioService.update(
+                owner.getId(), studioId, StudioFixture.이미지만_바꾸는_수정_요청(outsideKey)))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.INVALID_IMAGE_OBJECT_KEY.getMessage());
+    }
+
+    @Test
+    void 상위_경로를_노리는_키는_저장할_수_없다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        String traversalKey = "studio-images/../notice-images/a.jpg";
+
+        // when / then
+        assertThatThrownBy(() -> studioService.update(
+                owner.getId(), studioId, StudioFixture.이미지만_바꾸는_수정_요청(traversalKey)))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.INVALID_IMAGE_OBJECT_KEY.getMessage());
+    }
+
+    @Test
+    void 다른_시설이_쓰는_이미지로는_시설을_등록할_수_없다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        String shared = "studio-images/shared-on-create.jpg";
+        studioService.save(owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청(shared));
+
+        // when / then
+        assertThatThrownBy(() -> studioService.save(
+                owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청(shared)))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.IMAGE_ALREADY_USED.getMessage());
+    }
+
+    @Test
+    void 같은_이미지를_두_시설에_붙일_수_없다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long firstId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        Long secondId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        String shared = "studio-images/shared.jpg";
+        studioService.update(owner.getId(), firstId, StudioFixture.이미지만_바꾸는_수정_요청(shared));
+
+        // when / then
+        assertThatThrownBy(() -> studioService.update(
+                owner.getId(), secondId, StudioFixture.이미지만_바꾸는_수정_요청(shared)))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.IMAGE_ALREADY_USED.getMessage());
     }
 
     private Member 소유자를_저장한다() {

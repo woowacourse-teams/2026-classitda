@@ -415,6 +415,7 @@ class ClassTemplateCommandServiceTest {
                 .name("영속성 롤백 시설")
                 .openTime(java.time.LocalTime.of(9, 0))
                 .closeTime(java.time.LocalTime.of(22, 0))
+                .address(StudioFixture.기본_주소())
                 .build());
         ClassType yoga = 수업_종류를_저장한다(studio, "요가");
         ClassType pilates = 수업_종류를_저장한다(studio, "필라테스");
@@ -594,6 +595,7 @@ class ClassTemplateCommandServiceTest {
                 .name(name)
                 .openTime(java.time.LocalTime.of(9, 0))
                 .closeTime(java.time.LocalTime.of(22, 0))
+                .address(StudioFixture.기본_주소())
                 .build();
         entityManager.persist(studio);
         entityManager.flush();
