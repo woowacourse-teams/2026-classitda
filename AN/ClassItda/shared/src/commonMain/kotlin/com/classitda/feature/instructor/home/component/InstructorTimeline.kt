@@ -43,7 +43,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 internal fun InstructorTimeline(
     sessions: List<ClassSession>,
-    onScheduleClick: () -> Unit,
+    onSessionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val nextSessionIndex = sessions.indexOfFirst { it.status == ClassSessionStatus.SCHEDULED }
@@ -54,7 +54,7 @@ internal fun InstructorTimeline(
                 session = session,
                 isNext = session.status == ClassSessionStatus.SCHEDULED && index == nextSessionIndex,
                 isLast = index == sessions.lastIndex,
-                onScheduleClick = onScheduleClick,
+                onSessionClick = onSessionClick,
             )
         }
     }
@@ -65,7 +65,7 @@ private fun InstructorTimelineItem(
     session: ClassSession,
     isNext: Boolean,
     isLast: Boolean,
-    onScheduleClick: () -> Unit,
+    onSessionClick: (String) -> Unit,
 ) {
     Row(Modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding)) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(16.dp)) {
@@ -77,14 +77,14 @@ private fun InstructorTimelineItem(
         Spacer(Modifier.width(AppSpacing.md))
         if (isNext) {
             Card(
-                onClick = onScheduleClick,
                 colors = CardDefaults.cardColors(containerColor = InsColors.White),
+                onClick = { onSessionClick(session.id) },
                 modifier = Modifier.fillMaxWidth().padding(bottom = AppSpacing.md),
             ) {
                 InstructorTimelineItemContent(
                     session = session,
                     isNext = true,
-                    onScheduleClick = onScheduleClick,
+                    onSessionClick = onSessionClick,
                     modifier = Modifier.padding(AppSpacing.cardPadding),
                 )
             }
@@ -92,8 +92,8 @@ private fun InstructorTimelineItem(
             InstructorTimelineItemContent(
                 session = session,
                 isNext = false,
-                onScheduleClick = onScheduleClick,
-                modifier = Modifier.padding(bottom = AppSpacing.md),
+                onSessionClick = onSessionClick,
+                modifier = Modifier.padding(bottom = AppSpacing.md).clickable { onSessionClick(session.id) },
             )
         }
     }
@@ -103,7 +103,7 @@ private fun InstructorTimelineItem(
 private fun InstructorTimelineItemContent(
     session: ClassSession,
     isNext: Boolean,
-    onScheduleClick: () -> Unit,
+    onSessionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxWidth()) {
@@ -153,7 +153,7 @@ private fun InstructorTimelineItemContent(
                 Surface(
                     shape = AppShape.Card,
                     color = InsColors.Primary,
-                    modifier = Modifier.clickable(onClick = onScheduleClick),
+                    modifier = Modifier.clickable { onSessionClick(session.id) },
                 ) {
                     Text(
                         text = "수업 상세",
@@ -286,7 +286,7 @@ private fun InstructorTimelinePreview() {
                         status = ClassSessionStatus.CANCELLED,
                     ),
                 ),
-            onScheduleClick = {},
+            onSessionClick = {},
         )
     }
 }

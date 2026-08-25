@@ -36,12 +36,12 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun InstructorHomeRoute(
-    onScheduleClick: () -> Unit,
+    onSessionClick: (String) -> Unit,
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InstructorHomeViewModel = koinViewModel(),
 ) = InstructorHomeStateful(
-    onScheduleClick = onScheduleClick,
+    onSessionClick = onSessionClick,
     bottomBar = bottomBar,
     modifier = modifier,
     viewModel = viewModel,
@@ -49,7 +49,7 @@ internal fun InstructorHomeRoute(
 
 @Composable
 internal fun InstructorHomeStateful(
-    onScheduleClick: () -> Unit,
+    onSessionClick: (String) -> Unit,
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InstructorHomeViewModel = koinViewModel(),
@@ -77,7 +77,7 @@ internal fun InstructorHomeStateful(
             is InstructorHomeUiState.Success -> {
                 InstructorHomeStateless(
                     sessions = state.sessions,
-                    onScheduleClick = onScheduleClick,
+                    onSessionClick = onSessionClick,
                     modifier = Modifier.padding(contentPadding),
                 )
             }
@@ -88,7 +88,7 @@ internal fun InstructorHomeStateful(
 @Composable
 internal fun InstructorHomeStateless(
     sessions: List<ClassSession>,
-    onScheduleClick: () -> Unit,
+    onSessionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val visibleSessions = sessions.sortedBy { it.startAt }
@@ -106,7 +106,7 @@ internal fun InstructorHomeStateless(
         item {
             InstructorTimeline(
                 sessions = visibleSessions.take(4),
-                onScheduleClick = onScheduleClick,
+                onSessionClick = onSessionClick,
             )
         }
     }
@@ -195,7 +195,7 @@ private fun InstructorHomeStatelessPreview() {
                         status = ClassSessionStatus.SCHEDULED,
                     ),
                 ),
-            onScheduleClick = {},
+            onSessionClick = {},
         )
     }
 }
