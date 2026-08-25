@@ -42,6 +42,10 @@ public class AuthenticationIntegrationTestConfiguration {
                     "spring.sql.init.data-locations",
                     () -> "optional:classpath:/test-data.sql"
             );
+            registry.add("images.bucket", () -> "techcourse-project-2026");
+            registry.add("images.key-prefix", () -> "classitda");
+            registry.add("images.base-url", () -> ImageTestConfiguration.BASE_URL);
+            registry.add("images.region", () -> "ap-northeast-2");
         };
     }
 

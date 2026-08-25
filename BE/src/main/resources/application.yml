@@ -40,6 +40,13 @@ management:
     health:
       show-details: never
 
+images:
+  bucket: ${IMAGE_BUCKET}
+  key-prefix: ${IMAGE_KEY_PREFIX}
+  base-url: ${IMAGE_BASE_URL}
+  region: ${IMAGE_REGION}
+  upload-url-ttl: PT5M
+
 auth:
   google:
     web-client-id: ${GOOGLE_OAUTH_WEB_CLIENT_ID}
