@@ -695,6 +695,7 @@ class ClassTypeServiceTest {
                     .name("수업 종류 삭제 충돌 시설")
                     .openTime(LocalTime.of(9, 0))
                     .closeTime(LocalTime.of(22, 0))
+                    .address(StudioFixture.기본_주소())
                     .build();
             entityManager.persist(studio);
             ClassType classType = ClassTypeFixture.이름이_다른_수업_종류(studio, "사용 중인 요가");

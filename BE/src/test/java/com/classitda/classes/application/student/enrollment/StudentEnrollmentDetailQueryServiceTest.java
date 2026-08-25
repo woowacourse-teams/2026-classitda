@@ -1,5 +1,6 @@
 package com.classitda.classes.application.student.enrollment;
 
+import com.classitda.studio.fixture.StudioFixture;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
@@ -507,6 +508,7 @@ class StudentEnrollmentDetailQueryServiceTest {
                 .name(name)
                 .openTime(LocalTime.of(9, 0))
                 .closeTime(LocalTime.of(22, 0))
+                .address(StudioFixture.기본_주소())
                 .build();
         entityManager.persist(studio);
         entityManager.flush();

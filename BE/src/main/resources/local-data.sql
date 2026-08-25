@@ -15,8 +15,10 @@ VALUES (1, 1, 'GOOGLE', 'local-swagger-member-1', 'member1-local@example.com', C
        (4, 4, 'GOOGLE', 'local-swagger-member-4', 'member4-local@example.com', CURRENT_TIMESTAMP(6), NULL),
        (5, 5, 'GOOGLE', 'local-swagger-member-5', 'member5-local@example.com', CURRENT_TIMESTAMP(6), NULL);
 
-INSERT INTO studio (id, owner_member_id, name, address, phone_number, image_url, description, open_time, close_time, created_at, updated_at)
-VALUES (1, 2, '클래스잇다 테스트 스튜디오', '서울시 강남구 테헤란로 1', '+82200000001', NULL, 'local Swagger 테스트 전용 시설입니다.', '09:00:00', '22:00:00', CURRENT_TIMESTAMP(6), NULL);
+INSERT INTO studio (id, owner_member_id, name, zonecode, road_address, jibun_address, building_name, detail_address,
+                    phone_number, description, open_time, close_time, created_at, updated_at)
+VALUES (1, 2, '클래스잇다 테스트 스튜디오', '06234', '서울 강남구 테헤란로 1', '서울 강남구 역삼동 823', NULL, '3층 301호',
+        '+82200000001', 'local Swagger 테스트 전용 시설입니다.', '09:00:00', '22:00:00', CURRENT_TIMESTAMP(6), NULL);
 
 INSERT INTO studio_policy (id, studio_id, reservation_close_minutes_before, free_cancel_minutes_before, waiting_offer_response_minutes, max_hold_days, created_at, updated_at)
 VALUES (1, 1, 30, 120, 10, 7, CURRENT_TIMESTAMP(6), NULL);

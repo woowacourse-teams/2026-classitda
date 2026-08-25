@@ -434,6 +434,7 @@ class InstructorCalendarQueryServiceTest {
                 .name(name)
                 .openTime(java.time.LocalTime.of(9, 0))
                 .closeTime(java.time.LocalTime.of(22, 0))
+                .address(StudioFixture.기본_주소())
                 .build();
         entityManager.persist(studio);
         entityManager.flush();

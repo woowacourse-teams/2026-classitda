@@ -69,18 +69,23 @@ CREATE TABLE member_term_agreement
 
 CREATE TABLE studio
 (
-    id              BIGINT       NOT NULL AUTO_INCREMENT,
-    owner_member_id BIGINT       NOT NULL,
-    name            VARCHAR(50)  NOT NULL,
-    address         VARCHAR(255) NULL,
-    phone_number    VARCHAR(20)  NULL,
-    image_url       VARCHAR(500) NULL,
-    description     TEXT         NULL,
-    open_time       TIME         NOT NULL,
-    close_time      TIME         NOT NULL,
-    created_at      DATETIME(6)  NOT NULL,
-    updated_at      DATETIME(6)  NULL,
+    id               BIGINT       NOT NULL AUTO_INCREMENT,
+    owner_member_id  BIGINT       NOT NULL,
+    name             VARCHAR(50)  NOT NULL,
+    zonecode         VARCHAR(5)   NOT NULL,
+    road_address     VARCHAR(255) NOT NULL,
+    jibun_address    VARCHAR(255) NULL,
+    building_name    VARCHAR(100) NULL,
+    detail_address   VARCHAR(100) NULL,
+    phone_number     VARCHAR(20)  NULL,
+    image_object_key VARCHAR(255) NULL,
+    description      TEXT         NULL,
+    open_time        TIME         NOT NULL,
+    close_time       TIME         NOT NULL,
+    created_at       DATETIME(6)  NOT NULL,
+    updated_at       DATETIME(6)  NULL,
     PRIMARY KEY (id),
+    UNIQUE KEY uk_studio_image_key (image_object_key),
     CONSTRAINT fk_studio_owner FOREIGN KEY (owner_member_id) REFERENCES member (id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;

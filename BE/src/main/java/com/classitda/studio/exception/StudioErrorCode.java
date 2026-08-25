@@ -10,6 +10,11 @@ public enum StudioErrorCode implements ErrorCode {
     INVALID_OPERATING_TIME("STUDIO-001", "운영 종료 시간은 시작 시간보다 늦어야 합니다.", HttpStatus.BAD_REQUEST),
     NOT_FOUND("STUDIO-002", "시설을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     MEMBER_NOT_FOUND("STUDIO-003", "회원을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    INVALID_ZONECODE("STUDIO-004", "우편번호는 5자리 숫자여야 합니다.", HttpStatus.BAD_REQUEST),
+    INVALID_ROAD_ADDRESS("STUDIO-005", "도로명 주소는 필수이며 255자를 넘을 수 없습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_ADDRESS_LENGTH("STUDIO-006", "주소 항목의 길이가 허용 범위를 넘었습니다.", HttpStatus.BAD_REQUEST),
+    INVALID_IMAGE_OBJECT_KEY("STUDIO-007", "이미지 키가 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
+    IMAGE_ALREADY_USED("STUDIO-008", "이미 다른 시설에 사용된 이미지입니다.", HttpStatus.CONFLICT),
 
     // ROOM
     ROOM_NOT_FOUND("ROOM-001", "룸을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),

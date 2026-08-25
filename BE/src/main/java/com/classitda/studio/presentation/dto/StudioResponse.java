@@ -8,26 +8,26 @@ import java.time.LocalTime;
 public record StudioResponse(
         Long id,
         String name,
-        String address,
+        AddressResponse address,
         String phoneNumber,
-        @JsonFormat(pattern = "HH:mm:ss")
-        @Schema(type = "string", format = "time", example = "09:00:00")
+        @JsonFormat(pattern = "HH:mm")
+        @Schema(type = "string", format = "time", example = "09:00")
         LocalTime openTime,
-        @JsonFormat(pattern = "HH:mm:ss")
-        @Schema(type = "string", format = "time", example = "22:00:00")
+        @JsonFormat(pattern = "HH:mm")
+        @Schema(type = "string", format = "time", example = "22:00")
         LocalTime closeTime,
-        String imageUrl,
+        String image,
         String description
 ) {
-    public static StudioResponse from(Studio studio) {
+    public static StudioResponse of(Studio studio, String image) {
         return new StudioResponse(
                 studio.getId(),
                 studio.getName(),
-                studio.getAddress(),
+                AddressResponse.from(studio.getAddress()),
                 studio.getPhoneNumber(),
                 studio.getOpenTime(),
                 studio.getCloseTime(),
-                studio.getImageUrl(),
+                image,
                 studio.getDescription()
         );
     }

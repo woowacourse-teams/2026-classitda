@@ -1,8 +1,11 @@
 package com.classitda.studio.presentation;
 
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
+import com.classitda.studio.application.StudioImageService;
 import com.classitda.studio.application.StudioService;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
+import com.classitda.common.image.ImageUploadUrlRequest;
+import com.classitda.common.image.ImageUploadUrlResponse;
 import com.classitda.studio.presentation.dto.StudioResponse;
 import com.classitda.studio.presentation.dto.StudioUpdateRequest;
 import jakarta.validation.Valid;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class StudioController implements StudioControllerApi {
 
     private final StudioService studioService;
+    private final StudioImageService studioImageService;
 
     @Override
     @PostMapping(version = "1")
@@ -33,6 +37,14 @@ public class StudioController implements StudioControllerApi {
     ) {
         studioService.save(memberId, request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @Override
+    @PostMapping(path = "/image-upload-url", version = "1")
+    public ImageUploadUrlResponse issueImageUploadUrl(
+            @Valid @RequestBody ImageUploadUrlRequest request
+    ) {
+        return ImageUploadUrlResponse.from(studioImageService.issueUploadUrl(request));
     }
 
     @Override

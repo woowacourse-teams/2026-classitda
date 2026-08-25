@@ -7,7 +7,12 @@ import static org.mockito.Mockito.when;
 
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.common.config.ApiVersionConfig;
+import com.classitda.common.exception.ClassitdaException;
+import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.exception.GlobalExceptionHandler;
+import com.classitda.common.image.ImageUploadUrl;
+import com.classitda.common.image.ImageUploadUrlRequest;
+import com.classitda.studio.application.StudioImageService;
 import com.classitda.studio.application.StudioService;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
@@ -37,6 +42,9 @@ class StudioControllerTest {
     private StudioService studioService;
 
     @MockitoBean
+    private StudioImageService studioImageService;
+
+    @MockitoBean
     private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
 
     @Autowired
@@ -53,7 +61,7 @@ class StudioControllerTest {
     @Test
     void 시설을_생성하면_201과_빈_본문을_반환하고_서비스에_위임한다() {
         // given
-        StudioResponse response = StudioResponse.from(StudioFixture.기본_시설(StudioFixture.기본_소유자()));
+        StudioResponse response = StudioResponse.of(StudioFixture.기본_시설(StudioFixture.기본_소유자()), null);
         when(studioService.save(anyLong(), any(StudioCreateRequest.class))).thenReturn(response);
 
         // when
@@ -64,10 +72,16 @@ class StudioControllerTest {
                 .body("""
                         {
                           "name": "클래스잇다 스튜디오",
-                          "address": "서울시 강남구 테헤란로 1",
+                          "address": {
+                            "zonecode": "06234",
+                            "roadAddress": "서울 강남구 테헤란로 1",
+                            "jibunAddress": "서울 강남구 역삼동 823",
+                            "buildingName": "클래스잇다 빌딩",
+                            "detailAddress": "3층 301호"
+                          },
                           "phoneNumber": "0212345678",
-                          "openTime": "09:00:00",
-                          "closeTime": "22:00:00"
+                          "openTime": "09:00",
+                          "closeTime": "22:00"
                         }
                         """)
                 .exchange();
@@ -95,7 +109,7 @@ class StudioControllerTest {
     }
 
     @Test
-    void 운영시간에_초가_없으면_COMMON_001을_반환한다() {
+    void 운영시간에_초가_붙으면_COMMON_001을_반환한다() {
         // when
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/studios")
@@ -104,10 +118,16 @@ class StudioControllerTest {
                 .body("""
                         {
                           "name": "클래스잇다 스튜디오",
-                          "address": "서울시 강남구 테헤란로 1",
+                          "address": {
+                            "zonecode": "06234",
+                            "roadAddress": "서울 강남구 테헤란로 1",
+                            "jibunAddress": "서울 강남구 역삼동 823",
+                            "buildingName": "클래스잇다 빌딩",
+                            "detailAddress": "3층 301호"
+                          },
                           "phoneNumber": "0212345678",
-                          "openTime": "09:00",
-                          "closeTime": "22:00:00"
+                          "openTime": "09:00:00",
+                          "closeTime": "22:00"
                         }
                         """)
                 .exchange();
@@ -125,7 +145,7 @@ class StudioControllerTest {
         // given
         StudioCreateRequest request = new StudioCreateRequest(
                 " ",
-                "서울시 강남구 테헤란로 1",
+                StudioFixture.기본_주소_요청(),
                 "0212345678",
                 StudioFixture.기본_시설_생성_요청().openTime(),
                 StudioFixture.기본_시설_생성_요청().closeTime(),
@@ -171,7 +191,7 @@ class StudioControllerTest {
     @Test
     void 시설을_조회하면_200과_시설_정보를_반환한다() {
         // given
-        StudioResponse response = StudioResponse.from(StudioFixture.기본_시설(StudioFixture.기본_소유자()));
+        StudioResponse response = StudioResponse.of(StudioFixture.기본_시설(StudioFixture.기본_소유자()), null);
         when(studioService.findById(anyLong())).thenReturn(response);
 
         // when
@@ -227,6 +247,93 @@ class StudioControllerTest {
                 .expectBody()
                 .json("""
                         {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}
+                        """, JsonCompareMode.STRICT);
+    }
+    @Test
+    void 업로드_URL을_발급하면_200과_objectKey와_uploadUrl을_반환한다() {
+        // given
+        when(studioImageService.issueUploadUrl(any(ImageUploadUrlRequest.class)))
+                .thenReturn(ImageUploadUrl.of(
+                        "studio-images/9f1c2b7e.jpg",
+                        "https://images.test/upload?signature=abc",
+                        "image/jpeg"
+                ));
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/studios/image-upload-url")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ImageUploadUrlRequest.of("jpg", 3_145_728L))
+                .exchange();
+
+        // then
+        result.expectStatus().isOk()
+                .expectBody()
+                .json("""
+                        {
+                          "objectKey": "studio-images/9f1c2b7e.jpg",
+                          "uploadUrl": "https://images.test/upload?signature=abc",
+                          "contentType": "image/jpeg"
+                        }
+                        """, JsonCompareMode.STRICT);
+    }
+
+    @Test
+    void 업로드_URL_요청에_확장자가_없으면_COMMON_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/studios/image-upload-url")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ImageUploadUrlRequest.of(" ", 3_145_728L))
+                .exchange();
+
+        // then
+        result.expectStatus().isBadRequest()
+                .expectBody()
+                .json("""
+                        {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
+                        """, JsonCompareMode.STRICT);
+    }
+
+    @Test
+    void 업로드_URL_요청에_크기가_없으면_COMMON_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/studios/image-upload-url")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ImageUploadUrlRequest.of("jpg", null))
+                .exchange();
+
+        // then
+        result.expectStatus().isBadRequest()
+                .expectBody()
+                .json("""
+                        {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
+                        """, JsonCompareMode.STRICT);
+    }
+
+    @Test
+    void 지원하지_않는_확장자면_IMAGE_001을_반환한다() {
+        // given
+        when(studioImageService.issueUploadUrl(any(ImageUploadUrlRequest.class)))
+                .thenThrow(new ClassitdaException(CommonErrorCode.INVALID_IMAGE_EXTENSION));
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/studios/image-upload-url")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ImageUploadUrlRequest.of("gif", 3_145_728L))
+                .exchange();
+
+        // then
+        result.expectStatus().isBadRequest()
+                .expectBody()
+                .json("""
+                        {"code":"IMAGE-001","message":"지원하지 않는 이미지 형식입니다."}
                         """, JsonCompareMode.STRICT);
     }
 }
