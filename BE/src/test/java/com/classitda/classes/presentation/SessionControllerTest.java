@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
 import com.classitda.classes.application.ClassSessionCommandService;
-import com.classitda.classes.application.ClassSessionQueryService;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarSummary;
@@ -24,18 +23,16 @@ import com.classitda.classes.application.student.calendar.StudentCalendarQuerySe
 import com.classitda.classes.application.student.calendar.StudentCalendarSummary;
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.application.student.daily.StudentDailySessionView;
+import com.classitda.classes.application.student.detail.StudentSessionDetailQueryService;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.enrollment.AttendanceResult;
-import com.classitda.classes.domain.session.SessionPhase;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
-import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
-import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
@@ -63,8 +60,8 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 @AutoConfigureRestTestClient
 @Import({ApiVersionConfig.class, GlobalExceptionHandler.class})
-@WebMvcTest({ClassSessionController.class, InstructorSessionController.class})
-class ClassSessionControllerTest {
+@WebMvcTest({StudentSessionController.class, InstructorSessionController.class})
+class SessionControllerTest {
 
     private final RestTestClient client;
 
@@ -72,7 +69,7 @@ class ClassSessionControllerTest {
     private ClassSessionCommandService commandService;
 
     @MockitoBean
-    private ClassSessionQueryService queryService;
+    private StudentSessionDetailQueryService studentSessionDetailQueryService;
 
     @MockitoBean
     private StudentDailyQueryService studentDailyQueryService;
@@ -96,7 +93,7 @@ class ClassSessionControllerTest {
     private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
 
     @Autowired
-    ClassSessionControllerTest(RestTestClient client) {
+    SessionControllerTest(RestTestClient client) {
         this.client = client;
     }
 
@@ -291,35 +288,6 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 수업_회차_상세를_조회하면_200과_공용_상세_정보를_반환한다() {
-        // given
-        ClassSessionDetailResponse response = 수업_회차_상세_응답();
-        when(queryService.findOne(1L, 7L, 11L)).thenReturn(response);
-
-        // when
-        RestTestClient.ResponseSpec result = 수업_회차_상세를_조회한다(7L, 11L, "1");
-
-        // then
-        result.expectStatus().isOk().expectBody().json("""
-                {
-                  "id": 11,
-                  "instructorMembershipId": 12,
-                  "instructorName": "김강사",
-                  "classForm": "GROUP",
-                  "classType": {"id": 3, "name": "요가"},
-                  "className": "저녁 요가",
-                  "description": "편한 복장과 개인 수건을 준비해 주세요.",
-                  "capacity": 12,
-                  "durationMinutes": 60,
-                  "startAt": "2026-08-17T20:00:00",
-                  "endAt": "2026-08-17T21:00:00",
-                  "sessionPhase": "SCHEDULED"
-                }
-                """, JsonCompareMode.STRICT);
-        verify(queryService).findOne(1L, 7L, 11L);
-    }
-
-    @Test
     void 회원용_일별_수업_목록을_조회하면_200과_목록을_반환하고_조회_서비스에_위임한다() {
         // given
         LocalDate date = LocalDate.of(2026, 8, 17);
@@ -375,7 +343,7 @@ class ClassSessionControllerTest {
     void 회원용_목록에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/student/daily?date=2026-08-17")
+                .uri("/api/studios/7/student/class-sessions/daily?date=2026-08-17")
                 .exchange();
 
         // then
@@ -466,7 +434,7 @@ class ClassSessionControllerTest {
     void 학생용_달력에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/student/calendar"
+                .uri("/api/studios/7/student/class-sessions/calendar"
                         + "?from=2026-08-15&to=2026-08-19")
                 .exchange();
 
@@ -681,56 +649,16 @@ class ClassSessionControllerTest {
     }
 
     @Test
-    void 상세_조회에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
-        // when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/11")
-                .exchange();
-
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(queryService, never()).findOne(anyLong(), anyLong(), anyLong());
-    }
-
-    @Test
-    void 상세_조회에서_지원하지_않는_버전이면_API_002를_반환하고_조회_서비스를_호출하지_않는다() {
-        // when
-        RestTestClient.ResponseSpec result = 수업_회차_상세를_조회한다(7L, 11L, "3");
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(queryService, never()).findOne(anyLong(), anyLong(), anyLong());
-    }
-
-    @Test
     void 학생용_기존_상세_조회_경로는_노출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/student/11")
+                .uri("/api/studios/7/class-sessions/11")
                 .header("X-API-Version", "1")
                 .exchange();
 
         // then
         result.expectStatus().isNotFound();
-        verify(queryService, never()).findOne(anyLong(), anyLong(), anyLong());
-    }
-
-    @ParameterizedTest
-    @MethodSource("수업_회차_조회_예외")
-    void 조회_서비스_예외를_정확한_HTTP_응답으로_직렬화한다(
-            RuntimeException exception,
-            int status,
-            String code,
-            String message
-    ) {
-        // given
-        when(queryService.findOne(1L, 7L, 11L)).thenThrow(exception);
-
-        // when
-        RestTestClient.ResponseSpec result = 수업_회차_상세를_조회한다(7L, 11L, "1");
-
-        // then
-        오류를_검증한다(result, status, code, message);
+        verify(studentSessionDetailQueryService, never()).findOne(anyLong(), anyLong(), anyLong());
     }
 
     @Test
@@ -860,28 +788,13 @@ class ClassSessionControllerTest {
                 .exchange();
     }
 
-    private RestTestClient.ResponseSpec 수업_회차_상세를_조회한다(
-            Long studioId,
-            Long classSessionId,
-            String version
-    ) {
-        return client.get()
-                .uri(
-                        "/api/studios/{studioId}/class-sessions/{classSessionId}",
-                        studioId,
-                        classSessionId
-                )
-                .header("X-API-Version", version)
-                .exchange();
-    }
-
     private RestTestClient.ResponseSpec 회원용_일별_수업_목록을_조회한다(
             Long studioId,
             String query,
             String version
     ) {
         return client.get()
-                .uri("/api/studios/%d/class-sessions/student/daily?%s".formatted(studioId, query))
+                .uri("/api/studios/%d/student/class-sessions/daily?%s".formatted(studioId, query))
                 .header("X-API-Version", version)
                 .exchange();
     }
@@ -903,7 +816,7 @@ class ClassSessionControllerTest {
             String version
     ) {
         return client.get()
-                .uri("/api/studios/%d/class-sessions/student/calendar?%s".formatted(studioId, query))
+                .uri("/api/studios/%d/student/class-sessions/calendar?%s".formatted(studioId, query))
                 .header("X-API-Version", version)
                 .exchange();
     }
@@ -967,35 +880,6 @@ class ClassSessionControllerTest {
                         409,
                         "CLASS_SESSION-015",
                         "담당 강사의 기존 수업과 시간이 겹칩니다."
-                )
-        );
-    }
-
-    private static Stream<Arguments> 수업_회차_조회_예외() {
-        return Stream.of(
-                Arguments.of(
-                        new StudioException(StudioErrorCode.NOT_MEMBERSHIP),
-                        403,
-                        "MEMBERSHIP-001",
-                        "해당 시설의 소속이 아닙니다."
-                ),
-                Arguments.of(
-                        new StudioException(StudioErrorCode.MEMBERSHIP_INACTIVE),
-                        403,
-                        "MEMBERSHIP-002",
-                        "이용이 정지된 소속입니다."
-                ),
-                Arguments.of(
-                        new StudioException(StudioErrorCode.NOT_FOUND),
-                        404,
-                        "STUDIO-002",
-                        "시설을 찾을 수 없습니다."
-                ),
-                Arguments.of(
-                        new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND),
-                        404,
-                        "CLASS_SESSION-014",
-                        "수업 회차를 찾을 수 없습니다."
                 )
         );
     }
@@ -1064,23 +948,6 @@ class ClassSessionControllerTest {
                         "POLICY-001",
                         "운영 정책을 찾을 수 없습니다."
                 )
-        );
-    }
-
-    private static ClassSessionDetailResponse 수업_회차_상세_응답() {
-        return new ClassSessionDetailResponse(
-                11L,
-                12L,
-                "김강사",
-                ClassForm.GROUP,
-                ClassTypeResponse.of(3L, "요가"),
-                "저녁 요가",
-                "편한 복장과 개인 수건을 준비해 주세요.",
-                12,
-                60,
-                LocalDateTime.of(2026, 8, 17, 20, 0),
-                LocalDateTime.of(2026, 8, 17, 21, 0),
-                SessionPhase.SCHEDULED
         );
     }
 

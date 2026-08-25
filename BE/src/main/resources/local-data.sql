@@ -77,7 +77,7 @@ VALUES (42, 1, 1, 7, 7, 'ACTIVE', DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY), DATE_
 -- 김회원(ID 1)은 2일 전 회차 121~122에서 RESERVED + 결석·출결 미기록을 비교한다.
 -- 김회원(ID 1)은 다음 날 회차 117과 123에서 만석·여유 좌석이 있는 제안을 비교한다.
 -- 정회원(ID 5)은 회차 123의 제안을 받았지만 모든 수강권 잔여 횟수가 0인 보조 경우다.
--- 신청 ID 29는 취소된 회차 106에 연결되어 학생 신청 상세에서 SESSION_CANCELED를 확인한다.
+-- 신청 ID 29는 취소된 회차 106에 연결되어 향후 취소 이력 조회용 데이터로 보존한다.
 -- 김회원의 다음 날 학생 Daily 기대 조합은 다음과 같다.
 -- 101·105·118·119·120: NONE + RESERVABLE (118~120의 종료 이력은 활성 관계에서 제외)
 -- 102: NONE + WAITLISTABLE, 103: RESERVED + availability=null, 104: WAITING + availability=null

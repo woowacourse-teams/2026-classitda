@@ -16,7 +16,7 @@ public class StudentDailySessionAssembler {
 
     private final StudentBookingDecisionPolicy bookingDecisionPolicy;
 
-    StudentDailySessionView assemble(
+    public StudentDailySessionView assemble(
             StudentDailySessionProjection classSession,
             int reservationCloseMinutesBefore,
             LocalDateTime now

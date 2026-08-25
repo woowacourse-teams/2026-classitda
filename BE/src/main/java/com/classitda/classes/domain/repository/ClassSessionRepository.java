@@ -5,6 +5,7 @@ import com.classitda.classes.domain.repository.projection.ClassSessionCalendarSu
 import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
 import com.classitda.classes.domain.repository.projection.InstructorSessionDetailProjection;
 import com.classitda.classes.domain.repository.projection.StudentDailySessionProjection;
+import com.classitda.classes.domain.repository.projection.StudentSessionDetailProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,72 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     Optional<InstructorSessionDetailProjection> findDetailForInstructor(
             @Param("studioId") Long studioId,
             @Param("classSessionId") Long classSessionId
+    );
+
+    @Query("""
+            SELECT classSession AS session,
+                   instructorMembership.name AS instructorName,
+                   instructorMember.profileImageUrl AS instructorProfileImageUrl,
+                   instructorMembership.studio.name AS studioName,
+                   classType.id AS classTypeId,
+                   classType.name AS classTypeName,
+                   SUM(
+                       CASE WHEN enrollment.state.status IN (
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED,
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED
+                       )
+                            THEN 1 ELSE 0 END
+                   ) AS reservedCount,
+                   SUM(
+                       CASE WHEN enrollment.state.status =
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING
+                            THEN 1 ELSE 0 END
+                   ) AS waitingCount,
+                   ownEnrollment.id AS ownEnrollmentId,
+                   ownEnrollment.state.status AS ownEnrollmentStatus,
+                   ownEnrollment.attendance.result AS ownAttendanceResult
+            FROM ClassSession classSession
+            JOIN classSession.instructorMembership instructorMembership
+            JOIN instructorMembership.member instructorMember
+            JOIN ClassSessionClassType classSessionClassType
+              ON classSessionClassType.classSessionId = classSession.id
+            JOIN ClassType classType
+              ON classType.id = classSessionClassType.classTypeId
+            LEFT JOIN ClassSessionEnrollment enrollment
+              ON enrollment.classSession.id = classSession.id
+             AND enrollment.membership.studio.id = :studioId
+             AND enrollment.state.status IN (
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
+             )
+            LEFT JOIN ClassSessionEnrollment ownEnrollment
+              ON ownEnrollment.classSession.id = classSession.id
+             AND ownEnrollment.membership.id = :membershipId
+             AND ownEnrollment.membership.studio.id = :studioId
+             AND ownEnrollment.state.status IN (
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
+             )
+            WHERE classSession.id = :classSessionId
+              AND classSession.studioId = :studioId
+              AND classType.studio.id = :studioId
+              AND classSession.canceledAt IS NULL
+            GROUP BY classSession,
+                     instructorMembership.name,
+                     instructorMember.profileImageUrl,
+                     instructorMembership.studio.name,
+                     classType.id,
+                     classType.name,
+                     ownEnrollment.id,
+                     ownEnrollment.state.status,
+                     ownEnrollment.attendance.result
+            """)
+    Optional<StudentSessionDetailProjection> findDetailForStudent(
+            @Param("studioId") Long studioId,
+            @Param("classSessionId") Long classSessionId,
+            @Param("membershipId") Long membershipId
     );
 
     @Query("""

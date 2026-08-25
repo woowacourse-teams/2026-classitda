@@ -1,10 +1,10 @@
 package com.classitda.classes.presentation;
 
-import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.classes.presentation.dto.MemberClassSessionListRequest;
 import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
 import com.classitda.classes.presentation.dto.StudentCalendarListRequest;
 import com.classitda.classes.presentation.dto.StudentCalendarResponse;
+import com.classitda.classes.presentation.dto.StudentSessionDetailResponse;
 import com.classitda.common.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,8 +20,8 @@ import java.util.List;
 import org.springdoc.core.annotations.ParameterObject;
 
 @SecurityRequirement(name = "bearerAuth")
-@Tag(name = "수업 회차", description = "시설 회원용 수업 정보를 조회합니다.")
-public interface ClassSessionControllerApi {
+@Tag(name = "학생 수업", description = "학생용 수업 정보와 신청 생명주기를 조회합니다.")
+public interface StudentSessionControllerApi {
 
     @Operation(
             summary = "회원용 일별 수업 목록 조회",
@@ -45,7 +45,7 @@ public interface ClassSessionControllerApi {
                     - 클라이언트는 출결 결과, 본인의 활성 신청 관계, 예약 가능 상태 순서로 우선해서 표시 상태를 결정합니다.
                     - bookingRelation은 수업 시작 여부나 출결 기록 여부와 관계없이 실제 신청 관계를 반환합니다. 출석·결석 후에도 RESERVED를 유지합니다.
                     - enrollmentId는 bookingRelation이 RESERVED, WAITING, OFFERED일 때 해당 신청 ID이며, NONE이면 null입니다.
-                    - enrollmentId가 있으면 학생 신청 상세 조회 API의 enrollmentId로 사용할 수 있습니다.
+                    - enrollmentId가 있으면 같은 수업의 학생용 상세 조회 응답에서 신청 생명주기 정보를 확인할 수 있습니다.
                     - availability는 bookingRelation이 NONE일 때만 예약 가능 상태를 반환하며, 활성 신청이 있으면 null입니다.
                     - 출결은 저장된 AttendanceResult를 반환합니다.
                     - 출결 기능 구현 후에는 수업 시작 시 RESERVED + NOT_RECORDED 신청을 시스템이 ATTENDED로 자동 저장하고, 강사가 ABSENT로 변경할 수 있습니다.
@@ -252,31 +252,39 @@ public interface ClassSessionControllerApi {
     );
 
     @Operation(
-            summary = "수업 회차 상세 조회",
+            summary = "학생용 수업 상세 조회",
             description = """
                     ### 조회 대상
 
-                    - 시설 소속 사용자에게 공개되는 수업 정보를 조회합니다.
-                    - 시설 대표와 같은 시설의 활성 회원, 강사, 관리자가 조회할 수 있습니다.
-                    - 회원, 강사, 관리자에게 동일한 수업 회차 정보를 반환합니다.
+                    - 학생이 보유한 수강권으로 이용할 수 있는 특정 수업을 classSessionId로 조회합니다.
+                    - 시설의 활성 학생만 사용할 수 있으며 대표, 강사, 직원 역할은 사용할 수 없습니다.
+                    - 취소된 수업과 수강권 이용 범위를 벗어난 수업은 조회하지 않습니다.
+                    - 과거 날짜의 수업은 본인의 확정 예약 이력이 있을 때만 조회합니다.
 
-                    ### 응답 범위
+                    ### 예약 상태
 
-                    - 담당 강사, 수업 종류, 수업명, 수업 안내, 정원, 진행 시간, 시작·종료 일시와 상태를 반환합니다.
-                    - 예약 회원 목록과 예약·대기 인원은 포함하지 않습니다.
+                    - 활성 신청이 있으면 enrollment와 bookingRelation을 반환하고 availability는 null입니다.
+                    - 활성 신청이 없으면 enrollment는 null이고 availability는 RESERVABLE, WAITLISTABLE, CLOSED 중 하나입니다.
+                    - 출결은 attendanceResult로 반환합니다.
+                    - 대기 순번은 WAITING에서, 제안 만료 시각은 OFFERED에서만 반환합니다.
+
+                    ### 인원과 수강권
+
+                    - reservedCount는 RESERVED와 OFFERED가 점유한 좌석 수입니다.
+                    - remainingCapacity와 waitingCount는 조회 시점의 값이며 실제 신청 요청에서 다시 검증합니다.
+                    - 예약에 사용한 수강권은 활성 RESERVED 신청에 연결된 경우에만 enrollment.usedPass로 반환합니다.
 
                     ### local Swagger 테스트 데이터
 
-                    - 회원 ID: 1
-                    - 시설 ID: 1
-                    - 수업 회차 ID: 101
+                    - 김회원(ID 1)의 ACCESS 토큰을 Swagger Authorize에 입력합니다.
+                    - studioId는 1을 사용합니다.
                     """
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "시설 소속 사용자에게 공개되는 수업 회차 상세 정보를 반환합니다.",
-                    content = @Content(schema = @Schema(implementation = ClassSessionDetailResponse.class))
+                    description = "학생용 수업 상세와 현재 예약 판단을 반환합니다.",
+                    content = @Content(schema = @Schema(implementation = StudentSessionDetailResponse.class))
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -302,37 +310,39 @@ public interface ClassSessionControllerApi {
             ),
             @ApiResponse(
                     responseCode = "403",
-                    description = "시설 소속이 아니거나 소속이 비활성 상태입니다.",
+                    description = "시설의 활성 학생 소속이 아닙니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(name = "소속 아님", value = """
                                             {"code":"MEMBERSHIP-001","message":"해당 시설의 소속이 아닙니다."}"""),
                                     @ExampleObject(name = "비활성 소속", value = """
-                                            {"code":"MEMBERSHIP-002","message":"이용이 정지된 소속입니다."}""")
+                                            {"code":"MEMBERSHIP-002","message":"이용이 정지된 소속입니다."}"""),
+                                    @ExampleObject(name = "학생 권한 없음", value = """
+                                            {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}""")
                             }
                     )
             ),
             @ApiResponse(
                     responseCode = "404",
-                    description = "시설이나 수업 회차를 찾을 수 없습니다. 다른 시설의 수업 회차도 동일하게 처리합니다.",
+                    description = "시설 또는 조회 가능한 수업을 찾을 수 없습니다. 다른 시설·취소된 수업·수강권 범위 밖 수업도 동일하게 처리합니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(name = "시설 없음", value = """
                                             {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
-                                    @ExampleObject(name = "수업 회차 없음", value = """
+                                    @ExampleObject(name = "수업 없음", value = """
                                             {"code":"CLASS_SESSION-014","message":"수업 회차를 찾을 수 없습니다."}""")
                             }
                     )
             )
     })
-    ClassSessionDetailResponse findOne(
+    StudentSessionDetailResponse findOne(
             @Parameter(hidden = true)
             Long memberId,
             @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
             Long studioId,
-            @Parameter(description = "조회할 수업 회차 ID입니다.", required = true, example = "101")
+            @Parameter(description = "조회할 수업 회차 ID입니다.", required = true, example = "117")
             Long classSessionId
     );
 }
