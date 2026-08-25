@@ -20,7 +20,7 @@ private fun StudioResponseDto.toDomain() =
     Studio(
         id = StudioId(id.toString()),
         name = name,
-        address = address,
+        address = address.roadAddress ?: address.jibunAddress.orEmpty(),
         phoneNumber = phoneNumber,
         openTime = openTime?.let(LocalTime::parse),
         closeTime = closeTime?.let(LocalTime::parse),
