@@ -16,6 +16,8 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarQ
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarSummary;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
+import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
+import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailQueryService;
 import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
@@ -61,7 +63,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 @AutoConfigureRestTestClient
 @Import({ApiVersionConfig.class, GlobalExceptionHandler.class})
-@WebMvcTest(ClassSessionController.class)
+@WebMvcTest({ClassSessionController.class, InstructorSessionController.class})
 class ClassSessionControllerTest {
 
     private final RestTestClient client;
@@ -83,6 +85,12 @@ class ClassSessionControllerTest {
 
     @MockitoBean
     private InstructorCalendarQueryService instructorCalendarQueryService;
+
+    @MockitoBean
+    private InstructorSessionDetailQueryService instructorSessionDetailQueryService;
+
+    @MockitoBean
+    private ClassSessionInstructorEnrollmentCommandService instructorEnrollmentCommandService;
 
     @MockitoBean
     private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
@@ -119,7 +127,7 @@ class ClassSessionControllerTest {
 
         // when
         RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/7/class-sessions")
+                .uri("/api/studios/7/instructor/class-sessions")
                 .header("X-API-Version", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
@@ -179,7 +187,7 @@ class ClassSessionControllerTest {
 
         // when
         RestTestClient.ResponseSpec result = client.put()
-                .uri("/api/studios/7/class-sessions/11")
+                .uri("/api/studios/7/instructor/class-sessions/11")
                 .header("X-API-Version", "3")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
@@ -195,7 +203,7 @@ class ClassSessionControllerTest {
     void 필수_필드를_누락하면_COMMON_001을_반환하고_명령_서비스를_호출하지_않는다() {
         // when
         RestTestClient.ResponseSpec result = client.put()
-                .uri("/api/studios/7/class-sessions/11")
+                .uri("/api/studios/7/instructor/class-sessions/11")
                 .header("X-API-Version", "1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
@@ -534,7 +542,7 @@ class ClassSessionControllerTest {
     void 강사용_일별_목록에서_버전_헤더가_없으면_API_001을_반환한다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/instructor/daily?date=2026-08-17")
+                .uri("/api/studios/7/instructor/class-sessions/daily?date=2026-08-17")
                 .exchange();
 
         // then
@@ -650,7 +658,7 @@ class ClassSessionControllerTest {
     void 강사용_달력에서_버전_헤더가_없으면_API_001을_반환한다() {
         // when
         RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/class-sessions/instructor/calendar?from=2026-08-15&to=2026-08-19")
+                .uri("/api/studios/7/instructor/class-sessions/calendar?from=2026-08-15&to=2026-08-19")
                 .exchange();
 
         // then
@@ -747,7 +755,7 @@ class ClassSessionControllerTest {
 
         // when
         RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/7/class-sessions")
+                .uri("/api/studios/7/instructor/class-sessions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .exchange();
@@ -795,7 +803,7 @@ class ClassSessionControllerTest {
             ClassSessionCreateV2Request request
     ) {
         return client.post()
-                .uri("/api/studios/{studioId}/class-sessions", studioId)
+                .uri("/api/studios/{studioId}/instructor/class-sessions", studioId)
                 .header("X-API-Version", version)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
@@ -810,7 +818,7 @@ class ClassSessionControllerTest {
     ) {
         return client.put()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/{classSessionId}",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}",
                         studioId,
                         classSessionId
                 )
@@ -827,7 +835,7 @@ class ClassSessionControllerTest {
     ) {
         return client.put()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/{classSessionId}",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}",
                         studioId,
                         classSessionId
                 )
@@ -844,7 +852,7 @@ class ClassSessionControllerTest {
     ) {
         return client.delete()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/{classSessionId}",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}",
                         studioId,
                         classSessionId
                 )
@@ -884,7 +892,7 @@ class ClassSessionControllerTest {
             String version
     ) {
         return client.get()
-                .uri("/api/studios/%d/class-sessions/instructor/daily?%s".formatted(studioId, query))
+                .uri("/api/studios/%d/instructor/class-sessions/daily?%s".formatted(studioId, query))
                 .header("X-API-Version", version)
                 .exchange();
     }
@@ -906,7 +914,7 @@ class ClassSessionControllerTest {
             String version
     ) {
         return client.get()
-                .uri("/api/studios/%d/class-sessions/instructor/calendar?%s".formatted(studioId, query))
+                .uri("/api/studios/%d/instructor/class-sessions/calendar?%s".formatted(studioId, query))
                 .header("X-API-Version", version)
                 .exchange();
     }

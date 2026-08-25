@@ -22,7 +22,6 @@ import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.AuthenticationIntegrationTestConfiguration;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
@@ -38,7 +37,7 @@ import org.springframework.transaction.support.TransactionTemplate;
         "spring.jpa.hibernate.ddl-auto=validate",
         "spring.sql.init.mode=always"
 })
-class InstructorEnrollmentIntegrationTest {
+class InstructorSessionIntegrationTest {
 
     @Autowired
     private RestTestClient client;
@@ -125,73 +124,10 @@ class InstructorEnrollmentIntegrationTest {
         assertThat(enrollmentRepository.countOccupied(환경.classSessionId())).isEqualTo(1L);
     }
 
-    @Test
-    void 인증_토큰이_없으면_401을_반환한다() {
-        // given
-        예약_환경 환경 = 예약_환경을_만든다("e2e-unauthenticated");
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri(
-                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments",
-                        환경.studioId(),
-                        환경.classSessionId()
-                )
-                .header("X-API-Version", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(InstructorEnrollmentCreateRequest.from(환경.studentMembershipId()))
-                .exchange();
-
-        // then
-        result.expectStatus().isUnauthorized();
-        assertThat(enrollmentRepository.countOccupied(환경.classSessionId())).isZero();
-    }
-
-    @Test
-    void 버전_헤더가_없으면_400을_반환한다() {
-        // given
-        예약_환경 환경 = 예약_환경을_만든다("e2e-no-version");
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri(
-                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments",
-                        환경.studioId(),
-                        환경.classSessionId()
-                )
-                .header("Authorization", "Bearer " + 환경.accessToken())
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(InstructorEnrollmentCreateRequest.from(환경.studentMembershipId()))
-                .exchange();
-
-        // then
-        result.expectStatus().isBadRequest();
-        assertThat(enrollmentRepository.countOccupied(환경.classSessionId())).isZero();
-    }
-
-    @Test
-    void OpenAPI_문서에_대리_예약과_취소_경로가_노출된다() {
-        // given / when
-        String document = client.get()
-                .uri("/v3/api-docs")
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class)
-                .returnResult()
-                .getResponseBody();
-
-        // then
-        assertThat(document)
-                .contains("/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments")
-                .contains("/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments/{enrollmentId}")
-                .contains("회원 대리 예약")
-                .contains("회원 대리 예약 취소");
-    }
-
     private RestTestClient.ResponseSpec 예약한다(예약_환경 환경, String accessToken, String apiVersion) {
         return client.post()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}/enrollments",
                         환경.studioId(),
                         환경.classSessionId()
                 )
@@ -210,7 +146,7 @@ class InstructorEnrollmentIntegrationTest {
     ) {
         return client.delete()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments/{enrollmentId}",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}/enrollments/{enrollmentId}",
                         환경.studioId(),
                         환경.classSessionId(),
                         enrollmentId

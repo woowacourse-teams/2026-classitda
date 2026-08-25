@@ -8,7 +8,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
+import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
+import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
+import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
 import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailQueryService;
 import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailView;
@@ -35,10 +38,19 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 @AutoConfigureRestTestClient
 @Import({ApiVersionConfig.class, GlobalExceptionHandler.class})
-@WebMvcTest(InstructorEnrollmentController.class)
-class InstructorEnrollmentControllerTest {
+@WebMvcTest(InstructorSessionController.class)
+class InstructorSessionControllerTest {
 
     private final RestTestClient client;
+
+    @MockitoBean
+    private ClassSessionCommandService classSessionCommandService;
+
+    @MockitoBean
+    private InstructorDailyQueryService instructorDailyQueryService;
+
+    @MockitoBean
+    private InstructorCalendarQueryService instructorCalendarQueryService;
 
     @MockitoBean
     private ClassSessionInstructorEnrollmentCommandService commandService;
@@ -50,7 +62,7 @@ class InstructorEnrollmentControllerTest {
     private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
 
     @Autowired
-    InstructorEnrollmentControllerTest(RestTestClient client) {
+    InstructorSessionControllerTest(RestTestClient client) {
         this.client = client;
     }
 
@@ -95,18 +107,6 @@ class InstructorEnrollmentControllerTest {
                         }
                         """, JsonCompareMode.STRICT);
         verify(queryService).findOne(1L, 7L, 10L);
-    }
-
-    @Test
-    void 강사용_수업_상세_조회에서_버전_헤더가_없으면_API_001을_반환한다() {
-        // when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/{studioId}/class-sessions/instructor/{classSessionId}", 7L, 10L)
-                .exchange();
-
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(queryService, never()).findOne(any(), any(), any());
     }
 
     @Test
@@ -160,26 +160,6 @@ class InstructorEnrollmentControllerTest {
         // then
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
         verify(commandService, never()).save(any(), any(), any(), any());
-    }
-
-    @Test
-    void 버전_헤더가_없으면_API_001을_반환한다() {
-        // given
-        InstructorEnrollmentCreateRequest request = InstructorEnrollmentCreateRequest.from(12L);
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri(
-                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments",
-                        7L,
-                        10L
-                )
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange();
-
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
     }
 
     @Test
@@ -284,7 +264,7 @@ class InstructorEnrollmentControllerTest {
     ) {
         return client.post()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}/enrollments",
                         studioId,
                         classSessionId
                 )
@@ -301,7 +281,7 @@ class InstructorEnrollmentControllerTest {
     ) {
         return client.get()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}",
                         studioId,
                         classSessionId
                 )
@@ -317,7 +297,7 @@ class InstructorEnrollmentControllerTest {
     ) {
         return client.delete()
                 .uri(
-                        "/api/studios/{studioId}/class-sessions/instructor/{classSessionId}/enrollments/{enrollmentId}",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}/enrollments/{enrollmentId}",
                         studioId,
                         classSessionId,
                         enrollmentId

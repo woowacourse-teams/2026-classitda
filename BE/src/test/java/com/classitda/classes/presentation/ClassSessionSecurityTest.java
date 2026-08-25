@@ -14,6 +14,8 @@ import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.ClassSessionQueryService;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
+import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
+import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailQueryService;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
 import com.classitda.classes.fixture.ClassSessionFixture;
@@ -47,22 +49,23 @@ import org.springframework.test.web.servlet.client.RestTestClient;
         ClassSessionSecurityTest.TestSecurityConfiguration.class
 })
 @AutoConfigureRestTestClient
-@WebMvcTest(ClassSessionController.class)
+@WebMvcTest({ClassSessionController.class, InstructorSessionController.class})
 class ClassSessionSecurityTest {
 
     private static final String LIST_URI =
             "/api/studios/7/class-sessions/student/daily?date=2026-08-17";
     private static final String INSTRUCTOR_DAILY_URI =
-            "/api/studios/7/class-sessions/instructor/daily?date=2026-08-17";
+            "/api/studios/7/instructor/class-sessions/daily?date=2026-08-17";
     private static final String STUDENT_CALENDAR_URI =
             "/api/studios/7/class-sessions/student/calendar"
                     + "?from=2026-08-15&to=2026-08-19";
     private static final String DETAIL_URI =
             "/api/studios/7/class-sessions/11";
-    private static final String UPDATE_URI = DETAIL_URI;
-    private static final String CANCEL_URI = DETAIL_URI;
+    private static final String UPDATE_URI =
+            "/api/studios/7/instructor/class-sessions/11";
+    private static final String CANCEL_URI = UPDATE_URI;
     private static final String INSTRUCTOR_CALENDAR_URI =
-            "/api/studios/7/class-sessions/instructor/calendar?from=2026-08-15&to=2026-08-19";
+            "/api/studios/7/instructor/class-sessions/calendar?from=2026-08-15&to=2026-08-19";
 
     private final RestTestClient client;
 
@@ -83,6 +86,12 @@ class ClassSessionSecurityTest {
 
     @MockitoBean
     private InstructorCalendarQueryService instructorCalendarQueryService;
+
+    @MockitoBean
+    private InstructorSessionDetailQueryService instructorSessionDetailQueryService;
+
+    @MockitoBean
+    private ClassSessionInstructorEnrollmentCommandService instructorEnrollmentCommandService;
 
     @MockitoBean
     private JwtDecoder jwtDecoder;

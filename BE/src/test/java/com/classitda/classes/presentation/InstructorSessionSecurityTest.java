@@ -10,7 +10,10 @@ import com.classitda.authentication.infra.security.SecurityConfig;
 import com.classitda.authentication.infra.security.jwt.JwtAuthenticationConverter;
 import com.classitda.authentication.presentation.config.AuthenticationWebMvcConfig;
 import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumentResolver;
+import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
+import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
+import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
 import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailQueryService;
 import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailView;
@@ -41,16 +44,25 @@ import org.springframework.test.web.servlet.client.RestTestClient;
         JwtAuthenticationConverter.class,
         CurrentMemberIdArgumentResolver.class,
         AuthenticationWebMvcConfig.class,
-        InstructorEnrollmentSecurityTest.TestSecurityConfiguration.class
+        InstructorSessionSecurityTest.TestSecurityConfiguration.class
 })
 @AutoConfigureRestTestClient
-@WebMvcTest(InstructorEnrollmentController.class)
-class InstructorEnrollmentSecurityTest {
+@WebMvcTest(InstructorSessionController.class)
+class InstructorSessionSecurityTest {
 
     private static final String ROSTER_URI =
-            "/api/studios/7/class-sessions/instructor/10";
+            "/api/studios/7/instructor/class-sessions/10";
 
     private final RestTestClient client;
+
+    @MockitoBean
+    private ClassSessionCommandService classSessionCommandService;
+
+    @MockitoBean
+    private InstructorDailyQueryService instructorDailyQueryService;
+
+    @MockitoBean
+    private InstructorCalendarQueryService instructorCalendarQueryService;
 
     @MockitoBean
     private ClassSessionInstructorEnrollmentCommandService commandService;
@@ -62,7 +74,7 @@ class InstructorEnrollmentSecurityTest {
     private JwtDecoder jwtDecoder;
 
     @Autowired
-    InstructorEnrollmentSecurityTest(RestTestClient client) {
+    InstructorSessionSecurityTest(RestTestClient client) {
         this.client = client;
     }
 
