@@ -1,9 +1,9 @@
 package com.classitda.classes.presentation.dto;
 
-import com.classitda.classes.application.instructor.enrollment.InstructorEnrollmentCandidateView;
+import com.classitda.classes.application.instructor.enrollment.StudioStudentView;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public record InstructorEnrollmentCandidateResponse(
+public record StudioStudentResponse(
         @Schema(description = "시설 회원 소속 ID", example = "31")
         Long membershipId,
 
@@ -12,14 +12,18 @@ public record InstructorEnrollmentCandidateResponse(
 
         @Schema(description = "회원 프로필 이미지 URL", nullable = true,
                 example = "https://images.example.com/minji.png")
-        String profileImageUrl
+        String profileImageUrl,
+
+        @Schema(description = "현재 수업에 활성 신청으로 추가되어 있는지 여부", example = "true")
+        boolean enrolled
 ) {
 
-    public static InstructorEnrollmentCandidateResponse from(InstructorEnrollmentCandidateView candidate) {
-        return new InstructorEnrollmentCandidateResponse(
+    public static StudioStudentResponse from(StudioStudentView candidate) {
+        return new StudioStudentResponse(
                 candidate.membershipId(),
                 candidate.name(),
-                candidate.profileImageUrl()
+                candidate.profileImageUrl(),
+                candidate.enrolled()
         );
     }
 }

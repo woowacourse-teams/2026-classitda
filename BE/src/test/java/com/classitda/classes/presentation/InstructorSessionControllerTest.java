@@ -13,7 +13,7 @@ import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
-import com.classitda.classes.application.instructor.enrollment.InstructorEnrollmentCandidateView;
+import com.classitda.classes.application.instructor.enrollment.StudioStudentView;
 import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailView;
 import com.classitda.classes.application.instructor.enrollment.InstructorSessionQueryService;
 import com.classitda.classes.domain.ClassForm;
@@ -139,13 +139,14 @@ class InstructorSessionControllerTest {
     @Test
     void 대리_예약_후보_회원을_전체_조회하면_200과_목록을_반환한다() {
         // given
-        when(queryService.findAllEnrollmentCandidates(1L, 7L, 10L)).thenReturn(List.of(
-                new InstructorEnrollmentCandidateView(
+        when(queryService.findAllStudioStudents(1L, 7L, 10L)).thenReturn(List.of(
+                new StudioStudentView(
                         31L,
                         "김민지",
-                        "https://images.example.com/minji.png"
+                        "https://images.example.com/minji.png",
+                        true
                 ),
-                new InstructorEnrollmentCandidateView(32L, "최유진", null)
+                new StudioStudentView(32L, "최유진", null, false)
         ));
 
         // when
@@ -158,14 +159,16 @@ class InstructorSessionControllerTest {
                         [{
                           "membershipId":31,
                           "name":"김민지",
-                          "profileImageUrl":"https://images.example.com/minji.png"
+                          "profileImageUrl":"https://images.example.com/minji.png",
+                          "enrolled":true
                         },{
                           "membershipId":32,
                           "name":"최유진",
-                          "profileImageUrl":null
+                          "profileImageUrl":null,
+                          "enrolled":false
                         }]
                         """, JsonCompareMode.STRICT);
-        verify(queryService).findAllEnrollmentCandidates(1L, 7L, 10L);
+        verify(queryService).findAllStudioStudents(1L, 7L, 10L);
     }
 
     @Test
@@ -329,7 +332,7 @@ class InstructorSessionControllerTest {
     ) {
         return client.get()
                 .uri(
-                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}/enrollment-candidates",
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}/studio-students",
                         studioId,
                         classSessionId
                 )

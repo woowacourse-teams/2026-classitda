@@ -342,7 +342,7 @@ class InstructorSessionQueryServiceTest {
     }
 
     @Test
-    void 대표는_시설의_활성_학생을_이미_예약한_회원까지_모두_ID_순서로_조회한다() {
+    void 대표는_시설의_활성_학생과_예약_확정_여부를_ID_순서로_조회한다() {
         // given
         DetailContext context = 기본_환경("owner-candidates");
         StudioRole studentRole = 역할을_저장한다(context.studio(), SystemRole.STUDENT);
@@ -360,6 +360,13 @@ class InstructorSessionQueryServiceTest {
                 MembershipStatus.ACTIVE,
                 "최유진"
         );
+        StudioMembership waitingStudent = 소속을_저장한다(
+                context.studio(),
+                회원을_저장한다("정하늘", null),
+                studentRole,
+                MembershipStatus.ACTIVE,
+                "정하늘"
+        );
         소속을_저장한다(
                 context.studio(),
                 회원을_저장한다("정지 회원", null),
@@ -372,6 +379,17 @@ class InstructorSessionQueryServiceTest {
                 reservedStudent,
                 LocalDateTime.of(2026, 8, 1, 10, 0)
         );
+        ClassSessionEnrollment canceledEnrollment = 예약을_저장한다(
+                context.classSession(),
+                activeStudent,
+                LocalDateTime.of(2026, 8, 1, 11, 0)
+        );
+        canceledEnrollment.cancelReservation(LocalDateTime.of(2026, 8, 1, 12, 0));
+        entityManager.persist(ClassSessionEnrollment.waiting(
+                waitingStudent,
+                context.classSession(),
+                LocalDateTime.of(2026, 8, 1, 13, 0)
+        ));
 
         DetailContext otherContext = 기본_환경("other-studio-candidates");
         StudioRole otherStudentRole = 역할을_저장한다(otherContext.studio(), SystemRole.STUDENT);
@@ -385,7 +403,7 @@ class InstructorSessionQueryServiceTest {
         entityManager.clear();
 
         // when
-        List<InstructorEnrollmentCandidateView> result = queryService.findAllEnrollmentCandidates(
+        List<StudioStudentView> result = queryService.findAllStudioStudents(
                 context.owner().getId(),
                 context.studio().getId(),
                 context.classSession().getId()
@@ -393,12 +411,14 @@ class InstructorSessionQueryServiceTest {
 
         // then
         assertThat(result).containsExactly(
-                new InstructorEnrollmentCandidateView(
+                new StudioStudentView(
                         reservedStudent.getId(),
                         "김민지",
-                        "https://images.example.com/minji.png"
+                        "https://images.example.com/minji.png",
+                        true
                 ),
-                new InstructorEnrollmentCandidateView(activeStudent.getId(), "최유진", null)
+                new StudioStudentView(activeStudent.getId(), "최유진", null, false),
+                new StudioStudentView(waitingStudent.getId(), "정하늘", null, false)
         );
     }
 
@@ -415,7 +435,7 @@ class InstructorSessionQueryServiceTest {
 
         // when / then
         assertClassError(
-                () -> queryService.findAllEnrollmentCandidates(
+                () -> queryService.findAllStudioStudents(
                         instructor.getId(),
                         context.studio().getId(),
                         context.classSession().getId()
@@ -436,7 +456,7 @@ class InstructorSessionQueryServiceTest {
 
         // when / then
         assertStudioError(
-                () -> queryService.findAllEnrollmentCandidates(
+                () -> queryService.findAllStudioStudents(
                         instructor.getId(),
                         context.studio().getId(),
                         context.classSession().getId()

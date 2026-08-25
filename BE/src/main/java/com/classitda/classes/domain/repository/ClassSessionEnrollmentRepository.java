@@ -6,6 +6,7 @@ import com.classitda.classes.domain.repository.projection.StudentEnrollmentCalen
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -94,6 +95,20 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
             ORDER BY enrollment.state.statusChangedAt ASC, enrollment.id ASC
             """)
     List<InstructorReservedMemberProjection> findReservedMembersForInstructor(
+            @Param("studioId") Long studioId,
+            @Param("classSessionId") Long classSessionId
+    );
+
+    @Query("""
+            SELECT enrollment.membership.id
+            FROM ClassSessionEnrollment enrollment
+            WHERE enrollment.classSession.id = :classSessionId
+              AND enrollment.classSession.studioId = :studioId
+              AND enrollment.membership.studio.id = :studioId
+              AND enrollment.state.status =
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
+            """)
+    Set<Long> findReservedMembershipIds(
             @Param("studioId") Long studioId,
             @Param("classSessionId") Long classSessionId
     );

@@ -8,7 +8,7 @@ import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
-import com.classitda.classes.presentation.dto.InstructorEnrollmentCandidateResponse;
+import com.classitda.classes.presentation.dto.StudioStudentResponse;
 import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
 import com.classitda.classes.presentation.dto.InstructorSessionDetailResponse;
 import com.classitda.common.exception.ErrorResponse;
@@ -638,7 +638,7 @@ public interface InstructorSessionControllerApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    InstructorSessionDetailResponse findOne(
+    InstructorSessionDetailResponse findDetail(
             @Parameter(hidden = true) Long memberId,
             @Parameter(description = "시설 ID", example = "1") Long studioId,
             @Parameter(description = "수업 회차 ID", example = "10") Long classSessionId
@@ -652,6 +652,8 @@ public interface InstructorSessionControllerApi {
                     - **정렬**: 시설 회원 소속 ID 오름차순으로 반환합니다.
 
                     - **검색·페이지네이션**: 제공하지 않습니다. 이름 검색과 예약 여부 표시는 클라이언트에서 처리합니다.
+
+                    - **추가 여부**: `enrolled`는 현재 `RESERVED` 상태의 신청이 있으면 `true`입니다. 그 외 상태이거나 신청 이력이 없으면 `false`입니다.
 
                     - **권한**: 대표는 모든 수업을 관리할 수 있습니다. 그 외에는 예약 관리 권한과 본인 또는 전체 수업 관리 권한이 필요합니다.
 
@@ -667,17 +669,19 @@ public interface InstructorSessionControllerApi {
                     description = "대리 예약 후보 회원 전체를 반환합니다.",
                     content = @Content(
                             array = @ArraySchema(schema = @Schema(
-                                    implementation = InstructorEnrollmentCandidateResponse.class
+                                    implementation = StudioStudentResponse.class
                             )),
                             examples = @ExampleObject(value = """
                                     [{
                                       "membershipId":31,
                                       "name":"김민지",
-                                      "profileImageUrl":"https://images.example.com/minji.png"
+                                      "profileImageUrl":"https://images.example.com/minji.png",
+                                      "enrolled":true
                                     },{
                                       "membershipId":32,
                                       "name":"최유진",
-                                      "profileImageUrl":null
+                                      "profileImageUrl":null,
+                                      "enrolled":false
                                     }]
                                     """)
                     )
@@ -703,7 +707,7 @@ public interface InstructorSessionControllerApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    List<InstructorEnrollmentCandidateResponse> findAllEnrollmentCandidates(
+    List<StudioStudentResponse> findAllStudioStudents(
             @Parameter(hidden = true) Long memberId,
             @Parameter(description = "시설 ID", example = "1") Long studioId,
             @Parameter(description = "수업 회차 ID", example = "10") Long classSessionId

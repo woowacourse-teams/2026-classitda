@@ -19,6 +19,7 @@ import com.classitda.studio.exception.StudioException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,7 +67,7 @@ public class InstructorSessionQueryService {
         );
     }
 
-    public List<InstructorEnrollmentCandidateView> findAllEnrollmentCandidates(Long memberId, Long studioId, Long classSessionId) {
+    public List<StudioStudentView> findAllStudioStudents(Long memberId, Long studioId, Long classSessionId) {
         InstructorSessionAccess access = accessReader.readSessionAccess(
                 memberId,
                 studioId,
@@ -76,8 +77,13 @@ public class InstructorSessionQueryService {
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
         access.validateAccessTo(classSession.getInstructorMembership().getId());
 
+        Set<Long> reservedMembershipIds = enrollmentRepository.findReservedMembershipIds(studioId, classSessionId);
+
         return studioMembershipRepository.findActiveStudents(studioId).stream()
-                .map(InstructorEnrollmentCandidateView::from)
+                .map(membership -> StudioStudentView.from(
+                        membership,
+                        reservedMembershipIds.contains(membership.getId())
+                ))
                 .toList();
     }
 }

@@ -44,6 +44,7 @@ public class ClassSessionInstructorEnrollmentCommandService {
         StudioMembership membership = getActiveMembership(studioId, membershipId);
         validateCapacity(classSession);
 
+        // TODO: 강사가 WAITING/OFFERED 회원을 추가하면 기존 신청을 RESERVED로 전환해 활성 신청 중복 409를 방지한다.
         saveEnrollment(membership, classSession);
     }
 

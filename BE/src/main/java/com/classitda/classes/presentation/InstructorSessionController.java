@@ -14,7 +14,7 @@ import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
-import com.classitda.classes.presentation.dto.InstructorEnrollmentCandidateResponse;
+import com.classitda.classes.presentation.dto.StudioStudentResponse;
 import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
 import com.classitda.classes.presentation.dto.InstructorSessionDetailResponse;
 import jakarta.validation.Valid;
@@ -126,7 +126,7 @@ public class InstructorSessionController implements InstructorSessionControllerA
 
     @Override
     @GetMapping(path = "/{classSessionId}", version = "1")
-    public InstructorSessionDetailResponse findOne(
+    public InstructorSessionDetailResponse findDetail(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long classSessionId
@@ -137,14 +137,14 @@ public class InstructorSessionController implements InstructorSessionControllerA
     }
 
     @Override
-    @GetMapping(path = "/{classSessionId}/enrollment-candidates", version = "1")
-    public List<InstructorEnrollmentCandidateResponse> findAllEnrollmentCandidates(
+    @GetMapping(path = "/{classSessionId}/studio-students", version = "1")
+    public List<StudioStudentResponse> findAllStudioStudents(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long classSessionId
     ) {
-        return instructorSessionQueryService.findAllEnrollmentCandidates(memberId, studioId, classSessionId).stream()
-                .map(InstructorEnrollmentCandidateResponse::from)
+        return instructorSessionQueryService.findAllStudioStudents(memberId, studioId, classSessionId).stream()
+                .map(StudioStudentResponse::from)
                 .toList();
     }
 
