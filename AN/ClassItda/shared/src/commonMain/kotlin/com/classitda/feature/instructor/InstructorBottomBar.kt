@@ -17,6 +17,7 @@ import classitda.shared.generated.resources.ic_chat
 import classitda.shared.generated.resources.ic_check
 import classitda.shared.generated.resources.ic_home
 import classitda.shared.generated.resources.ic_person
+import classitda.shared.generated.resources.ic_schedule_calendar
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
@@ -41,13 +42,12 @@ private val InstructorBottomTab.label: String
             InstructorBottomTab.MY -> "마이"
         }
 
-// ic_check는 '관리' 탭에 맞는 아이콘이 디자인 리소스에 없어 대체한 것이다.
 private val InstructorBottomTab.icon: DrawableResource
     get() =
         when (this) {
             InstructorBottomTab.HOME -> Res.drawable.ic_home
             InstructorBottomTab.SCHEDULE -> Res.drawable.ic_calendar
-            InstructorBottomTab.MANAGEMENT -> Res.drawable.ic_check
+            InstructorBottomTab.MANAGEMENT -> Res.drawable.ic_schedule_calendar
             InstructorBottomTab.CHAT -> Res.drawable.ic_chat
             InstructorBottomTab.MY -> Res.drawable.ic_person
         }
