@@ -14,7 +14,7 @@ public record StudioStudentResponse(
                 example = "https://images.example.com/minji.png")
         String profileImageUrl,
 
-        @Schema(description = "현재 수업에 활성 신청으로 추가되어 있는지 여부", example = "true")
+        @Schema(description = "현재 수업에 예약 확정(RESERVED) 신청이 있는지 여부", example = "true")
         boolean enrolled
 ) {
 
