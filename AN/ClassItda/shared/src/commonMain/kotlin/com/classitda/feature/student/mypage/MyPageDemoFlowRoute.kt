@@ -29,6 +29,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.di.mypage.myPageDemoModule
+import com.classitda.feature.common.privacypolicy.PrivacyPolicyRoute
 import com.classitda.feature.student.StudentTab
 import kotlinx.serialization.Serializable
 import org.koin.compose.KoinApplication
@@ -53,6 +54,9 @@ private data object ConnectedFacilitiesDestination
 
 @Serializable
 private data object NotificationSettingsDestination
+
+@Serializable
+private data object PrivacyPolicyDestination
 
 @Composable
 internal fun MyPageDemoNavHost(
@@ -83,6 +87,12 @@ internal fun MyPageDemoNavHost(
         }
     }
 
+    fun navigateToPrivacyPolicy() {
+        navController.navigate(PrivacyPolicyDestination) {
+            launchSingleTop = true
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = MyPageDestination,
@@ -107,7 +117,7 @@ internal fun MyPageDemoNavHost(
                     onExternalAction("onOpenNotificationSettings")
                     navController.navigate(NotificationSettingsDestination)
                 },
-                onOpenPrivacyPolicy = { onExternalAction("OpenPrivacyPolicy") },
+                onOpenPrivacyPolicy = ::navigateToPrivacyPolicy,
                 onOpenInstructorSignup = { onExternalAction("OpenInstructorSignup") },
                 onSwitchToInstructor = { onExternalAction("SwitchToInstructor") },
                 onTabSelected = { tab ->
@@ -187,6 +197,10 @@ internal fun MyPageDemoNavHost(
                     navigateToMyPage()
                 },
             )
+        }
+
+        composable<PrivacyPolicyDestination> {
+            PrivacyPolicyRoute(onBack = navController::popBackStack)
         }
     }
 }

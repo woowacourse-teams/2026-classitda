@@ -19,6 +19,7 @@ import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.instructor_facility_management_title
 import classitda.shared.generated.resources.instructor_member_management_title
 import classitda.shared.generated.resources.instructor_my_page_title
+import classitda.shared.generated.resources.my_page_privacy_policy
 import classitda.shared.generated.resources.profile_view_title
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -27,6 +28,9 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.feature.common.privacypolicy.PrivacyPolicyAction
+import com.classitda.feature.common.privacypolicy.PrivacyPolicyScreen
+import com.classitda.feature.common.privacypolicy.PrivacyPolicyUiState
 import com.classitda.feature.common.profile.PhoneNumberChangeScreen
 import com.classitda.feature.common.profile.ProfileEditScreen
 import com.classitda.feature.common.profile.ProfileViewScreen
@@ -110,6 +114,7 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                         }
 
                         InstructorMyPageAction.OpenPrivacyPolicy -> {
+                            destination = HarnessDestination.PRIVACY_POLICY
                             lastEvent = "OpenPrivacyPolicy"
                         }
 
@@ -118,6 +123,35 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                         }
                     }
                 }, modifier = Modifier.weight(1f))
+            }
+
+            HarnessDestination.PRIVACY_POLICY -> {
+                PrivacyPolicyScreen(
+                    uiState = PrivacyPolicyUiState.Content(),
+                    onAction = { action ->
+                        when (action) {
+                            PrivacyPolicyAction.Back -> {
+                                destination = HarnessDestination.F01
+                                lastEvent = "Back:PrivacyPolicy"
+                            }
+
+                            PrivacyPolicyAction.Retry -> {
+                                lastEvent = "Retry:PrivacyPolicy"
+                            }
+
+                            PrivacyPolicyAction.DismissBlockedNavigationNotice -> {
+                                lastEvent = "DismissBlockedNavigationNotice:PrivacyPolicy"
+                            }
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    content = {
+                        Text(
+                            text = stringResource(Res.string.my_page_privacy_policy),
+                            modifier = Modifier.fillMaxSize().padding(AppSpacing.screenPadding),
+                        )
+                    },
+                )
             }
 
             HarnessDestination.F02 -> {
@@ -412,7 +446,7 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
     }
 }
 
-private enum class HarnessDestination { F01, F02, F03, F04, F05, F06, F08, F09 }
+private enum class HarnessDestination { F01, F02, F03, F04, F05, F06, F08, F09, PRIVACY_POLICY }
 
 private val instructorProfileFixture = InstructorMyPageUiModel("이지은 강사", "010-****-5678", null, "이")
 private val profileFixture =
