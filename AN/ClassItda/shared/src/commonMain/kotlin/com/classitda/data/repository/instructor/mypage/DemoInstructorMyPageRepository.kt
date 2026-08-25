@@ -1,5 +1,6 @@
 package com.classitda.data.repository.instructor.mypage
 
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorAccountProfile
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
@@ -12,15 +13,17 @@ import com.classitda.domain.model.instructor.mypage.MemberListPage
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.domain.repository.instructor.mypage.FacilityList
+import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.domain.repository.instructor.mypage.InstructorPhoneVerificationChallenge
 
 private typealias MemberRegistrationResult = InstructorMyPageResult<InstructorMemberId>
-private typealias FacilityRegistrationResult = InstructorMyPageResult<InstructorFacilityId>
 
 /** Deterministic app-smoke fixture; it is not an operational repository. */
-internal class DemoInstructorMyPageRepository : InstructorMyPageRepository {
+internal class DemoInstructorMyPageRepository :
+    InstructorMyPageRepository,
+    InstructorFacilityRepository {
     private var profile =
         InstructorAccountProfile(
             id = "instructor-demo",
@@ -39,8 +42,11 @@ internal class DemoInstructorMyPageRepository : InstructorMyPageRepository {
             ManagedFacility(
                 id = InstructorFacilityId("facility-1"),
                 name = "클래스잇다 스튜디오",
-                address = "서울특별시 강남구 테헤란로",
-                detailAddress = "5층 501호",
+                address =
+                    FacilityAddress(
+                        roadAddress = "서울특별시 강남구 테헤란로",
+                        detailAddress = "5층 501호",
+                    ),
                 phoneNumber = "02-1234-5678",
                 description = "회원들이 편하게 운동할 수 있는 클래스잇다의 대표 시설입니다.",
                 openingTime = "09:00",
@@ -128,44 +134,34 @@ internal class DemoInstructorMyPageRepository : InstructorMyPageRepository {
                 com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
             )
 
-    override suspend fun registerFacility(draft: FacilityRegistrationDraft): FacilityRegistrationResult {
+    override suspend fun registerFacility(draft: FacilityRegistrationDraft): InstructorMyPageResult<Unit> {
         val id = InstructorFacilityId("facility-${facilities.size + 1}")
         facilities += draft.toManagedFacility(id)
-        return InstructorMyPageResult.Success(id)
+        return InstructorMyPageResult.Success(Unit)
     }
 
     override suspend fun updateFacility(
         facilityId: InstructorFacilityId,
         draft: FacilityRegistrationDraft,
-    ) = facilities
-        .indexOfFirst { it.id == facilityId }
-        .takeIf { it >= 0 }
-        ?.let { index ->
-            val updated = draft.toManagedFacility(facilityId)
-            facilities[index] = updated
-            InstructorMyPageResult.Success(updated)
-        }
-        ?: InstructorMyPageResult.Failure(
-            com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
-        )
-
-    override suspend fun deleteFacility(facilityId: InstructorFacilityId) =
-        if (facilities.removeAll { it.id == facilityId }) {
-            InstructorMyPageResult.Success(facilityId)
-        } else {
-            InstructorMyPageResult.Failure(
+    ): InstructorMyPageResult<Unit> =
+        facilities
+            .indexOfFirst { it.id == facilityId }
+            .takeIf { it >= 0 }
+            ?.let { index ->
+                val updated = draft.toManagedFacility(facilityId)
+                facilities[index] = updated
+                InstructorMyPageResult.Success(Unit)
+            }
+            ?: InstructorMyPageResult.Failure(
                 com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
             )
-        }
 
     private fun FacilityRegistrationDraft.toManagedFacility(id: InstructorFacilityId) =
         ManagedFacility(
             id = id,
             name = name,
             address = address,
-            representativeImageReference = images.firstOrNull()?.previewReference,
-            images = images,
-            detailAddress = detailAddress,
+            image = image,
             phoneNumber = phoneNumber,
             description = description,
             openingTime = openingTime,
