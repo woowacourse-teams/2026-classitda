@@ -1,5 +1,7 @@
 package com.classitda.domain.model.instructor.mypage
 
+import kotlin.jvm.JvmInline
+
 data class ManagedFacility(
     val id: InstructorFacilityId,
     val name: String,
@@ -53,6 +55,25 @@ sealed interface FacilityImageSelection {
             require(sizeBytes >= 0) { "시설 로컬 이미지 크기는 음수일 수 없습니다." }
         }
     }
+}
+
+@JvmInline
+value class UploadedFacilityImage(
+    val objectKey: String,
+) {
+    init {
+        require(objectKey.isNotBlank()) { "업로드된 시설 이미지 objectKey는 비어 있을 수 없습니다." }
+    }
+}
+
+sealed interface FacilityImageMutation {
+    data object Unchanged : FacilityImageMutation
+
+    data class Replace(
+        val image: FacilityImageSelection.Local,
+    ) : FacilityImageMutation
+
+    data object Remove : FacilityImageMutation
 }
 
 data class FacilityRegistrationDraft(

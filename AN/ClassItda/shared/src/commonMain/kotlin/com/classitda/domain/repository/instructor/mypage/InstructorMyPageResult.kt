@@ -18,6 +18,7 @@ enum class InstructorMyPageFailureReason {
     NOT_FOUND,
     CONFLICT,
     INVALID_REQUEST,
+    CONTRACT,
     VERIFICATION_EXPIRED,
     VERIFICATION_FAILED,
     UNKNOWN,
