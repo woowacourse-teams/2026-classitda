@@ -19,8 +19,6 @@ import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.feature.instructor.classsession.member.edit.model.MemberAddType
-import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
