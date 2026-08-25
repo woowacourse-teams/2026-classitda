@@ -1,10 +1,12 @@
 package com.classitda.classes.domain.repository;
 
 import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
+import com.classitda.classes.domain.repository.projection.InstructorReservedMemberProjection;
 import com.classitda.classes.domain.repository.projection.StudentEnrollmentCalendarEventProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,9 +19,20 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
             "classSession.instructorMembership.studio",
             "memberPassProduct.passProduct"
     })
-    Optional<ClassSessionEnrollment> findByIdAndMembershipId(
-            Long enrollmentId,
-            Long membershipId
+    @Query("""
+            SELECT enrollment
+            FROM ClassSessionEnrollment enrollment
+            WHERE enrollment.id = :enrollmentId
+              AND enrollment.classSession.id = :classSessionId
+              AND enrollment.classSession.studioId = :studioId
+              AND enrollment.membership.id = :membershipId
+              AND enrollment.membership.studio.id = :studioId
+            """)
+    Optional<ClassSessionEnrollment> findDetailForStudent(
+            @Param("enrollmentId") Long enrollmentId,
+            @Param("classSessionId") Long classSessionId,
+            @Param("studioId") Long studioId,
+            @Param("membershipId") Long membershipId
     );
 
     @Query("""
@@ -64,6 +77,40 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
             @Param("enrollmentId") Long enrollmentId,
             @Param("classSessionId") Long classSessionId,
             @Param("studioId") Long studioId
+    );
+
+    @Query("""
+            SELECT enrollment.id AS enrollmentId,
+                   membership.id AS membershipId,
+                   membership.name AS memberName,
+                   member.profileImageUrl AS profileImageUrl
+            FROM ClassSessionEnrollment enrollment
+            JOIN enrollment.membership membership
+            JOIN membership.member member
+            WHERE enrollment.classSession.id = :classSessionId
+              AND enrollment.classSession.studioId = :studioId
+              AND membership.studio.id = :studioId
+              AND enrollment.state.status =
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
+            ORDER BY enrollment.state.statusChangedAt ASC, enrollment.id ASC
+            """)
+    List<InstructorReservedMemberProjection> findReservedMembersForInstructor(
+            @Param("studioId") Long studioId,
+            @Param("classSessionId") Long classSessionId
+    );
+
+    @Query("""
+            SELECT enrollment.membership.id
+            FROM ClassSessionEnrollment enrollment
+            WHERE enrollment.classSession.id = :classSessionId
+              AND enrollment.classSession.studioId = :studioId
+              AND enrollment.membership.studio.id = :studioId
+              AND enrollment.state.status =
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
+            """)
+    Set<Long> findReservedMembershipIds(
+            @Param("studioId") Long studioId,
+            @Param("classSessionId") Long classSessionId
     );
 
     @Query("""

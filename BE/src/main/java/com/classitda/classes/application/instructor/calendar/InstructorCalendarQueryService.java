@@ -29,7 +29,8 @@ public class InstructorCalendarQueryService {
     ) {
         ClassSessionQueryRange range = ClassSessionQueryRange.calendar(from, to);
 
-        Long requesterMembershipId = accessReader.readRequesterMembershipId(memberId, studioId);
+        Long requesterMembershipId = accessReader.readSessionAccess(memberId, studioId)
+                .requesterMembershipId();
         return classSessionRepository.findCalendarSummaryForInstructor(
                         studioId,
                         requesterMembershipId,

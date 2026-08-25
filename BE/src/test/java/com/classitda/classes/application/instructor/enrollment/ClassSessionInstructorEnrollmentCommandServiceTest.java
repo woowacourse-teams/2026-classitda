@@ -3,6 +3,7 @@ package com.classitda.classes.application.instructor.enrollment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
 import com.classitda.classes.domain.enrollment.EnrollmentStatus;
@@ -12,7 +13,6 @@ import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.member.domain.Member;
-import com.classitda.studio.application.StudioPermissionService;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
 import com.classitda.studio.domain.PermissionCode;
@@ -43,7 +43,7 @@ import org.springframework.context.annotation.Import;
 
 @Import({
         ClassSessionInstructorEnrollmentCommandService.class,
-        StudioPermissionService.class,
+        InstructorSessionAccessReader.class,
         ClassSessionInstructorEnrollmentCommandServiceTest.FixedClockConfig.class
 })
 @MySqlRepositoryTest
@@ -111,7 +111,7 @@ class ClassSessionInstructorEnrollmentCommandServiceTest {
     }
 
     @Test
-    void 예약_관리_권한이_있는_소속도_회원을_예약할_수_있다() {
+    void 전체_수업_관리_권한이_있는_소속도_회원을_예약할_수_있다() {
         // given
         Member owner = 회원을_저장한다("owner-permitted");
         Studio studio = 시설을_저장한다(owner, "권한 스튜디오");
@@ -119,6 +119,7 @@ class ClassSessionInstructorEnrollmentCommandServiceTest {
         StudioRole managerRole = 역할을_저장한다(studio, SystemRole.INSTRUCTOR);
         소속을_저장한다(studio, manager, managerRole, MembershipStatus.ACTIVE);
         권한을_저장한다(managerRole, PermissionCode.RESERVATION_MANAGE);
+        권한을_저장한다(managerRole, PermissionCode.CLASS_SESSION_MANAGE_ALL);
         StudioMembership student = 학생_소속을_저장한다(studio, "student-permitted", MembershipStatus.ACTIVE);
         ClassSession classSession = 수업_회차를_저장한다(studio, owner, 시작_예정, 12);
 
@@ -128,6 +129,78 @@ class ClassSessionInstructorEnrollmentCommandServiceTest {
         // then
         ClassSessionEnrollment enrollment = 신청을_다시_읽는다(classSession.getId(), student.getId());
         assertThat(enrollment.getEnrollmentStatus()).isEqualTo(EnrollmentStatus.RESERVED);
+    }
+
+    @Test
+    void 본인_수업_관리_권한이_있는_강사는_본인_수업에_회원을_예약할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("owner-own-reserve");
+        Studio studio = 시설을_저장한다(owner, "본인 수업 예약 스튜디오");
+        Member instructor = 회원을_저장한다("instructor-own-reserve");
+        StudioRole instructorRole = 역할을_저장한다(studio, SystemRole.INSTRUCTOR);
+        소속을_저장한다(studio, instructor, instructorRole, MembershipStatus.ACTIVE);
+        권한을_저장한다(instructorRole, PermissionCode.RESERVATION_MANAGE);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        StudioMembership student = 학생_소속을_저장한다(
+                studio,
+                "student-own-reserve",
+                MembershipStatus.ACTIVE
+        );
+        ClassSession classSession = 수업_회차를_저장한다(studio, instructor, 시작_예정, 12);
+
+        // when
+        commandService.save(instructor.getId(), studio.getId(), classSession.getId(), student.getId());
+
+        // then
+        ClassSessionEnrollment enrollment = 신청을_다시_읽는다(classSession.getId(), student.getId());
+        assertThat(enrollment.getEnrollmentStatus()).isEqualTo(EnrollmentStatus.RESERVED);
+    }
+
+    @Test
+    void 본인_수업_관리_권한이_있는_강사는_다른_강사_수업에_회원을_예약할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("owner-other-reserve");
+        Studio studio = 시설을_저장한다(owner, "다른 강사 수업 예약 스튜디오");
+        Member instructor = 회원을_저장한다("instructor-other-reserve");
+        StudioRole instructorRole = 역할을_저장한다(studio, SystemRole.INSTRUCTOR);
+        소속을_저장한다(studio, instructor, instructorRole, MembershipStatus.ACTIVE);
+        권한을_저장한다(instructorRole, PermissionCode.RESERVATION_MANAGE);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        StudioMembership student = 학생_소속을_저장한다(
+                studio,
+                "student-other-reserve",
+                MembershipStatus.ACTIVE
+        );
+        ClassSession classSession = 수업_회차를_저장한다(studio, owner, 시작_예정, 12);
+
+        // when / then
+        assertThatThrownBy(() -> commandService.save(
+                instructor.getId(), studio.getId(), classSession.getId(), student.getId()))
+                .isInstanceOf(ClassException.class)
+                .hasMessage(ClassErrorCode.CLASS_SESSION_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void 예약_관리_권한만_있고_수업_관리_범위가_없으면_예약할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("owner-no-session-scope");
+        Studio studio = 시설을_저장한다(owner, "수업 범위 없는 스튜디오");
+        Member manager = 회원을_저장한다("manager-no-session-scope");
+        StudioRole managerRole = 역할을_저장한다(studio, SystemRole.INSTRUCTOR);
+        소속을_저장한다(studio, manager, managerRole, MembershipStatus.ACTIVE);
+        권한을_저장한다(managerRole, PermissionCode.RESERVATION_MANAGE);
+        StudioMembership student = 학생_소속을_저장한다(
+                studio,
+                "student-no-session-scope",
+                MembershipStatus.ACTIVE
+        );
+        ClassSession classSession = 수업_회차를_저장한다(studio, owner, 시작_예정, 12);
+
+        // when / then
+        assertThatThrownBy(() -> commandService.save(
+                manager.getId(), studio.getId(), classSession.getId(), student.getId()))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.PERMISSION_DENIED.getMessage());
     }
 
     @Test
@@ -181,10 +254,27 @@ class ClassSessionInstructorEnrollmentCommandServiceTest {
     }
 
     @Test
+    void 강사_소속은_수업_회차에_예약할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("owner-instructor-target");
+        Studio studio = 시설을_저장한다(owner, "강사 예약 차단 스튜디오");
+        Member instructor = 회원을_저장한다("instructor-target");
+        StudioMembership instructorMembership = 강사_소속을_저장한다(studio, instructor);
+        ClassSession classSession = 수업_회차를_저장한다(studio, owner, 시작_예정, 12);
+
+        // when / then
+        assertThatThrownBy(() -> commandService.save(
+                owner.getId(), studio.getId(), classSession.getId(), instructorMembership.getId()))
+                .isInstanceOf(ClassException.class)
+                .hasMessage(ClassErrorCode.ENROLLMENT_MEMBER_NOT_FOUND.getMessage());
+    }
+
+    @Test
     void 다른_시설의_수업_회차에는_예약할_수_없다() {
         // given
         Member owner = 회원을_저장한다("owner-session-cross");
         Studio studio = 시설을_저장한다(owner, "회차 스튜디오");
+        강사_소속을_저장한다(studio, owner);
         Member otherOwner = 회원을_저장한다("owner-session-cross-other");
         Studio otherStudio = 시설을_저장한다(otherOwner, "남의 회차 스튜디오");
         StudioMembership student = 학생_소속을_저장한다(studio, "student-session-cross", MembershipStatus.ACTIVE);
@@ -319,6 +409,33 @@ class ClassSessionInstructorEnrollmentCommandServiceTest {
                 owner.getId(), studio.getId(), otherSession.getId(), enrollmentId))
                 .isInstanceOf(ClassException.class)
                 .hasMessage(ClassErrorCode.CLASS_SESSION_ENROLLMENT_NOT_FOUND.getMessage());
+    }
+
+    @Test
+    void 본인_수업_관리_권한이_있는_강사는_다른_강사_수업의_예약을_취소할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("owner-other-cancel");
+        Studio studio = 시설을_저장한다(owner, "다른 강사 예약 취소 스튜디오");
+        StudioMembership student = 학생_소속을_저장한다(
+                studio,
+                "student-other-cancel",
+                MembershipStatus.ACTIVE
+        );
+        ClassSession classSession = 수업_회차를_저장한다(studio, owner, 시작_예정, 12);
+        commandService.save(owner.getId(), studio.getId(), classSession.getId(), student.getId());
+        Long enrollmentId = 신청을_다시_읽는다(classSession.getId(), student.getId()).getId();
+
+        Member instructor = 회원을_저장한다("instructor-other-cancel");
+        StudioRole instructorRole = 역할을_저장한다(studio, SystemRole.INSTRUCTOR);
+        소속을_저장한다(studio, instructor, instructorRole, MembershipStatus.ACTIVE);
+        권한을_저장한다(instructorRole, PermissionCode.RESERVATION_MANAGE);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+
+        // when / then
+        assertThatThrownBy(() -> commandService.cancel(
+                instructor.getId(), studio.getId(), classSession.getId(), enrollmentId))
+                .isInstanceOf(ClassException.class)
+                .hasMessage(ClassErrorCode.CLASS_SESSION_NOT_FOUND.getMessage());
     }
 
     @Test

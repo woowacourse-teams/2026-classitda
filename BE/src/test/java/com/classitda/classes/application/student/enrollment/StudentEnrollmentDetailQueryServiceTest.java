@@ -157,19 +157,26 @@ class StudentEnrollmentDetailQueryServiceTest {
         entityManager.clear();
 
         // when
-        StudentEnrollmentDetailView reservedView = queryService.findOne(memberId, studioId, reserved.getId());
-        StudentEnrollmentDetailView waitingView = queryService.findOne(memberId, studioId, waiting.getId());
-        StudentEnrollmentDetailView offeredView = queryService.findOne(memberId, studioId, offered.getId());
-        StudentEnrollmentDetailView attendedView = queryService.findOne(memberId, studioId, attended.getId());
-        StudentEnrollmentDetailView absentView = queryService.findOne(memberId, studioId, absent.getId());
+        StudentEnrollmentDetailView reservedView = queryService.findOne(
+                memberId, studioId, reservedSession.getId(), reserved.getId());
+        StudentEnrollmentDetailView waitingView = queryService.findOne(
+                memberId, studioId, waitingSession.getId(), waiting.getId());
+        StudentEnrollmentDetailView offeredView = queryService.findOne(
+                memberId, studioId, offeredSession.getId(), offered.getId());
+        StudentEnrollmentDetailView attendedView = queryService.findOne(
+                memberId, studioId, attendedSession.getId(), attended.getId());
+        StudentEnrollmentDetailView absentView = queryService.findOne(
+                memberId, studioId, absentSession.getId(), absent.getId());
         StudentEnrollmentDetailView reservationCanceledView = queryService.findOne(
                 memberId,
                 studioId,
+                reservationCanceledSession.getId(),
                 reservationCanceled.getId()
         );
         StudentEnrollmentDetailView sessionCanceledView = queryService.findOne(
                 memberId,
                 studioId,
+                sessionCanceledSession.getId(),
                 sessionCanceled.getId()
         );
 
@@ -326,6 +333,7 @@ class StudentEnrollmentDetailQueryServiceTest {
         StudentEnrollmentDetailView targetView = queryService.findOne(
                 targetMemberId,
                 studioId,
+                context.classSession().getId(),
                 target.getId()
         );
         long waitingQueryCount = statistics.getPrepareStatementCount();
@@ -335,6 +343,7 @@ class StudentEnrollmentDetailQueryServiceTest {
         StudentEnrollmentDetailView offeredView = queryService.findOne(
                 offeredMemberId,
                 studioId,
+                context.classSession().getId(),
                 offered.getId()
         );
         long offeredQueryCount = statistics.getPrepareStatementCount();
@@ -347,9 +356,15 @@ class StudentEnrollmentDetailQueryServiceTest {
     }
 
     @Test
-    void 숨긴_이력과_소유하지_않은_신청은_같은_NOT_FOUND로_처리한다() {
+    void 숨긴_이력과_조회_범위를_벗어난_신청은_같은_NOT_FOUND로_처리한다() {
         // given
         DetailContext context = 기본_환경("not-found");
+        ClassSessionEnrollment ownedEnrollment = 신청을_저장한다(ClassSessionEnrollment.reserved(
+                context.studentMembership(),
+                context.classSession(),
+                context.memberPassProduct(),
+                ENROLLED_AT.minusMinutes(1)
+        ));
         ClassSessionEnrollment waitingCanceled = ClassSessionEnrollment.waiting(
                 context.studentMembership(),
                 context.classSession(),
@@ -373,11 +388,22 @@ class StudentEnrollmentDetailQueryServiceTest {
                 ENROLLED_AT.plusMinutes(4)
         ));
 
+        ClassSession otherSession = 수업을_저장한다(
+                context,
+                "다른 수업",
+                SESSION_START_AT.plusDays(1)
+        );
+
         DetailContext otherStudioContext = 기본_환경("other-studio");
         ClassSessionEnrollment otherStudioEnrollment = 신청을_저장한다(ClassSessionEnrollment.waiting(
                 otherStudioContext.studentMembership(),
                 otherStudioContext.classSession(),
                 ENROLLED_AT.plusMinutes(5)
+        ));
+        ClassSessionEnrollment crossStudioEnrollment = 신청을_저장한다(ClassSessionEnrollment.waiting(
+                context.studentMembership(),
+                otherStudioContext.classSession(),
+                ENROLLED_AT.plusMinutes(6)
         ));
 
         Long memberId = context.studentMembership().getMember().getId();
@@ -386,11 +412,29 @@ class StudentEnrollmentDetailQueryServiceTest {
         entityManager.clear();
 
         // when / then
-        assertEnrollmentNotFound(() -> queryService.findOne(memberId, studioId, Long.MAX_VALUE));
-        assertEnrollmentNotFound(() -> queryService.findOne(memberId, studioId, waitingCanceled.getId()));
-        assertEnrollmentNotFound(() -> queryService.findOne(memberId, studioId, expired.getId()));
-        assertEnrollmentNotFound(() -> queryService.findOne(memberId, studioId, otherEnrollment.getId()));
-        assertEnrollmentNotFound(() -> queryService.findOne(memberId, studioId, otherStudioEnrollment.getId()));
+        Long classSessionId = context.classSession().getId();
+        assertEnrollmentNotFound(() -> queryService.findOne(
+                memberId, studioId, classSessionId, Long.MAX_VALUE));
+        assertEnrollmentNotFound(() -> queryService.findOne(
+                memberId, studioId, classSessionId, waitingCanceled.getId()));
+        assertEnrollmentNotFound(() -> queryService.findOne(
+                memberId, studioId, classSessionId, expired.getId()));
+        assertEnrollmentNotFound(() -> queryService.findOne(
+                memberId, studioId, classSessionId, otherEnrollment.getId()));
+        assertEnrollmentNotFound(() -> queryService.findOne(
+                memberId, studioId, otherSession.getId(), ownedEnrollment.getId()));
+        assertEnrollmentNotFound(() -> queryService.findOne(
+                memberId,
+                studioId,
+                otherStudioContext.classSession().getId(),
+                otherStudioEnrollment.getId()
+        ));
+        assertEnrollmentNotFound(() -> queryService.findOne(
+                memberId,
+                studioId,
+                otherStudioContext.classSession().getId(),
+                crossStudioEnrollment.getId()
+        ));
     }
 
     @Test
@@ -432,27 +476,28 @@ class StudentEnrollmentDetailQueryServiceTest {
 
         // when / then
         assertStudioError(
-                () -> queryService.findOne(stranger.getId(), studioId, 1L),
+                () -> queryService.findOne(stranger.getId(), studioId, 1L, 1L),
                 StudioErrorCode.NOT_MEMBERSHIP
         );
         assertStudioError(
-                () -> queryService.findOne(inactiveStudent.getMember().getId(), studioId, 1L),
+                () -> queryService.findOne(inactiveStudent.getMember().getId(), studioId, 1L, 1L),
                 StudioErrorCode.MEMBERSHIP_INACTIVE
         );
         assertStudioError(
-                () -> queryService.findOne(ownerRole.getMember().getId(), studioId, 1L),
+                () -> queryService.findOne(ownerRole.getMember().getId(), studioId, 1L, 1L),
                 StudioErrorCode.PERMISSION_DENIED
         );
         assertStudioError(
                 () -> queryService.findOne(
                         context.instructorMembership().getMember().getId(),
                         studioId,
+                        1L,
                         1L
                 ),
                 StudioErrorCode.PERMISSION_DENIED
         );
         assertStudioError(
-                () -> queryService.findOne(customStaff.getMember().getId(), studioId, 1L),
+                () -> queryService.findOne(customStaff.getMember().getId(), studioId, 1L, 1L),
                 StudioErrorCode.PERMISSION_DENIED
         );
     }

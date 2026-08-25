@@ -2,24 +2,21 @@ package com.classitda.classes.presentation;
 
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
 import com.classitda.classes.application.ClassSessionCommandService;
-import com.classitda.classes.application.ClassSessionQueryService;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
-import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
-import com.classitda.classes.application.student.daily.StudentDailyQueryService;
+import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
+import com.classitda.classes.application.instructor.enrollment.InstructorSessionQueryService;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
-import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
-import com.classitda.classes.presentation.dto.MemberClassSessionListRequest;
-import com.classitda.classes.presentation.dto.MemberClassSessionResponse;
-import com.classitda.classes.presentation.dto.StudentCalendarListRequest;
-import com.classitda.classes.presentation.dto.StudentCalendarResponse;
+import com.classitda.classes.presentation.dto.StudioStudentResponse;
+import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
+import com.classitda.classes.presentation.dto.InstructorSessionDetailResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -36,16 +33,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
-@RequestMapping("/api/studios/{studioId}/class-sessions")
+@RequestMapping("/api/studios/{studioId}/instructor/class-sessions")
 @RestController
-public class ClassSessionController implements ClassSessionControllerApi {
+public class InstructorSessionController implements InstructorSessionControllerApi {
 
     private final ClassSessionCommandService classSessionCommandService;
-    private final ClassSessionQueryService classSessionQueryService;
-    private final StudentDailyQueryService studentDailyQueryService;
-    private final StudentCalendarQueryService studentCalendarQueryService;
     private final InstructorDailyQueryService instructorDailyQueryService;
     private final InstructorCalendarQueryService instructorCalendarQueryService;
+    private final InstructorSessionQueryService instructorSessionQueryService;
+    private final ClassSessionInstructorEnrollmentCommandService instructorEnrollmentCommandService;
 
     @Override
     @PostMapping(version = "1")
@@ -105,32 +101,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
     }
 
     @Override
-    @GetMapping(path = "/student/daily", version = "1")
-    // TODO(#68): 홀딩 기능 구현 후 홀딩 수강권 정보와 수업 목록을 함께 반환하는 응답 객체로 확장한다.
-    public List<MemberClassSessionResponse> findAllForStudent(
-            @CurrentMemberId Long memberId,
-            @PathVariable Long studioId,
-            @Valid @ModelAttribute MemberClassSessionListRequest request
-    ) {
-        return studentDailyQueryService.findAll(memberId, studioId, request.date()).stream()
-                .map(MemberClassSessionResponse::from)
-                .toList();
-    }
-
-    @Override
-    @GetMapping(path = "/student/calendar", version = "1")
-    public List<StudentCalendarResponse> findAllCalendarForStudent(
-            @CurrentMemberId Long memberId,
-            @PathVariable Long studioId,
-            @Valid @ModelAttribute StudentCalendarListRequest request
-    ) {
-        return studentCalendarQueryService.findAll(memberId, studioId, request.from(), request.to()).stream()
-                .map(StudentCalendarResponse::from)
-                .toList();
-    }
-
-    @Override
-    @GetMapping(path = "/instructor/daily", version = "1")
+    @GetMapping(path = "/daily", version = "1")
     public List<InstructorDailySessionResponse> findAllDailyForInstructor(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
@@ -142,7 +113,7 @@ public class ClassSessionController implements ClassSessionControllerApi {
     }
 
     @Override
-    @GetMapping(path = "/instructor/calendar", version = "1")
+    @GetMapping(path = "/calendar", version = "1")
     public List<InstructorCalendarResponse> findAllCalendarForInstructor(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
@@ -155,11 +126,49 @@ public class ClassSessionController implements ClassSessionControllerApi {
 
     @Override
     @GetMapping(path = "/{classSessionId}", version = "1")
-    public ClassSessionDetailResponse findOne(
+    public InstructorSessionDetailResponse findDetail(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long classSessionId
     ) {
-        return classSessionQueryService.findOne(memberId, studioId, classSessionId);
+        return InstructorSessionDetailResponse.from(
+                instructorSessionQueryService.findDetail(memberId, studioId, classSessionId)
+        );
+    }
+
+    @Override
+    @GetMapping(path = "/{classSessionId}/studio-students", version = "1")
+    public List<StudioStudentResponse> findAllStudioStudents(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classSessionId
+    ) {
+        return instructorSessionQueryService.findAllStudioStudents(memberId, studioId, classSessionId).stream()
+                .map(StudioStudentResponse::from)
+                .toList();
+    }
+
+    @Override
+    @PostMapping(path = "/{classSessionId}/enrollments", version = "1")
+    public ResponseEntity<Void> save(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classSessionId,
+            @Valid @RequestBody InstructorEnrollmentCreateRequest request
+    ) {
+        instructorEnrollmentCommandService.save(memberId, studioId, classSessionId, request.membershipId());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @Override
+    @DeleteMapping(path = "/{classSessionId}/enrollments/{enrollmentId}", version = "1")
+    public ResponseEntity<Void> cancel(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classSessionId,
+            @PathVariable Long enrollmentId
+    ) {
+        instructorEnrollmentCommandService.cancel(memberId, studioId, classSessionId, enrollmentId);
+        return ResponseEntity.noContent().build();
     }
 }
