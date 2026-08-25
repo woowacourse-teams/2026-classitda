@@ -5,7 +5,7 @@ import com.classitda.data.remote.api.ClassTemplatesApi
 import com.classitda.data.remote.api.ClassTypesApi
 import com.classitda.domain.model.instructor.management.ClassTemplate
 import com.classitda.domain.model.instructor.management.ClassType
-import com.classitda.domain.repository.instructor.management.ClassManagementException
+import com.classitda.domain.repository.instructor.management.ClassTemplateManagementException
 import com.classitda.domain.repository.instructor.management.ClassTemplateManagementRepository
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpStatusCode
@@ -63,17 +63,17 @@ private suspend fun <T> handlingApiErrors(block: suspend () -> T): T =
     try {
         block()
     } catch (e: ResponseException) {
-        throw e.toClassManagementException()
+        throw e.toClassTemplateManagementException()
     }
 
-private suspend fun ResponseException.toClassManagementException(): ClassManagementException {
+private suspend fun ResponseException.toClassTemplateManagementException(): ClassTemplateManagementException {
     val error = toErrorResponse()
     return when (response.status) {
-        HttpStatusCode.BadRequest -> ClassManagementException.InvalidRequest(error.code, error.message)
-        HttpStatusCode.Unauthorized -> ClassManagementException.Unauthorized(error.code, error.message)
-        HttpStatusCode.Forbidden -> ClassManagementException.Forbidden(error.code, error.message)
-        HttpStatusCode.NotFound -> ClassManagementException.NotFound(error.code, error.message)
-        HttpStatusCode.Conflict -> ClassManagementException.Conflict(error.code, error.message)
-        else -> ClassManagementException.Unknown(error.code, error.message)
+        HttpStatusCode.BadRequest -> ClassTemplateManagementException.InvalidRequest(error.code, error.message)
+        HttpStatusCode.Unauthorized -> ClassTemplateManagementException.Unauthorized(error.code, error.message)
+        HttpStatusCode.Forbidden -> ClassTemplateManagementException.Forbidden(error.code, error.message)
+        HttpStatusCode.NotFound -> ClassTemplateManagementException.NotFound(error.code, error.message)
+        HttpStatusCode.Conflict -> ClassTemplateManagementException.Conflict(error.code, error.message)
+        else -> ClassTemplateManagementException.Unknown(error.code, error.message)
     }
 }
