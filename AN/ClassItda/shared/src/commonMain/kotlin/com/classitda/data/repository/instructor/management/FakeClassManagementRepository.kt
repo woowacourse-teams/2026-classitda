@@ -1,5 +1,6 @@
 package com.classitda.data.repository.instructor.management
 
+import com.classitda.domain.model.instructor.management.ClassForm
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionMember
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
@@ -20,6 +21,7 @@ internal class FakeClassManagementRepository : ClassManagementRepository {
                 id = "1",
                 tags = listOf("그룹 수업", "필라테스"),
                 title = "리포머 밸런스",
+                classForm = ClassForm.GROUP,
                 durationMinutes = 50,
                 capacity = 8,
                 schedule =
@@ -33,6 +35,7 @@ internal class FakeClassManagementRepository : ClassManagementRepository {
                 id = "2",
                 tags = listOf("그룹 수업", "필라테스"),
                 title = "리포머 밸런스",
+                classForm = ClassForm.GROUP,
                 durationMinutes = 50,
                 capacity = 8,
                 schedule =
@@ -46,6 +49,7 @@ internal class FakeClassManagementRepository : ClassManagementRepository {
                 id = "3",
                 tags = listOf("개인 수업", "요가"),
                 title = "1:1 개인 수업",
+                classForm = ClassForm.INDIVIDUAL,
                 durationMinutes = 50,
                 capacity = 1,
                 schedule = null,

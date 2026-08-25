@@ -1,5 +1,6 @@
 package com.classitda.feature.instructor.management.lesson.create.util
 
+import com.classitda.domain.model.instructor.management.ClassForm
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.domain.model.instructor.management.ClassTemplate
@@ -18,6 +19,7 @@ internal fun ClassTemplateDraftUiModel.toClassTemplate(id: String): ClassTemplat
         id = id,
         tags = listOf(classType.label) + categories,
         title = title,
+        classForm = classType.toClassForm(),
         durationMinutes = durationMinutes,
         capacity = capacity,
         schedule =
@@ -79,6 +81,12 @@ internal fun ClassSessionDraftUiModel.toClassSessions(): List<ClassSession> {
         )
     }
 }
+
+internal fun ClassType.toClassForm(): ClassForm =
+    when (this) {
+        ClassType.GROUP -> ClassForm.GROUP
+        ClassType.PERSONAL -> ClassForm.INDIVIDUAL
+    }
 
 internal fun List<String>.classTypeOrNull(): ClassType? = ClassType.entries.firstOrNull { it.label in this }
 

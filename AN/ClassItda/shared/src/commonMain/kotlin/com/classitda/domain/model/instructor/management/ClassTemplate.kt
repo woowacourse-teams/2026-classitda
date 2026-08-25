@@ -7,11 +7,18 @@ data class ClassTemplate(
     val id: String,
     val tags: List<String>,
     val title: String,
+    val classForm: ClassForm,
     val durationMinutes: Int,
     val capacity: Int,
     val schedule: ClassTemplateSchedule? = null,
     val description: String = "",
+    val classTypeIds: List<String> = emptyList(),
 )
+
+enum class ClassForm {
+    INDIVIDUAL,
+    GROUP,
+}
 
 data class ClassTemplateSchedule(
     val startTime: LocalTime,
