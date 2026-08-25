@@ -2,9 +2,12 @@ package com.classitda.data.repository.instructor.mypage
 
 import com.classitda.data.remote.instructor.mypage.facility.StudioRemoteDataSource
 import com.classitda.data.remote.instructor.mypage.facility.StudioResponseDto
+import com.classitda.data.remote.instructor.mypage.facility.StudioUpdateRequestDto
 import com.classitda.data.remote.instructor.mypage.facility.toDomain
 import com.classitda.data.remote.instructor.mypage.facility.toStudioCreateRequestDto
+import com.classitda.data.remote.instructor.mypage.facility.toStudioUpdateRequestDto
 import com.classitda.data.remote.instructor.mypage.facility.toWireId
+import com.classitda.domain.model.instructor.mypage.FacilityImageMutation
 import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
@@ -12,6 +15,7 @@ import com.classitda.domain.model.instructor.mypage.ManagedFacility
 import com.classitda.domain.model.instructor.mypage.UploadedFacilityImage
 import com.classitda.domain.repository.instructor.mypage.FacilityImageUploader
 import com.classitda.domain.repository.instructor.mypage.FacilityList
+import com.classitda.domain.repository.instructor.mypage.FacilityUpdateOperation
 import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
@@ -31,6 +35,7 @@ internal class RemoteInstructorFacilityRepository(
     private val imageUploader: FacilityImageUploader? = null,
 ) : InstructorFacilityRepository {
     private var pendingCreate: PendingFacilityCreate? = null
+    private var pendingUpdate: PendingFacilityUpdate? = null
 
     private suspend fun resolveCreateImage(draft: FacilityRegistrationDraft): UploadedFacilityImage? =
         when (val image = draft.image) {
@@ -48,8 +53,13 @@ internal class RemoteInstructorFacilityRepository(
                     ?.uploadedImage
                     ?: imageUploader?.upload(image)?.let { result ->
                         when (result) {
-                            is InstructorMyPageResult.Success -> result.value
-                            is InstructorMyPageResult.Failure -> throw FacilityImageUploadFailure(result.reason)
+                            is InstructorMyPageResult.Success -> {
+                                result.value
+                            }
+
+                            is InstructorMyPageResult.Failure -> {
+                                throw FacilityImageUploadFailure(result.reason)
+                            }
                         }
                     }
                     ?: throw FacilityImageUploadFailure(InstructorMyPageFailureReason.INVALID_REQUEST)
@@ -103,8 +113,120 @@ internal class RemoteInstructorFacilityRepository(
 
     override suspend fun updateFacility(
         facilityId: InstructorFacilityId,
+        original: ManagedFacility,
         draft: FacilityRegistrationDraft,
-    ): InstructorMyPageResult<Unit> = throw UnsupportedOperationException("시설 수정 API는 P7에서 연결합니다.")
+        imageMutation: FacilityImageMutation,
+    ): InstructorMyPageResult<Unit> {
+        val studioId =
+            when (val result = facilityId.toWireId()) {
+                is InstructorMyPageResult.Success -> result.value
+                is InstructorMyPageResult.Failure -> return result
+            }
+
+        val previous =
+            pendingUpdate?.takeIf {
+                it.facilityId == facilityId &&
+                    it.original == original &&
+                    it.imageMutation == imageMutation
+            }
+        val generalDraftChanged = previous != null && previous.draft.copy(image = null) != draft.copy(image = null)
+        val completedOperations =
+            if (generalDraftChanged) {
+                previous.completedOperations - FacilityUpdateOperation.PATCH
+            } else {
+                previous?.completedOperations.orEmpty()
+            }
+        pendingUpdate =
+            PendingFacilityUpdate(
+                facilityId = facilityId,
+                original = original,
+                draft = draft,
+                imageMutation = imageMutation,
+                uploadedImage = previous?.uploadedImage,
+                completedOperations = completedOperations,
+            )
+
+        return runUpdateQuery {
+            val uploadedImage = resolveUpdateImage(draft, imageMutation)
+            val request =
+                when (val result = original.toStudioUpdateRequestDto(draft, imageMutation, uploadedImage)) {
+                    is InstructorMyPageResult.Success -> result.value
+                    is InstructorMyPageResult.Failure -> return@runUpdateQuery result
+                }
+            val shouldPatch = request.hasGeneralChanges() || imageMutation is FacilityImageMutation.Replace
+            if (shouldPatch && FacilityUpdateOperation.PATCH !in currentPendingOperations()) {
+                remoteDataSource.update(studioId, request)
+                markUpdateOperationCompleted(FacilityUpdateOperation.PATCH)
+            }
+            if (imageMutation is FacilityImageMutation.Remove &&
+                FacilityUpdateOperation.DELETE_IMAGE !in currentPendingOperations()
+            ) {
+                remoteDataSource.deleteImage(studioId)
+                markUpdateOperationCompleted(FacilityUpdateOperation.DELETE_IMAGE)
+            }
+            pendingUpdate = null
+            InstructorMyPageResult.Success(Unit)
+        }
+    }
+
+    private suspend fun resolveUpdateImage(
+        draft: FacilityRegistrationDraft,
+        imageMutation: FacilityImageMutation,
+    ): UploadedFacilityImage? =
+        when (imageMutation) {
+            FacilityImageMutation.Unchanged, FacilityImageMutation.Remove -> {
+                null
+            }
+
+            is FacilityImageMutation.Replace -> {
+                val localImage = imageMutation.image
+                if (draft.image != localImage) {
+                    throw FacilityImageUploadFailure(InstructorMyPageFailureReason.INVALID_REQUEST)
+                }
+                pendingUpdate?.uploadedImage
+                    ?: imageUploader?.upload(localImage)?.let { result ->
+                        when (result) {
+                            is InstructorMyPageResult.Success -> {
+                                pendingUpdate = pendingUpdate?.copy(uploadedImage = result.value)
+                                result.value
+                            }
+
+                            is InstructorMyPageResult.Failure -> {
+                                throw FacilityImageUploadFailure(result.reason)
+                            }
+                        }
+                    }
+                    ?: throw FacilityImageUploadFailure(InstructorMyPageFailureReason.INVALID_REQUEST)
+            }
+        }
+
+    private fun currentPendingOperations(): Set<FacilityUpdateOperation> = pendingUpdate?.completedOperations.orEmpty()
+
+    private fun markUpdateOperationCompleted(operation: FacilityUpdateOperation) {
+        pendingUpdate =
+            pendingUpdate?.copy(
+                completedOperations = currentPendingOperations() + operation,
+            )
+    }
+
+    private suspend inline fun <T> runUpdateQuery(
+        block: suspend () -> InstructorMyPageResult<T>,
+    ): InstructorMyPageResult<T> =
+        try {
+            block()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: ResponseException) {
+            InstructorMyPageResult.Failure(
+                reason = exception.toFacilityFailureReason(),
+                completedFacilityUpdateOperations = currentPendingOperations(),
+            )
+        } catch (exception: Throwable) {
+            InstructorMyPageResult.Failure(
+                reason = exception.toFacilityFailureReason(),
+                completedFacilityUpdateOperations = currentPendingOperations(),
+            )
+        }
 }
 
 private suspend inline fun <T> runRemoteQuery(
@@ -123,6 +245,15 @@ private suspend inline fun <T> runRemoteQuery(
 private data class PendingFacilityCreate(
     val draft: FacilityRegistrationDraft,
     val uploadedImage: UploadedFacilityImage,
+)
+
+private data class PendingFacilityUpdate(
+    val facilityId: InstructorFacilityId,
+    val original: ManagedFacility,
+    val draft: FacilityRegistrationDraft,
+    val imageMutation: FacilityImageMutation,
+    val uploadedImage: UploadedFacilityImage?,
+    val completedOperations: Set<FacilityUpdateOperation>,
 )
 
 private class FacilityImageUploadFailure(
@@ -149,6 +280,14 @@ private suspend fun ResponseException.toFacilityFailureReason(): InstructorMyPag
     return when (code) {
         "STUDIO-008" -> {
             InstructorMyPageFailureReason.CONFLICT
+        }
+
+        "PERMISSION-001", "MEMBERSHIP-001" -> {
+            InstructorMyPageFailureReason.FORBIDDEN
+        }
+
+        "STUDIO-002" -> {
+            InstructorMyPageFailureReason.NOT_FOUND
         }
 
         "COMMON-001", "STUDIO-001", "STUDIO-007", "API-001" -> {
@@ -199,3 +338,11 @@ private fun errorCodeFrom(body: String): String? =
     }.getOrNull()
 
 private val facilityErrorJson = Json { ignoreUnknownKeys = true }
+
+private fun StudioUpdateRequestDto.hasGeneralChanges(): Boolean =
+    name != null ||
+        address != null ||
+        phoneNumber != null ||
+        openTime != null ||
+        closeTime != null ||
+        description != null

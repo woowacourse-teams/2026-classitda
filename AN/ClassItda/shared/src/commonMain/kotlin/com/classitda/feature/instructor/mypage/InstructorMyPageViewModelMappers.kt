@@ -164,6 +164,8 @@ internal fun InstructorMyPageFailureReason.toFacilityEditError() =
     when (this) {
         InstructorMyPageFailureReason.NETWORK -> FacilityEditUiError.NETWORK
         InstructorMyPageFailureReason.NOT_FOUND -> FacilityEditUiError.NOT_FOUND
+        InstructorMyPageFailureReason.FORBIDDEN -> FacilityEditUiError.FORBIDDEN
+        InstructorMyPageFailureReason.CONFLICT -> FacilityEditUiError.CONFLICT
         InstructorMyPageFailureReason.INVALID_REQUEST -> FacilityEditUiError.INVALID_REQUEST
         else -> FacilityEditUiError.UNKNOWN
     }

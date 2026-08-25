@@ -112,6 +112,78 @@ class FacilityWireMapperTest {
     }
 
     @Test
+    fun `시설 수정 mapper는 변경된 일반 필드만 포함한다`() {
+        val original = validManagedFacility()
+        val draft = validDraft(image = original.image).copy(name = "변경된 시설")
+
+        val result =
+            assertIs<InstructorMyPageResult.Success<StudioUpdateRequestDto>>(
+                original.toStudioUpdateRequestDto(draft, FacilityImageMutation.Unchanged),
+            )
+        val encoded = json.encodeToString(result.value)
+
+        assertEquals("변경된 시설", result.value.name)
+        assertNull(result.value.address)
+        assertNull(result.value.phoneNumber)
+        assertNull(result.value.openTime)
+        assertNull(result.value.closeTime)
+        assertNull(result.value.description)
+        assertNull(result.value.image)
+        assertTrue(encoded.contains("\"name\":\"변경된 시설\""))
+        assertFalse(encoded.contains("address"))
+    }
+
+    @Test
+    fun `주소가 변경되면 주소 다섯 값을 모두 포함한다`() {
+        val original = validManagedFacility()
+        val changedAddress =
+            validAddress().copy(
+                zoneCode = "13529",
+                roadAddress = "서울특별시 강남구 테헤란로 1",
+                jibunAddress = "서울특별시 강남구 역삼동 1",
+                buildingName = "새 빌딩",
+                detailAddress = "2층",
+            )
+        val draft = validDraft(image = original.image).copy(address = changedAddress)
+
+        val request =
+            assertIs<InstructorMyPageResult.Success<StudioUpdateRequestDto>>(
+                original.toStudioUpdateRequestDto(draft, FacilityImageMutation.Unchanged),
+            ).value
+
+        assertEquals(changedAddress.zoneCode, request.address?.zoneCode)
+        assertEquals(changedAddress.roadAddress, request.address?.roadAddress)
+        assertEquals(changedAddress.jibunAddress, request.address?.jibunAddress)
+        assertEquals(changedAddress.buildingName, request.address?.buildingName)
+        assertEquals(changedAddress.detailAddress, request.address?.detailAddress)
+    }
+
+    @Test
+    fun `이미지 교체는 objectKey를 사용하고 제거는 image를 보내지 않는다`() {
+        val original = validManagedFacility()
+        val replacement = localImage()
+        val replacementDraft = validDraft(image = replacement)
+        val replacementRequest =
+            assertIs<InstructorMyPageResult.Success<StudioUpdateRequestDto>>(
+                original.toStudioUpdateRequestDto(
+                    replacementDraft,
+                    FacilityImageMutation.Replace(replacement),
+                    UploadedFacilityImage("studio-images/new.jpg"),
+                ),
+            ).value
+        assertEquals("studio-images/new.jpg", replacementRequest.image)
+        assertFalse(replacementRequest.image!!.contains(replacement.handle))
+
+        val removeDraft = validDraft(image = null)
+        val removeRequest =
+            assertIs<InstructorMyPageResult.Success<StudioUpdateRequestDto>>(
+                original.toStudioUpdateRequestDto(removeDraft, FacilityImageMutation.Remove),
+            ).value
+        assertNull(removeRequest.image)
+        assertFalse(json.encodeToString(removeRequest).contains("image"))
+    }
+
+    @Test
     fun `업로드 URL 요청 JSON은 확장자와 실제 파일 크기를 사용한다`() {
         val request = ImageUploadUrlRequestDto(extension = "webp", size = 5L * 1024L * 1024L)
 
@@ -258,5 +330,17 @@ class FacilityWireMapperTest {
             closeTime = "22:00:00",
             image = "https://cdn.classitda.com/studio.jpg",
             description = "시설 설명",
+        )
+
+    private fun validManagedFacility() =
+        com.classitda.domain.model.instructor.mypage.ManagedFacility(
+            id = InstructorFacilityId("42"),
+            name = "클래스잇다 스튜디오",
+            address = validAddress(),
+            image = FacilityImageSelection.Remote("https://cdn.classitda.com/studio.jpg"),
+            phoneNumber = "031-123-4567",
+            description = "시설 설명",
+            openingTime = "09:00",
+            closingTime = "22:00",
         )
 }

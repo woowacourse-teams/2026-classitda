@@ -2,7 +2,10 @@ package com.classitda.feature.instructor.mypage.facility
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.domain.model.instructor.mypage.FacilityImageMutation
+import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
+import com.classitda.domain.model.instructor.mypage.ManagedFacility
 import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
@@ -25,6 +28,7 @@ internal class FacilityEditViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<FacilityEditUiState>(FacilityEditUiState.Loading)
     val uiState: StateFlow<FacilityEditUiState> = _uiState.asStateFlow()
+    private var originalFacility: ManagedFacility? = null
 
     init {
         refresh()
@@ -112,11 +116,13 @@ internal class FacilityEditViewModel(
     }
 
     fun refresh() {
+        originalFacility = null
         _uiState.value = FacilityEditUiState.Loading
         viewModelScope.launch {
             _uiState.value =
                 when (val result = repository.getFacility(facilityId)) {
                     is InstructorMyPageResult.Success -> {
+                        originalFacility = result.value
                         editing(result.value.toFacilityInputUiModel())
                     }
 
@@ -151,10 +157,22 @@ internal class FacilityEditViewModel(
             return
         }
         val domainDraft = state.draft.toFacilityRegistrationDraft()
+        val original = originalFacility ?: return
+        val imageMutation = original.imageMutationFor(domainDraft.image)
+        if (imageMutation == null) {
+            _uiState.value =
+                state.copy(
+                    canSubmit = false,
+                    fieldErrors =
+                        state.fieldErrors +
+                            com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField.IMAGE,
+                )
+            return
+        }
         _uiState.value = FacilityEditUiState.Submitting(facilityId, state.draft)
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.updateFacility(facilityId, domainDraft)) {
+                when (val result = repository.updateFacility(facilityId, original, domainDraft, imageMutation)) {
                     is InstructorMyPageResult.Success -> {
                         FacilityEditUiState.Success(facilityId)
                     }
@@ -165,9 +183,17 @@ internal class FacilityEditViewModel(
                             draft = state.draft,
                             reason = result.reason.toFacilityEditError(),
                             isSubmitFailure = true,
+                            completedOperations = result.completedFacilityUpdateOperations,
                         )
                     }
                 }
         }
     }
 }
+
+private fun ManagedFacility.imageMutationFor(selection: FacilityImageSelection?): FacilityImageMutation? =
+    when (selection) {
+        null -> if (image == null) FacilityImageMutation.Unchanged else FacilityImageMutation.Remove
+        is FacilityImageSelection.Local -> FacilityImageMutation.Replace(selection)
+        is FacilityImageSelection.Remote -> if (image == selection) FacilityImageMutation.Unchanged else null
+    }

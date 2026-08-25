@@ -1,6 +1,7 @@
 package com.classitda.data.remote.instructor.mypage.facility
 
 import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageMutation
 import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
@@ -78,6 +79,65 @@ internal fun FacilityRegistrationDraft.toStudioCreateRequestDto(
     )
 }
 
+internal fun ManagedFacility.toStudioUpdateRequestDto(
+    draft: FacilityRegistrationDraft,
+    imageMutation: FacilityImageMutation,
+    uploadedImage: UploadedFacilityImage? = null,
+): InstructorMyPageResult<StudioUpdateRequestDto> {
+    val name =
+        draft.name.takeUnless { it == this.name }?.also {
+            if (it.isBlank() || it.length > STUDIO_NAME_MAX_LENGTH) return invalidRequest()
+        }
+    val address =
+        if (draft.address != this.address) {
+            when (val result = draft.address.toAddressRequestDto()) {
+                is InstructorMyPageResult.Success -> result.value
+                is InstructorMyPageResult.Failure -> return result
+            }
+        } else {
+            null
+        }
+    val phoneNumber =
+        draft.phoneNumber.takeUnless { it == this.phoneNumber }?.also {
+            if (it.isBlank() || it.length > PHONE_NUMBER_MAX_LENGTH) return invalidRequest()
+        }
+    val openingTimeChanged = draft.openingTime != this.openingTime
+    val closingTimeChanged = draft.closingTime != this.closingTime
+    if (openingTimeChanged || closingTimeChanged) {
+        if (!draft.openingTime.isParsableTime() || !draft.closingTime.isParsableTime()) return invalidRequest()
+        if (draft.closingTime.toMinutes() <= draft.openingTime.toMinutes()) return invalidRequest()
+    }
+    val mappedImage =
+        when (imageMutation) {
+            FacilityImageMutation.Unchanged -> {
+                if (draft.image != this.image) return invalidRequest()
+                null
+            }
+
+            is FacilityImageMutation.Replace -> {
+                if (draft.image != imageMutation.image) return invalidRequest()
+                uploadedImage?.objectKey ?: return invalidRequest()
+            }
+
+            FacilityImageMutation.Remove -> {
+                if (draft.image != null || this.image == null) return invalidRequest()
+                null
+            }
+        }
+
+    return InstructorMyPageResult.Success(
+        StudioUpdateRequestDto(
+            name = name,
+            address = address,
+            phoneNumber = phoneNumber,
+            openTime = draft.openingTime.takeIf { openingTimeChanged },
+            closeTime = draft.closingTime.takeIf { closingTimeChanged },
+            image = mappedImage,
+            description = draft.description.takeIf { it != this.description },
+        ),
+    )
+}
+
 internal fun AddressResponseDto.toDomain(): InstructorMyPageResult<FacilityAddress> {
     val requiredZoneCode = zoneCode?.takeIf(String::isNotBlank) ?: return contractFailure()
     val requiredRoadAddress = roadAddress?.takeIf(String::isNotBlank) ?: return contractFailure()
@@ -136,7 +196,9 @@ private fun String.isFiveDigitZoneCode(): Boolean = length == ZONE_CODE_LENGTH &
 
 private fun String.isValidTime(): Boolean = HH_MM_PATTERN.matches(this)
 
-private fun String.toMinutes(): Int = substringBefore(':').toInt() * 60 + substringAfter(':').toInt()
+private fun String.isParsableTime(): Boolean = matches(Regex("(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?"))
+
+private fun String.toMinutes(): Int = substringBefore(':').toInt() * 60 + substringAfter(':').take(2).toInt()
 
 private fun invalidRequest() = InstructorMyPageResult.Failure(InstructorMyPageFailureReason.INVALID_REQUEST)
 

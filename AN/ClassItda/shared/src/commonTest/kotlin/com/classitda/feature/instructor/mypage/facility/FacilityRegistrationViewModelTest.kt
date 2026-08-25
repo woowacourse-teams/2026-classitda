@@ -1,6 +1,7 @@
 package com.classitda.feature.instructor.mypage.facility
 
 import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageMutation
 import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
@@ -118,6 +119,8 @@ private object NoOpFacilityRepository : InstructorFacilityRepository {
 
     override suspend fun updateFacility(
         facilityId: InstructorFacilityId,
+        original: ManagedFacility,
         draft: FacilityRegistrationDraft,
+        imageMutation: FacilityImageMutation,
     ): InstructorMyPageResult<Unit> = error("not used")
 }

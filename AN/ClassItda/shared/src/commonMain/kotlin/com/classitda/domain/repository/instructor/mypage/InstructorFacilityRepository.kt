@@ -1,5 +1,6 @@
 package com.classitda.domain.repository.instructor.mypage
 
+import com.classitda.domain.model.instructor.mypage.FacilityImageMutation
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.ManagedFacility
@@ -14,6 +15,8 @@ interface InstructorFacilityRepository {
 
     suspend fun updateFacility(
         facilityId: InstructorFacilityId,
+        original: ManagedFacility,
         draft: FacilityRegistrationDraft,
+        imageMutation: FacilityImageMutation,
     ): InstructorMyPageResult<Unit>
 }

@@ -10,4 +10,15 @@ internal class StudioRemoteDataSource(
     suspend fun create(request: StudioCreateRequestDto) {
         api.create(request)
     }
+
+    suspend fun update(
+        studioId: Long,
+        request: StudioUpdateRequestDto,
+    ) {
+        api.update(studioId, request)
+    }
+
+    suspend fun deleteImage(studioId: Long) {
+        api.deleteImage(studioId)
+    }
 }

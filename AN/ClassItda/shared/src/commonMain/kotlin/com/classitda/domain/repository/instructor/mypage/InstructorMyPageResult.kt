@@ -10,7 +10,13 @@ sealed interface InstructorMyPageResult<out T> {
 
     data class Failure(
         val reason: InstructorMyPageFailureReason,
+        val completedFacilityUpdateOperations: Set<FacilityUpdateOperation> = emptySet(),
     ) : InstructorMyPageResult<Nothing>
+}
+
+enum class FacilityUpdateOperation {
+    PATCH,
+    DELETE_IMAGE,
 }
 
 enum class InstructorMyPageFailureReason {

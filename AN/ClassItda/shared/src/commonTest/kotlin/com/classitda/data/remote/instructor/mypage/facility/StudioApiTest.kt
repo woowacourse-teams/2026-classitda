@@ -15,6 +15,7 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -101,6 +102,52 @@ class StudioApiTest {
             } finally {
                 client.close()
             }
+        }
+
+    @Test
+    fun `수정과 대표 이미지 삭제는 확정 PATCH DELETE와 204 no body를 사용한다`() =
+        runBlocking {
+            var requestIndex = 0
+            val engine =
+                MockEngine { request ->
+                    assertEquals("1", request.headers["X-API-Version"])
+                    assertEquals("Bearer access-token", request.headers[HttpHeaders.Authorization])
+                    when (requestIndex++) {
+                        0 -> {
+                            assertEquals(HttpMethod.Patch, request.method)
+                            assertEquals("/api/studios/42", request.url.encodedPath)
+                            val body = request.body.toByteArray().decodeToString()
+                            assertTrue(body.contains("\"name\":\"변경 시설\""))
+                            assertFalse(body.contains("phoneNumber"))
+                            respond("", status = HttpStatusCode.NoContent)
+                        }
+
+                        1 -> {
+                            assertEquals(HttpMethod.Delete, request.method)
+                            assertEquals("/api/studios/42/image", request.url.encodedPath)
+                            respond("", status = HttpStatusCode.NoContent)
+                        }
+
+                        else -> {
+                            error("예상하지 못한 요청입니다: ${request.url}")
+                        }
+                    }
+                }
+            val tokenStorage = InMemoryAuthTokenStorage().apply { write(testTokens) }
+            val client =
+                com.classitda.core.network.createClassItdaHttpClient(
+                    engine,
+                    BASE_URL,
+                    tokenStorage,
+                )
+
+            try {
+                StudioApi(client).update(42, StudioUpdateRequestDto(name = "변경 시설"))
+                StudioApi(client).deleteImage(42)
+            } finally {
+                client.close()
+            }
+            assertEquals(2, requestIndex)
         }
 
     private companion object {

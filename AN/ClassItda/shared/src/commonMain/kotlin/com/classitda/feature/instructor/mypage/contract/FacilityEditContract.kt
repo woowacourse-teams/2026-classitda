@@ -2,6 +2,7 @@ package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.FacilityAddress
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
+import com.classitda.domain.repository.instructor.mypage.FacilityUpdateOperation
 
 sealed interface FacilityEditUiState {
     data object Loading : FacilityEditUiState
@@ -28,12 +29,15 @@ sealed interface FacilityEditUiState {
         val draft: FacilityInputUiModel,
         val reason: FacilityEditUiError,
         val isSubmitFailure: Boolean = false,
+        val completedOperations: Set<FacilityUpdateOperation> = emptySet(),
     ) : FacilityEditUiState
 }
 
 enum class FacilityEditUiError {
     NETWORK,
     NOT_FOUND,
+    FORBIDDEN,
+    CONFLICT,
     INVALID_REQUEST,
     UNKNOWN,
 }

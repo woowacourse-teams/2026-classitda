@@ -1,5 +1,6 @@
 package com.classitda.data.repository.instructor.mypage
 
+import com.classitda.domain.model.instructor.mypage.FacilityImageMutation
 import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.ManagedFacility
@@ -37,7 +38,12 @@ class DemoInstructorMyPageRepositoryTest {
             assertEquals(InstructorMyPageResult.Success(Unit), repository.registerFacility(draft))
             assertEquals(
                 InstructorMyPageResult.Success(Unit),
-                repository.updateFacility(InstructorFacilityId("facility-1"), draft),
+                repository.updateFacility(
+                    InstructorFacilityId("facility-1"),
+                    ManagedFacility(InstructorFacilityId("facility-1"), name = "기존 시설"),
+                    draft,
+                    FacilityImageMutation.Unchanged,
+                ),
             )
         }
 }

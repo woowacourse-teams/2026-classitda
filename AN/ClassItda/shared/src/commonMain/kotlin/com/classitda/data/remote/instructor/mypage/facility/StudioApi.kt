@@ -2,8 +2,10 @@ package com.classitda.data.remote.instructor.mypage.facility
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -27,5 +29,19 @@ internal class StudioApi(
             header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(request)
         }
+    }
+
+    suspend fun update(
+        studioId: Long,
+        request: StudioUpdateRequestDto,
+    ) {
+        client.patch("api/studios/$studioId") {
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            setBody(request)
+        }
+    }
+
+    suspend fun deleteImage(studioId: Long) {
+        client.delete("api/studios/$studioId/image")
     }
 }

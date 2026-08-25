@@ -59,6 +59,7 @@ private fun FacilityEditUiState.toRegistrationUiState(): FacilityRegistrationUiS
             FacilityRegistrationUiState.Error(
                 draft = draft,
                 reason = reason.toRegistrationError(),
+                completedOperations = completedOperations,
             )
         }
     }
@@ -86,6 +87,8 @@ private fun FacilityRegistrationAction.toEditAction(): FacilityEditAction =
 private fun FacilityEditUiError.toRegistrationError() =
     when (this) {
         FacilityEditUiError.NETWORK -> FacilityRegistrationUiError.NETWORK
+        FacilityEditUiError.FORBIDDEN -> FacilityRegistrationUiError.FORBIDDEN
+        FacilityEditUiError.CONFLICT -> FacilityRegistrationUiError.CONFLICT
         FacilityEditUiError.INVALID_REQUEST -> FacilityRegistrationUiError.INVALID_REQUEST
         FacilityEditUiError.NOT_FOUND -> FacilityRegistrationUiError.UNKNOWN
         FacilityEditUiError.UNKNOWN -> FacilityRegistrationUiError.UNKNOWN

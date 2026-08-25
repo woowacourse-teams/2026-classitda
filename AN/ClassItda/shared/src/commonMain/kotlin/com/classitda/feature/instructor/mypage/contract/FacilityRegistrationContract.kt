@@ -1,6 +1,7 @@
 package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.repository.instructor.mypage.FacilityUpdateOperation
 
 sealed interface FacilityRegistrationUiState {
     data object Loading : FacilityRegistrationUiState
@@ -19,6 +20,7 @@ sealed interface FacilityRegistrationUiState {
     data class Error(
         val draft: FacilityInputUiModel,
         val reason: FacilityRegistrationUiError,
+        val completedOperations: Set<FacilityUpdateOperation> = emptySet(),
     ) : FacilityRegistrationUiState
 }
 
@@ -35,6 +37,7 @@ enum class FacilityRegistrationField {
 
 enum class FacilityRegistrationUiError {
     NETWORK,
+    FORBIDDEN,
     CONFLICT,
     INVALID_REQUEST,
     UNKNOWN,
