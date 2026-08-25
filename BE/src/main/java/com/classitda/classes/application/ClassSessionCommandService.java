@@ -1,16 +1,19 @@
 package com.classitda.classes.application;
 
-import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.session.ClassSession;
-import com.classitda.classes.domain.session.ClassSessionClassType;
-import com.classitda.classes.domain.session.ClassSessionDatePlan;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.session.ClassSessionClassType;
+import com.classitda.classes.domain.session.ClassSessionDatePlan;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.PermissionCode;
 import com.classitda.studio.domain.Studio;
@@ -42,13 +45,31 @@ public class ClassSessionCommandService {
     private final StudioRolePermissionRepository studioRolePermissionRepository;
     private final Clock clock;
 
-    public void save(Long memberId, Long studioId, ClassSessionCreateRequest request) {
+    public void saveV1(Long memberId, Long studioId, ClassSessionCreateV1Request request) {
         Studio studio = getStudio(studioId);
         StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
-        validateManagePermission(studio, requesterMembership, request.instructorMembershipId(), memberId);
+        validateManagePermission(studio, requesterMembership, requesterMembership.getId());
+        validateInstructorForCreate(requesterMembership);
 
-        StudioMembership instructorMembership = getInstructorForCreate(studioId, request.instructorMembershipId());
+        saveClassSessions(studioId, requesterMembership, request);
+    }
 
+    public void saveV2(Long memberId, Long studioId, ClassSessionCreateV2Request request) {
+        Studio studio = getStudio(studioId);
+        StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
+        validateManagePermission(studio, requesterMembership, request.instructorMembershipId());
+
+        StudioMembership instructorMembership = getActiveInstructorMembership(
+                studioId, request.instructorMembershipId());
+
+        saveClassSessions(studioId, instructorMembership, request);
+    }
+
+    private void saveClassSessions(
+            Long studioId,
+            StudioMembership instructorMembership,
+            ClassSessionCreateRequest request
+    ) {
         validateClassType(studioId, request.classTypeId());
 
         List<LocalDate> sessionDates = ClassSessionDatePlan.of(
@@ -70,24 +91,54 @@ public class ClassSessionCommandService {
         saveClassSessionClassTypes(savedClassSessions, request.classTypeId());
     }
 
-    public void update(Long memberId, Long studioId, Long classSessionId, ClassSessionUpdateRequest request) {
+    public void updateV1(Long memberId, Long studioId, Long classSessionId, ClassSessionUpdateV1Request request) {
         Studio studio = getStudio(studioId);
         StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
-        ClassSession classSession = classSessionRepository
-                .findByIdAndStudioId(classSessionId, studioId)
-                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
+        ClassSession classSession = getClassSession(studioId, classSessionId);
 
         validateManagePermission(
                 studio,
                 requesterMembership,
-                classSession.getInstructorMembership().getId(),
-                memberId
+                classSession.getInstructorMembership().getId()
         );
 
-        updateClassSessionDetails(classSession, request);
-        if (request.classTypeId() != null) {
-            updateClassSessionClassType(studioId, classSessionId, request.classTypeId());
+        updateClassSession(studioId, classSession, classSession.getInstructorMembership(), request);
+    }
+
+    public void updateV2(Long memberId, Long studioId, Long classSessionId, ClassSessionUpdateV2Request request) {
+        Studio studio = getStudio(studioId);
+        StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
+        ClassSession classSession = getClassSession(studioId, classSessionId);
+
+        Long currentInstructorMembershipId = classSession.getInstructorMembership().getId();
+        Long targetInstructorMembershipId = request.instructorMembershipId();
+
+        boolean instructorChanged =
+                !currentInstructorMembershipId.equals(targetInstructorMembershipId);
+        if (instructorChanged) {
+            validateManageAllPermission(studio, requesterMembership);
+        } else {
+            validateManagePermission(
+                    studio,
+                    requesterMembership,
+                    currentInstructorMembershipId
+            );
         }
+
+        StudioMembership instructorMembership
+                = getActiveInstructorMembership(studioId, targetInstructorMembershipId);
+        updateClassSession(studioId, classSession, instructorMembership, request);
+    }
+
+    private void updateClassSession(
+            Long studioId,
+            ClassSession classSession,
+            StudioMembership instructorMembership,
+            ClassSessionUpdateRequest request
+    ) {
+        validateClassType(studioId, request.classTypeId());
+        updateClassSessionDetails(classSession, instructorMembership, request);
+        updateClassSessionClassType(classSession.getId(), request.classTypeId());
     }
 
     public void cancel(Long memberId, Long studioId, Long classSessionId) {
@@ -100,8 +151,7 @@ public class ClassSessionCommandService {
         validateManagePermission(
                 studio,
                 requesterMembership,
-                classSession.getInstructorMembership().getId(),
-                memberId
+                classSession.getInstructorMembership().getId()
         );
 
         classSession.cancel(LocalDateTime.now(clock));
@@ -125,7 +175,15 @@ public class ClassSessionCommandService {
         return membership;
     }
 
-    private StudioMembership getInstructorForCreate(Long studioId, Long instructorMembershipId) {
+    private ClassSession getClassSession(Long studioId, Long classSessionId) {
+        return classSessionRepository.findByIdAndStudioId(classSessionId, studioId)
+                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
+    }
+
+    private StudioMembership getActiveInstructorMembership(Long studioId, Long instructorMembershipId) {
+        if (instructorMembershipId == null) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_INSTRUCTOR_NOT_FOUND);
+        }
         return studioMembershipRepository.findByIdAndStudioId(instructorMembershipId, studioId)
                 .filter(membership -> membership.getStatus() == MembershipStatus.ACTIVE)
                 .filter(StudioMembership::isInstructor)
@@ -134,13 +192,18 @@ public class ClassSessionCommandService {
                 ));
     }
 
+    private void validateInstructorForCreate(StudioMembership membership) {
+        if (!membership.isInstructor()) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_INSTRUCTOR_NOT_FOUND);
+        }
+    }
+
     private void validateManagePermission(
             Studio studio,
             StudioMembership requesterMembership,
-            Long targetInstructorMembershipId,
-            Long memberId
+            Long targetInstructorMembershipId
     ) {
-        if (studio.isOwner(memberId)) {
+        if (studio.isOwner(requesterMembership)) {
             return;
         }
 
@@ -163,6 +226,19 @@ public class ClassSessionCommandService {
         }
     }
 
+    private void validateManageAllPermission(Studio studio, StudioMembership requesterMembership) {
+        if (studio.isOwner(requesterMembership)) {
+            return;
+        }
+
+        if (!studioRolePermissionRepository.existsByStudioRoleIdAndPermissionCodeIn(
+                requesterMembership.getStudioRole().getId(),
+                List.of(PermissionCode.CLASS_SESSION_MANAGE_ALL)
+        )) {
+            throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
+        }
+    }
+
     private void validateClassType(Long studioId, Long classTypeId) {
         classTypeRepository.findByIdAndStudioId(classTypeId, studioId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND));
@@ -170,28 +246,21 @@ public class ClassSessionCommandService {
 
     private void updateClassSessionDetails(
             ClassSession classSession,
+            StudioMembership instructorMembership,
             ClassSessionUpdateRequest request
     ) {
-        String name = resolve(request.className(), classSession.getName());
-        String description = resolve(request.description(), classSession.getDescription());
-        ClassForm classForm = resolve(request.classForm(), classSession.getClassForm());
-        int durationMinutes = resolve(
-                request.durationMinutes(), classSession.getDurationMinutes());
-        int capacity = resolve(request.capacity(), classSession.getCapacity());
-        LocalDateTime startAt = resolve(request.startAt(), classSession.getStartAt());
-
-        if (request.startAt() != null || request.durationMinutes() != null) {
-            LocalDateTime endAt = calculateEndAt(startAt, durationMinutes);
-            validateNoInstructorTimeConflictExcluding(classSession, startAt, endAt);
-        }
+        LocalDateTime endAt = calculateEndAt(request.startAt(), request.durationMinutes());
+        validateNoInstructorTimeConflictExcluding(
+                instructorMembership.getId(), classSession.getId(), request.startAt(), endAt);
 
         classSession.updateDetails(
-                name,
-                description,
-                classForm,
-                durationMinutes,
-                capacity,
-                startAt
+                instructorMembership,
+                request.className(),
+                request.description(),
+                request.classForm(),
+                request.durationMinutes(),
+                request.capacity(),
+                request.startAt()
         );
     }
 
@@ -238,13 +307,14 @@ public class ClassSessionCommandService {
     }
 
     private void validateNoInstructorTimeConflictExcluding(
-            ClassSession classSession,
+            Long instructorMembershipId,
+            Long classSessionId,
             LocalDateTime startAt,
             LocalDateTime endAt
     ) {
         if (classSessionRepository.existsActiveOverlapExcluding(
-                classSession.getInstructorMembership().getId(),
-                classSession.getId(),
+                instructorMembershipId,
+                classSessionId,
                 startAt,
                 endAt
         )) {
@@ -263,9 +333,7 @@ public class ClassSessionCommandService {
         classSessionClassTypeRepository.saveAll(classSessionClassTypes);
     }
 
-    private void updateClassSessionClassType(Long studioId, Long classSessionId, Long classTypeId) {
-        validateClassType(studioId, classTypeId);
-
+    private void updateClassSessionClassType(Long classSessionId, Long classTypeId) {
         ClassSessionClassType classSessionClassType = classSessionClassTypeRepository
                 .findByClassSessionId(classSessionId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
@@ -286,9 +354,5 @@ public class ClassSessionCommandService {
         } catch (DateTimeException exception) {
             throw new ClassException(ClassErrorCode.INVALID_CLASS_SESSION_START_AT);
         }
-    }
-
-    private <T> T resolve(T requested, T current) {
-        return requested != null ? requested : current;
     }
 }

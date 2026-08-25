@@ -303,6 +303,28 @@ class ClassSessionTest {
         assertThat(classSession.isCanceled()).isFalse();
     }
 
+    @Test
+    void 수업_회차의_담당_강사와_상세_정보를_함께_수정한다() {
+        // given
+        ClassSession classSession = 기본_수업_회차();
+        StudioMembership nextInstructorMembership = 기본_담당_강사_소속();
+
+        // when
+        classSession.updateDetails(
+                nextInstructorMembership,
+                "새 강사의 요가",
+                null,
+                ClassForm.GROUP,
+                60,
+                12,
+                LocalDateTime.of(2026, 8, 18, 20, 0)
+        );
+
+        // then
+        assertThat(classSession.getInstructorMembership()).isSameAs(nextInstructorMembership);
+        assertThat(classSession.getName()).isEqualTo("새 강사의 요가");
+    }
+
     @ParameterizedTest
     @MethodSource("유효하지_않은_수정")
     void 수정할_상세_정보가_유효하지_않으면_예외가_발생하고_기존_정보를_유지한다(

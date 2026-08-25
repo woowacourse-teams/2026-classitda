@@ -64,7 +64,7 @@ class CommonWebContractTest {
         // given / when
         RestTestClient.ResponseSpec response = client.get()
                 .uri("/test/success")
-                .header("X-API-Version", "2")
+                .header("X-API-Version", "3")
                 .exchange();
 
         // then

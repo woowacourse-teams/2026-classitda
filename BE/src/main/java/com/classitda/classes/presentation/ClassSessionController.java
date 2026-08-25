@@ -7,9 +7,11 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarQ
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
 import com.classitda.classes.application.student.daily.StudentDailyQueryService;
-import com.classitda.classes.presentation.dto.ClassSessionCreateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionDetailResponse;
-import com.classitda.classes.presentation.dto.ClassSessionUpdateRequest;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
+import com.classitda.classes.presentation.dto.ClassSessionUpdateV2Request;
 import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
@@ -26,9 +28,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,24 +49,47 @@ public class ClassSessionController implements ClassSessionControllerApi {
 
     @Override
     @PostMapping(version = "1")
-    public ResponseEntity<Void> save(
+    public ResponseEntity<Void> saveV1(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
-            @Valid @RequestBody ClassSessionCreateRequest request
+            @Valid @RequestBody ClassSessionCreateV1Request request
     ) {
-        classSessionCommandService.save(memberId, studioId, request);
+        classSessionCommandService.saveV1(memberId, studioId, request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @Override
-    @PatchMapping(path = "/{classSessionId}", version = "1")
-    public ResponseEntity<Void> update(
+    @PostMapping(version = "2")
+    public ResponseEntity<Void> saveV2(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @Valid @RequestBody ClassSessionCreateV2Request request
+    ) {
+        classSessionCommandService.saveV2(memberId, studioId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @Override
+    @PutMapping(path = "/{classSessionId}", version = "1")
+    public ResponseEntity<Void> updateV1(
             @CurrentMemberId Long memberId,
             @PathVariable Long studioId,
             @PathVariable Long classSessionId,
-            @Valid @RequestBody ClassSessionUpdateRequest request
+            @Valid @RequestBody ClassSessionUpdateV1Request request
     ) {
-        classSessionCommandService.update(memberId, studioId, classSessionId, request);
+        classSessionCommandService.updateV1(memberId, studioId, classSessionId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @PutMapping(path = "/{classSessionId}", version = "2")
+    public ResponseEntity<Void> updateV2(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classSessionId,
+            @Valid @RequestBody ClassSessionUpdateV2Request request
+    ) {
+        classSessionCommandService.updateV2(memberId, studioId, classSessionId, request);
         return ResponseEntity.noContent().build();
     }
 

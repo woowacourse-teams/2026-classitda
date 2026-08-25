@@ -11,7 +11,7 @@ public class ApiVersionConfig implements WebMvcConfigurer {
     public void configureApiVersioning(ApiVersionConfigurer configurer) {
         configurer.useRequestHeader("X-API-Version")
                 .setVersionRequired(true)
-                .addSupportedVersions("1")
+                .addSupportedVersions("1", "2")
                 .detectSupportedVersions(false);
     }
 }
