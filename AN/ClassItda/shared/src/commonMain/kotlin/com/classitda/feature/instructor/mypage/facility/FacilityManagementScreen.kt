@@ -221,7 +221,7 @@ private fun FacilitySuccessBanner(modifier: Modifier = Modifier) {
             }
             Text(
                 text = stringResource(Res.string.instructor_facility_management_notice),
-                style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
+                style = appTypography().titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = InsColors.Purple,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -239,7 +239,7 @@ private fun FacilityCount(count: Int) {
         Text(
             text = stringResource(Res.string.instructor_facility_management_count, count),
             modifier = Modifier.padding(horizontal = AppSpacing.xxl, vertical = AppSpacing.md),
-            style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+            style = appTypography().titleMedium.copy(fontWeight = FontWeight.Bold),
             color = InsColors.White,
         )
     }

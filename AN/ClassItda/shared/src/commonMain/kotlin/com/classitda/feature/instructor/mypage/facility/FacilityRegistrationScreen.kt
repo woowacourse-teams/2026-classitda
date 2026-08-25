@@ -586,12 +586,12 @@ private fun FacilityImageSection(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = stringResource(Res.string.instructor_facility_registration_image_label),
-                style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = appTypography().titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = InsColors.TextPrimary,
             )
             Text(
                 text = stringResource(Res.string.instructor_facility_registration_image_optional),
-                style = appTypography().titleLarge,
+                style = appTypography().titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = InsColors.TextTertiary,
             )
         }
