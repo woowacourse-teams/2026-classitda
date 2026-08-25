@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -43,7 +42,6 @@ import com.classitda.feature.instructor.classsession.member.edit.component.Class
 import com.classitda.feature.instructor.classsession.member.edit.component.ClassSessionMemberEditBookedRow
 import com.classitda.feature.instructor.classsession.member.edit.component.ExistingMemberBottomSheet
 import com.classitda.feature.instructor.classsession.member.edit.model.ClassSessionMemberEditUiModel
-import com.classitda.feature.instructor.classsession.member.edit.model.MemberAddType
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -91,9 +89,6 @@ private fun ClassSessionMemberEditStateful(
     modifier: Modifier = Modifier,
 ) {
     var bookedMembers by remember(content.detail.id) { mutableStateOf(content.detail.members) }
-    var temporaryMemberSequence by remember(content.detail.id) { mutableIntStateOf(0) }
-    var addType by remember { mutableStateOf(MemberAddType.EXISTING) }
-    var temporaryName by remember { mutableStateOf("") }
     var isExistingSheetVisible by remember { mutableStateOf(false) }
     var memberQuery by remember { mutableStateOf("") }
     var selectedMemberIds by remember { mutableStateOf(emptySet<String>()) }
@@ -106,29 +101,12 @@ private fun ClassSessionMemberEditStateful(
 
     ClassSessionMemberEditStateless(
         detail = content.detail.copy(members = bookedMembers, reservedCount = bookedMembers.size),
-        addType = addType,
-        temporaryName = temporaryName,
         onBackClick = onBackClick,
-        onAddTypeChange = { addType = it },
-        onTemporaryNameChange = { temporaryName = it },
         onRemoveMember = { memberId -> bookedMembers = bookedMembers.filterNot { it.id == memberId } },
         onExistingAddClick = {
             selectedMemberIds = emptySet()
             memberQuery = ""
             isExistingSheetVisible = true
-        },
-        onTemporaryAddClick = {
-            if (temporaryName.isNotBlank() && bookedMembers.size < content.detail.capacity) {
-                val temporaryMemberId = "temporary-${temporaryMemberSequence++}"
-                bookedMembers =
-                    bookedMembers +
-                    ClassSessionMemberUiModel(
-                        id = temporaryMemberId,
-                        name = temporaryName.trim(),
-                        isTemporary = true,
-                    )
-                temporaryName = ""
-            }
         },
         onSaveClick = { onSave(bookedMembers) },
         modifier = modifier,
@@ -168,14 +146,9 @@ private fun ClassSessionMemberEditStateful(
 @Composable
 internal fun ClassSessionMemberEditStateless(
     detail: ClassSessionDetailUiModel,
-    addType: MemberAddType,
-    temporaryName: String,
     onBackClick: () -> Unit,
-    onAddTypeChange: (MemberAddType) -> Unit,
-    onTemporaryNameChange: (String) -> Unit,
     onRemoveMember: (String) -> Unit,
     onExistingAddClick: () -> Unit,
-    onTemporaryAddClick: () -> Unit,
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -237,12 +210,7 @@ internal fun ClassSessionMemberEditStateless(
             }
             item {
                 ClassSessionMemberAddSection(
-                    addType = addType,
-                    temporaryName = temporaryName,
-                    onAddTypeChange = onAddTypeChange,
-                    onTemporaryNameChange = onTemporaryNameChange,
                     onExistingAddClick = onExistingAddClick,
-                    onTemporaryAddClick = onTemporaryAddClick,
                     modifier = Modifier.padding(top = AppSpacing.md),
                 )
             }
@@ -330,17 +298,12 @@ private fun ClassSessionMemberEditStatelessPreview() {
                         listOf(
                             ClassSessionMemberUiModel(id = "1", name = "김민지"),
                             ClassSessionMemberUiModel(id = "2", name = "이서윤"),
-                            ClassSessionMemberUiModel(id = "3", name = "박지수", isTemporary = true),
+                            ClassSessionMemberUiModel(id = "3", name = "박지수"),
                         ),
                 ),
-            addType = MemberAddType.EXISTING,
-            temporaryName = "",
             onBackClick = {},
-            onAddTypeChange = {},
-            onTemporaryNameChange = {},
             onRemoveMember = {},
             onExistingAddClick = {},
-            onTemporaryAddClick = {},
             onSaveClick = {},
         )
     }
