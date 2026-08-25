@@ -3,6 +3,7 @@ package com.classitda.classes.domain.repository;
 import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.domain.repository.projection.ClassSessionCalendarSummaryProjection;
 import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
+import com.classitda.classes.domain.repository.projection.InstructorSessionDetailProjection;
 import com.classitda.classes.domain.repository.projection.StudentDailySessionProjection;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +15,27 @@ import org.springframework.data.repository.query.Param;
 public interface ClassSessionRepository extends JpaRepository<ClassSession, Long> {
 
     Optional<ClassSession> findByIdAndStudioId(Long classSessionId, Long studioId);
+
+    @Query("""
+            SELECT classSession AS session,
+                   instructorMembership.id AS instructorMembershipId,
+                   instructorMembership.name AS instructorName,
+                   classType.id AS classTypeId,
+                   classType.name AS classTypeName
+            FROM ClassSession classSession
+            JOIN classSession.instructorMembership instructorMembership
+            JOIN ClassSessionClassType classSessionClassType
+              ON classSessionClassType.classSessionId = classSession.id
+            JOIN ClassType classType
+              ON classType.id = classSessionClassType.classTypeId
+            WHERE classSession.id = :classSessionId
+              AND classSession.studioId = :studioId
+              AND classType.studio.id = :studioId
+            """)
+    Optional<InstructorSessionDetailProjection> findDetailForInstructor(
+            @Param("studioId") Long studioId,
+            @Param("classSessionId") Long classSessionId
+    );
 
     @Query("""
             SELECT CASE WHEN COUNT(classSession) > 0 THEN true ELSE false END

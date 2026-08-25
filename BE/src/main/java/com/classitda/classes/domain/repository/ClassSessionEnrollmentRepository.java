@@ -1,6 +1,7 @@
 package com.classitda.classes.domain.repository;
 
 import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
+import com.classitda.classes.domain.repository.projection.InstructorReservedMemberProjection;
 import com.classitda.classes.domain.repository.projection.StudentEnrollmentCalendarEventProjection;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -64,6 +65,26 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
             @Param("enrollmentId") Long enrollmentId,
             @Param("classSessionId") Long classSessionId,
             @Param("studioId") Long studioId
+    );
+
+    @Query("""
+            SELECT enrollment.id AS enrollmentId,
+                   membership.id AS membershipId,
+                   membership.name AS memberName,
+                   member.profileImageUrl AS profileImageUrl
+            FROM ClassSessionEnrollment enrollment
+            JOIN enrollment.membership membership
+            JOIN membership.member member
+            WHERE enrollment.classSession.id = :classSessionId
+              AND enrollment.classSession.studioId = :studioId
+              AND membership.studio.id = :studioId
+              AND enrollment.state.status =
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
+            ORDER BY enrollment.state.statusChangedAt ASC, enrollment.id ASC
+            """)
+    List<InstructorReservedMemberProjection> findReservedMembersForInstructor(
+            @Param("studioId") Long studioId,
+            @Param("classSessionId") Long classSessionId
     );
 
     @Query("""
