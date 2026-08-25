@@ -18,6 +18,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import java.io.ByteArrayInputStream
 
 @Composable
 internal actual fun PrivacyPolicyWebContent(
@@ -102,6 +103,19 @@ private class PrivacyPolicyWebViewClient(
             true
         }
 
+    override fun shouldInterceptRequest(
+        view: WebView,
+        request: WebResourceRequest,
+    ): WebResourceResponse? {
+        val isPostNavigation = request.method.equals("POST", ignoreCase = true)
+        val isNavigationLikeRequest = request.isForMainFrame || isPostNavigation
+        if (isNavigationLikeRequest && !request.url.isAllowedPrivacyPolicyUrl()) {
+            view.post { onNavigationBlocked() }
+            return blockedNavigationResponse()
+        }
+        return super.shouldInterceptRequest(view, request)
+    }
+
     override fun onPageStarted(
         view: WebView,
         url: String?,
@@ -162,6 +176,16 @@ private class PrivacyPolicyWebViewClient(
         handler.cancel()
         onLoadFailed(PrivacyPolicyError.TLS)
     }
+
+    private fun blockedNavigationResponse() =
+        WebResourceResponse(
+            "text/plain",
+            "UTF-8",
+            403,
+            "Forbidden",
+            emptyMap(),
+            ByteArrayInputStream(ByteArray(0)),
+        )
 }
 
 private fun configurePrivacyPolicyWebView(webView: WebView) {

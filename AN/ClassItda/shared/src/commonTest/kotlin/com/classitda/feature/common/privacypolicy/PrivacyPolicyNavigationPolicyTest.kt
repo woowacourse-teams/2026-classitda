@@ -53,6 +53,15 @@ class PrivacyPolicyNavigationPolicyTest {
     }
 
     @Test
+    fun `외부 host와 userInfo 기반 approved host 위장을 차단한다`() {
+        assertFalse(policy.allows(target(host = "naver.com")))
+        assertFalse(policy.allows(target(host = "google.com")))
+        assertFalse(policy.allows(target(host = "classitda.com.evil.com")))
+        assertFalse(policy.allows(target(host = "evil-classitda.com")))
+        assertFalse(policy.allows(target(host = "classitda.com", hasUserInfo = true)))
+    }
+
+    @Test
     fun `HTTP downgrade와 위험 scheme을 차단한다`() {
         assertFalse(policy.allows(target(scheme = "http")))
         assertFalse(policy.allows(target(scheme = "javascript", host = null, path = "")))
@@ -60,6 +69,8 @@ class PrivacyPolicyNavigationPolicyTest {
         assertFalse(policy.allows(target(scheme = "file", host = null, path = "/etc/passwd")))
         assertFalse(policy.allows(target(scheme = "content", host = null, path = "provider/item")))
         assertFalse(policy.allows(target(scheme = "data", host = null, path = "text/html,blocked")))
+        assertFalse(policy.allows(target(scheme = "tel", host = null, path = "+821012345678")))
+        assertFalse(policy.allows(target(scheme = "mailto", host = null, path = "support@classitda.com")))
     }
 
     @Test
@@ -94,13 +105,12 @@ class PrivacyPolicyNavigationPolicyTest {
         hasUserInfo: Boolean = false,
         path: String = "/privacy-policy",
         query: String? = null,
-    ) =
-        PrivacyPolicyNavigationTarget(
-            scheme = scheme,
-            host = host,
-            port = port,
-            hasUserInfo = hasUserInfo,
-            path = path,
-            query = query,
-        )
+    ) = PrivacyPolicyNavigationTarget(
+        scheme = scheme,
+        host = host,
+        port = port,
+        hasUserInfo = hasUserInfo,
+        path = path,
+        query = query,
+    )
 }
