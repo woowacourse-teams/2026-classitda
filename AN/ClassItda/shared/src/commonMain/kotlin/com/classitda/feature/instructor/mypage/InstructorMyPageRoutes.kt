@@ -3,11 +3,15 @@ package com.classitda.feature.instructor.mypage
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.classitda.core.platform.KakaoPostcodeResult
+import com.classitda.core.platform.KakaoPostcodeSearchState
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
 import com.classitda.feature.common.profile.PhoneNumberChangeScreen
 import com.classitda.feature.common.profile.ProfileEditScreen
 import com.classitda.feature.common.profile.ProfileViewScreen
@@ -31,6 +35,7 @@ import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
 import com.classitda.feature.instructor.mypage.facility.FacilityManagementViewModel
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationViewModel
+import com.classitda.feature.instructor.mypage.facility.address.KakaoPostcodeSearchDialog
 import com.classitda.feature.instructor.mypage.member.MemberEditScreen
 import com.classitda.feature.instructor.mypage.member.MemberEditViewModel
 import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
@@ -315,13 +320,56 @@ internal fun InstructorFacilityEditRoute(
         ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var postcodeSearchState by remember { mutableStateOf<KakaoPostcodeSearchState?>(null) }
+    var postcodeSearchSession by remember { mutableStateOf(0) }
     FacilityEditScreen(uiState, onAction = { action ->
         when (action) {
-            FacilityEditAction.Back -> onBack()
-            is FacilityEditAction.SuccessAcknowledged -> onSaved(action.facilityId)
-            else -> viewModel.onAction(action)
+            FacilityEditAction.Back -> {
+                onBack()
+            }
+
+            FacilityEditAction.RequestAddressSearch -> {
+                postcodeSearchSession += 1
+                postcodeSearchState = KakaoPostcodeSearchState.Loading
+            }
+
+            is FacilityEditAction.SuccessAcknowledged -> {
+                onSaved(action.facilityId)
+            }
+
+            else -> {
+                viewModel.onAction(action)
+            }
         }
     }, modifier = modifier)
+    postcodeSearchState?.let { state ->
+        key(postcodeSearchSession) {
+            KakaoPostcodeSearchDialog(
+                state = state,
+                onLoadingChanged = { isLoading ->
+                    if (postcodeSearchState !is KakaoPostcodeSearchState.Error) {
+                        postcodeSearchState =
+                            if (isLoading) {
+                                KakaoPostcodeSearchState.Loading
+                            } else {
+                                KakaoPostcodeSearchState.Ready
+                            }
+                    }
+                },
+                onResult = { result ->
+                    postcodeSearchState = null
+                    viewModel.onAction(FacilityEditAction.AddressSelected(result.toFacilityAddress()))
+                },
+                onCancelled = { postcodeSearchState = null },
+                onError = { reason -> postcodeSearchState = KakaoPostcodeSearchState.Error(reason) },
+                onRetry = {
+                    postcodeSearchState = null
+                    postcodeSearchSession += 1
+                    postcodeSearchState = KakaoPostcodeSearchState.Loading
+                },
+            )
+        }
+    }
 }
 
 @Composable
@@ -332,13 +380,55 @@ internal fun InstructorFacilityRegistrationRoute(
     viewModel: FacilityRegistrationViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var postcodeSearchState by remember { mutableStateOf<KakaoPostcodeSearchState?>(null) }
+    var postcodeSearchSession by remember { mutableStateOf(0) }
     FacilityRegistrationScreen(uiState, onAction = { action ->
         if (action == FacilityRegistrationAction.Back) {
             onBack()
+        } else if (action == FacilityRegistrationAction.RequestAddressSearch) {
+            postcodeSearchSession += 1
+            postcodeSearchState = KakaoPostcodeSearchState.Loading
         } else {
             viewModel.onAction(action)
         }
     }, modifier = modifier)
+    postcodeSearchState?.let { state ->
+        key(postcodeSearchSession) {
+            KakaoPostcodeSearchDialog(
+                state = state,
+                onLoadingChanged = { isLoading ->
+                    if (postcodeSearchState !is KakaoPostcodeSearchState.Error) {
+                        postcodeSearchState =
+                            if (isLoading) {
+                                KakaoPostcodeSearchState.Loading
+                            } else {
+                                KakaoPostcodeSearchState.Ready
+                            }
+                    }
+                },
+                onResult = { result ->
+                    postcodeSearchState = null
+                    viewModel.onAction(FacilityRegistrationAction.AddressSelected(result.toFacilityAddress()))
+                },
+                onCancelled = { postcodeSearchState = null },
+                onError = { reason -> postcodeSearchState = KakaoPostcodeSearchState.Error(reason) },
+                onRetry = {
+                    postcodeSearchState = null
+                    postcodeSearchSession += 1
+                    postcodeSearchState = KakaoPostcodeSearchState.Loading
+                },
+            )
+        }
+    }
     val success = uiState as? com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState.Success
     LaunchedEffect(success) { if (success != null) onSuccess() }
 }
+
+private fun KakaoPostcodeResult.toFacilityAddress(): FacilityAddress =
+    FacilityAddress(
+        zoneCode = zoneCode,
+        roadAddress = roadAddress,
+        jibunAddress = jibunAddress,
+        buildingName = buildingName,
+        detailAddress = "",
+    )

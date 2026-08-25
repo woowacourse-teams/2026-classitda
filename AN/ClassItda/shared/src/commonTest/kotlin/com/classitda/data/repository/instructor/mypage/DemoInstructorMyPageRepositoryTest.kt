@@ -12,29 +12,32 @@ import kotlin.test.assertIs
 
 class DemoInstructorMyPageRepositoryTest {
     @Test
-    fun `demo 시설 목록과 상세 조회는 구조화 주소를 유지한다`() = runBlocking {
-        val repository = DemoInstructorMyPageRepository()
+    fun `demo 시설 목록과 상세 조회는 구조화 주소를 유지한다`() =
+        runBlocking {
+            val repository = DemoInstructorMyPageRepository()
 
-        val facilityList = assertIs<InstructorMyPageResult.Success<FacilityList>>(repository.getFacilities()).value
-        assertEquals(1, facilityList.facilities.size)
+            val facilityList =
+                assertIs<InstructorMyPageResult.Success<FacilityList>>(repository.getFacilities()).value
+            assertEquals(1, facilityList.facilities.size)
 
-        val facility =
-            assertIs<InstructorMyPageResult.Success<ManagedFacility>>(
-                repository.getFacility(InstructorFacilityId("facility-1")),
-            ).value
-        assertEquals("서울특별시 강남구 테헤란로", facility.address.displayAddress)
-        assertEquals("5층 501호", facility.address.detailAddress)
-    }
+            val facility =
+                assertIs<InstructorMyPageResult.Success<ManagedFacility>>(
+                    repository.getFacility(InstructorFacilityId("facility-1")),
+                ).value
+            assertEquals("서울특별시 강남구 테헤란로", facility.address.displayAddress)
+            assertEquals("5층 501호", facility.address.detailAddress)
+        }
 
     @Test
-    fun `demo 시설 생성과 수정 성공은 Unit을 반환한다`() = runBlocking {
-        val repository = DemoInstructorMyPageRepository()
-        val draft = FacilityRegistrationDraft(name = "새 시설")
+    fun `demo 시설 생성과 수정 성공은 Unit을 반환한다`() =
+        runBlocking {
+            val repository = DemoInstructorMyPageRepository()
+            val draft = FacilityRegistrationDraft(name = "새 시설")
 
-        assertEquals(InstructorMyPageResult.Success(Unit), repository.registerFacility(draft))
-        assertEquals(
-            InstructorMyPageResult.Success(Unit),
-            repository.updateFacility(InstructorFacilityId("facility-1"), draft),
-        )
-    }
+            assertEquals(InstructorMyPageResult.Success(Unit), repository.registerFacility(draft))
+            assertEquals(
+                InstructorMyPageResult.Success(Unit),
+                repository.updateFacility(InstructorFacilityId("facility-1"), draft),
+            )
+        }
 }

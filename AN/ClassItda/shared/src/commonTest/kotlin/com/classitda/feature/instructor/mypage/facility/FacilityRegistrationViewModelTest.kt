@@ -8,9 +8,9 @@ import com.classitda.domain.model.instructor.mypage.ManagedFacility
 import com.classitda.domain.repository.instructor.mypage.FacilityList
 import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
+import com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
