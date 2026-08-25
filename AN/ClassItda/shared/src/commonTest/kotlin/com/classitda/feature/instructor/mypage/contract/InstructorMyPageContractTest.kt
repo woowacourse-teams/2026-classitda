@@ -11,7 +11,9 @@ import kotlin.test.assertTrue
 class InstructorMyPageContractTest {
     @Test
     fun myPagePrivacyPolicyActionIsASeparateNavigationContract() {
-        assertIs<InstructorMyPageAction.OpenPrivacyPolicy>(InstructorMyPageAction.OpenPrivacyPolicy)
+        val action: InstructorMyPageAction = InstructorMyPageAction.OpenPrivacyPolicy
+
+        assertIs<InstructorMyPageAction.OpenPrivacyPolicy>(action)
     }
 
     @Test
