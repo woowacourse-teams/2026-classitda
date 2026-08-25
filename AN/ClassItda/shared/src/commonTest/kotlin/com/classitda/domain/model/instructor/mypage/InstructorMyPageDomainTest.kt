@@ -28,7 +28,13 @@ class InstructorMyPageDomainTest {
         }
 
         assertFailsWith<IllegalArgumentException> {
-            FacilityImageDraft(id = "", previewReference = "opaque-reference")
+            FacilityImageSelection.Local(
+                handle = "",
+                previewReference = "opaque-reference",
+                mimeType = "image/jpeg",
+                fileName = "facility.jpg",
+                sizeBytes = 1,
+            )
         }
     }
 
@@ -61,44 +67,47 @@ class InstructorMyPageDomainTest {
             ManagedFacility(
                 id = InstructorFacilityId("facility-1"),
                 name = "  Studio / 강남  ",
-                address = "서울시 / 상세 주소",
+                address =
+                    FacilityAddress(
+                        roadAddress = "서울시",
+                        detailAddress = "상세 주소",
+                    ),
             )
 
         assertEquals("  강사 / Studio  ", profile.name)
         assertEquals("+821012345678", profile.phoneNumber)
         assertEquals("  회원  ", member.name)
         assertEquals("01012345678", member.phoneNumber)
-        assertEquals("서울시 / 상세 주소", facility.address)
+        assertEquals("서울시", facility.address.displayAddress)
+        assertEquals("상세 주소", facility.address.detailAddress)
     }
 
     @Test
-    fun `시설 등록 draft는 이미지 다섯 장까지 보유할 수 있다`() {
-        val images =
-            (1..FacilityRegistrationDraft.MAX_IMAGE_COUNT).map { index ->
-                FacilityImageDraft(
-                    id = "image-$index",
-                    previewReference = "opaque-reference-$index",
-                )
-            }
+    fun `시설 주소는 다섯 필드를 보존하고 도로명 없을 때 지번을 표시한다`() {
+        val address =
+            FacilityAddress(
+                zoneCode = "13494",
+                roadAddress = "경기 성남시 분당구 판교역로 166",
+                jibunAddress = "경기 성남시 분당구 백현동 532",
+                buildingName = "카카오 판교 아지트",
+                detailAddress = "3층",
+            )
 
-        val draft = FacilityRegistrationDraft(images = images)
-
-        assertEquals(FacilityRegistrationDraft.MAX_IMAGE_COUNT, draft.images.size)
+        assertEquals("13494", address.zoneCode)
+        assertEquals("경기 성남시 분당구 판교역로 166", address.roadAddress)
+        assertEquals("경기 성남시 분당구 백현동 532", address.jibunAddress)
+        assertEquals("카카오 판교 아지트", address.buildingName)
+        assertEquals("3층", address.detailAddress)
+        assertEquals(address.roadAddress, address.displayAddress)
+        assertEquals(address.jibunAddress, address.copy(roadAddress = "").displayAddress)
     }
 
     @Test
-    fun `시설 등록 draft는 이미지가 여섯 장이면 생성할 수 없다`() {
-        val images =
-            (1..FacilityRegistrationDraft.MAX_IMAGE_COUNT + 1).map { index ->
-                FacilityImageDraft(
-                    id = "image-$index",
-                    previewReference = "opaque-reference-$index",
-                )
-            }
+    fun `시설 등록 draft는 단일 이미지를 보유한다`() {
+        val image = FacilityImageSelection.Remote("https://example.com/facility.jpg")
+        val draft = FacilityRegistrationDraft(image = image)
 
-        assertFailsWith<IllegalArgumentException> {
-            FacilityRegistrationDraft(images = images)
-        }
+        assertEquals(image, draft.image)
     }
 
     @Test

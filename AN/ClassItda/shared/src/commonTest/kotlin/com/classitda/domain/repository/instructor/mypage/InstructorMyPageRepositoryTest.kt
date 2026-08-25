@@ -1,5 +1,6 @@
 package com.classitda.domain.repository.instructor.mypage
 
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId
 import com.classitda.domain.model.instructor.mypage.ManagedFacility
@@ -30,7 +31,7 @@ class InstructorMyPageRepositoryTest {
             ManagedFacility(
                 id = InstructorFacilityId("facility-1"),
                 name = "Studio",
-                address = "Seoul",
+                address = FacilityAddress(roadAddress = "Seoul"),
             )
         val page = FacilityList(totalCount = 12, facilities = listOf(facility))
 

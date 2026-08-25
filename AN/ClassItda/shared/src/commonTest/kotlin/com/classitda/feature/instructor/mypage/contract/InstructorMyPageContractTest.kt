@@ -1,5 +1,7 @@
 package com.classitda.feature.instructor.mypage.contract
 
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import kotlin.test.Test
@@ -88,8 +90,6 @@ class InstructorMyPageContractTest {
     @Test
     fun successStatesExposeStableRegistrationIds() {
         val memberId = InstructorMemberId("member-1")
-        val facilityId = InstructorFacilityId("facility-1")
-
         assertEquals(
             memberId,
             assertIs<MemberRegistrationAction.SuccessAcknowledged>(
@@ -101,22 +101,42 @@ class InstructorMyPageContractTest {
             memberId,
             assertIs<MemberRegistrationUiState.Success>(MemberRegistrationUiState.Success(memberId)).memberId,
         )
-        assertEquals(
-            facilityId,
-            assertIs<FacilityRegistrationUiState.Success>(FacilityRegistrationUiState.Success(facilityId))
-                .facilityId,
-        )
+        assertIs<FacilityRegistrationUiState.Success>(FacilityRegistrationUiState.Success)
     }
 
     @Test
     fun facilityRegistrationActionsExposeExternalSelectionBoundaries() {
-        val draft = FacilityInputUiModel()
-        val images = FacilityRegistrationAction.ImagesSelected(draft.images)
-        val address = FacilityRegistrationAction.AddressSelected("Seoul", "Jongno")
+        val image = FacilityImageInputUiModel(FacilityImageSelection.Remote("https://example.com/facility.jpg"))
+        val selectedImage = FacilityRegistrationAction.ImageSelected(image)
+        val address =
+            FacilityRegistrationAction.AddressSelected(
+                FacilityAddress(
+                    roadAddress = "Seoul",
+                    detailAddress = "Jongno",
+                ),
+            )
 
-        assertEquals(draft.images, images.images)
-        assertEquals("Seoul", address.address)
-        assertEquals("Jongno", address.detailAddress)
+        assertEquals(image, selectedImage.image)
+        assertEquals("Seoul", address.address.roadAddress)
+        assertEquals("Jongno", address.address.detailAddress)
+    }
+
+    @Test
+    fun facilityImageContractSupportsSelectionReplacementAndRemoval() {
+        val first =
+            FacilityImageInputUiModel(
+                FacilityImageSelection.Local("handle-1", "preview-1", "image/jpeg", "one.jpg", 10),
+            )
+        val replacement =
+            FacilityImageInputUiModel(
+                FacilityImageSelection.Local("handle-2", "preview-2", "image/png", "two.png", 20),
+            )
+        val initial = FacilityInputUiModel(image = first)
+
+        assertEquals(first, initial.image)
+        assertEquals(replacement, initial.copy(image = replacement).image)
+        assertEquals(null, initial.copy(image = null).image)
+        assertIs<FacilityRegistrationAction.RemoveImage>(FacilityRegistrationAction.RemoveImage)
     }
 
     @Test
@@ -125,7 +145,7 @@ class InstructorMyPageContractTest {
         val validDraft =
             FacilityInputUiModel(
                 name = "Facility",
-                address = "Seoul",
+                address = FacilityAddress(roadAddress = "Seoul"),
                 phoneNumber = "0212345678",
                 openingTime = "09:00",
                 closingTime = "22:00",
@@ -176,7 +196,7 @@ class InstructorMyPageContractTest {
                     FacilityUiModel(
                         id = facility,
                         name = "클래스잇다 스튜디오",
-                        address = "서울",
+                        address = FacilityAddress(roadAddress = "서울"),
                     ),
                 deleteState = confirming,
             )

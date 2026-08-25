@@ -1,6 +1,7 @@
 package com.classitda.feature.instructor.mypage
 
-import com.classitda.domain.model.instructor.mypage.FacilityImageDraft
+import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.domain.model.instructor.mypage.ManagedFacility
@@ -40,27 +41,27 @@ class InstructorMemberFacilityMapperTest {
             ManagedFacility(
                 id = InstructorFacilityId("facility-1"),
                 name = "클래스잇다 스튜디오",
-                address = "서울 강남구 테헤란로 123",
+                address = FacilityAddress(roadAddress = "서울 강남구 테헤란로 123"),
                 phoneNumber = "0212345678",
-                images = listOf(FacilityImageDraft("image-1", "preview-1")),
+                image = FacilityImageSelection.Remote("preview-1"),
             ).toFacilityUiModel()
 
         assertEquals("02-1234-5678", uiModel.phoneNumber)
-        assertEquals("preview-1", uiModel.images.single().previewReference)
+        assertEquals("preview-1", uiModel.image?.previewReference)
     }
 
     @Test
     fun facilityInputModelBecomesRepositoryDraftAndKeepsImageBoundaries() {
         val draft =
             FacilityInputUiModel(
-                images = listOf(FacilityImageInputUiModel("image-1", "preview-1")),
+                image = FacilityImageInputUiModel(FacilityImageSelection.Remote("preview-1")),
                 name = "클래스잇다 스튜디오",
-                address = "서울 강남구 테헤란로 123",
+                address = FacilityAddress(roadAddress = "서울 강남구 테헤란로 123"),
                 phoneNumber = "0212345678",
             ).toFacilityRegistrationDraft()
 
         assertEquals("클래스잇다 스튜디오", draft.name)
         assertEquals("0212345678", draft.phoneNumber)
-        assertEquals("image-1", draft.images.single().id)
+        assertEquals("preview-1", draft.image?.previewReference)
     }
 }
