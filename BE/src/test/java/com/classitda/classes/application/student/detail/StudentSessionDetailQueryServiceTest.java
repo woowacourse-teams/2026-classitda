@@ -32,6 +32,7 @@ import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.StudioPolicy;
 import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.SystemRole;
+import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
@@ -283,6 +284,7 @@ class StudentSessionDetailQueryServiceTest {
         Studio studio = Studio.builder()
                 .owner(owner)
                 .name(name)
+                .address(StudioFixture.기본_주소())
                 .openTime(LocalTime.of(9, 0))
                 .closeTime(LocalTime.of(22, 0))
                 .build();
