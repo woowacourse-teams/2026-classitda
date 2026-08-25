@@ -13,8 +13,9 @@ import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
-import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailQueryService;
+import com.classitda.classes.application.instructor.enrollment.InstructorEnrollmentCandidateView;
 import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailView;
+import com.classitda.classes.application.instructor.enrollment.InstructorSessionQueryService;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
@@ -56,7 +57,7 @@ class InstructorSessionControllerTest {
     private ClassSessionInstructorEnrollmentCommandService commandService;
 
     @MockitoBean
-    private InstructorSessionDetailQueryService queryService;
+    private InstructorSessionQueryService queryService;
 
     @MockitoBean
     private CurrentMemberIdArgumentResolver currentMemberIdArgumentResolver;
@@ -75,7 +76,7 @@ class InstructorSessionControllerTest {
     @Test
     void 강사용_수업_상세와_예약_회원_명단을_조회하면_200과_응답을_반환한다() {
         // given
-        when(queryService.findOne(1L, 7L, 10L)).thenReturn(상세_뷰());
+        when(queryService.findDetail(1L, 7L, 10L)).thenReturn(상세_뷰());
 
         // when
         RestTestClient.ResponseSpec result = 명단을_조회한다(7L, 10L, "1");
@@ -106,14 +107,14 @@ class InstructorSessionControllerTest {
                           }]
                         }
                         """, JsonCompareMode.STRICT);
-        verify(queryService).findOne(1L, 7L, 10L);
+        verify(queryService).findDetail(1L, 7L, 10L);
     }
 
     @Test
     void 조회할_수_없는_수업이면_404를_반환한다() {
         // given
         doThrow(new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND))
-                .when(queryService).findOne(any(), any(), any());
+                .when(queryService).findDetail(any(), any(), any());
 
         // when
         RestTestClient.ResponseSpec result = 명단을_조회한다(7L, 10L, "1");
@@ -126,13 +127,45 @@ class InstructorSessionControllerTest {
     void 예약_조회_권한이_없으면_403을_반환한다() {
         // given
         doThrow(new StudioException(StudioErrorCode.PERMISSION_DENIED))
-                .when(queryService).findOne(any(), any(), any());
+                .when(queryService).findDetail(any(), any(), any());
 
         // when
         RestTestClient.ResponseSpec result = 명단을_조회한다(7L, 10L, "1");
 
         // then
         오류를_검증한다(result, 403, "PERMISSION-001", "이 작업을 수행할 권한이 없습니다.");
+    }
+
+    @Test
+    void 대리_예약_후보_회원을_전체_조회하면_200과_목록을_반환한다() {
+        // given
+        when(queryService.findAllEnrollmentCandidates(1L, 7L, 10L)).thenReturn(List.of(
+                new InstructorEnrollmentCandidateView(
+                        31L,
+                        "김민지",
+                        "https://images.example.com/minji.png"
+                ),
+                new InstructorEnrollmentCandidateView(32L, "최유진", null)
+        ));
+
+        // when
+        RestTestClient.ResponseSpec result = 후보_회원을_조회한다(7L, 10L, "1");
+
+        // then
+        result.expectStatus().isOk()
+                .expectBody()
+                .json("""
+                        [{
+                          "membershipId":31,
+                          "name":"김민지",
+                          "profileImageUrl":"https://images.example.com/minji.png"
+                        },{
+                          "membershipId":32,
+                          "name":"최유진",
+                          "profileImageUrl":null
+                        }]
+                        """, JsonCompareMode.STRICT);
+        verify(queryService).findAllEnrollmentCandidates(1L, 7L, 10L);
     }
 
     @Test
@@ -282,6 +315,21 @@ class InstructorSessionControllerTest {
         return client.get()
                 .uri(
                         "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}",
+                        studioId,
+                        classSessionId
+                )
+                .header("X-API-Version", apiVersion)
+                .exchange();
+    }
+
+    private RestTestClient.ResponseSpec 후보_회원을_조회한다(
+            Long studioId,
+            Long classSessionId,
+            String apiVersion
+    ) {
+        return client.get()
+                .uri(
+                        "/api/studios/{studioId}/instructor/class-sessions/{classSessionId}/enrollment-candidates",
                         studioId,
                         classSessionId
                 )

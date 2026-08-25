@@ -16,7 +16,7 @@ import com.classitda.classes.application.instructor.calendar.InstructorCalendarS
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
 import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
-import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailQueryService;
+import com.classitda.classes.application.instructor.enrollment.InstructorSessionQueryService;
 import com.classitda.classes.application.student.StudentBookingDecision;
 import com.classitda.classes.application.student.StudentBookingRelation;
 import com.classitda.classes.application.student.calendar.StudentCalendarQueryService;
@@ -84,7 +84,7 @@ class SessionControllerTest {
     private InstructorCalendarQueryService instructorCalendarQueryService;
 
     @MockitoBean
-    private InstructorSessionDetailQueryService instructorSessionDetailQueryService;
+    private InstructorSessionQueryService instructorSessionQueryService;
 
     @MockitoBean
     private ClassSessionInstructorEnrollmentCommandService instructorEnrollmentCommandService;

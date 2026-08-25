@@ -50,12 +50,12 @@ import org.springframework.test.context.TestPropertySource;
 
 @TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @Import({
-        InstructorSessionDetailQueryService.class,
+        InstructorSessionQueryService.class,
         InstructorSessionAccessReader.class,
-        InstructorSessionDetailQueryServiceTest.FixedClockConfig.class
+        InstructorSessionQueryServiceTest.FixedClockConfig.class
 })
 @MySqlRepositoryTest
-class InstructorSessionDetailQueryServiceTest {
+class InstructorSessionQueryServiceTest {
 
     private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 10, 0);
@@ -63,7 +63,7 @@ class InstructorSessionDetailQueryServiceTest {
 
     private long phoneSequence = 10_000_000L;
 
-    private final InstructorSessionDetailQueryService queryService;
+    private final InstructorSessionQueryService queryService;
     private final ClassSessionClassTypeRepository classSessionClassTypeRepository;
     private final ClassSessionRepository classSessionRepository;
     private final ClassTypeRepository classTypeRepository;
@@ -73,8 +73,8 @@ class InstructorSessionDetailQueryServiceTest {
     private final Statistics statistics;
 
     @Autowired
-    InstructorSessionDetailQueryServiceTest(
-            InstructorSessionDetailQueryService queryService,
+    InstructorSessionQueryServiceTest(
+            InstructorSessionQueryService queryService,
             ClassSessionClassTypeRepository classSessionClassTypeRepository,
             ClassSessionRepository classSessionRepository,
             ClassTypeRepository classTypeRepository,
@@ -144,7 +144,7 @@ class InstructorSessionDetailQueryServiceTest {
         statistics.clear();
 
         // when
-        InstructorSessionDetailView result = queryService.findOne(
+        InstructorSessionDetailView result = queryService.findDetail(
                 context.owner().getId(),
                 context.studio().getId(),
                 context.classSession().getId()
@@ -198,7 +198,7 @@ class InstructorSessionDetailQueryServiceTest {
         entityManager.clear();
 
         // when
-        InstructorSessionDetailView result = queryService.findOne(
+        InstructorSessionDetailView result = queryService.findDetail(
                 context.owner().getId(),
                 context.studio().getId(),
                 context.classSession().getId()
@@ -224,7 +224,7 @@ class InstructorSessionDetailQueryServiceTest {
         entityManager.clear();
 
         // when
-        InstructorSessionDetailView result = queryService.findOne(
+        InstructorSessionDetailView result = queryService.findDetail(
                 instructor.getId(),
                 context.studio().getId(),
                 ownSession.getId()
@@ -247,7 +247,7 @@ class InstructorSessionDetailQueryServiceTest {
 
         // when / then
         assertClassError(
-                () -> queryService.findOne(
+                () -> queryService.findDetail(
                         instructor.getId(),
                         context.studio().getId(),
                         context.classSession().getId()
@@ -268,7 +268,7 @@ class InstructorSessionDetailQueryServiceTest {
         entityManager.clear();
 
         // when
-        InstructorSessionDetailView result = queryService.findOne(
+        InstructorSessionDetailView result = queryService.findDetail(
                 manager.getId(),
                 context.studio().getId(),
                 context.classSession().getId()
@@ -290,7 +290,7 @@ class InstructorSessionDetailQueryServiceTest {
 
         // when / then
         assertStudioError(
-                () -> queryService.findOne(
+                () -> queryService.findDetail(
                         manager.getId(),
                         context.studio().getId(),
                         context.classSession().getId()
@@ -314,7 +314,7 @@ class InstructorSessionDetailQueryServiceTest {
 
         // when / then
         assertStudioError(
-                () -> queryService.findOne(
+                () -> queryService.findDetail(
                         student.getId(),
                         context.studio().getId(),
                         context.classSession().getId()
@@ -332,12 +332,116 @@ class InstructorSessionDetailQueryServiceTest {
 
         // when / then
         assertClassError(
-                () -> queryService.findOne(
+                () -> queryService.findDetail(
                         context.owner().getId(),
                         context.studio().getId(),
                         other.classSession().getId()
                 ),
                 ClassErrorCode.CLASS_SESSION_NOT_FOUND
+        );
+    }
+
+    @Test
+    void 대표는_시설의_활성_학생을_이미_예약한_회원까지_모두_ID_순서로_조회한다() {
+        // given
+        DetailContext context = 기본_환경("owner-candidates");
+        StudioRole studentRole = 역할을_저장한다(context.studio(), SystemRole.STUDENT);
+        StudioMembership reservedStudent = 소속을_저장한다(
+                context.studio(),
+                회원을_저장한다("김민지", "https://images.example.com/minji.png"),
+                studentRole,
+                MembershipStatus.ACTIVE,
+                "김민지"
+        );
+        StudioMembership activeStudent = 소속을_저장한다(
+                context.studio(),
+                회원을_저장한다("최유진", null),
+                studentRole,
+                MembershipStatus.ACTIVE,
+                "최유진"
+        );
+        소속을_저장한다(
+                context.studio(),
+                회원을_저장한다("정지 회원", null),
+                studentRole,
+                MembershipStatus.INACTIVE,
+                "정지 회원"
+        );
+        예약을_저장한다(
+                context.classSession(),
+                reservedStudent,
+                LocalDateTime.of(2026, 8, 1, 10, 0)
+        );
+
+        DetailContext otherContext = 기본_환경("other-studio-candidates");
+        StudioRole otherStudentRole = 역할을_저장한다(otherContext.studio(), SystemRole.STUDENT);
+        소속을_저장한다(
+                otherContext.studio(),
+                회원을_저장한다("다른 시설 회원", null),
+                otherStudentRole,
+                MembershipStatus.ACTIVE,
+                "다른 시설 회원"
+        );
+        entityManager.clear();
+
+        // when
+        List<InstructorEnrollmentCandidateView> result = queryService.findAllEnrollmentCandidates(
+                context.owner().getId(),
+                context.studio().getId(),
+                context.classSession().getId()
+        );
+
+        // then
+        assertThat(result).containsExactly(
+                new InstructorEnrollmentCandidateView(
+                        reservedStudent.getId(),
+                        "김민지",
+                        "https://images.example.com/minji.png"
+                ),
+                new InstructorEnrollmentCandidateView(activeStudent.getId(), "최유진", null)
+        );
+    }
+
+    @Test
+    void 본인_수업만_관리하는_강사가_다른_강사의_수업_후보를_조회하면_찾을_수_없다() {
+        // given
+        DetailContext context = 기본_환경("other-session-candidates");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        권한을_저장한다(instructorRole, PermissionCode.RESERVATION_MANAGE);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_OWN);
+        Member instructor = 회원을_저장한다("일반 강사", null);
+        소속을_저장한다(context.studio(), instructor, instructorRole, "일반 강사");
+        entityManager.clear();
+
+        // when / then
+        assertClassError(
+                () -> queryService.findAllEnrollmentCandidates(
+                        instructor.getId(),
+                        context.studio().getId(),
+                        context.classSession().getId()
+                ),
+                ClassErrorCode.CLASS_SESSION_NOT_FOUND
+        );
+    }
+
+    @Test
+    void 예약_관리_권한이_없는_강사는_후보_회원을_조회할_수_없다() {
+        // given
+        DetailContext context = 기본_환경("no-permission-candidates");
+        StudioRole instructorRole = 역할을_저장한다(context.studio(), SystemRole.INSTRUCTOR);
+        권한을_저장한다(instructorRole, PermissionCode.CLASS_SESSION_MANAGE_ALL);
+        Member instructor = 회원을_저장한다("권한 없는 강사", null);
+        소속을_저장한다(context.studio(), instructor, instructorRole, "권한 없는 강사");
+        entityManager.clear();
+
+        // when / then
+        assertStudioError(
+                () -> queryService.findAllEnrollmentCandidates(
+                        instructor.getId(),
+                        context.studio().getId(),
+                        context.classSession().getId()
+                ),
+                StudioErrorCode.PERMISSION_DENIED
         );
     }
 
@@ -410,12 +514,22 @@ class InstructorSessionDetailQueryServiceTest {
             StudioRole role,
             String name
     ) {
+        return 소속을_저장한다(studio, member, role, MembershipStatus.ACTIVE, name);
+    }
+
+    private StudioMembership 소속을_저장한다(
+            Studio studio,
+            Member member,
+            StudioRole role,
+            MembershipStatus status,
+            String name
+    ) {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
                 .studioRole(role)
                 .name(name)
-                .status(MembershipStatus.ACTIVE)
+                .status(status)
                 .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))
                 .build();
         entityManager.persist(membership);

@@ -5,7 +5,7 @@ import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
 import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
-import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailQueryService;
+import com.classitda.classes.application.instructor.enrollment.InstructorSessionQueryService;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV1Request;
 import com.classitda.classes.presentation.dto.ClassSessionCreateV2Request;
 import com.classitda.classes.presentation.dto.ClassSessionUpdateV1Request;
@@ -14,6 +14,7 @@ import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
+import com.classitda.classes.presentation.dto.InstructorEnrollmentCandidateResponse;
 import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
 import com.classitda.classes.presentation.dto.InstructorSessionDetailResponse;
 import jakarta.validation.Valid;
@@ -39,7 +40,7 @@ public class InstructorSessionController implements InstructorSessionControllerA
     private final ClassSessionCommandService classSessionCommandService;
     private final InstructorDailyQueryService instructorDailyQueryService;
     private final InstructorCalendarQueryService instructorCalendarQueryService;
-    private final InstructorSessionDetailQueryService instructorSessionDetailQueryService;
+    private final InstructorSessionQueryService instructorSessionQueryService;
     private final ClassSessionInstructorEnrollmentCommandService instructorEnrollmentCommandService;
 
     @Override
@@ -131,8 +132,20 @@ public class InstructorSessionController implements InstructorSessionControllerA
             @PathVariable Long classSessionId
     ) {
         return InstructorSessionDetailResponse.from(
-                instructorSessionDetailQueryService.findOne(memberId, studioId, classSessionId)
+                instructorSessionQueryService.findDetail(memberId, studioId, classSessionId)
         );
+    }
+
+    @Override
+    @GetMapping(path = "/{classSessionId}/enrollment-candidates", version = "1")
+    public List<InstructorEnrollmentCandidateResponse> findAllEnrollmentCandidates(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @PathVariable Long classSessionId
+    ) {
+        return instructorSessionQueryService.findAllEnrollmentCandidates(memberId, studioId, classSessionId).stream()
+                .map(InstructorEnrollmentCandidateResponse::from)
+                .toList();
     }
 
     @Override

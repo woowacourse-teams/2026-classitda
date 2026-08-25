@@ -12,6 +12,7 @@ import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.studio.domain.PermissionCode;
 import com.classitda.studio.domain.StudioPolicy;
+import com.classitda.studio.domain.repository.StudioMembershipRepository;
 import com.classitda.studio.domain.repository.StudioPolicyRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
@@ -25,15 +26,16 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
-public class InstructorSessionDetailQueryService {
+public class InstructorSessionQueryService {
 
     private final ClassSessionEnrollmentRepository enrollmentRepository;
     private final ClassSessionRepository classSessionRepository;
     private final InstructorSessionAccessReader accessReader;
+    private final StudioMembershipRepository studioMembershipRepository;
     private final StudioPolicyRepository studioPolicyRepository;
     private final Clock clock;
 
-    public InstructorSessionDetailView findOne(Long memberId, Long studioId, Long classSessionId) {
+    public InstructorSessionDetailView findDetail(Long memberId, Long studioId, Long classSessionId) {
         InstructorSessionAccess access = accessReader.readSessionAccess(
                 memberId,
                 studioId,
@@ -53,8 +55,8 @@ public class InstructorSessionDetailQueryService {
                 classSession.phaseAt(now),
                 classSession.bookingWindowAt(now, studioPolicy.getReservationCloseMinutesBefore())
         );
-        List<InstructorReservedMemberProjection> reservedMembers
-                = enrollmentRepository.findReservedMembersForInstructor(studioId, classSessionId);
+        List<InstructorReservedMemberProjection> reservedMembers =
+                enrollmentRepository.findReservedMembersForInstructor(studioId, classSessionId);
 
         return InstructorSessionDetailView.of(
                 detail,
@@ -62,5 +64,20 @@ public class InstructorSessionDetailQueryService {
                 access.requesterMembershipId().equals(detail.getInstructorMembershipId()),
                 reservedMembers
         );
+    }
+
+    public List<InstructorEnrollmentCandidateView> findAllEnrollmentCandidates(Long memberId, Long studioId, Long classSessionId) {
+        InstructorSessionAccess access = accessReader.readSessionAccess(
+                memberId,
+                studioId,
+                PermissionCode.RESERVATION_MANAGE
+        );
+        ClassSession classSession = classSessionRepository.findByIdAndStudioId(classSessionId, studioId)
+                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
+        access.validateAccessTo(classSession.getInstructorMembership().getId());
+
+        return studioMembershipRepository.findActiveStudents(studioId).stream()
+                .map(InstructorEnrollmentCandidateView::from)
+                .toList();
     }
 }

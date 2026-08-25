@@ -8,6 +8,7 @@ import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
+import com.classitda.classes.presentation.dto.InstructorEnrollmentCandidateResponse;
 import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
 import com.classitda.classes.presentation.dto.InstructorSessionDetailResponse;
 import com.classitda.common.exception.ErrorResponse;
@@ -638,6 +639,71 @@ public interface InstructorSessionControllerApi {
             )
     })
     InstructorSessionDetailResponse findOne(
+            @Parameter(hidden = true) Long memberId,
+            @Parameter(description = "시설 ID", example = "1") Long studioId,
+            @Parameter(description = "수업 회차 ID", example = "10") Long classSessionId
+    );
+
+    @Operation(
+            summary = "회원 대리 예약 후보 전체 조회",
+            description = """
+                    - **대상**: 같은 시설에 현재 활성 상태로 등록된 학생 회원을 모두 반환합니다. 이미 이 수업을 예약한 회원도 포함합니다.
+
+                    - **정렬**: 시설 회원 소속 ID 오름차순으로 반환합니다.
+
+                    - **검색·페이지네이션**: 제공하지 않습니다. 이름 검색과 예약 여부 표시는 클라이언트에서 처리합니다.
+
+                    - **권한**: 대표는 모든 수업을 관리할 수 있습니다. 그 외에는 예약 관리 권한과 본인 또는 전체 수업 관리 권한이 필요합니다.
+
+                    - **로컬 테스트 데이터**
+                      1. 회원 `3`: 이강사, `OWN` 권한
+                      2. 수업 `101~106`, `108`, `110~123`: 이강사 담당
+                      3. 수업 `107`, `109`: 박대표 담당
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "대리 예약 후보 회원 전체를 반환합니다.",
+                    content = @Content(
+                            array = @ArraySchema(schema = @Schema(
+                                    implementation = InstructorEnrollmentCandidateResponse.class
+                            )),
+                            examples = @ExampleObject(value = """
+                                    [{
+                                      "membershipId":31,
+                                      "name":"김민지",
+                                      "profileImageUrl":"https://images.example.com/minji.png"
+                                    },{
+                                      "membershipId":32,
+                                      "name":"최유진",
+                                      "profileImageUrl":null
+                                    }]
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "API 버전 헤더가 유효하지 않습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "활성 소속이 아니거나 예약·수업 관리 권한이 없습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설 또는 조회 가능한 수업 회차를 찾을 수 없습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    List<InstructorEnrollmentCandidateResponse> findAllEnrollmentCandidates(
             @Parameter(hidden = true) Long memberId,
             @Parameter(description = "시설 ID", example = "1") Long studioId,
             @Parameter(description = "수업 회차 ID", example = "10") Long classSessionId
