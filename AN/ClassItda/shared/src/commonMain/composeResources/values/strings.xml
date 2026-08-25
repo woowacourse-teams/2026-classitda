@@ -315,7 +315,18 @@
     <string name="instructor_facility_registration_image_label">시설 이미지</string>
     <string name="instructor_facility_registration_image_optional"> (선택)</string>
     <string name="instructor_facility_registration_image_remove">이미지 삭제</string>
-    <string name="instructor_facility_registration_image_count">%1$d / 5</string>
+    <string name="instructor_facility_registration_image_upload_unavailable">이미지를 서버에 업로드할 수 없어 저장할 수 없습니다. 이미지를 제거한 뒤 저장해 주세요.</string>
+    <string name="instructor_facility_registration_image_permission_denied">카메라 권한이 거부되었습니다.</string>
+    <string name="instructor_facility_registration_image_camera_unavailable">이 기기에서는 카메라를 사용할 수 없습니다.</string>
+    <string name="instructor_facility_registration_image_read_failed">이미지를 읽지 못했습니다. 다시 선택해 주세요.</string>
+    <string name="instructor_facility_registration_image_invalid_mime">지원하지 않는 이미지 형식입니다.</string>
+    <string name="instructor_facility_registration_image_file_too_large">이미지는 5MB 이하만 선택할 수 있습니다.</string>
+    <string name="instructor_facility_registration_image_unknown_error">이미지를 선택하지 못했습니다. 다시 시도해 주세요.</string>
+    <string name="instructor_facility_image_picker_title">시설 이미지 추가</string>
+    <string name="instructor_facility_image_picker_description">카메라로 촬영하거나 갤러리에서 대표 이미지를 선택해 주세요.</string>
+    <string name="instructor_facility_image_picker_camera">카메라로 촬영</string>
+    <string name="instructor_facility_image_picker_gallery">갤러리에서 선택</string>
+    <string name="instructor_facility_image_picker_cancel">취소</string>
     <string name="instructor_facility_registration_name">시설명</string>
     <string name="instructor_facility_registration_name_placeholder">시설명을 입력해 주세요.</string>
     <string name="instructor_facility_registration_name_error">시설명을 입력해 주세요.</string>
@@ -381,7 +392,6 @@
     <string name="instructor_facility_delete_pane_title">시설 삭제 확인</string>
     <string name="instructor_facility_registration_harness_empty">빈 form</string>
     <string name="instructor_facility_registration_harness_filled">유효한 form</string>
-    <string name="instructor_facility_registration_harness_five_images">이미지 5장</string>
     <string name="instructor_facility_registration_harness_errors">필드 오류</string>
     <string name="instructor_facility_registration_harness_submitting">Submitting</string>
     <string name="instructor_facility_registration_harness_failed">SubmitFailed</string>

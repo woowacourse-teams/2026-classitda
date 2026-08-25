@@ -1,17 +1,23 @@
 package com.classitda.feature.instructor.mypage
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.classitda.core.platform.FacilityImagePickerError
+import com.classitda.core.platform.FacilityImagePickerSelection
 import com.classitda.core.platform.KakaoPostcodeResult
 import com.classitda.core.platform.KakaoPostcodeSearchState
+import com.classitda.core.platform.releaseFacilityImage
 import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.feature.common.profile.PhoneNumberChangeScreen
 import com.classitda.feature.common.profile.ProfileEditScreen
 import com.classitda.feature.common.profile.ProfileViewScreen
@@ -21,8 +27,10 @@ import com.classitda.feature.common.profile.contract.ProfileViewAction
 import com.classitda.feature.instructor.mypage.contract.FacilityDetailAction
 import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiState
 import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
+import com.classitda.feature.instructor.mypage.contract.FacilityEditUiState
 import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
+import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.MemberEditAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
@@ -36,6 +44,7 @@ import com.classitda.feature.instructor.mypage.facility.FacilityManagementViewMo
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
 import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationViewModel
 import com.classitda.feature.instructor.mypage.facility.address.KakaoPostcodeSearchDialog
+import com.classitda.feature.instructor.mypage.facility.image.FacilityImagePickerOverlay
 import com.classitda.feature.instructor.mypage.member.MemberEditScreen
 import com.classitda.feature.instructor.mypage.member.MemberEditViewModel
 import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
@@ -320,8 +329,15 @@ internal fun InstructorFacilityEditRoute(
         ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentUiState by rememberUpdatedState(uiState)
     var postcodeSearchState by remember { mutableStateOf<KakaoPostcodeSearchState?>(null) }
     var postcodeSearchSession by remember { mutableStateOf(0) }
+    var imagePickerVisible by remember { mutableStateOf(false) }
+    DisposableEffect(Unit) {
+        onDispose {
+            currentUiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+        }
+    }
     FacilityEditScreen(uiState, onAction = { action ->
         when (action) {
             FacilityEditAction.Back -> {
@@ -333,6 +349,22 @@ internal fun InstructorFacilityEditRoute(
                 postcodeSearchState = KakaoPostcodeSearchState.Loading
             }
 
+            FacilityEditAction.RequestImageSource -> {
+                imagePickerVisible = true
+            }
+
+            FacilityEditAction.RemoveImage -> {
+                uiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+                viewModel.onAction(action)
+            }
+
+            is FacilityEditAction.ImageSelected -> {
+                uiState.localFacilityImageHandle()?.let { handle ->
+                    if (handle != action.image.selection.localHandle()) releaseFacilityImage(handle)
+                }
+                viewModel.onAction(action)
+            }
+
             is FacilityEditAction.SuccessAcknowledged -> {
                 onSaved(action.facilityId)
             }
@@ -342,6 +374,19 @@ internal fun InstructorFacilityEditRoute(
             }
         }
     }, modifier = modifier)
+    FacilityImagePickerOverlay(
+        visible = imagePickerVisible,
+        onSelected = { selection ->
+            imagePickerVisible = false
+            uiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+            viewModel.onAction(FacilityEditAction.ImageSelected(selection.toInputUiModel()))
+        },
+        onCancelled = { imagePickerVisible = false },
+        onError = { reason ->
+            imagePickerVisible = false
+            viewModel.onAction(FacilityEditAction.ImagePickerFailed(reason.toUiError()))
+        },
+    )
     postcodeSearchState?.let { state ->
         key(postcodeSearchSession) {
             KakaoPostcodeSearchDialog(
@@ -380,18 +425,60 @@ internal fun InstructorFacilityRegistrationRoute(
     viewModel: FacilityRegistrationViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val currentUiState by rememberUpdatedState(uiState)
     var postcodeSearchState by remember { mutableStateOf<KakaoPostcodeSearchState?>(null) }
     var postcodeSearchSession by remember { mutableStateOf(0) }
+    var imagePickerVisible by remember { mutableStateOf(false) }
+    DisposableEffect(Unit) {
+        onDispose {
+            currentUiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+        }
+    }
     FacilityRegistrationScreen(uiState, onAction = { action ->
-        if (action == FacilityRegistrationAction.Back) {
-            onBack()
-        } else if (action == FacilityRegistrationAction.RequestAddressSearch) {
-            postcodeSearchSession += 1
-            postcodeSearchState = KakaoPostcodeSearchState.Loading
-        } else {
-            viewModel.onAction(action)
+        when (action) {
+            FacilityRegistrationAction.Back -> {
+                onBack()
+            }
+
+            FacilityRegistrationAction.RequestAddressSearch -> {
+                postcodeSearchSession += 1
+                postcodeSearchState = KakaoPostcodeSearchState.Loading
+            }
+
+            FacilityRegistrationAction.RequestImageSource -> {
+                imagePickerVisible = true
+            }
+
+            FacilityRegistrationAction.RemoveImage -> {
+                uiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+                viewModel.onAction(action)
+            }
+
+            is FacilityRegistrationAction.ImageSelected -> {
+                uiState.localFacilityImageHandle()?.let { handle ->
+                    if (handle != action.image.selection.localHandle()) releaseFacilityImage(handle)
+                }
+                viewModel.onAction(action)
+            }
+
+            else -> {
+                viewModel.onAction(action)
+            }
         }
     }, modifier = modifier)
+    FacilityImagePickerOverlay(
+        visible = imagePickerVisible,
+        onSelected = { selection ->
+            imagePickerVisible = false
+            uiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+            viewModel.onAction(FacilityRegistrationAction.ImageSelected(selection.toInputUiModel()))
+        },
+        onCancelled = { imagePickerVisible = false },
+        onError = { reason ->
+            imagePickerVisible = false
+            viewModel.onAction(FacilityRegistrationAction.ImagePickerFailed(reason.toUiError()))
+        },
+    )
     postcodeSearchState?.let { state ->
         key(postcodeSearchSession) {
             KakaoPostcodeSearchDialog(
@@ -432,3 +519,59 @@ private fun KakaoPostcodeResult.toFacilityAddress(): FacilityAddress =
         buildingName = buildingName,
         detailAddress = "",
     )
+
+private fun FacilityImagePickerSelection.toInputUiModel() =
+    com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel(
+        FacilityImageSelection.Local(
+            handle = handle,
+            previewReference = previewReference,
+            mimeType = mimeType,
+            fileName = fileName,
+            sizeBytes = sizeBytes,
+        ),
+    )
+
+private fun FacilityImageSelection.localHandle(): String? = (this as? FacilityImageSelection.Local)?.handle
+
+private fun FacilityImagePickerError.toUiError() =
+    when (this) {
+        FacilityImagePickerError.PERMISSION_DENIED -> {
+            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.PERMISSION_DENIED
+        }
+
+        FacilityImagePickerError.CAMERA_UNAVAILABLE -> {
+            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.CAMERA_UNAVAILABLE
+        }
+
+        FacilityImagePickerError.READ_FAILED -> {
+            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.READ_FAILED
+        }
+
+        FacilityImagePickerError.INVALID_MIME -> {
+            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.INVALID_MIME
+        }
+
+        FacilityImagePickerError.FILE_TOO_LARGE -> {
+            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.FILE_TOO_LARGE
+        }
+
+        FacilityImagePickerError.UNKNOWN -> {
+            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.READ_FAILED
+        }
+    }
+
+private fun FacilityEditUiState.localFacilityImageHandle(): String? =
+    (this as? FacilityEditUiState.Editing)
+        ?.draft
+        ?.image
+        ?.selection
+        ?.let { it as? FacilityImageSelection.Local }
+        ?.handle
+
+private fun FacilityRegistrationUiState.localFacilityImageHandle(): String? =
+    (this as? FacilityRegistrationUiState.Editing)
+        ?.draft
+        ?.image
+        ?.selection
+        ?.let { it as? FacilityImageSelection.Local }
+        ?.handle

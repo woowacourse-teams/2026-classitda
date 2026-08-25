@@ -11,6 +11,7 @@ sealed interface FacilityEditUiState {
         val draft: FacilityInputUiModel,
         val canSubmit: Boolean,
         val fieldErrors: Set<FacilityRegistrationField> = emptySet(),
+        val imageError: FacilityImageUiError? = null,
     ) : FacilityEditUiState
 
     data class Submitting(
@@ -75,6 +76,10 @@ sealed interface FacilityEditAction {
     ) : FacilityEditAction
 
     data object RemoveImage : FacilityEditAction
+
+    data class ImagePickerFailed(
+        val reason: FacilityImageUiError,
+    ) : FacilityEditAction
 
     data object RequestAddressSearch : FacilityEditAction
 

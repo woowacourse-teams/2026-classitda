@@ -43,6 +43,7 @@ private fun FacilityEditUiState.toRegistrationUiState(): FacilityRegistrationUiS
                 draft = draft,
                 canSubmit = canSubmit,
                 fieldErrors = fieldErrors,
+                imageError = imageError,
             )
         }
 
@@ -75,6 +76,7 @@ private fun FacilityRegistrationAction.toEditAction(): FacilityEditAction =
         FacilityRegistrationAction.RequestImageSource -> FacilityEditAction.RequestImageSource
         is FacilityRegistrationAction.ImageSelected -> FacilityEditAction.ImageSelected(image)
         FacilityRegistrationAction.RemoveImage -> FacilityEditAction.RemoveImage
+        is FacilityRegistrationAction.ImagePickerFailed -> FacilityEditAction.ImagePickerFailed(reason)
         FacilityRegistrationAction.RequestAddressSearch -> FacilityEditAction.RequestAddressSearch
         is FacilityRegistrationAction.AddressSelected -> FacilityEditAction.AddressSelected(address)
         FacilityRegistrationAction.Submit -> FacilityEditAction.Submit

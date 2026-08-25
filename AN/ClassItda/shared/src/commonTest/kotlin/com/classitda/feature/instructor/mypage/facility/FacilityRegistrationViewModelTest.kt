@@ -9,10 +9,13 @@ import com.classitda.domain.repository.instructor.mypage.FacilityList
 import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel
+import com.classitda.feature.instructor.mypage.contract.FacilityImageUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
+import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 
 class FacilityRegistrationViewModelTest {
@@ -59,6 +62,51 @@ class FacilityRegistrationViewModelTest {
 
         viewModel.onAction(FacilityRegistrationAction.RemoveImage)
         assertEquals(null, assertIs<FacilityRegistrationUiState.Editing>(viewModel.uiState.value).draft.image)
+    }
+
+    @Test
+    fun `새 Local 이미지가 있으면 업로드 연결 전 저장을 제한한다`() {
+        val viewModel = FacilityRegistrationViewModel(NoOpFacilityRepository)
+        viewModel.onAction(FacilityRegistrationAction.NameChanged("시설"))
+        viewModel.onAction(
+            FacilityRegistrationAction.AddressSelected(
+                FacilityAddress(roadAddress = "서울시 강남구 테헤란로 1"),
+            ),
+        )
+        viewModel.onAction(FacilityRegistrationAction.PhoneNumberChanged("02-1234-5678"))
+        viewModel.onAction(
+            FacilityRegistrationAction.ImageSelected(
+                FacilityImageInputUiModel(
+                    FacilityImageSelection.Local("handle", "preview", "image/jpeg", "one.jpg", 10),
+                ),
+            ),
+        )
+
+        viewModel.onAction(FacilityRegistrationAction.Submit)
+
+        val state = assertIs<FacilityRegistrationUiState.Editing>(viewModel.uiState.value)
+        assertFalse(state.canSubmit)
+        assertEquals(setOf(FacilityRegistrationField.IMAGE), state.fieldErrors)
+    }
+
+    @Test
+    fun `이미지 선택 오류는 기존 이미지를 유지하고 오류 상태만 기록한다`() {
+        val viewModel = FacilityRegistrationViewModel(NoOpFacilityRepository)
+        val existing =
+            FacilityImageInputUiModel(
+                FacilityImageSelection.Local("handle", "preview", "image/jpeg", "one.jpg", 10),
+            )
+        viewModel.onAction(FacilityRegistrationAction.ImageSelected(existing))
+
+        viewModel.onAction(
+            FacilityRegistrationAction.ImagePickerFailed(
+                FacilityImageUiError.PERMISSION_DENIED,
+            ),
+        )
+
+        val state = assertIs<FacilityRegistrationUiState.Editing>(viewModel.uiState.value)
+        assertEquals(existing, state.draft.image)
+        assertEquals(FacilityImageUiError.PERMISSION_DENIED, state.imageError)
     }
 }
 

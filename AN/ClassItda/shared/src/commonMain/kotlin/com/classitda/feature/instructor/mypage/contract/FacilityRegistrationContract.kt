@@ -1,6 +1,7 @@
 package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.FacilityAddress
+import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 
 sealed interface FacilityRegistrationUiState {
     data object Loading : FacilityRegistrationUiState
@@ -9,6 +10,7 @@ sealed interface FacilityRegistrationUiState {
         val draft: FacilityInputUiModel,
         val canSubmit: Boolean,
         val fieldErrors: Set<FacilityRegistrationField> = emptySet(),
+        val imageError: FacilityImageUiError? = null,
     ) : FacilityRegistrationUiState
 
     data object Submitting : FacilityRegistrationUiState
@@ -78,6 +80,10 @@ sealed interface FacilityRegistrationAction {
 
     data object RemoveImage : FacilityRegistrationAction
 
+    data class ImagePickerFailed(
+        val reason: FacilityImageUiError,
+    ) : FacilityRegistrationAction
+
     data object RequestAddressSearch : FacilityRegistrationAction
 
     data class AddressSelected(
@@ -94,6 +100,9 @@ internal fun facilityRegistrationFieldErrors(draft: FacilityInputUiModel): Set<F
         if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
         if (!draft.address.hasBaseAddress) add(FacilityRegistrationField.ADDRESS)
         if (!isFacilityPhoneNumberValid(draft.phoneNumber)) add(FacilityRegistrationField.PHONE_NUMBER)
+        if (draft.image?.selection is FacilityImageSelection.Local) {
+            add(FacilityRegistrationField.IMAGE)
+        }
         if (draft.openingTime.isNotBlank() && !isFacilityTimeValid(draft.openingTime)) {
             add(FacilityRegistrationField.OPENING_TIME)
         }

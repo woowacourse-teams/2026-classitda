@@ -43,3 +43,12 @@ data class FacilityImageInputUiModel(
 ) {
     val previewReference: String get() = selection.previewReference
 }
+
+enum class FacilityImageUiError {
+    PERMISSION_DENIED,
+    CAMERA_UNAVAILABLE,
+    READ_FAILED,
+    INVALID_MIME,
+    FILE_TOO_LARGE,
+    UPLOAD_UNAVAILABLE,
+}

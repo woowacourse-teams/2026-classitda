@@ -68,6 +68,11 @@ internal class FacilityEditViewModel(
                 update { copy(image = null) }
             }
 
+            is FacilityEditAction.ImagePickerFailed -> {
+                val state = _uiState.value as? FacilityEditUiState.Editing ?: return
+                _uiState.value = state.copy(imageError = action.reason)
+            }
+
             is FacilityEditAction.AddressSelected -> {
                 update { copy(address = action.address.copy(detailAddress = "")) }
             }

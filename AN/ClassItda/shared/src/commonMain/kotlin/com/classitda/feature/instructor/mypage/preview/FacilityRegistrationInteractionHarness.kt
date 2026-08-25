@@ -120,6 +120,10 @@ internal fun FacilityRegistrationInteractionHarness(modifier: Modifier = Modifie
                             )
                     }
 
+                    is FacilityRegistrationAction.ImagePickerFailed -> {
+                        lastEvent = "ImagePickerFailed"
+                    }
+
                     FacilityRegistrationAction.RequestAddressSearch -> {
                         lastEvent = "RequestAddressSearch"
                     }

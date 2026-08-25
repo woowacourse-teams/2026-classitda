@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
+import com.classitda.feature.instructor.mypage.contract.FacilityImageUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
@@ -58,6 +59,11 @@ internal class FacilityRegistrationViewModel(
 
             FacilityRegistrationAction.RemoveImage -> {
                 update { copy(image = null) }
+            }
+
+            is FacilityRegistrationAction.ImagePickerFailed -> {
+                val state = _uiState.value as? FacilityRegistrationUiState.Editing ?: return
+                _uiState.value = state.copy(imageError = action.reason)
             }
 
             is FacilityRegistrationAction.AddressSelected -> {

@@ -79,10 +79,15 @@ import classitda.shared.generated.resources.instructor_facility_registration_des
 import classitda.shared.generated.resources.instructor_facility_registration_detail_address
 import classitda.shared.generated.resources.instructor_facility_registration_detail_address_placeholder
 import classitda.shared.generated.resources.instructor_facility_registration_error
-import classitda.shared.generated.resources.instructor_facility_registration_image_count
+import classitda.shared.generated.resources.instructor_facility_registration_image_camera_unavailable
+import classitda.shared.generated.resources.instructor_facility_registration_image_file_too_large
+import classitda.shared.generated.resources.instructor_facility_registration_image_invalid_mime
 import classitda.shared.generated.resources.instructor_facility_registration_image_label
 import classitda.shared.generated.resources.instructor_facility_registration_image_optional
+import classitda.shared.generated.resources.instructor_facility_registration_image_permission_denied
+import classitda.shared.generated.resources.instructor_facility_registration_image_read_failed
 import classitda.shared.generated.resources.instructor_facility_registration_image_remove
+import classitda.shared.generated.resources.instructor_facility_registration_image_upload_unavailable
 import classitda.shared.generated.resources.instructor_facility_registration_intro_description
 import classitda.shared.generated.resources.instructor_facility_registration_intro_title
 import classitda.shared.generated.resources.instructor_facility_registration_loading
@@ -113,6 +118,7 @@ import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.FacilityAddress
 import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 import com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel
+import com.classitda.feature.instructor.mypage.contract.FacilityImageUiError
 import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationField
@@ -152,6 +158,8 @@ fun FacilityRegistrationScreen(
         }
     val fieldErrors =
         (uiState as? FacilityRegistrationUiState.Editing)?.fieldErrors.orEmpty()
+    val imageError =
+        (uiState as? FacilityRegistrationUiState.Editing)?.imageError
     val canAttemptSubmit =
         uiState is FacilityRegistrationUiState.Editing || uiState is FacilityRegistrationUiState.Error
 
@@ -254,6 +262,7 @@ fun FacilityRegistrationScreen(
                 FacilityRegistrationForm(
                     draft = draft,
                     fieldErrors = fieldErrors,
+                    imageError = imageError,
                     isSubmitting = false,
                     errorMessage =
                         if (uiState is FacilityRegistrationUiState.Error) {
@@ -374,6 +383,7 @@ private fun FacilityRegistrationTopBar(
 private fun FacilityRegistrationForm(
     draft: FacilityInputUiModel,
     fieldErrors: Set<FacilityRegistrationField>,
+    imageError: FacilityImageUiError?,
     isSubmitting: Boolean,
     errorMessage: String?,
     onAction: (FacilityRegistrationAction) -> Unit,
@@ -415,6 +425,49 @@ private fun FacilityRegistrationForm(
             onRequestImageSource = { onAction(FacilityRegistrationAction.RequestImageSource) },
             onRemoveImage = { onAction(FacilityRegistrationAction.RemoveImage) },
         )
+        val displayedImageError =
+            if (imageError != null) {
+                imageError
+            } else if (FacilityRegistrationField.IMAGE in fieldErrors) {
+                FacilityImageUiError.UPLOAD_UNAVAILABLE
+            } else {
+                null
+            }
+        displayedImageError?.let { error ->
+            Text(
+                text =
+                    stringResource(
+                        when (error) {
+                            FacilityImageUiError.PERMISSION_DENIED -> {
+                                Res.string.instructor_facility_registration_image_permission_denied
+                            }
+
+                            FacilityImageUiError.CAMERA_UNAVAILABLE -> {
+                                Res.string.instructor_facility_registration_image_camera_unavailable
+                            }
+
+                            FacilityImageUiError.READ_FAILED -> {
+                                Res.string.instructor_facility_registration_image_read_failed
+                            }
+
+                            FacilityImageUiError.INVALID_MIME -> {
+                                Res.string.instructor_facility_registration_image_invalid_mime
+                            }
+
+                            FacilityImageUiError.FILE_TOO_LARGE -> {
+                                Res.string.instructor_facility_registration_image_file_too_large
+                            }
+
+                            FacilityImageUiError.UPLOAD_UNAVAILABLE -> {
+                                Res.string.instructor_facility_registration_image_upload_unavailable
+                            }
+                        },
+                    ),
+                modifier = Modifier.semantics { error("facility-image-error") },
+                style = appTypography().bodySmall,
+                color = InsColors.Red,
+            )
+        }
         FacilityTextField(
             label = stringResource(Res.string.instructor_facility_registration_name),
             value = draft.name,
@@ -601,7 +654,6 @@ private fun FacilityImageSection(
         ) {
             FacilityImageTile(
                 image = image,
-                count = if (image == null) 0 else null,
                 enabled = enabled,
                 onClick = onRequestImageSource,
                 onRemove = if (image == null) null else onRemoveImage,
@@ -613,7 +665,6 @@ private fun FacilityImageSection(
 @Composable
 private fun FacilityImageTile(
     image: FacilityImageInputUiModel?,
-    count: Int?,
     enabled: Boolean,
     onClick: () -> Unit,
     onRemove: (() -> Unit)? = null,
@@ -640,11 +691,6 @@ private fun FacilityImageTile(
                 contentDescription = stringResource(Res.string.instructor_facility_registration_image_label),
                 tint = InsColors.TextTertiary,
                 modifier = Modifier.size(AppSpacing.xxxl),
-            )
-            Text(
-                text = stringResource(Res.string.instructor_facility_registration_image_count, count ?: 0),
-                style = appTypography().bodyLarge,
-                color = InsColors.TextTertiary,
             )
         }
     } else {
@@ -869,6 +915,20 @@ private val singleImageFacilityRegistrationState =
                         ),
                     ),
             ),
+        canSubmit = false,
+        fieldErrors = setOf(FacilityRegistrationField.IMAGE),
+        imageError = FacilityImageUiError.UPLOAD_UNAVAILABLE,
+    )
+
+private val remoteImageFacilityRegistrationState =
+    FacilityRegistrationUiState.Editing(
+        draft =
+            filledFacilityRegistrationState.draft.copy(
+                image =
+                    FacilityImageInputUiModel(
+                        FacilityImageSelection.Remote("remote-fixture-image"),
+                    ),
+            ),
         canSubmit = true,
     )
 
@@ -908,6 +968,19 @@ private fun FacilityRegistrationScreenPreview_Filled() {
 private fun FacilityRegistrationScreenPreview_SingleImage() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         FacilityRegistrationScreen(singleImageFacilityRegistrationState, onAction = {})
+    }
+}
+
+@Preview(
+    name = "Remote image · Instructor",
+    group = "Screen/FacilityRegistration",
+    widthDp = 390,
+    heightDp = 1043,
+)
+@Composable
+private fun FacilityRegistrationScreenPreview_RemoteImage() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        FacilityRegistrationScreen(remoteImageFacilityRegistrationState, onAction = {})
     }
 }
 
