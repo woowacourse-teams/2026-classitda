@@ -275,7 +275,7 @@ private fun ClassSessionDetailStatelessPreview() {
                         listOf(
                             ClassSessionMemberUiModel(id = "1", name = "김민지"),
                             ClassSessionMemberUiModel(id = "2", name = "이서윤"),
-                            ClassSessionMemberUiModel(id = "3", name = "박지수", isTemporary = true),
+                            ClassSessionMemberUiModel(id = "3", name = "박지수"),
                         ),
                 ),
             isMenuExpanded = false,
