@@ -85,6 +85,13 @@ public class StudioService {
         return toResponse(studio);
     }
 
+    @Transactional
+    public void deleteImage(Long memberId, Long studioId) {
+        Studio studio = getStudio(studioId);
+        studioPermissionService.validate(studio, memberId, PermissionCode.STUDIO_UPDATE);
+        studio.removeImage();
+    }
+
     private Studio getStudio(Long studioId) {
         return studioRepository.findById(studioId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_FOUND));

@@ -109,6 +109,10 @@ public class Studio extends BaseEntity {
         this.closeTime = closeTime;
     }
 
+    public void removeImage() {
+        this.imageObjectKey = null;
+    }
+
     private void validateAddress(Address address) {
         if (address == null) {
             throw new StudioException(StudioErrorCode.INVALID_ROAD_ADDRESS);

@@ -240,6 +240,7 @@ public interface StudioControllerApi {
                     - `image` 를 보내면 기존 대표 이미지를 새 `objectKey` 로 교체합니다.
                     - 업로드 URL 발급 API 로 받은 `objectKey` 를 그대로 담습니다.
                     - 이미 다른 시설이 쓰고 있는 `objectKey` 로는 교체할 수 없습니다.
+                    - **지울 때는 `DELETE /api/studios/{studioId}/image` 를 씁니다.** 이 API 로는 지울 수 없습니다.
 
                     ### 운영 시간
 
@@ -318,5 +319,61 @@ public interface StudioControllerApi {
             @Parameter(description = "시설 ID", required = true, example = "1")
             Long studioId,
             StudioUpdateRequest request
+    );
+
+    @Operation(
+            summary = "시설 대표 이미지 삭제",
+            description = """
+                    ### 삭제 방식
+
+                    - 시설의 대표 이미지를 지웁니다. 시설 자체는 삭제되지 않습니다.
+                    - **이미 대표 이미지가 없어도 204 를 반환합니다.** 여러 번 호출해도 결과가 같습니다.
+                    - 수정 API 는 `image` 를 생략하거나 `null` 로 보내면 기존 값을 유지하므로, **지울 때는 이 API 를 씁니다.**
+
+                    ### 남는 파일
+
+                    - DB 에서 이미지 연결만 끊고 S3 객체는 남겨 둡니다. 되돌릴 여지를 두기 위해서입니다.
+
+                    ### 권한
+
+                    - 대표이거나 시설 수정 권한이 있어야 합니다.
+                    """,
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "삭제 성공 (대표 이미지가 없던 경우 포함)"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "API 버전 헤더가 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "버전 헤더 누락", value = """
+                                    {"code": "API-001", "message": "X-API-Version 헤더는 필수입니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "시설 수정 권한이 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "권한 없음", value = """
+                                    {"code": "PERMISSION-001", "message": "이 작업을 수행할 권한이 없습니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설을 찾을 수 없음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "시설 없음", value = """
+                                    {"code": "STUDIO-002", "message": "시설을 찾을 수 없습니다."}""")
+                    )
+            )
+    })
+    ResponseEntity<Void> deleteImage(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "시설 ID", required = true, example = "1")
+            Long studioId
     );
 }

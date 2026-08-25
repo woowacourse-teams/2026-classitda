@@ -13,6 +13,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,6 +72,16 @@ public class StudioController implements StudioControllerApi {
             @Valid @RequestBody StudioUpdateRequest request
     ) {
         studioService.update(memberId, studioId, request);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @DeleteMapping(path = "/{studioId}/image", version = "1")
+    public ResponseEntity<Void> deleteImage(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId
+    ) {
+        studioService.deleteImage(memberId, studioId);
         return ResponseEntity.noContent().build();
     }
 }

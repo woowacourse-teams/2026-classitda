@@ -337,6 +337,65 @@ class StudioServiceTest {
     }
 
     @Test
+    void 대표_이미지를_삭제한다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(
+                owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청("studio-images/to-delete.jpg")).id();
+
+        // when
+        studioService.deleteImage(owner.getId(), studioId);
+
+        // then
+        assertThat(studioService.findById(studioId).image()).isNull();
+    }
+
+    @Test
+    void 대표_이미지가_없어도_삭제_요청은_성공한다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+
+        // when
+        studioService.deleteImage(owner.getId(), studioId);
+
+        // then
+        assertThat(studioService.findById(studioId).image()).isNull();
+    }
+
+    @Test
+    void 대표_이미지를_삭제하면_같은_키를_다른_시설이_쓸_수_있다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        String objectKey = "studio-images/reusable.jpg";
+        Long firstId = studioService.save(
+                owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청(objectKey)).id();
+        Long secondId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+        studioService.deleteImage(owner.getId(), firstId);
+
+        // when
+        studioService.update(owner.getId(), secondId, StudioFixture.이미지만_바꾸는_수정_요청(objectKey));
+
+        // then
+        assertThat(studioService.findById(secondId).image())
+                .isEqualTo(ImageTestConfiguration.BASE_URL + "/" + objectKey);
+    }
+
+    @Test
+    void 권한이_없으면_대표_이미지를_삭제할_수_없다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Member stranger = 소유자를_저장한다();
+        Long studioId = studioService.save(
+                owner.getId(), StudioFixture.이미지가_있는_시설_생성_요청("studio-images/guarded.jpg")).id();
+
+        // when / then
+        assertThatThrownBy(() -> studioService.deleteImage(stranger.getId(), studioId))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.NOT_MEMBERSHIP.getMessage());
+    }
+
+    @Test
     void 업로드_네임스페이스_밖의_키는_저장할_수_없다() {
         // given
         Member owner = 소유자를_저장한다();

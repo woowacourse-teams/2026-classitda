@@ -2,6 +2,7 @@ package com.classitda.studio.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -334,6 +335,58 @@ class StudioControllerTest {
                 .expectBody()
                 .json("""
                         {"code":"IMAGE-001","message":"지원하지 않는 이미지 형식입니다."}
+                        """, JsonCompareMode.STRICT);
+    }
+    @Test
+    void 대표_이미지를_삭제하면_204를_반환하고_서비스에_위임한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri("/api/studios/1/image")
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        result.expectStatus().isNoContent();
+        verify(studioService).deleteImage(1L, 1L);
+    }
+
+    @Test
+    void 없는_시설의_대표_이미지를_삭제하면_STUDIO_002를_반환한다() {
+        // given
+        doThrow(new StudioException(StudioErrorCode.NOT_FOUND))
+                .when(studioService).deleteImage(anyLong(), anyLong());
+
+        // when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri("/api/studios/999/image")
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        result.expectStatus().isNotFound()
+                .expectBody()
+                .json("""
+                        {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}
+                        """, JsonCompareMode.STRICT);
+    }
+
+    @Test
+    void 권한이_없으면_대표_이미지를_삭제할_수_없다() {
+        // given
+        doThrow(new StudioException(StudioErrorCode.PERMISSION_DENIED))
+                .when(studioService).deleteImage(anyLong(), anyLong());
+
+        // when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri("/api/studios/1/image")
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        result.expectStatus().isForbidden()
+                .expectBody()
+                .json("""
+                        {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}
                         """, JsonCompareMode.STRICT);
     }
 }
