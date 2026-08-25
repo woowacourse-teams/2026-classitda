@@ -5,12 +5,18 @@ import com.classitda.core.network.createClassItdaHttpClient
 import com.classitda.domain.model.auth.signup.LoginTokens
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
+import io.ktor.client.engine.mock.toByteArray
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.headersOf
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class StudioApiTest {
     @Test
@@ -48,6 +54,53 @@ class StudioApiTest {
             assertEquals(2, requestIndex)
 
             client.close()
+        }
+
+    @Test
+    fun `생성은 POST와 전체 생성 JSON을 사용하고 201 no body를 Unit으로 처리한다`() =
+        runBlocking {
+            val engine =
+                MockEngine { request ->
+                    assertEquals(HttpMethod.Post, request.method)
+                    assertEquals("/api/studios", request.url.encodedPath)
+                    assertEquals("1", request.headers["X-API-Version"])
+                    assertEquals("Bearer access-token", request.headers[HttpHeaders.Authorization])
+                    val outgoingBody = assertIs<OutgoingContent>(request.body)
+                    assertEquals(ContentType.Application.Json, outgoingBody.contentType)
+                    val body = request.body.toByteArray().decodeToString()
+                    assertTrue(body.contains("\"zonecode\":\"13494\""))
+                    assertTrue(body.contains("\"roadAddress\":\"경기 성남시 분당구 판교역로 166\""))
+                    assertTrue(body.contains("\"jibunAddress\":\"경기 성남시 분당구 백현동 532\""))
+                    assertTrue(body.contains("\"buildingName\":\"카카오 판교 아지트\""))
+                    assertTrue(body.contains("\"detailAddress\":\"3층\""))
+                    assertTrue(body.contains("\"image\":\"studios/images/object-key.jpg\""))
+                    respond("", status = HttpStatusCode.Created)
+                }
+            val tokenStorage = InMemoryAuthTokenStorage().apply { write(testTokens) }
+            val client = createClassItdaHttpClient(engine, BASE_URL, tokenStorage)
+
+            try {
+                StudioApi(client).create(
+                    StudioCreateRequestDto(
+                        name = "클래스잇다 스튜디오",
+                        address =
+                            AddressRequestDto(
+                                zoneCode = "13494",
+                                roadAddress = "경기 성남시 분당구 판교역로 166",
+                                jibunAddress = "경기 성남시 분당구 백현동 532",
+                                buildingName = "카카오 판교 아지트",
+                                detailAddress = "3층",
+                            ),
+                        phoneNumber = "031-123-4567",
+                        openTime = "09:00",
+                        closeTime = "22:00",
+                        image = "studios/images/object-key.jpg",
+                        description = "시설 설명",
+                    ),
+                )
+            } finally {
+                client.close()
+            }
         }
 
     private companion object {

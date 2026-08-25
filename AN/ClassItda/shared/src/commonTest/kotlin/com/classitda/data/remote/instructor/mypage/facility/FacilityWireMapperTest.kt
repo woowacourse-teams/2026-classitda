@@ -69,8 +69,8 @@ class FacilityWireMapperTest {
         assertTrue(encoded.contains("\"name\":\"클래스잇다 스튜디오\""))
         assertTrue(encoded.contains("\"address\""))
         assertTrue(encoded.contains("\"phoneNumber\":\"031-123-4567\""))
-        assertTrue(encoded.contains("\"openTime\":\"09:00:00\""))
-        assertTrue(encoded.contains("\"closeTime\":\"22:00:00\""))
+        assertTrue(encoded.contains("\"openTime\":\"09:00\""))
+        assertTrue(encoded.contains("\"closeTime\":\"22:00\""))
         assertTrue(encoded.contains("\"image\":\"studios/images/object-key.jpg\""))
         assertFalse(encoded.contains(localImage.previewReference))
     }
@@ -81,6 +81,22 @@ class FacilityWireMapperTest {
 
         val failure = assertIs<InstructorMyPageResult.Failure>(result)
         assertEquals(InstructorMyPageFailureReason.INVALID_REQUEST, failure.reason)
+    }
+
+    @Test
+    fun `생성 요청은 시간 형식과 종료 시간이 시작 시간보다 늦은지 검증한다`() {
+        val invalidDrafts =
+            listOf(
+                validDraft().copy(openingTime = "9:00"),
+                validDraft().copy(closingTime = "25:00"),
+                validDraft().copy(openingTime = "22:00", closingTime = "09:00"),
+                validDraft().copy(openingTime = "09:00", closingTime = "09:00"),
+            )
+
+        invalidDrafts.forEach { draft ->
+            val failure = assertIs<InstructorMyPageResult.Failure>(draft.toStudioCreateRequestDto())
+            assertEquals(InstructorMyPageFailureReason.INVALID_REQUEST, failure.reason)
+        }
     }
 
     @Test
@@ -212,8 +228,8 @@ class FacilityWireMapperTest {
             address = validAddress(),
             phoneNumber = "031-123-4567",
             description = "시설 설명",
-            openingTime = "09:00:00",
-            closingTime = "22:00:00",
+            openingTime = "09:00",
+            closingTime = "22:00",
         )
 
     private fun localImage() =

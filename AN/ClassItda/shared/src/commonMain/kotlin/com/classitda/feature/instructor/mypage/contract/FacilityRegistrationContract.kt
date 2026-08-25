@@ -1,7 +1,6 @@
 package com.classitda.feature.instructor.mypage.contract
 
 import com.classitda.domain.model.instructor.mypage.FacilityAddress
-import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
 
 sealed interface FacilityRegistrationUiState {
     data object Loading : FacilityRegistrationUiState
@@ -100,9 +99,6 @@ internal fun facilityRegistrationFieldErrors(draft: FacilityInputUiModel): Set<F
         if (draft.name.isBlank()) add(FacilityRegistrationField.NAME)
         if (!draft.address.hasBaseAddress) add(FacilityRegistrationField.ADDRESS)
         if (!isFacilityPhoneNumberValid(draft.phoneNumber)) add(FacilityRegistrationField.PHONE_NUMBER)
-        if (draft.image?.selection is FacilityImageSelection.Local) {
-            add(FacilityRegistrationField.IMAGE)
-        }
         if (draft.openingTime.isNotBlank() && !isFacilityTimeValid(draft.openingTime)) {
             add(FacilityRegistrationField.OPENING_TIME)
         }

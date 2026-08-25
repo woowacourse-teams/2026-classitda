@@ -6,4 +6,8 @@ internal class StudioRemoteDataSource(
     suspend fun getMine(): List<StudioResponseDto> = api.getMine()
 
     suspend fun get(studioId: Long): StudioResponseDto = api.get(studioId)
+
+    suspend fun create(request: StudioCreateRequestDto) {
+        api.create(request)
+    }
 }

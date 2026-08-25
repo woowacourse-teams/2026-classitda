@@ -65,7 +65,7 @@ class FacilityRegistrationViewModelTest {
     }
 
     @Test
-    fun `새 Local 이미지가 있으면 업로드 연결 전 저장을 제한한다`() {
+    fun `새 Local 이미지는 생성 요청을 위해 이미지 필드 오류로 막지 않는다`() {
         val viewModel = FacilityRegistrationViewModel(NoOpFacilityRepository)
         viewModel.onAction(FacilityRegistrationAction.NameChanged("시설"))
         viewModel.onAction(
@@ -82,11 +82,8 @@ class FacilityRegistrationViewModelTest {
             ),
         )
 
-        viewModel.onAction(FacilityRegistrationAction.Submit)
-
         val state = assertIs<FacilityRegistrationUiState.Editing>(viewModel.uiState.value)
-        assertFalse(state.canSubmit)
-        assertEquals(setOf(FacilityRegistrationField.IMAGE), state.fieldErrors)
+        assertFalse(FacilityRegistrationField.IMAGE in state.fieldErrors)
     }
 
     @Test

@@ -16,6 +16,7 @@ private const val BUILDING_NAME_MAX_LENGTH = 100
 private const val DETAIL_ADDRESS_MAX_LENGTH = 100
 private const val STUDIO_NAME_MAX_LENGTH = 50
 private const val PHONE_NUMBER_MAX_LENGTH = 20
+private val HH_MM_PATTERN = Regex("(?:[01]\\d|2[0-3]):[0-5]\\d")
 
 internal fun FacilityAddress.toAddressRequestDto(): InstructorMyPageResult<AddressRequestDto> {
     if (!zoneCode.isFiveDigitZoneCode() || roadAddress.isBlank()) return invalidRequest()
@@ -40,7 +41,8 @@ internal fun FacilityRegistrationDraft.toStudioCreateRequestDto(
 ): InstructorMyPageResult<StudioCreateRequestDto> {
     if (name.isBlank() || name.length > STUDIO_NAME_MAX_LENGTH) return invalidRequest()
     if (phoneNumber.isBlank() || phoneNumber.length > PHONE_NUMBER_MAX_LENGTH) return invalidRequest()
-    if (openingTime.isBlank() || closingTime.isBlank()) return invalidRequest()
+    if (!openingTime.isValidTime() || !closingTime.isValidTime()) return invalidRequest()
+    if (closingTime.toMinutes() <= openingTime.toMinutes()) return invalidRequest()
 
     val addressDto =
         when (val result = address.toAddressRequestDto()) {
@@ -131,6 +133,10 @@ internal fun InstructorFacilityId.toWireId(): InstructorMyPageResult<Long> =
     value.toLongOrNull()?.let { InstructorMyPageResult.Success(it) } ?: invalidRequest()
 
 private fun String.isFiveDigitZoneCode(): Boolean = length == ZONE_CODE_LENGTH && all(Char::isDigit)
+
+private fun String.isValidTime(): Boolean = HH_MM_PATTERN.matches(this)
+
+private fun String.toMinutes(): Int = substringBefore(':').toInt() * 60 + substringAfter(':').toInt()
 
 private fun invalidRequest() = InstructorMyPageResult.Failure(InstructorMyPageFailureReason.INVALID_REQUEST)
 
