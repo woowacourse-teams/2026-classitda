@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 class StudentEnrollmentControllerTest {
 
     private static final String DETAIL_URI =
-            "/api/studios/7/class-session-enrollments/19";
+            "/api/studios/7/student/class-sessions/117/enrollments/19";
 
     private final RestTestClient client;
 
@@ -62,7 +62,7 @@ class StudentEnrollmentControllerTest {
     @Test
     void 학생_신청_상세를_조회하면_200과_중첩된_상세_응답을_반환한다() {
         // given
-        when(queryService.findOne(1L, 7L, 19L)).thenReturn(제안_상세_뷰());
+        when(queryService.findOne(1L, 7L, 117L, 19L)).thenReturn(제안_상세_뷰());
 
         // when
         RestTestClient.ResponseSpec result = 상세를_조회한다("1");
@@ -94,13 +94,13 @@ class StudentEnrollmentControllerTest {
                   }
                 }
                 """, JsonCompareMode.STRICT);
-        verify(queryService).findOne(1L, 7L, 19L);
+        verify(queryService).findOne(1L, 7L, 117L, 19L);
     }
 
     @Test
     void 수강권이_연결된_신청은_사용_수강권을_반환한다() {
         // given
-        when(queryService.findOne(1L, 7L, 19L)).thenReturn(예약_상세_뷰());
+        when(queryService.findOne(1L, 7L, 117L, 19L)).thenReturn(예약_상세_뷰());
 
         // when
         RestTestClient.ResponseSpec result = 상세를_조회한다("1");
@@ -126,7 +126,7 @@ class StudentEnrollmentControllerTest {
             String message
     ) {
         // given
-        when(queryService.findOne(1L, 7L, 19L)).thenThrow(exception);
+        when(queryService.findOne(1L, 7L, 117L, 19L)).thenThrow(exception);
 
         // when
         RestTestClient.ResponseSpec result = 상세를_조회한다("1");

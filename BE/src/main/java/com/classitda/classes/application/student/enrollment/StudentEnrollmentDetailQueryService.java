@@ -18,11 +18,11 @@ public class StudentEnrollmentDetailQueryService {
     private final StudentSessionAccessReader accessReader;
     private final ClassSessionEnrollmentRepository enrollmentRepository;
 
-    public StudentEnrollmentDetailView findOne(Long memberId, Long studioId, Long enrollmentId) {
+    public StudentEnrollmentDetailView findOne(Long memberId, Long studioId, Long classSessionId, Long enrollmentId) {
         Long membershipId = accessReader.readMembershipId(memberId, studioId);
 
         ClassSessionEnrollment enrollment = enrollmentRepository
-                .findByIdAndMembershipId(enrollmentId, membershipId)
+                .findDetailForStudent(enrollmentId, classSessionId, studioId, membershipId)
                 .filter(this::isVisible)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_ENROLLMENT_NOT_FOUND));
 
