@@ -2,8 +2,11 @@ package com.classitda.feature.instructor.classsession.edit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.classitda.domain.model.instructor.management.ClassSession
-import com.classitda.domain.repository.instructor.management.ClassManagementRepository
+import com.classitda.core.studio.InstructorStudioContext
+import com.classitda.domain.model.instructor.session.InstructorClassForm
+import com.classitda.domain.model.instructor.session.InstructorSessionDetail
+import com.classitda.domain.model.instructor.session.InstructorSessionUpdate
+import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
 import com.classitda.feature.instructor.management.model.ClassType
 import kotlinx.coroutines.CancellationException
@@ -16,12 +19,13 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 
 internal class ClassSessionEditViewModel(
-    private val repository: ClassManagementRepository,
+    private val repository: InstructorSessionRepository,
+    private val studioContext: InstructorStudioContext,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ClassSessionEditUiState>(ClassSessionEditUiState.Loading)
     val uiState: StateFlow<ClassSessionEditUiState> = _uiState.asStateFlow()
     private var loadJob: Job? = null
-    private var currentSession: ClassSession? = null
+    private var currentSession: InstructorSessionDetail? = null
 
     fun load(sessionId: String) {
         loadJob?.cancel()
@@ -29,11 +33,10 @@ internal class ClassSessionEditViewModel(
         loadJob =
             viewModelScope.launch {
                 try {
-                    val session = repository.getSessions().firstOrNull { it.id == sessionId }
+                    val studio = studioContext.getSelectedStudio()
+                    val session = repository.getSession(studio.id, sessionId)
                     currentSession = session
-                    _uiState.value =
-                        session?.let { ClassSessionEditUiState.Success(it.toEditForm()) }
-                            ?: ClassSessionEditUiState.Error("수업 정보를 찾을 수 없어요")
+                    _uiState.value = ClassSessionEditUiState.Success(session.toEditForm())
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
@@ -49,7 +52,12 @@ internal class ClassSessionEditViewModel(
         val session = currentSession ?: return
         viewModelScope.launch {
             try {
-                repository.updateSession(session.toUpdatedSession(form))
+                val studio = studioContext.getSelectedStudio()
+                repository.updateSession(
+                    studioId = studio.id,
+                    sessionId = session.id,
+                    update = form.toUpdate(),
+                )
                 onSuccess()
             } catch (exception: CancellationException) {
                 throw exception
@@ -65,7 +73,8 @@ internal class ClassSessionEditViewModel(
     ) {
         viewModelScope.launch {
             try {
-                repository.deleteSession(sessionId)
+                val studio = studioContext.getSelectedStudio()
+                repository.cancelSession(studio.id, sessionId)
                 onSuccess()
             } catch (exception: CancellationException) {
                 throw exception
@@ -76,35 +85,46 @@ internal class ClassSessionEditViewModel(
     }
 }
 
-private fun ClassSession.toEditForm(): ClassSessionEditFormUiModel {
-    val classType = ClassType.entries.firstOrNull { it.label in tags } ?: ClassType.GROUP
-    val categories = tags.filter { it !in ClassType.entries.map(ClassType::label) }
+private fun InstructorSessionDetail.toEditForm(): ClassSessionEditFormUiModel {
+    val formClassType =
+        when (classForm) {
+            InstructorClassForm.INDIVIDUAL -> ClassType.PERSONAL
+
+            InstructorClassForm.GROUP,
+            InstructorClassForm.UNKNOWN,
+            -> ClassType.GROUP
+        }
     val durationMinutes = durationBetween(startAt.time, endAt.time)
 
     return ClassSessionEditFormUiModel(
         id = id,
-        classType = classType,
-        categories = categories,
-        title = title,
+        classTypeId = this.classType.id,
+        classType = formClassType,
+        categories = listOf(this.classType.name),
+        title = className,
         capacity = capacity,
-        reservedCount = reservedCount,
+        reservedCount = 0,
         durationMinutes = durationMinutes,
         startTime = startAt.time,
         sessionDate = startAt.date,
-        description = "체어룸에서 할 예정",
+        description = description.orEmpty(),
     )
 }
 
-private fun ClassSession.toUpdatedSession(form: ClassSessionEditFormUiModel): ClassSession {
-    val endTime = form.startTime.plusMinutesClamped(form.durationMinutes)
-    return copy(
-        tags = listOf(form.classType.label) + form.categories,
-        title = form.title,
-        startAt = LocalDateTime(form.sessionDate, form.startTime),
-        endAt = LocalDateTime(form.sessionDate, endTime),
-        capacity = form.capacity,
+private fun ClassSessionEditFormUiModel.toUpdate() =
+    InstructorSessionUpdate(
+        classForm =
+            when (classType) {
+                ClassType.GROUP -> InstructorClassForm.GROUP
+                ClassType.PERSONAL -> InstructorClassForm.INDIVIDUAL
+            },
+        classTypeId = classTypeId,
+        className = title,
+        capacity = capacity,
+        durationMinutes = durationMinutes,
+        startAt = LocalDateTime(sessionDate, startTime),
+        description = description,
     )
-}
 
 private fun durationBetween(
     start: LocalTime,

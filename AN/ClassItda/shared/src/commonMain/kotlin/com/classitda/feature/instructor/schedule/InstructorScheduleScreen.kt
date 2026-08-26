@@ -39,6 +39,7 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.component.TopBar
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
+import com.classitda.domain.model.instructor.session.InstructorCalendarDay
 import com.classitda.feature.instructor.schedule.component.InstructorCalendar
 import com.classitda.feature.instructor.schedule.component.InstructorScheduleCard
 import com.classitda.feature.instructor.schedule.component.koreanName
@@ -80,6 +81,7 @@ internal fun InstructorScheduleStateful(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val sessions = (uiState as? InstructorScheduleUiState.Success)?.sessions.orEmpty()
+    val calendarDays = (uiState as? InstructorScheduleUiState.Success)?.calendarDays.orEmpty()
     val firstSessionDate =
         sessions.minOfOrNull { it.startAt.date }
             ?: Clock.System.todayIn(TimeZone.currentSystemDefault())
@@ -88,10 +90,8 @@ internal fun InstructorScheduleStateful(
     var selectedDate by remember { mutableStateOf(firstSessionDate) }
     var isMonthMode by remember { mutableStateOf(true) }
 
-    LaunchedEffect(refreshKey) {
-        if (refreshKey > 0) {
-            viewModel.load()
-        }
+    LaunchedEffect(selectedDate, refreshKey) {
+        viewModel.load(selectedDate)
     }
 
     LaunchedEffect(sessions) {
@@ -125,6 +125,7 @@ internal fun InstructorScheduleStateful(
             is InstructorScheduleUiState.Success -> {
                 InstructorScheduleStateless(
                     sessions = state.sessions,
+                    calendarDays = state.calendarDays,
                     displayedYear = displayedYear,
                     displayedMonth = displayedMonth,
                     selectedDate = selectedDate,
@@ -182,6 +183,7 @@ internal fun InstructorScheduleStateful(
 @Composable
 internal fun InstructorScheduleStateless(
     sessions: List<ClassSession>,
+    calendarDays: List<InstructorCalendarDay>,
     displayedYear: Int,
     displayedMonth: Int,
     selectedDate: LocalDate,
@@ -210,14 +212,14 @@ internal fun InstructorScheduleStateless(
                 selectedDate = selectedDate,
                 isMonthMode = isMonthMode,
                 scheduledDates =
-                    sessions
-                        .filter { it.status == ClassSessionStatus.SCHEDULED }
-                        .map { it.startAt.date }
+                    calendarDays
+                        .filter { it.scheduled }
+                        .map { it.date }
                         .toSet(),
                 completedDates =
-                    sessions
-                        .filter { it.status == ClassSessionStatus.COMPLETED }
-                        .map { it.startAt.date }
+                    calendarDays
+                        .filter { it.completed }
+                        .map { it.date }
                         .toSet(),
                 onDateSelected = onDateSelected,
                 onModeChange = onModeChange,
@@ -295,6 +297,7 @@ private fun InstructorScheduleStatelessPreview() {
                         status = ClassSessionStatus.COMPLETED,
                     ),
                 ),
+            calendarDays = emptyList(),
             displayedYear = selectedDate.year,
             displayedMonth = selectedDate.month.number,
             selectedDate = selectedDate,

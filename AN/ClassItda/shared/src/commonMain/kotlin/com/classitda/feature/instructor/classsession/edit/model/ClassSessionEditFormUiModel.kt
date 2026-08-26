@@ -6,6 +6,7 @@ import kotlinx.datetime.LocalTime
 
 internal data class ClassSessionEditFormUiModel(
     val id: String,
+    val classTypeId: String,
     val classType: ClassType,
     val categories: List<String>,
     val title: String,

@@ -2,18 +2,32 @@ package com.classitda.feature.instructor.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.management.ClassSession
-import com.classitda.domain.repository.instructor.management.ClassManagementRepository
+import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
+import com.classitda.feature.instructor.session.toClassSession
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
 
 internal class InstructorHomeViewModel(
-    private val repository: ClassManagementRepository,
+    private val repository: InstructorSessionRepository,
+    private val studioContext: InstructorStudioContext,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<InstructorHomeUiState>(InstructorHomeUiState.Loading)
     val uiState: StateFlow<InstructorHomeUiState> = _uiState.asStateFlow()
+    private var loadJob: Job? = null
 
     init {
         load()
@@ -24,15 +38,32 @@ internal class InstructorHomeViewModel(
     }
 
     private fun load() {
+        loadJob?.cancel()
         _uiState.value = InstructorHomeUiState.Loading
-        viewModelScope.launch {
-            runCatching { repository.getSessions() }
-                .onSuccess { sessions ->
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    val studio = studioContext.getSelectedStudio()
+                    val today = Clock.System.todayIn(TimeZone.of("Asia/Seoul"))
+                    val sessions =
+                        coroutineScope {
+                            (0..6)
+                                .map { offset ->
+                                    async {
+                                        repository
+                                            .getDailySessions(studio.id, today.plus(DatePeriod(days = offset)))
+                                            .map { it.toClassSession() }
+                                    }
+                                }.awaitAll()
+                                .flatten()
+                        }
                     _uiState.value = InstructorHomeUiState.Success(sessions.sortedBy { it.startAt })
-                }.onFailure { error ->
-                    _uiState.value = InstructorHomeUiState.Error(error.message)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    _uiState.value = InstructorHomeUiState.Error(exception.message)
                 }
-        }
+            }
     }
 }
 

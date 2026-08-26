@@ -12,10 +12,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,37 +31,55 @@ import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
+import com.classitda.domain.model.studio.Studio
 import com.classitda.feature.instructor.home.component.InstructorHomeHeader
 import com.classitda.feature.instructor.home.component.InstructorHomeSummary
+import com.classitda.feature.instructor.home.component.InstructorStudioSwitchSheet
 import com.classitda.feature.instructor.home.component.InstructorTimeline
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
-import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 internal fun InstructorHomeRoute(
     onSessionClick: (String) -> Unit,
+    onStudioChanged: () -> Unit = {},
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InstructorHomeViewModel = koinViewModel(),
 ) = InstructorHomeStateful(
     onSessionClick = onSessionClick,
+    onStudioChanged = onStudioChanged,
     bottomBar = bottomBar,
     modifier = modifier,
     viewModel = viewModel,
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun InstructorHomeStateful(
     onSessionClick: (String) -> Unit,
+    onStudioChanged: () -> Unit = {},
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InstructorHomeViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val studioContext = koinInject<InstructorStudioContext>()
+    val scope = rememberCoroutineScope()
+    var selectedStudio by remember { mutableStateOf<Studio?>(null) }
+    var pendingStudio by remember { mutableStateOf<Studio?>(null) }
+    var studios by remember { mutableStateOf<List<Studio>>(emptyList()) }
+    var studioLoadError by remember { mutableStateOf<String?>(null) }
+    var isStudioSheetVisible by remember { mutableStateOf(false) }
 
+    LaunchedEffect(Unit) {
+        selectedStudio = runCatching { studioContext.getSelectedStudio() }.getOrNull()
+    }
     Scaffold(
         modifier = modifier,
         containerColor = InsColors.Background,
@@ -77,10 +101,57 @@ internal fun InstructorHomeStateful(
             is InstructorHomeUiState.Success -> {
                 InstructorHomeStateless(
                     sessions = state.sessions,
+                    studioName = selectedStudio?.name ?: "시설 선택",
+                    onStudioClick = {
+                        scope.launch {
+                            studioLoadError = null
+                            runCatching {
+                                studioContext.getStudios()
+                            }.onSuccess { loadedStudios ->
+                                studios = loadedStudios
+                                pendingStudio = selectedStudio
+                            }.onFailure { error -> studioLoadError = error.message }
+                            isStudioSheetVisible = true
+                        }
+                    },
                     onSessionClick = onSessionClick,
                     modifier = Modifier.padding(contentPadding),
                 )
             }
+        }
+
+        if (isStudioSheetVisible) {
+            InstructorStudioSwitchSheet(
+                studios = studios,
+                selectedStudioId = pendingStudio?.id?.value,
+                errorMessage = studioLoadError,
+                onRetry = {
+                    scope.launch {
+                        studioLoadError = null
+                        runCatching {
+                            studioContext.getStudios()
+                        }.onSuccess { loadedStudios ->
+                            studios = loadedStudios
+                            pendingStudio = selectedStudio
+                        }.onFailure { error -> studioLoadError = error.message }
+                    }
+                },
+                onStudioClick = { studio ->
+                    pendingStudio = studio
+                },
+                onConfirmClick = {
+                    pendingStudio?.let { studio ->
+                        scope.launch {
+                            studioContext.selectStudio(studio.id.value)
+                            viewModel.retry()
+                            selectedStudio = studio
+                            isStudioSheetVisible = false
+                            onStudioChanged()
+                        }
+                    }
+                },
+                onDismissRequest = { isStudioSheetVisible = false },
+            )
         }
     }
 }
@@ -89,6 +160,8 @@ internal fun InstructorHomeStateful(
 internal fun InstructorHomeStateless(
     sessions: List<ClassSession>,
     onSessionClick: (String) -> Unit,
+    studioName: String = "클래스잇다 요가&필라테스",
+    onStudioClick: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val visibleSessions = sessions.sortedBy { it.startAt }
@@ -98,7 +171,10 @@ internal fun InstructorHomeStateless(
         contentPadding = PaddingValues(bottom = AppSpacing.xxxl),
     ) {
         item {
-            InstructorHomeHeader()
+            InstructorHomeHeader(
+                studioName = studioName,
+                onStudioClick = onStudioClick,
+            )
         }
         item {
             InstructorHomeSummary(sessions)

@@ -75,6 +75,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             InstructorBottomTab.HOME -> {
                 InstructorHomeRoute(
                     onSessionClick = { selectedSessionId = it },
+                    onStudioChanged = { scheduleRefreshKey++ },
                     bottomBar = {},
                     modifier = modifier,
                 )
@@ -98,6 +99,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             -> {
                 InstructorHomeRoute(
                     onSessionClick = { selectedSessionId = it },
+                    onStudioChanged = { scheduleRefreshKey++ },
                     bottomBar = {},
                     modifier = modifier,
                 )

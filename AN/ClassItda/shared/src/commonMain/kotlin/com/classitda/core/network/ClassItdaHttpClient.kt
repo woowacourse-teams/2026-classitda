@@ -31,6 +31,7 @@ internal fun createClassItdaHttpClient(
 ): HttpClient =
     HttpClient(engine) {
         expectSuccess = true
+        installClassItdaErrorLogging()
         install(ContentNegotiation) {
             json(
                 Json {
@@ -53,6 +54,7 @@ internal fun createConfiguredHttpClient(
 ): HttpClient =
     HttpClient {
         expectSuccess = true
+        installClassItdaErrorLogging()
         install(ContentNegotiation) {
             json(
                 Json {
@@ -60,13 +62,6 @@ internal fun createConfiguredHttpClient(
                     explicitNulls = false
                 },
             )
-        }
-        HttpResponseValidator {
-            handleResponseExceptionWithRequest { cause, request ->
-                if (cause is ResponseException) {
-                    Logger.e("${request.method.value} ${request.url}: ${cause.response.status}", cause)
-                }
-            }
         }
         defaultRequest {
             url.takeFrom(config.baseUrl)
@@ -132,3 +127,17 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
         }
     }
 }
+
+private fun io.ktor.client.HttpClientConfig<*>.installClassItdaErrorLogging() {
+    HttpResponseValidator {
+        handleResponseExceptionWithRequest { cause, request ->
+            if (cause is ResponseException) {
+                networkLogger.e {
+                    "HTTP ${cause.response.status.value} ${request.method.value} ${request.url.encodedPath}"
+                }
+            }
+        }
+    }
+}
+
+private val networkLogger = Logger.withTag("ClassItdaNetwork")

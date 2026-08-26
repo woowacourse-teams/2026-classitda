@@ -1,5 +1,6 @@
 package com.classitda.feature.instructor.home.component
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_expand_more
 import com.classitda.core.designsystem.AppSpacing
@@ -26,7 +28,11 @@ import com.classitda.core.designsystem.ThemeType
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-internal fun InstructorHomeHeader(modifier: Modifier = Modifier) {
+internal fun InstructorHomeHeader(
+    studioName: String,
+    onStudioClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
         verticalAlignment = Alignment.Top,
@@ -34,8 +40,15 @@ internal fun InstructorHomeHeader(modifier: Modifier = Modifier) {
         Column(Modifier.weight(1f)) {
             Text("안녕하세요, 이지은 강사님", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(AppSpacing.xs))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("클래스잇다 요가&필라테스", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Row(
+                modifier = Modifier.clickable(onClick = onStudioClick),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = studioName,
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+                    fontWeight = FontWeight.Bold,
+                )
                 Spacer(Modifier.width(AppSpacing.xs))
                 Icon(
                     painter = painterResource(Res.drawable.ic_expand_more),
@@ -52,6 +65,9 @@ internal fun InstructorHomeHeader(modifier: Modifier = Modifier) {
 @Composable
 private fun InstructorHomeHeaderPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
-        InstructorHomeHeader()
+        InstructorHomeHeader(
+            studioName = "클래스잇다 요가&필라테스",
+            onStudioClick = {},
+        )
     }
 }

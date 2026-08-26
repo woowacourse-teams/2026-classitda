@@ -27,9 +27,18 @@ internal fun InstructorHomeSummary(
     val remainingCount = sessions.count { it.status == ClassSessionStatus.SCHEDULED }
 
     Column(modifier.padding(horizontal = AppSpacing.screenPadding)) {
-        Text("오늘 수업 ${sessions.size}개", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(
+            text = "오늘 수업 ${sessions.size}개",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = InsColors.TextPrimary,
+        )
         Spacer(Modifier.height(AppSpacing.xs))
-        Text("완료 ${completedCount}개 · 남은 수업 ${remainingCount}개", color = InsColors.TextSecondary)
+        Text(
+            text = "완료 ${completedCount}개 · 남은 수업 ${remainingCount}개",
+            style = MaterialTheme.typography.bodyMedium,
+            color = InsColors.TextSecondary,
+        )
     }
 }
 
