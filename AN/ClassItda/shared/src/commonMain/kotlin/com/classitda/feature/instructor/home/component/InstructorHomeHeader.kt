@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_expand_more
 import com.classitda.core.designsystem.AppSpacing
@@ -43,7 +44,11 @@ internal fun InstructorHomeHeader(
                 modifier = Modifier.clickable(onClick = onStudioClick),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(studioName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Text(
+                    text = studioName,
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+                    fontWeight = FontWeight.Bold,
+                )
                 Spacer(Modifier.width(AppSpacing.xs))
                 Icon(
                     painter = painterResource(Res.drawable.ic_expand_more),
