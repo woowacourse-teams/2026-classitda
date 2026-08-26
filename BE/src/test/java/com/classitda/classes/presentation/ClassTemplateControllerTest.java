@@ -67,7 +67,7 @@ class ClassTemplateControllerTest {
     @Test
     void 수업_템플릿을_등록하면_201과_빈_본문을_반환하고_명령_서비스에_위임한다() {
         // given
-        ClassTemplateCreateRequest request = ClassTemplateFixture.기본_수업_템플릿_생성_요청(List.of(3L, 1L));
+        ClassTemplateCreateRequest request = ClassTemplateFixture.기본_수업_템플릿_생성_요청(1L);
 
         // when
         RestTestClient.ResponseSpec result = 수업_템플릿을_등록한다(7L, "1", request);
@@ -81,7 +81,7 @@ class ClassTemplateControllerTest {
     void 필수_이름이_비어_있으면_COMMON_001을_반환하고_명령_서비스를_호출하지_않는다() {
         // given
         ClassTemplateCreateRequest request = ClassTemplateFixture.수업_템플릿_생성_요청(
-                " ", null, null, List.of(1L));
+                " ", null, null, 1L);
 
         // when
         RestTestClient.ResponseSpec result = 수업_템플릿을_등록한다(7L, "1", request);
@@ -92,9 +92,27 @@ class ClassTemplateControllerTest {
     }
 
     @Test
+    void 여러_수업_종류_ID_배열로_등록하면_COMMON_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/studios/7/class-templates")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("""
+                        {"name":"저녁 요가","classForm":"GROUP","durationMinutes":60,
+                        "startTime":"20:00:00","capacity":12,"classTypeIds":[1,2]}
+                        """)
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(commandService, never()).save(anyLong(), anyLong(), any());
+    }
+
+    @Test
     void 등록_버전_헤더가_없거나_지원되지_않으면_서비스를_호출하지_않는다() {
         // given
-        ClassTemplateCreateRequest request = ClassTemplateFixture.기본_수업_템플릿_생성_요청(List.of(1L));
+        ClassTemplateCreateRequest request = ClassTemplateFixture.기본_수업_템플릿_생성_요청(1L);
 
         // when / then
         오류를_검증한다(client.post()
@@ -110,7 +128,7 @@ class ClassTemplateControllerTest {
     @Test
     void 명령_서비스의_권한과_수업_종류_예외를_정확히_직렬화한다() {
         // given
-        ClassTemplateCreateRequest request = ClassTemplateFixture.기본_수업_템플릿_생성_요청(List.of(1L));
+        ClassTemplateCreateRequest request = ClassTemplateFixture.기본_수업_템플릿_생성_요청(1L);
         doThrow(new StudioException(StudioErrorCode.PERMISSION_DENIED),
                 new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND))
                 .when(commandService).save(1L, 7L, request);
@@ -125,8 +143,7 @@ class ClassTemplateControllerTest {
     @Test
     void 수업_템플릿을_전체_수정하면_204와_빈_본문을_반환하고_정확한_요청을_위임한다() {
         // given
-        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(
-                List.of(3L, 1L));
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(1L);
 
         // when
         RestTestClient.ResponseSpec result = 수업_템플릿을_수정한다(7L, 11L, "1", request);
@@ -141,7 +158,7 @@ class ClassTemplateControllerTest {
         // given
         ClassTemplateUpdateRequest request = ClassTemplateFixture.수업_템플릿_수정_요청(
                 "요일 없는 템플릿", null, ClassForm.GROUP, 60,
-                LocalTime.of(20, 0), null, 12, List.of(1L));
+                LocalTime.of(20, 0), null, 12, 1L);
 
         // when
         RestTestClient.ResponseSpec result = 수업_템플릿을_수정한다(7L, 11L, "1", request);
@@ -160,7 +177,7 @@ class ClassTemplateControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {"name":"요일 없는 템플릿","description":null,"classForm":"GROUP",
-                        "durationMinutes":60,"startTime":"20:00:00","capacity":12,"classTypeIds":[1]}
+                        "durationMinutes":60,"startTime":"20:00:00","capacity":12,"classTypeId":1}
                         """)
                 .exchange();
 
@@ -169,7 +186,7 @@ class ClassTemplateControllerTest {
         verify(commandService).update(eq(1L), eq(7L), eq(11L),
                 eq(ClassTemplateFixture.수업_템플릿_수정_요청(
                         "요일 없는 템플릿", null, ClassForm.GROUP, 60,
-                        LocalTime.of(20, 0), null, 12, List.of(1L))));
+                        LocalTime.of(20, 0), null, 12, 1L)));
     }
 
     @Test
@@ -181,7 +198,7 @@ class ClassTemplateControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {"name":"저녁 요가","classForm":"GROUP","durationMinutes":60,
-                        "startTime":"20:00","capacity":12,"classTypeIds":[1]}
+                        "startTime":"20:00","capacity":12,"classTypeId":1}
                         """)
                 .exchange();
 
@@ -199,7 +216,7 @@ class ClassTemplateControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .body("""
                         {"name":"저녁 요가","classForm":"GROUP","durationMinutes":60,
-                        "startTime":"20:00","capacity":12,"classTypeIds":[1]}
+                        "startTime":"20:00","capacity":12,"classTypeId":1}
                         """)
                 .exchange();
 
@@ -213,17 +230,17 @@ class ClassTemplateControllerTest {
         // given
         List<ClassTemplateUpdateRequest> invalidRequests = List.of(
                 ClassTemplateFixture.수업_템플릿_수정_요청(
-                        null, null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, 12, List.of(1L)),
+                        null, null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, 12, 1L),
                 ClassTemplateFixture.수업_템플릿_수정_요청(
-                        "템플릿", null, null, 60, LocalTime.of(20, 0), null, 12, List.of(1L)),
+                        "템플릿", null, null, 60, LocalTime.of(20, 0), null, 12, 1L),
                 ClassTemplateFixture.수업_템플릿_수정_요청(
-                        "템플릿", null, ClassForm.GROUP, null, LocalTime.of(20, 0), null, 12, List.of(1L)),
+                        "템플릿", null, ClassForm.GROUP, null, LocalTime.of(20, 0), null, 12, 1L),
                 ClassTemplateFixture.수업_템플릿_수정_요청(
-                        "템플릿", null, ClassForm.GROUP, 60, null, null, 12, List.of(1L)),
+                        "템플릿", null, ClassForm.GROUP, 60, null, null, 12, 1L),
                 ClassTemplateFixture.수업_템플릿_수정_요청(
-                        "템플릿", null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, null, List.of(1L)),
+                        "템플릿", null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, null, 1L),
                 ClassTemplateFixture.수업_템플릿_수정_요청(
-                        "템플릿", null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, 12, List.of())
+                        "템플릿", null, ClassForm.GROUP, 60, LocalTime.of(20, 0), null, 12, null)
         );
 
         // when / then
@@ -239,7 +256,7 @@ class ClassTemplateControllerTest {
     @Test
     void 전체_수정_버전이_없거나_지원되지_않으면_서비스를_호출하지_않는다() {
         // given
-        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(1L));
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(1L);
 
         // when / then
         오류를_검증한다(client.put()
@@ -255,7 +272,7 @@ class ClassTemplateControllerTest {
     @Test
     void 전체_수정_서비스의_권한과_템플릿과_수업_종류_예외를_정확히_직렬화한다() {
         // given
-        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(List.of(1L));
+        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(1L);
         doThrow(
                 new StudioException(StudioErrorCode.PERMISSION_DENIED),
                 new ClassException(ClassErrorCode.CLASS_TEMPLATE_NOT_FOUND),
@@ -319,7 +336,7 @@ class ClassTemplateControllerTest {
                 LocalTime.of(20, 0),
                 List.of(DayOfWeek.MONDAY, DayOfWeek.FRIDAY),
                 12,
-                List.of(ClassTypeResponse.of(1L, "요가"), ClassTypeResponse.of(3L, "필라테스"))
+                ClassTypeResponse.of(1L, "요가")
         )));
 
         // when
@@ -329,7 +346,7 @@ class ClassTemplateControllerTest {
         result.expectStatus().isOk().expectBody().json("""
                 [{"id":2,"name":"저녁 요가","description":null,"classForm":"GROUP",
                 "durationMinutes":60,"startTime":"20:00:00","recurringDays":["MONDAY","FRIDAY"],
-                "capacity":12,"classTypes":[{"id":1,"name":"요가"},{"id":3,"name":"필라테스"}]}]
+                "capacity":12,"classType":{"id":1,"name":"요가"}}]
                 """, JsonCompareMode.STRICT);
         verify(queryService).findAll(1L, 7L);
     }

@@ -246,7 +246,7 @@ CREATE TABLE class_template_class_type
     created_at        DATETIME(6) NOT NULL,
     updated_at        DATETIME(6) NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_template_class_type (class_template_id, class_type_id),
+    UNIQUE KEY uk_template_class_type (class_template_id),
     CONSTRAINT fk_template_class_type_template
         FOREIGN KEY (class_template_id) REFERENCES class_template (id) ON DELETE CASCADE,
     CONSTRAINT fk_template_class_type_type

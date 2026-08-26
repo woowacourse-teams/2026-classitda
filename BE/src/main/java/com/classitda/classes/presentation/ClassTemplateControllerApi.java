@@ -97,7 +97,7 @@ public interface ClassTemplateControllerApi {
             summary = "수업 템플릿 목록 조회",
             description = """
                     시설에 속한 수업 템플릿 전체를 ID 오름차순으로 조회합니다.
-                    각 템플릿의 수업 종류는 페이징하지 않고 전체를 ID 오름차순으로 반환합니다.
+                    각 템플릿에 연결된 하나의 수업 종류를 반환합니다.
                     수업 템플릿 관리 권한이 필요합니다.
                     """
     )
@@ -170,7 +170,7 @@ public interface ClassTemplateControllerApi {
             description = """
                     수업 템플릿의 모든 수정 가능한 정보를 새 값으로 교체합니다.
                     description이 null이면 메모를 삭제하고, recurringDays가 null이거나 비어 있으면 반복 요일을 모두 삭제합니다.
-                    description과 recurringDays를 제외한 모든 필드는 필수이며, 수업 종류를 하나 이상 선택해야 합니다.
+                    description과 recurringDays를 제외한 모든 필드는 필수이며, 수업 종류를 하나 선택해야 합니다.
                     존재하지 않는 수업 템플릿은 새로 생성하지 않으며, 수업 템플릿 관리 권한이 필요합니다.
                     """
     )
