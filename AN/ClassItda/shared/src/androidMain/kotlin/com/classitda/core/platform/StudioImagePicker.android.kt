@@ -138,7 +138,13 @@ private fun createCameraUri(context: Context): Uri? {
                 put(MediaStore.Images.Media.IS_PENDING, 1)
             }
         }
-    return context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+    return try {
+        context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+    } catch (_: SecurityException) {
+        null
+    } catch (_: IllegalArgumentException) {
+        null
+    }
 }
 
 private fun markCameraUriReady(
