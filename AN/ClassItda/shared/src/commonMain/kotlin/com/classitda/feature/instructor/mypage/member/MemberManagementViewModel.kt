@@ -16,10 +16,10 @@ import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
-import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFieldErrors
-import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
+import com.classitda.feature.instructor.mypage.contract.isStudioRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.contract.studioRegistrationFieldErrors
 import com.classitda.feature.instructor.mypage.toDomain
 import com.classitda.feature.instructor.mypage.toListError
 import com.classitda.feature.instructor.mypage.toMemberListUiModel

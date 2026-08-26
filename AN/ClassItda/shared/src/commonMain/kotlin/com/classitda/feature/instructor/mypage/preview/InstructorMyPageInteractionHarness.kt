@@ -16,9 +16,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
-import classitda.shared.generated.resources.instructor_facility_management_title
 import classitda.shared.generated.resources.instructor_member_management_title
 import classitda.shared.generated.resources.instructor_my_page_title
+import classitda.shared.generated.resources.instructor_studio_management_title
 import classitda.shared.generated.resources.my_page_privacy_policy
 import classitda.shared.generated.resources.profile_view_title
 import com.classitda.core.designsystem.AppSpacing
@@ -26,8 +26,8 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
-import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.feature.common.privacypolicy.PrivacyPolicyAction
 import com.classitda.feature.common.privacypolicy.PrivacyPolicyScreen
 import com.classitda.feature.common.privacypolicy.PrivacyPolicyUiState
@@ -42,13 +42,6 @@ import com.classitda.feature.common.profile.contract.ProfileEditUiState
 import com.classitda.feature.common.profile.contract.ProfileViewAction
 import com.classitda.feature.common.profile.contract.ProfileViewUiState
 import com.classitda.feature.instructor.mypage.InstructorMyPageScreen
-import com.classitda.feature.instructor.mypage.contract.FacilityInputUiModel
-import com.classitda.feature.instructor.mypage.contract.FacilityListUiModel
-import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
-import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityUiModel
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiModel
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiState
@@ -59,10 +52,17 @@ import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.MemberUiModel
-import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
-import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
+import com.classitda.feature.instructor.mypage.contract.StudioInputUiModel
+import com.classitda.feature.instructor.mypage.contract.StudioListUiModel
+import com.classitda.feature.instructor.mypage.contract.StudioManagementAction
+import com.classitda.feature.instructor.mypage.contract.StudioManagementUiState
+import com.classitda.feature.instructor.mypage.contract.StudioRegistrationAction
+import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.StudioUiModel
 import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
 import com.classitda.feature.instructor.mypage.member.MemberRegistrationScreen
+import com.classitda.feature.instructor.mypage.studio.StudioManagementScreen
+import com.classitda.feature.instructor.mypage.studio.StudioRegistrationScreen
 import org.jetbrains.compose.resources.stringResource
 
 /** Deterministic no-DI harness: it verifies Screen state/callback contracts only. */
@@ -81,12 +81,12 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
     var registrationState by remember {
         mutableStateOf<MemberRegistrationUiState>(MemberRegistrationUiState.Editing(MemberInputUiModel(), false))
     }
-    var facilityState by remember {
-        mutableStateOf<FacilityManagementUiState>(FacilityManagementUiState.Content(facilityPageFixture))
+    var studioState by remember {
+        mutableStateOf<StudioManagementUiState>(StudioManagementUiState.Content(studioPageFixture))
     }
-    var facilityRegistrationState by remember {
-        mutableStateOf<FacilityRegistrationUiState>(
-            FacilityRegistrationUiState.Editing(FacilityInputUiModel(), false),
+    var studioRegistrationState by remember {
+        mutableStateOf<StudioRegistrationUiState>(
+            StudioRegistrationUiState.Editing(StudioInputUiModel(), false),
         )
     }
 
@@ -107,10 +107,10 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                                 "OpenMemberManagement"
                         }
 
-                        InstructorMyPageAction.OpenFacilityManagement -> {
+                        InstructorMyPageAction.OpenStudioManagement -> {
                             destination = HarnessDestination.F08
                             lastEvent =
-                                "OpenFacilityManagement"
+                                "OpenStudioManagement"
                         }
 
                         InstructorMyPageAction.OpenPrivacyPolicy -> {
@@ -350,29 +350,29 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
             }
 
             HarnessDestination.F08 -> {
-                FacilityManagementScreen(facilityState, onAction = { action ->
+                StudioManagementScreen(studioState, onAction = { action ->
                     when (action) {
-                        FacilityManagementAction.Back -> {
+                        StudioManagementAction.Back -> {
                             destination = HarnessDestination.F01
                             lastEvent = "Back:F08"
                         }
 
-                        is FacilityManagementAction.EditFacility -> {
-                            lastEvent = "EditFacility:${action.facilityId.value}"
+                        is StudioManagementAction.EditStudio -> {
+                            lastEvent = "EditStudio:${action.studioId.value}"
                         }
 
-                        is FacilityManagementAction.OpenFacilityDetail -> {
+                        is StudioManagementAction.OpenStudioDetail -> {
                             lastEvent =
-                                "OpenFacilityDetail:${action.facilityId.value}"
+                                "OpenStudioDetail:${action.studioId.value}"
                         }
 
-                        FacilityManagementAction.OpenFacilityRegistration -> {
+                        StudioManagementAction.OpenStudioRegistration -> {
                             destination = HarnessDestination.F09
                             lastEvent =
-                                "OpenFacilityRegistration"
+                                "OpenStudioRegistration"
                         }
 
-                        FacilityManagementAction.Retry -> {
+                        StudioManagementAction.Retry -> {
                             lastEvent = "Retry:F08"
                         }
                     }
@@ -380,44 +380,42 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
             }
 
             HarnessDestination.F09 -> {
-                FacilityRegistrationScreen(facilityRegistrationState, onAction = { action ->
+                StudioRegistrationScreen(studioRegistrationState, onAction = { action ->
                     when (action) {
-                        FacilityRegistrationAction.Back -> {
+                        StudioRegistrationAction.Back -> {
                             destination = HarnessDestination.F08
                             lastEvent = "Back:F09"
                         }
 
-                        FacilityRegistrationAction.RequestImages -> {
-                            lastEvent = "RequestImages"
+                        StudioRegistrationAction.RequestImageSource -> {
+                            lastEvent = "RequestImageSource"
                         }
 
-                        FacilityRegistrationAction.RequestAddressSearch -> {
+                        StudioRegistrationAction.RequestAddressSearch -> {
                             lastEvent = "RequestAddressSearch"
                         }
 
-                        is FacilityRegistrationAction.ImagesSelected -> {
-                            lastEvent =
-                                "ImagesSelected:${action.images.size.coerceAtMost(5)}"
+                        is StudioRegistrationAction.ImageSelected -> {
+                            lastEvent = "ImageSelected"
                         }
 
-                        is FacilityRegistrationAction.AddressSelected -> {
+                        is StudioRegistrationAction.AddressSelected -> {
                             lastEvent = "AddressSelected:${action.address}"
-                            facilityRegistrationState =
-                                FacilityRegistrationUiState.Editing(
-                                    FacilityInputUiModel(
+                            studioRegistrationState =
+                                StudioRegistrationUiState.Editing(
+                                    StudioInputUiModel(
                                         address = action.address,
-                                        detailAddress = action.detailAddress,
                                     ),
                                     false,
                                 )
                         }
 
-                        FacilityRegistrationAction.Submit -> {
+                        StudioRegistrationAction.Submit -> {
                             lastEvent = "Submit:F09"
                         }
 
                         else -> {
-                            lastEvent = action::class.simpleName ?: "FacilityAction"
+                            lastEvent = action::class.simpleName ?: "StudioAction"
                         }
                     }
                 }, modifier = Modifier.weight(1f))
@@ -435,7 +433,7 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
             }) { Text(stringResource(Res.string.instructor_member_management_title)) }
             TextButton(onClick = {
                 destination = HarnessDestination.F08
-            }) { Text(stringResource(Res.string.instructor_facility_management_title)) }
+            }) { Text(stringResource(Res.string.instructor_studio_management_title)) }
         }
         Text(
             "last callback: $lastEvent",
@@ -465,15 +463,17 @@ private val memberPageFixture =
         totalCount = 2,
         members = listOf(MemberUiModel(InstructorMemberId("member-1"), "김민지", "010-1234-5678", "김")),
     )
-private val facilityPageFixture =
-    FacilityListUiModel(
+private val studioPageFixture =
+    StudioListUiModel(
         totalCount = 1,
-        facilities =
+        studios =
             listOf(
-                FacilityUiModel(
-                    InstructorFacilityId("facility-1"),
+                StudioUiModel(
+                    InstructorStudioId("studio-1"),
                     "클래스잇다 스튜디오",
-                    "서울특별시 강남구 테헤란로",
+                    com.classitda.domain.model.instructor.mypage.StudioAddress(
+                        roadAddress = "서울특별시 강남구 테헤란로",
+                    ),
                 ),
             ),
     )
