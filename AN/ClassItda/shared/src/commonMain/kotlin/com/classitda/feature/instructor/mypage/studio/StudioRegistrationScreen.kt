@@ -430,40 +430,43 @@ private fun StudioRegistrationForm(
                 imageError
             } else if (StudioRegistrationField.IMAGE in fieldErrors) {
                 StudioImageUiError.UPLOAD_UNAVAILABLE
-            } else {
-                null
+        } else {
+            null
+        }
+        val displayedImageErrorText =
+            displayedImageError?.let { error ->
+                stringResource(
+                    when (error) {
+                        StudioImageUiError.PERMISSION_DENIED -> {
+                            Res.string.instructor_studio_registration_image_permission_denied
+                        }
+
+                        StudioImageUiError.CAMERA_UNAVAILABLE -> {
+                            Res.string.instructor_studio_registration_image_camera_unavailable
+                        }
+
+                        StudioImageUiError.READ_FAILED -> {
+                            Res.string.instructor_studio_registration_image_read_failed
+                        }
+
+                        StudioImageUiError.INVALID_MIME -> {
+                            Res.string.instructor_studio_registration_image_invalid_mime
+                        }
+
+                        StudioImageUiError.FILE_TOO_LARGE -> {
+                            Res.string.instructor_studio_registration_image_file_too_large
+                        }
+
+                        StudioImageUiError.UPLOAD_UNAVAILABLE -> {
+                            Res.string.instructor_studio_registration_image_upload_unavailable
+                        }
+                    },
+                )
             }
-        displayedImageError?.let { error ->
+        displayedImageErrorText?.let { errorMessageText ->
             Text(
-                text =
-                    stringResource(
-                        when (error) {
-                            StudioImageUiError.PERMISSION_DENIED -> {
-                                Res.string.instructor_studio_registration_image_permission_denied
-                            }
-
-                            StudioImageUiError.CAMERA_UNAVAILABLE -> {
-                                Res.string.instructor_studio_registration_image_camera_unavailable
-                            }
-
-                            StudioImageUiError.READ_FAILED -> {
-                                Res.string.instructor_studio_registration_image_read_failed
-                            }
-
-                            StudioImageUiError.INVALID_MIME -> {
-                                Res.string.instructor_studio_registration_image_invalid_mime
-                            }
-
-                            StudioImageUiError.FILE_TOO_LARGE -> {
-                                Res.string.instructor_studio_registration_image_file_too_large
-                            }
-
-                            StudioImageUiError.UPLOAD_UNAVAILABLE -> {
-                                Res.string.instructor_studio_registration_image_upload_unavailable
-                            }
-                        },
-                    ),
-                modifier = Modifier.semantics { error("studio-image-error") },
+                text = errorMessageText,
+                modifier = Modifier.semantics { error(errorMessageText) },
                 style = appTypography().bodySmall,
                 color = InsColors.Red,
             )
