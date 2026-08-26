@@ -24,9 +24,21 @@ public class StudioPermissionService {
         if (studio.isOwner(memberId)) {
             return;
         }
+
         StudioMembership membership = getActiveMembership(studio.getId(), memberId);
         if (!studioRolePermissionRepository.existsByStudioRoleIdAndPermissionCode(
                 membership.getStudioRole().getId(), required)) {
+            throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
+        }
+    }
+
+    public void validateStaff(Studio studio, Long memberId) {
+        if (studio.isOwner(memberId)) {
+            return;
+        }
+
+        StudioMembership membership = getActiveMembership(studio.getId(), memberId);
+        if (membership.isStudent()) {
             throw new StudioException(StudioErrorCode.PERMISSION_DENIED);
         }
     }
@@ -35,9 +47,11 @@ public class StudioPermissionService {
         StudioMembership membership = studioMembershipRepository
                 .findByStudioIdAndMemberId(studioId, memberId)
                 .orElseThrow(() -> new StudioException(StudioErrorCode.NOT_MEMBERSHIP));
+
         if (membership.getStatus() != MembershipStatus.ACTIVE) {
             throw new StudioException(StudioErrorCode.MEMBERSHIP_INACTIVE);
         }
+
         return membership;
     }
 }

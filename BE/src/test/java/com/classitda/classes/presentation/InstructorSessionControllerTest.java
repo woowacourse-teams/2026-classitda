@@ -1,6 +1,7 @@
 package com.classitda.classes.presentation;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -12,6 +13,7 @@ import com.classitda.classes.application.ClassSessionCommandService;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.application.instructor.calendar.InstructorCalendarQueryService;
 import com.classitda.classes.application.instructor.daily.InstructorDailyQueryService;
+import com.classitda.classes.application.instructor.daily.InstructorDailySessionView;
 import com.classitda.classes.application.instructor.enrollment.ClassSessionInstructorEnrollmentCommandService;
 import com.classitda.classes.application.instructor.enrollment.StudioStudentView;
 import com.classitda.classes.application.instructor.enrollment.InstructorSessionDetailView;
@@ -21,13 +23,18 @@ import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
 import com.classitda.common.config.ApiVersionConfig;
+import com.classitda.common.exception.ClassitdaException;
+import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.exception.GlobalExceptionHandler;
+import com.classitda.common.pagination.CursorResponse;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -71,6 +78,123 @@ class InstructorSessionControllerTest {
     void 인증된_회원_아이디를_주입한다() throws Exception {
         when(currentMemberIdArgumentResolver.supportsParameter(any())).thenReturn(true);
         when(currentMemberIdArgumentResolver.resolveArgument(any(), any(), any(), any())).thenReturn(1L);
+    }
+
+    @Test
+    void 강사용_전체_수업_목록을_필터링해_조회하면_200과_커서_응답을_반환한다() {
+        // given
+        when(instructorDailyQueryService.findWithCursor(
+                1L,
+                7L,
+                "cursor-token",
+                20,
+                ClassForm.GROUP,
+                3L
+        )).thenReturn(CursorResponse.of(List.of(목록_뷰()), true, "next-cursor"));
+
+        // when
+        RestTestClient.ResponseSpec result = 전체_수업_목록을_조회한다(
+                7L,
+                "cursor=cursor-token&size=20&classForm=GROUP&classTypeId=3",
+                "1"
+        );
+
+        // then
+        result.expectStatus().isOk().expectBody().json("""
+                {
+                  "items":[{
+                    "id":11,
+                    "instructorMembershipId":12,
+                    "instructorName":"김강사",
+                    "classForm":"GROUP",
+                    "classType":{"id":3,"name":"필라테스"},
+                    "className":"리포머 밸런스",
+                    "description":"3층 A룸에서 진행합니다.",
+                    "capacity":10,
+                    "reservedCount":8,
+                    "waitingCount":2,
+                    "startAt":"2026-08-17T20:00:00",
+                    "endAt":"2026-08-17T21:00:00",
+                    "status":"SCHEDULED_BOOKING_OPEN",
+                    "mine":true
+                  }],
+                  "hasNext":true,
+                  "nextCursor":"next-cursor"
+                }
+                """, JsonCompareMode.STRICT);
+        verify(instructorDailyQueryService).findWithCursor(
+                1L,
+                7L,
+                "cursor-token",
+                20,
+                ClassForm.GROUP,
+                3L
+        );
+    }
+
+    @Test
+    void 강사용_전체_수업_목록의_선택_조건을_생략하면_기본값으로_조회한다() {
+        // given
+        when(instructorDailyQueryService.findWithCursor(1L, 7L, null, 10, null, null))
+                .thenReturn(CursorResponse.of(List.of(), false, null));
+
+        // when
+        RestTestClient.ResponseSpec result = 전체_수업_목록을_조회한다(7L, "", "1");
+
+        // then
+        result.expectStatus().isOk().expectBody().json("""
+                {"items":[],"hasNext":false,"nextCursor":null}
+                """, JsonCompareMode.STRICT);
+        verify(instructorDailyQueryService).findWithCursor(1L, 7L, null, 10, null, null);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"size=0", "size=101", "classForm=ETC", "classTypeId=0"})
+    void 강사용_전체_수업_목록의_요청_값이_유효하지_않으면_COMMON_001을_반환한다(String query) {
+        // when
+        RestTestClient.ResponseSpec result = 전체_수업_목록을_조회한다(7L, query, "1");
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verify(instructorDailyQueryService, never()).findWithCursor(
+                any(), any(), any(), anyInt(), any(), any());
+    }
+
+    @Test
+    void 강사용_전체_수업_목록의_커서가_유효하지_않으면_COMMON_001을_반환한다() {
+        // given
+        when(instructorDailyQueryService.findWithCursor(1L, 7L, "invalid", 10, null, null))
+                .thenThrow(new ClassitdaException(CommonErrorCode.INVALID_INPUT));
+
+        // when
+        RestTestClient.ResponseSpec result = 전체_수업_목록을_조회한다(7L, "cursor=invalid", "1");
+
+        // then
+        오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+    }
+
+    @Test
+    void 강사용_전체_수업_목록에서_버전_헤더가_없으면_API_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri("/api/studios/7/instructor/class-sessions")
+                .exchange();
+
+        // then
+        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
+        verify(instructorDailyQueryService, never()).findWithCursor(
+                any(), any(), any(), anyInt(), any(), any());
+    }
+
+    @Test
+    void 강사용_전체_수업_목록에서_지원하지_않는_버전이면_API_002를_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = 전체_수업_목록을_조회한다(7L, "", "3");
+
+        // then
+        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
+        verify(instructorDailyQueryService, never()).findWithCursor(
+                any(), any(), any(), anyInt(), any(), any());
     }
 
     @Test
@@ -310,6 +434,18 @@ class InstructorSessionControllerTest {
                 .exchange();
     }
 
+    private RestTestClient.ResponseSpec 전체_수업_목록을_조회한다(
+            Long studioId,
+            String query,
+            String apiVersion
+    ) {
+        String queryString = query.isBlank() ? "" : "?" + query;
+        return client.get()
+                .uri("/api/studios/%d/instructor/class-sessions%s".formatted(studioId, queryString))
+                .header("X-API-Version", apiVersion)
+                .exchange();
+    }
+
     private RestTestClient.ResponseSpec 명단을_조회한다(
             Long studioId,
             Long classSessionId,
@@ -392,6 +528,26 @@ class InstructorSessionControllerTest {
                         "김민지",
                         "https://images.example.com/minji.png"
                 ))
+        );
+    }
+
+    private InstructorDailySessionView 목록_뷰() {
+        return new InstructorDailySessionView(
+                11L,
+                12L,
+                "김강사",
+                ClassForm.GROUP,
+                3L,
+                "필라테스",
+                "리포머 밸런스",
+                "3층 A룸에서 진행합니다.",
+                10,
+                8,
+                2,
+                LocalDateTime.of(2026, 8, 17, 20, 0),
+                LocalDateTime.of(2026, 8, 17, 21, 0),
+                InstructorSessionStatus.SCHEDULED_BOOKING_OPEN,
+                true
         );
     }
 }

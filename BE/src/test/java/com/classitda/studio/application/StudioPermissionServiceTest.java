@@ -80,6 +80,41 @@ class StudioPermissionServiceTest {
     }
 
     @Test
+    void 활성_상태의_시설_직원은_직원_검증을_통과한다() {
+        // given
+        Member owner = 회원을_저장한다("staff-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member instructor = 소속을_만든다(
+                studio,
+                "active-staff",
+                SystemRole.INSTRUCTOR,
+                MembershipStatus.ACTIVE
+        );
+
+        // when / then
+        assertThatCode(() -> permissionChecker.validateStaff(studio, instructor.getId()))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void 학생은_직원_검증에서_PERMISSION_001을_던진다() {
+        // given
+        Member owner = 회원을_저장한다("student-staff-owner");
+        Studio studio = 시설을_만든다(owner);
+        Member student = 소속을_만든다(
+                studio,
+                "student-staff-member",
+                SystemRole.STUDENT,
+                MembershipStatus.ACTIVE
+        );
+
+        // when / then
+        assertThatThrownBy(() -> permissionChecker.validateStaff(studio, student.getId()))
+                .isInstanceOf(StudioException.class)
+                .hasMessage(StudioErrorCode.PERMISSION_DENIED.getMessage());
+    }
+
+    @Test
     void 일반_강사는_룸_관리_권한이_없다() {
         // given
         Member owner = 회원을_저장한다("owner");

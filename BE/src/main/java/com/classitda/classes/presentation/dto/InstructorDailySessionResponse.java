@@ -6,7 +6,7 @@ import com.classitda.classes.domain.ClassForm;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 
-@Schema(description = "강사용 일별 수업 목록 항목")
+@Schema(description = "강사용 수업 목록 항목")
 public record InstructorDailySessionResponse(
         Long id,
 

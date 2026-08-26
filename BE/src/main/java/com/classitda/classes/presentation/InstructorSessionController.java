@@ -14,9 +14,11 @@ import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
-import com.classitda.classes.presentation.dto.StudioStudentResponse;
 import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
 import com.classitda.classes.presentation.dto.InstructorSessionDetailResponse;
+import com.classitda.classes.presentation.dto.InstructorSessionListRequest;
+import com.classitda.classes.presentation.dto.StudioStudentResponse;
+import com.classitda.common.pagination.CursorResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -98,6 +100,27 @@ public class InstructorSessionController implements InstructorSessionControllerA
     ) {
         classSessionCommandService.cancel(memberId, studioId, classSessionId);
         return ResponseEntity.noContent().build();
+    }
+
+    @Override
+    @GetMapping(version = "1")
+    public CursorResponse<InstructorDailySessionResponse> findAllForInstructor(
+            @CurrentMemberId Long memberId,
+            @PathVariable Long studioId,
+            @Valid @ModelAttribute InstructorSessionListRequest request
+    ) {
+        var page = instructorDailyQueryService.findWithCursor(
+                memberId,
+                studioId,
+                request.cursor(),
+                request.size(),
+                request.classForm(),
+                request.classTypeId()
+        );
+        List<InstructorDailySessionResponse> items = page.items().stream()
+                .map(InstructorDailySessionResponse::from)
+                .toList();
+        return CursorResponse.of(items, page.hasNext(), page.nextCursor());
     }
 
     @Override

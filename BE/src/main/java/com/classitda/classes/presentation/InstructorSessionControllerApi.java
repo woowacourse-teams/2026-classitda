@@ -8,10 +8,12 @@ import com.classitda.classes.presentation.dto.InstructorCalendarListRequest;
 import com.classitda.classes.presentation.dto.InstructorCalendarResponse;
 import com.classitda.classes.presentation.dto.InstructorDailySessionListRequest;
 import com.classitda.classes.presentation.dto.InstructorDailySessionResponse;
-import com.classitda.classes.presentation.dto.StudioStudentResponse;
 import com.classitda.classes.presentation.dto.InstructorEnrollmentCreateRequest;
 import com.classitda.classes.presentation.dto.InstructorSessionDetailResponse;
+import com.classitda.classes.presentation.dto.InstructorSessionListRequest;
+import com.classitda.classes.presentation.dto.StudioStudentResponse;
 import com.classitda.common.exception.ErrorResponse;
+import com.classitda.common.pagination.CursorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -381,6 +383,93 @@ public interface InstructorSessionControllerApi {
             Long studioId,
             @Parameter(description = "취소할 수업 회차 ID입니다.", required = true, example = "101")
             Long classSessionId
+    );
+
+    @Operation(
+            summary = "강사용 전체 수업 목록 조회",
+            description = """
+                    ### 조회 기준
+
+                    - 시설 전체 수업을 시작 일시와 회차 ID 내림차순으로 조회합니다.
+                    - cursor를 생략하면 첫 페이지를 반환하고, 다음 페이지는 응답의 nextCursor를 그대로 전달합니다.
+                    - size의 기본값은 10이며 1 이상 100 이하여야 합니다.
+                    - classForm과 classTypeId는 선택 필터이며 함께 전달하면 두 조건을 모두 적용합니다.
+                    - 필터를 변경하면 기존 커서를 사용하지 않고 첫 페이지부터 조회해야 합니다.
+
+                    ### 조회 권한
+
+                    - 같은 시설의 대표와 활성 상태의 강사·수업 관리 직원이 조회할 수 있습니다.
+                    - 학생, 권한이 없는 직원, 비활성 소속은 조회할 수 없습니다.
+
+                    ### 응답 범위
+
+                    - 담당 강사, 수업 종류, 예약·대기 인원, 수업 상태와 요청자 담당 여부를 반환합니다.
+                    - 취소 수업도 포함하며 CANCELED 상태로 반환합니다.
+                    - 마지막 페이지에서는 hasNext가 false이고 nextCursor가 null입니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "커서 페이지와 수업 목록을 반환합니다."),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "cursor, size, classForm, classTypeId 또는 API 버전이 올바르지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "요청 값 오류", value = """
+                                            {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}"""),
+                                    @ExampleObject(name = "버전 헤더 누락", value = """
+                                            {"code":"API-001","message":"X-API-Version 헤더는 필수입니다."}"""),
+                                    @ExampleObject(name = "지원하지 않는 버전", value = """
+                                            {"code":"API-002","message":"지원하지 않는 API 버전입니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증 정보가 없거나 유효하지 않습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(name = "인증 실패", value = """
+                                    {"code":"AUTH-001","message":"인증이 필요합니다."}""")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "시설 소속이 아니거나 소속이 비활성 상태이거나 수업 조회 권한이 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "소속 아님", value = """
+                                            {"code":"MEMBERSHIP-001","message":"해당 시설의 소속이 아닙니다."}"""),
+                                    @ExampleObject(name = "비활성 소속", value = """
+                                            {"code":"MEMBERSHIP-002","message":"이용이 정지된 소속입니다."}"""),
+                                    @ExampleObject(name = "권한 없음", value = """
+                                            {"code":"PERMISSION-001","message":"이 작업을 수행할 권한이 없습니다."}""")
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "시설 또는 운영 정책을 찾을 수 없습니다.",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(name = "시설 없음", value = """
+                                            {"code":"STUDIO-002","message":"시설을 찾을 수 없습니다."}"""),
+                                    @ExampleObject(name = "운영 정책 없음", value = """
+                                            {"code":"POLICY-001","message":"운영 정책을 찾을 수 없습니다."}""")
+                            }
+                    )
+            )
+    })
+    CursorResponse<InstructorDailySessionResponse> findAllForInstructor(
+            @Parameter(hidden = true)
+            Long memberId,
+            @Parameter(description = "대상 시설을 식별하는 ID입니다.", required = true, example = "1")
+            Long studioId,
+            @ParameterObject
+            InstructorSessionListRequest request
     );
 
     @Operation(
