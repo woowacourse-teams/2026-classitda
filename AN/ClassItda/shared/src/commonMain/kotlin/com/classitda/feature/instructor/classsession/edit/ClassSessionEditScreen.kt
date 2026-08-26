@@ -2,8 +2,10 @@ package com.classitda.feature.instructor.classsession.edit
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +18,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,13 +43,13 @@ import com.classitda.feature.instructor.classsession.edit.component.ClassSession
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDeleteConfirmDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionEditExitDialog
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
-import com.classitda.feature.instructor.management.component.CategoryChipSelector
 import com.classitda.feature.instructor.management.component.ClassStartTimeField
 import com.classitda.feature.instructor.management.component.ClassTimePickerDialog
 import com.classitda.feature.instructor.management.component.CreateTextField
 import com.classitda.feature.instructor.management.component.DatePickerField
 import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.domain.model.instructor.management.ClassType as DomainClassType
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
@@ -55,7 +58,6 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 internal fun ClassSessionEditRoute(
     sessionId: String,
-    categories: List<String>,
     onBackClick: () -> Unit,
     onSaved: () -> Unit,
     onDeleted: () -> Unit,
@@ -83,7 +85,7 @@ internal fun ClassSessionEditRoute(
         is ClassSessionEditUiState.Success -> {
             ClassSessionEditStateful(
                 initialForm = state.form,
-                categories = categories,
+                categories = state.categories,
                 onBackClick = onBackClick,
                 onSave = { form -> viewModel.updateSession(form, onSaved) },
                 onDelete = { viewModel.deleteSession(sessionId, onDeleted) },
@@ -96,7 +98,7 @@ internal fun ClassSessionEditRoute(
 @Composable
 private fun ClassSessionEditStateful(
     initialForm: ClassSessionEditFormUiModel,
-    categories: List<String>,
+    categories: List<DomainClassType>,
     onBackClick: () -> Unit,
     onSave: (ClassSessionEditFormUiModel) -> Unit,
     onDelete: () -> Unit,
@@ -144,6 +146,8 @@ private fun ClassSessionEditStateful(
             onSave(
                 initialForm.copy(
                     classType = classType,
+                    classTypeId = categories.firstOrNull { it.name == selectedCategories.firstOrNull() }?.id
+                        ?: initialForm.classTypeId,
                     categories = selectedCategories,
                     title = title,
                     capacity = capacity,
@@ -230,7 +234,7 @@ private fun ClassSessionEditStateful(
 internal fun ClassSessionEditStateless(
     classType: ClassType,
     selectedCategories: List<String>,
-    categories: List<String>,
+    categories: List<DomainClassType>,
     title: String,
     capacityText: String,
     durationText: String,
@@ -277,9 +281,9 @@ internal fun ClassSessionEditStateless(
                 selectedIndex = ClassType.entries.indexOf(classType),
                 onOptionSelected = { onClassTypeChange(ClassType.entries[it]) },
             )
-            CategoryChipSelector(
+            SingleCategorySelector(
                 label = "카테고리 *",
-                allCategories = categories,
+                categories = categories,
                 selectedCategories = selectedCategories,
                 onSelectedCategoriesChanged = onCategoriesChange,
             )
@@ -358,6 +362,38 @@ internal fun ClassSessionEditStateless(
 }
 
 @Composable
+private fun SingleCategorySelector(
+    label: String,
+    categories: List<DomainClassType>,
+    selectedCategories: List<String>,
+    onSelectedCategoriesChanged: (List<String>) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+        EditSectionLabel(text = label)
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+        ) {
+            categories.forEach { category ->
+                val isSelected = category.name in selectedCategories
+                Surface(
+                    modifier = Modifier.clickable { onSelectedCategoriesChanged(listOf(category.name)) },
+                    shape = com.classitda.core.designsystem.AppShape.Pill,
+                    color = if (isSelected) InsColors.PurpleLight else InsColors.Gray100,
+                    contentColor = if (isSelected) InsColors.Purple else InsColors.TextSecondary,
+                ) {
+                    Text(
+                        text = category.name,
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun EditSectionLabel(text: String) {
     Text(
         text = text,
@@ -406,7 +442,12 @@ private fun ClassSessionEditStatelessPreview() {
         ClassSessionEditStateless(
             classType = ClassType.GROUP,
             selectedCategories = listOf("필라테스"),
-            categories = listOf("필라테스", "요가", "그룹 PT"),
+            categories =
+                listOf(
+                    DomainClassType(id = "1", name = "필라테스"),
+                    DomainClassType(id = "2", name = "요가"),
+                    DomainClassType(id = "3", name = "그룹 PT"),
+                ),
             title = "리포머 밸런스",
             capacityText = "8",
             durationText = "50",

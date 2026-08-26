@@ -7,6 +7,7 @@ import com.classitda.domain.model.instructor.session.InstructorClassForm
 import com.classitda.domain.model.instructor.session.InstructorSessionDetail
 import com.classitda.domain.model.instructor.session.InstructorSessionUpdate
 import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
+import com.classitda.domain.repository.instructor.management.ClassTemplateManagementRepository
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
 import com.classitda.feature.instructor.management.model.ClassType
 import kotlinx.coroutines.CancellationException
@@ -21,6 +22,7 @@ import kotlinx.datetime.LocalTime
 internal class ClassSessionEditViewModel(
     private val repository: InstructorSessionRepository,
     private val studioContext: InstructorStudioContext,
+    private val classTemplateRepository: ClassTemplateManagementRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<ClassSessionEditUiState>(ClassSessionEditUiState.Loading)
     val uiState: StateFlow<ClassSessionEditUiState> = _uiState.asStateFlow()
@@ -35,8 +37,9 @@ internal class ClassSessionEditViewModel(
                 try {
                     val studio = studioContext.getSelectedStudio()
                     val session = repository.getSession(studio.id, sessionId)
+                    val categories = classTemplateRepository.getClassTypes(studio.id.value)
                     currentSession = session
-                    _uiState.value = ClassSessionEditUiState.Success(session.toEditForm())
+                    _uiState.value = ClassSessionEditUiState.Success(session.toEditForm(), categories)
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
