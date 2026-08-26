@@ -2,6 +2,9 @@
 -- application-dev.yml이 시작할 때 reset-schema.sql과 schema.sql로 스키마를 초기화하므로
 -- 고정 ID를 안전하게 사용한다. term과 permission은 schema.sql이 넣으므로 여기서 다루지 않는다.
 -- local-data.sql과 시나리오는 같지만, 개발 배포에만 필요한 데이터가 아래에 더 붙는다.
+-- 시간 기반 시나리오는 애플리케이션과 같은 한국 시간으로 계산한다.
+
+SET time_zone = '+09:00';
 
 INSERT INTO member (id, name, phone_number, profile_image_url, created_at, updated_at)
 VALUES (1, '김회원', '+821000000001', NULL, CURRENT_TIMESTAMP(6), NULL),
@@ -27,7 +30,8 @@ VALUES (1, 1, 30, 120, 10, 7, CURRENT_TIMESTAMP(6), NULL);
 
 INSERT INTO class_type (id, studio_id, name, created_at, updated_at)
 VALUES (1, 1, '리포머', CURRENT_TIMESTAMP(6), NULL),
-       (2, 1, '체어', CURRENT_TIMESTAMP(6), NULL);
+       (2, 1, '체어', CURRENT_TIMESTAMP(6), NULL),
+       (3, 1, '매트', CURRENT_TIMESTAMP(6), NULL);
 
 INSERT INTO studio_role (id, studio_id, name, system_role, is_instructor, created_at, updated_at)
 VALUES (1, 1, '대표 강사', 'OWNER', TRUE, CURRENT_TIMESTAMP(6), NULL),
@@ -80,6 +84,10 @@ VALUES (42, 1, 1, 7, 7, 'ACTIVE', DATE_SUB(CURRENT_DATE, INTERVAL 30 DAY), DATE_
 -- 김회원(ID 1)은 다음 날 회차 117과 123에서 만석·여유 좌석이 있는 제안을 비교한다.
 -- 정회원(ID 5)은 회차 123의 제안을 받았지만 모든 수강권 잔여 횟수가 0인 보조 경우다.
 -- 신청 ID 29는 취소된 회차 106에 연결되어 학생 신청 상세에서 SESSION_CANCELED를 확인한다.
+-- 강사용 전체 목록은 회차 124~132로 개인/그룹, 내/다른 강사, 예정/진행/완료/취소를 비교한다.
+-- 회차 107과 124는 시작 시간이 같고 강사가 달라 (startAt, id) 커서의 동률 정렬을 확인할 수 있다.
+-- 회차 125~129는 리포머/체어/매트와 개인/그룹 필터의 교차 결과를 확인한다.
+-- 회차 125~128은 예약 0~2명, 대기 0~1명, 제안 포함 조합을 보여 준다.
 -- 김회원의 다음 날 학생 Daily 기대 조합은 다음과 같다.
 -- 101·105·118·119·120: NONE + RESERVABLE (118~120의 종료 이력은 활성 관계에서 제외)
 -- 102: NONE + WAITLISTABLE, 103: RESERVED + availability=null, 104: WAITING + availability=null
@@ -108,7 +116,16 @@ VALUES (101, 1, 3, '리포머 베이직', '편한 복장과 개인 수건을 준
        (120, 1, 3, '제안 만료 이력 리포머', '제안 기한이 지나 신청이 만료된 경우입니다.', 'GROUP', 50, 5, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '15:00:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '15:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
        (121, 1, 3, '2일 전 결석 리포머', '예약 확정 후 결석으로 기록된 경우입니다.', 'GROUP', 50, 5, TIMESTAMP(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), '14:00:00'), TIMESTAMP(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), '14:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
        (122, 1, 3, '2일 전 출결 미기록 리포머', '지난 예약이지만 출결 결과를 기록하지 않은 경우입니다.', 'GROUP', 50, 5, TIMESTAMP(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), '16:00:00'), TIMESTAMP(DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), '16:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
-       (123, 1, 3, '여유 좌석이 있는 제안 리포머', '제안 두 건이 좌석을 점유하고 한 좌석이 남은 경우입니다.', 'GROUP', 50, 3, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '16:00:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '16:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL);
+       (123, 1, 3, '여유 좌석이 있는 제안 리포머', '제안 두 건이 좌석을 점유하고 한 좌석이 남은 경우입니다.', 'GROUP', 50, 3, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '16:00:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '16:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
+       (124, 1, 3, '동시 시작 개인 리포머', '회차 107과 시작 시간이 같은 커서 동률 정렬 확인용 수업입니다.', 'INDIVIDUAL', 50, 1, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '12:30:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 1 DAY), '13:20:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
+       (125, 1, 2, '예약된 다른 강사 개인 체어', '다른 강사의 개인 수업과 예약 1명을 확인합니다.', 'INDIVIDUAL', 50, 1, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 6 DAY), '09:00:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 6 DAY), '09:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
+       (126, 1, 3, '제안된 내 개인 매트', '제안이 좌석을 점유하는 개인 수업입니다.', 'INDIVIDUAL', 50, 1, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 6 DAY), '10:30:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 6 DAY), '11:20:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
+       (127, 1, 3, '예약과 대기가 있는 그룹 매트', '예약과 제안 2명, 대기 1명을 표시하는 수업입니다.', 'GROUP', 50, 2, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY), '12:00:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY), '12:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
+       (128, 1, 2, '예약이 없는 다른 강사 그룹 체어', '예약과 대기가 모두 0명인 다른 강사 수업입니다.', 'GROUP', 50, 6, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY), '14:00:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 7 DAY), '14:50:00'), NULL, CURRENT_TIMESTAMP(6), NULL),
+       (129, 1, 3, '취소된 개인 매트', '개인 수업의 취소 상태를 확인합니다.', 'INDIVIDUAL', 50, 1, TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 8 DAY), '09:00:00'), TIMESTAMP(DATE_ADD(CURRENT_DATE, INTERVAL 8 DAY), '09:50:00'), CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6), NULL),
+       (130, 1, 3, '진행 중인 그룹 리포머', '개발 DB 초기화 시점에 진행 중으로 표시되는 수업입니다.', 'GROUP', 50, 4, DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 20 MINUTE), DATE_ADD(CURRENT_TIMESTAMP(6), INTERVAL 30 MINUTE), NULL, CURRENT_TIMESTAMP(6), NULL),
+       (131, 1, 3, '완료된 내 개인 체어', '내 개인 수업의 완료 상태를 확인합니다.', 'INDIVIDUAL', 50, 1, DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 120 MINUTE), DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 70 MINUTE), NULL, CURRENT_TIMESTAMP(6), NULL),
+       (132, 1, 2, '완료된 다른 강사 개인 리포머', '다른 강사의 개인 수업과 완료 상태를 확인합니다.', 'INDIVIDUAL', 50, 1, DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 180 MINUTE), DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 130 MINUTE), NULL, CURRENT_TIMESTAMP(6), NULL);
 
 INSERT INTO class_session_class_type (id, class_session_id, class_type_id, created_at, updated_at)
 VALUES (101, 101, 1, CURRENT_TIMESTAMP(6), NULL),
@@ -133,7 +150,16 @@ VALUES (101, 101, 1, CURRENT_TIMESTAMP(6), NULL),
        (120, 120, 1, CURRENT_TIMESTAMP(6), NULL),
        (121, 121, 1, CURRENT_TIMESTAMP(6), NULL),
        (122, 122, 1, CURRENT_TIMESTAMP(6), NULL),
-       (123, 123, 1, CURRENT_TIMESTAMP(6), NULL);
+       (123, 123, 1, CURRENT_TIMESTAMP(6), NULL),
+       (124, 124, 1, CURRENT_TIMESTAMP(6), NULL),
+       (125, 125, 2, CURRENT_TIMESTAMP(6), NULL),
+       (126, 126, 3, CURRENT_TIMESTAMP(6), NULL),
+       (127, 127, 3, CURRENT_TIMESTAMP(6), NULL),
+       (128, 128, 2, CURRENT_TIMESTAMP(6), NULL),
+       (129, 129, 3, CURRENT_TIMESTAMP(6), NULL),
+       (130, 130, 1, CURRENT_TIMESTAMP(6), NULL),
+       (131, 131, 2, CURRENT_TIMESTAMP(6), NULL),
+       (132, 132, 1, CURRENT_TIMESTAMP(6), NULL);
 
 INSERT INTO class_session_enrollment (
     id,
@@ -176,7 +202,15 @@ VALUES (1, 4, 101, 43, 'RESERVED', CURRENT_TIMESTAMP(6), NULL, 'NOT_RECORDED', N
        (26, 1, 122, 42, 'RESERVED', TIMESTAMP(DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), '16:00:00'), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
        (27, 1, 123, NULL, 'OFFERED', CURRENT_TIMESTAMP(6), DATE_ADD(CURRENT_TIMESTAMP(6), INTERVAL 10 MINUTE), 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
        (28, 5, 123, NULL, 'OFFERED', CURRENT_TIMESTAMP(6), DATE_ADD(CURRENT_TIMESTAMP(6), INTERVAL 10 MINUTE), 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
-       (29, 1, 106, 42, 'RESERVED', CURRENT_TIMESTAMP(6), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL);
+       (29, 1, 106, 42, 'RESERVED', CURRENT_TIMESTAMP(6), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
+       (30, 1, 125, NULL, 'RESERVED', CURRENT_TIMESTAMP(6), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
+       (31, 1, 126, NULL, 'OFFERED', CURRENT_TIMESTAMP(6), DATE_ADD(CURRENT_TIMESTAMP(6), INTERVAL 10 MINUTE), 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
+       (32, 1, 127, NULL, 'RESERVED', CURRENT_TIMESTAMP(6), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
+       (33, 4, 127, NULL, 'OFFERED', CURRENT_TIMESTAMP(6), DATE_ADD(CURRENT_TIMESTAMP(6), INTERVAL 10 MINUTE), 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
+       (34, 5, 127, NULL, 'WAITING', CURRENT_TIMESTAMP(6), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
+       (35, 4, 130, 43, 'RESERVED', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 1 DAY), NULL, 'NOT_RECORDED', NULL, CURRENT_TIMESTAMP(6), NULL),
+       (36, 1, 131, NULL, 'RESERVED', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 1 DAY), NULL, 'ATTENDED', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 60 MINUTE), CURRENT_TIMESTAMP(6), NULL),
+       (37, 4, 132, NULL, 'RESERVED', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 1 DAY), NULL, 'ABSENT', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 120 MINUTE), CURRENT_TIMESTAMP(6), NULL);
 
 -- 여기서부터 개발 배포 전용 데이터다.
 -- 스웨거로 로그인 없이 API 를 눌러보기 위한 개발 전용 회원이다.
