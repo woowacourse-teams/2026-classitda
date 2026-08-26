@@ -1,14 +1,17 @@
 package com.classitda.classes.domain.repository;
 
-import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.repository.projection.ClassSessionCalendarSummaryProjection;
 import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
 import com.classitda.classes.domain.repository.projection.InstructorSessionDetailProjection;
 import com.classitda.classes.domain.repository.projection.StudentDailySessionProjection;
 import com.classitda.classes.domain.repository.projection.StudentSessionDetailProjection;
+import com.classitda.classes.domain.session.ClassSession;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -246,6 +249,59 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
             @Param("studioId") Long studioId,
             @Param("rangeStart") LocalDateTime rangeStart,
             @Param("rangeEnd") LocalDateTime rangeEnd
+    );
+
+    @Query("""
+            SELECT classSession AS session,
+                   classSession.instructorMembership.name AS instructorName,
+                   classType.id AS classTypeId,
+                   classType.name AS classTypeName,
+                   SUM(
+                       CASE WHEN enrollment.state.status IN (
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED,
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED
+                       )
+                            THEN 1 ELSE 0 END
+                   ) AS reservedCount,
+                   SUM(
+                       CASE WHEN enrollment.state.status =
+                            com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING
+                            THEN 1 ELSE 0 END
+                   ) AS waitingCount
+            FROM ClassSession classSession
+            JOIN ClassSessionClassType classSessionClassType
+              ON classSessionClassType.classSessionId = classSession.id
+            JOIN ClassType classType
+              ON classType.id = classSessionClassType.classTypeId
+            LEFT JOIN ClassSessionEnrollment enrollment
+              ON enrollment.classSession.id = classSession.id
+             AND enrollment.state.status IN (
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED,
+                 com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
+             )
+            WHERE classSession.studioId = :studioId
+              AND classType.studio.id = :studioId
+              AND (
+                  :cursorStartAt IS NULL
+                  OR classSession.startAt < :cursorStartAt
+                  OR (classSession.startAt = :cursorStartAt AND classSession.id < :cursorId)
+              )
+              AND (:classForm IS NULL OR classSession.classForm = :classForm)
+              AND (:classTypeId IS NULL OR classType.id = :classTypeId)
+            GROUP BY classSession,
+                     classSession.instructorMembership.name,
+                     classType.id,
+                     classType.name
+            ORDER BY classSession.startAt DESC, classSession.id DESC
+            """)
+    Slice<InstructorDailySessionProjection> findAllForInstructorWithCursor(
+            @Param("studioId") Long studioId,
+            @Param("cursorStartAt") LocalDateTime cursorStartAt,
+            @Param("cursorId") Long cursorId,
+            @Param("classForm") ClassForm classForm,
+            @Param("classTypeId") Long classTypeId,
+            Pageable pageable
     );
 
     @Query(value = """
