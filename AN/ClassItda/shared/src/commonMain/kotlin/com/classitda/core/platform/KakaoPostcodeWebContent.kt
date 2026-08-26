@@ -21,7 +21,7 @@ data class KakaoPostcodeResult(
 
     companion object {
         fun parse(payload: String): Result<KakaoPostcodeResult> =
-            parseKakaoPostcodeBridgeMessage(payload).map { message ->
+            parseKakaoPostcodeBridgeMessage(payload).mapCatching { message ->
                 when (message) {
                     is KakaoPostcodeBridgeMessage.Result -> message.value
                     is KakaoPostcodeBridgeMessage.Error -> error("Kakao 우편번호 wrapper 오류: ${message.reason}")
