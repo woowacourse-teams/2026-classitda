@@ -13,6 +13,7 @@ import com.classitda.feature.instructor.classsession.edit.ClassSessionEditRoute
 import com.classitda.feature.instructor.classsession.member.edit.ClassSessionMemberEditRoute
 import com.classitda.feature.instructor.home.InstructorHomeRoute
 import com.classitda.feature.instructor.management.ManagementFlowNavHost
+import com.classitda.feature.instructor.mypage.InstructorMyPageNavHost
 import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
 
 @Composable
@@ -76,7 +77,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
                 InstructorHomeRoute(
                     onSessionClick = { selectedSessionId = it },
                     onStudioChanged = { scheduleRefreshKey++ },
-                    bottomBar = {},
+                    bottomBar = topLevelBottomBar,
                     modifier = modifier,
                 )
             }
@@ -94,15 +95,8 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
                 ManagementFlowNavHost(bottomBar = topLevelBottomBar, modifier = modifier)
             }
 
-            InstructorBottomTab.CHAT,
-            InstructorBottomTab.MY,
-            -> {
-                InstructorHomeRoute(
-                    onSessionClick = { selectedSessionId = it },
-                    onStudioChanged = { scheduleRefreshKey++ },
-                    bottomBar = {},
-                    modifier = modifier,
-                )
+            InstructorBottomTab.MY -> {
+                InstructorMyPageNavHost(bottomBar = topLevelBottomBar, modifier = modifier)
             }
         }
     }

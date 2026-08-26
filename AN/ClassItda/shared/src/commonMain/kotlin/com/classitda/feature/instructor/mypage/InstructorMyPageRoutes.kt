@@ -64,6 +64,7 @@ internal fun InstructorMyPageRoute(
     onOpenMemberManagement: () -> Unit,
     onOpenStudioManagement: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
+    bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InstructorMyPageViewModel = koinViewModel(),
 ) {
@@ -76,7 +77,7 @@ internal fun InstructorMyPageRoute(
             InstructorMyPageAction.OpenPrivacyPolicy -> onOpenPrivacyPolicy()
             InstructorMyPageAction.Retry -> viewModel.onAction(action)
         }
-    }, modifier = modifier)
+    }, bottomBar = bottomBar, modifier = modifier)
 }
 
 @Composable

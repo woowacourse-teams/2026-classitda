@@ -13,7 +13,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_calendar
-import classitda.shared.generated.resources.ic_chat
 import classitda.shared.generated.resources.ic_check
 import classitda.shared.generated.resources.ic_home
 import classitda.shared.generated.resources.ic_person
@@ -24,11 +23,11 @@ import com.classitda.core.designsystem.ThemeType
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
+// Chat is excluded from MVP scope; CHAT entry intentionally omitted below.
 internal enum class InstructorBottomTab {
     HOME,
     SCHEDULE,
     MANAGEMENT,
-    CHAT,
     MY,
 }
 
@@ -38,7 +37,6 @@ private val InstructorBottomTab.label: String
             InstructorBottomTab.HOME -> "홈"
             InstructorBottomTab.SCHEDULE -> "일정"
             InstructorBottomTab.MANAGEMENT -> "관리"
-            InstructorBottomTab.CHAT -> "메시지"
             InstructorBottomTab.MY -> "마이"
         }
 
@@ -48,7 +46,6 @@ private val InstructorBottomTab.icon: DrawableResource
             InstructorBottomTab.HOME -> Res.drawable.ic_home
             InstructorBottomTab.SCHEDULE -> Res.drawable.ic_calendar
             InstructorBottomTab.MANAGEMENT -> Res.drawable.ic_schedule_calendar
-            InstructorBottomTab.CHAT -> Res.drawable.ic_chat
             InstructorBottomTab.MY -> Res.drawable.ic_person
         }
 
