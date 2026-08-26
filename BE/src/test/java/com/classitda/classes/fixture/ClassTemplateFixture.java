@@ -6,17 +6,16 @@ import com.classitda.classes.presentation.dto.ClassTemplateCreateRequest;
 import com.classitda.classes.presentation.dto.ClassTemplateUpdateRequest;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.Set;
 
 public class ClassTemplateFixture {
 
-    public static ClassTemplateCreateRequest 기본_수업_템플릿_생성_요청(List<Long> classTypeIds) {
+    public static ClassTemplateCreateRequest 기본_수업_템플릿_생성_요청(Long classTypeId) {
         return 수업_템플릿_생성_요청(
                 "저녁 요가",
                 "퇴근 후 진행하는 수업",
                 Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
-                classTypeIds
+                classTypeId
         );
     }
 
@@ -24,7 +23,7 @@ public class ClassTemplateFixture {
             String name,
             String description,
             Set<DayOfWeek> recurringDays,
-            List<Long> classTypeIds
+            Long classTypeId
     ) {
         return new ClassTemplateCreateRequest(
                 name,
@@ -34,7 +33,7 @@ public class ClassTemplateFixture {
                 LocalTime.of(20, 0),
                 recurringDays,
                 12,
-                classTypeIds
+                classTypeId
         );
     }
 
@@ -51,7 +50,7 @@ public class ClassTemplateFixture {
                 .build();
     }
 
-    public static ClassTemplateUpdateRequest 기본_수업_템플릿_수정_요청(List<Long> classTypeIds) {
+    public static ClassTemplateUpdateRequest 기본_수업_템플릿_수정_요청(Long classTypeId) {
         return 수업_템플릿_수정_요청(
                 "아침 개인 필라테스",
                 "개인별 자세 교정 수업",
@@ -60,7 +59,7 @@ public class ClassTemplateFixture {
                 LocalTime.of(9, 30),
                 Set.of(DayOfWeek.TUESDAY, DayOfWeek.THURSDAY),
                 1,
-                classTypeIds
+                classTypeId
         );
     }
 
@@ -72,7 +71,7 @@ public class ClassTemplateFixture {
             LocalTime startTime,
             Set<DayOfWeek> recurringDays,
             Integer capacity,
-            List<Long> classTypeIds
+            Long classTypeId
     ) {
         return new ClassTemplateUpdateRequest(
                 name,
@@ -82,7 +81,7 @@ public class ClassTemplateFixture {
                 startTime,
                 recurringDays,
                 capacity,
-                classTypeIds
+                classTypeId
         );
     }
 }

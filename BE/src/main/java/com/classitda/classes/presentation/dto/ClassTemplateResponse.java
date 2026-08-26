@@ -19,12 +19,12 @@ public record ClassTemplateResponse(
         LocalTime startTime,
         List<DayOfWeek> recurringDays,
         int capacity,
-        List<ClassTypeResponse> classTypes
+        ClassTypeResponse classType
 ) {
 
     public static ClassTemplateResponse of(
             ClassTemplate classTemplate,
-            List<ClassTypeResponse> classTypes
+            ClassTypeResponse classType
     ) {
         List<DayOfWeek> recurringDays = classTemplate.getRecurringDays().stream()
                 .sorted()
@@ -38,7 +38,7 @@ public record ClassTemplateResponse(
                 classTemplate.getStartTime(),
                 recurringDays,
                 classTemplate.getCapacity(),
-                classTypes
+                classType
         );
     }
 }

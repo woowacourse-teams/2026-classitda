@@ -2,7 +2,6 @@ package com.classitda.classes.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.groups.Tuple.tuple;
 
 import com.classitda.classes.domain.template.ClassTemplate;
 import com.classitda.classes.domain.template.ClassTemplateClassType;
@@ -13,7 +12,6 @@ import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.fixture.ClassTemplateFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassTemplateResponse;
-import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.application.StudioPermissionService;
 import com.classitda.studio.domain.Studio;
@@ -95,13 +93,12 @@ class ClassTemplateQueryServiceTest {
 
         // then
         assertThat(response.recurringDays()).isEmpty();
-        assertThat(response.classTypes())
-                .extracting(ClassTypeResponse::id, ClassTypeResponse::name)
-                .containsExactly(tuple(classType.getId(), "요가"));
+        assertThat(response.classType().id()).isEqualTo(classType.getId());
+        assertThat(response.classType().name()).isEqualTo("요가");
     }
 
     @Test
-    void 템플릿과_수업_종류는_아이디순으로_조회하고_요일은_자연순으로_반환한다() {
+    void 템플릿은_아이디순으로_조회하고_요일은_자연순으로_반환한다() {
         // given
         Member owner = 회원을_저장한다("ordered-template-owner");
         Studio studio = 시설을_저장한다(owner, "정렬 시설");
@@ -110,7 +107,6 @@ class ClassTemplateQueryServiceTest {
         ClassTemplate firstTemplate = 템플릿을_저장한다(
                 studio, "첫 번째", Set.of(DayOfWeek.FRIDAY, DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
         ClassTemplate secondTemplate = 템플릿을_저장한다(studio, "두 번째", Set.of(DayOfWeek.SUNDAY));
-        연결을_저장한다(firstTemplate, secondType);
         연결을_저장한다(firstTemplate, firstType);
         연결을_저장한다(secondTemplate, secondType);
         entityManager.flush();
@@ -124,10 +120,10 @@ class ClassTemplateQueryServiceTest {
                 .containsExactly(firstTemplate.getId(), secondTemplate.getId());
         assertThat(responses.getFirst().recurringDays())
                 .containsExactly(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY);
-        assertThat(responses.getFirst().classTypes()).extracting(ClassTypeResponse::id)
-                .containsExactly(firstType.getId(), secondType.getId());
-        assertThat(responses.getFirst().classTypes()).extracting(ClassTypeResponse::name)
-                .containsExactly("요가", "필라테스");
+        assertThat(responses.getFirst().classType().id()).isEqualTo(firstType.getId());
+        assertThat(responses.getFirst().classType().name()).isEqualTo("요가");
+        assertThat(responses.getLast().classType().id()).isEqualTo(secondType.getId());
+        assertThat(responses.getLast().classType().name()).isEqualTo("필라테스");
     }
 
     @Test
@@ -146,9 +142,7 @@ class ClassTemplateQueryServiceTest {
                 largeStudio, "큰 템플릿 1", Set.of(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY));
         ClassTemplate secondTemplate = 템플릿을_저장한다(
                 largeStudio, "큰 템플릿 2", Set.of(DayOfWeek.FRIDAY, DayOfWeek.SUNDAY));
-        연결을_저장한다(firstTemplate, secondType);
         연결을_저장한다(firstTemplate, firstType);
-        연결을_저장한다(secondTemplate, firstType);
         연결을_저장한다(secondTemplate, secondType);
         entityManager.flush();
         entityManager.clear();
@@ -166,7 +160,7 @@ class ClassTemplateQueryServiceTest {
         assertThat(largeResponses).hasSize(2);
         assertThat(largeResponses).allSatisfy(response -> {
             assertThat(response.recurringDays()).hasSize(2);
-            assertThat(response.classTypes()).hasSize(2);
+            assertThat(response.classType()).isNotNull();
         });
         assertThat(smallQueryCount).isEqualTo(largeQueryCount);
         assertThat(smallQueryCount).isLessThanOrEqualTo(4L);

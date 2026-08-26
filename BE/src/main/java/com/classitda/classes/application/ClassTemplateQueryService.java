@@ -14,7 +14,6 @@ import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,42 +60,46 @@ public class ClassTemplateQueryService {
         List<TemplateClassTypeProjection> templateClassTypes = classTemplateClassTypeRepository
                 .findAllByTemplateIds(classTemplateIds);
 
-        Map<Long, List<ClassTypeResponse>> classTypesByTemplateId = groupClassTypesByTemplateId(
+        Map<Long, ClassTypeResponse> classTypeByTemplateId = mapClassTypeByTemplateId(
                 studioId,
-                classTemplateIds,
                 templateClassTypes
         );
 
         return classTemplates.stream()
                 .map(classTemplate -> ClassTemplateResponse.of(
                         classTemplate,
-                        classTypesByTemplateId.get(classTemplate.getId())
+                        getClassType(classTypeByTemplateId, classTemplate.getId())
                 ))
                 .toList();
     }
 
-    private Map<Long, List<ClassTypeResponse>> groupClassTypesByTemplateId(
+    private Map<Long, ClassTypeResponse> mapClassTypeByTemplateId(
             Long studioId,
-            List<Long> classTemplateIds,
             List<TemplateClassTypeProjection> templateClassTypes
     ) {
-        Map<Long, List<ClassTypeResponse>> classTypesByTemplateId = new LinkedHashMap<>();
-
-        classTemplateIds.forEach(
-                classTemplateId -> classTypesByTemplateId.put(classTemplateId, new ArrayList<>())
-        );
+        Map<Long, ClassTypeResponse> classTypeByTemplateId = new LinkedHashMap<>();
 
         templateClassTypes.forEach(templateClassType -> {
             if (!studioId.equals(templateClassType.getStudioId())) {
                 throw new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND);
             }
-            classTypesByTemplateId.get(templateClassType.getClassTemplateId())
-                    .add(ClassTypeResponse.of(
+            classTypeByTemplateId.put(
+                    templateClassType.getClassTemplateId(),
+                    ClassTypeResponse.of(
                             templateClassType.getClassTypeId(),
                             templateClassType.getClassTypeName()
-                    ));
+                    )
+            );
         });
 
-        return classTypesByTemplateId;
+        return classTypeByTemplateId;
+    }
+
+    private ClassTypeResponse getClassType(Map<Long, ClassTypeResponse> classTypeByTemplateId, Long classTemplateId) {
+        ClassTypeResponse classType = classTypeByTemplateId.get(classTemplateId);
+        if (classType == null) {
+            throw new ClassException(ClassErrorCode.CLASS_TYPE_NOT_FOUND);
+        }
+        return classType;
     }
 }

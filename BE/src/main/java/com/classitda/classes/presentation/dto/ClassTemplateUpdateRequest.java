@@ -4,13 +4,11 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.classitda.classes.domain.ClassForm;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.DayOfWeek;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.Set;
 
 public record ClassTemplateUpdateRequest(
@@ -38,8 +36,8 @@ public record ClassTemplateUpdateRequest(
         @Positive(message = "정원은 1명 이상이어야 합니다.")
         Integer capacity,
 
-        @NotEmpty(message = "수업 종류를 하나 이상 선택해야 합니다.")
-        List<@NotNull(message = "수업 종류 ID에는 null을 포함할 수 없습니다.")
-                @Positive(message = "수업 종류 ID는 양수여야 합니다.") Long> classTypeIds
+        @NotNull(message = "수업 종류는 필수입니다.")
+        @Positive(message = "수업 종류 ID는 양수여야 합니다.")
+        Long classTypeId
 ) {
 }

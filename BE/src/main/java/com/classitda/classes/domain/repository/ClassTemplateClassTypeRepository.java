@@ -4,6 +4,7 @@ import com.classitda.classes.domain.template.ClassTemplateClassType;
 import com.classitda.classes.domain.repository.projection.TemplateClassTypeProjection;
 import jakarta.persistence.LockModeType;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
@@ -32,16 +33,16 @@ public interface ClassTemplateClassTypeRepository extends JpaRepository<ClassTem
             WHERE link.classTemplateId = :classTemplateId
             """)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    List<Long> findClassTypeIdsByTemplateId(@Param("classTemplateId") Long classTemplateId);
+    Optional<Long> findClassTypeIdByTemplateId(@Param("classTemplateId") Long classTemplateId);
 
     @Modifying
     @Query("""
             DELETE FROM ClassTemplateClassType link
             WHERE link.classTemplateId = :classTemplateId
-              AND link.classTypeId IN :classTypeIds
+              AND link.classTypeId = :classTypeId
             """)
-    void deleteAllByTemplateIdAndClassTypeIds(
+    void deleteByTemplateIdAndClassTypeId(
             @Param("classTemplateId") Long classTemplateId,
-            @Param("classTypeIds") List<Long> classTypeIds
+            @Param("classTypeId") Long classTypeId
     );
 }
