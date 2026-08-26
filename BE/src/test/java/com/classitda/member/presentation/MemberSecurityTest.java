@@ -13,6 +13,9 @@ import com.classitda.authentication.presentation.resolver.CurrentMemberIdArgumen
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import com.classitda.member.application.MemberService;
+import com.classitda.member.fixture.MemberFixture;
+import com.classitda.member.presentation.dto.MyNameUpdateRequest;
+import com.classitda.member.presentation.dto.MyProfileResponse;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTe
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -35,11 +39,11 @@ import org.springframework.test.web.servlet.client.RestTestClient;
         JwtAuthenticationConverter.class,
         CurrentMemberIdArgumentResolver.class,
         AuthenticationWebMvcConfig.class,
-        MemberWithdrawalSecurityTest.TestSecurityConfiguration.class
+        MemberSecurityTest.TestSecurityConfiguration.class
 })
 @AutoConfigureRestTestClient
 @WebMvcTest(MemberController.class)
-class MemberWithdrawalSecurityTest {
+class MemberSecurityTest {
 
     private final RestTestClient client;
 
@@ -50,7 +54,7 @@ class MemberWithdrawalSecurityTest {
     private JwtDecoder jwtDecoder;
 
     @Autowired
-    MemberWithdrawalSecurityTest(RestTestClient client) {
+    MemberSecurityTest(RestTestClient client) {
         this.client = client;
     }
 
@@ -88,6 +92,101 @@ class MemberWithdrawalSecurityTest {
         // then
         result.expectStatus().isNoContent();
         verify(memberService).withdraw(1L);
+    }
+
+    @Test
+    void 인증이_없으면_내_정보를_조회할_수_없다() {
+        // when
+        RestTestClient.ResponseSpec result = findMe(null);
+
+        // then
+        assertAuthError(result, 401, "AUTH-001", "인증이 필요합니다.");
+        verifyNoInteractions(memberService);
+    }
+
+    @Test
+    void 가입_토큰으로는_내_정보를_조회할_수_없다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("1", TokenUse.SIGNUP));
+
+        // when
+        RestTestClient.ResponseSpec result = findMe("signup-token");
+
+        // then
+        assertAuthError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
+        verifyNoInteractions(memberService);
+    }
+
+    @Test
+    void 액세스_토큰으로_내_정보를_조회할_수_있다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("1", TokenUse.ACCESS));
+        given(memberService.findMe(1L)).willReturn(
+                MyProfileResponse.of(MemberFixture.기본_회원(), "member@example.com"));
+
+        // when
+        RestTestClient.ResponseSpec result = findMe("access-token");
+
+        // then
+        result.expectStatus().isOk();
+        verify(memberService).findMe(1L);
+    }
+
+    @Test
+    void 인증이_없으면_이름을_수정할_수_없다() {
+        // when
+        RestTestClient.ResponseSpec result = updateName(null);
+
+        // then
+        assertAuthError(result, 401, "AUTH-001", "인증이 필요합니다.");
+        verifyNoInteractions(memberService);
+    }
+
+    @Test
+    void 가입_토큰으로는_이름을_수정할_수_없다() {
+        // given
+        given(jwtDecoder.decode("signup-token")).willReturn(jwt("1", TokenUse.SIGNUP));
+
+        // when
+        RestTestClient.ResponseSpec result = updateName("signup-token");
+
+        // then
+        assertAuthError(result, 403, "AUTH-002", "접근 권한이 없습니다.");
+        verifyNoInteractions(memberService);
+    }
+
+    @Test
+    void 액세스_토큰으로_이름을_수정할_수_있다() {
+        // given
+        given(jwtDecoder.decode("access-token")).willReturn(jwt("1", TokenUse.ACCESS));
+
+        // when
+        RestTestClient.ResponseSpec result = updateName("access-token");
+
+        // then
+        result.expectStatus().isNoContent();
+        verify(memberService).updateName(1L, MyNameUpdateRequest.from("이클래스"));
+    }
+
+    private RestTestClient.ResponseSpec findMe(String token) {
+        RestTestClient.RequestHeadersSpec<?> request = client.get()
+                .uri("/api/members/me")
+                .header("X-API-Version", "1");
+        if (token != null) {
+            request = request.header("Authorization", "Bearer " + token);
+        }
+        return request.exchange();
+    }
+
+    private RestTestClient.ResponseSpec updateName(String token) {
+        RestTestClient.RequestBodySpec request = client.patch()
+                .uri("/api/members/me/name")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON);
+        if (token != null) {
+            request = request.header("Authorization", "Bearer " + token);
+        }
+        return request.body(MyNameUpdateRequest.from("이클래스")).exchange();
     }
 
     private RestTestClient.ResponseSpec withdraw(String token) {
