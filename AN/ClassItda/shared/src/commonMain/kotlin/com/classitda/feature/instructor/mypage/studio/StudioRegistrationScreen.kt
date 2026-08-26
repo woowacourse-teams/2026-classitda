@@ -121,12 +121,14 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.StudioAddress
 import com.classitda.domain.model.instructor.mypage.StudioImageSelection
+import com.classitda.feature.instructor.management.component.ClassTimePickerDialog
 import com.classitda.feature.instructor.mypage.contract.StudioImageInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioImageUiError
 import com.classitda.feature.instructor.mypage.contract.StudioInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationField
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
+import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -394,6 +396,7 @@ private fun StudioRegistrationForm(
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
+    var selectedTimeField by remember { mutableStateOf<StudioTimeField?>(null) }
     val nameError = StudioRegistrationField.NAME in fieldErrors
     val addressError = StudioRegistrationField.ADDRESS in fieldErrors
     val detailAddressError = StudioRegistrationField.DETAIL_ADDRESS in fieldErrors
@@ -564,7 +567,7 @@ private fun StudioRegistrationForm(
             visualTransformation = StudioPhoneVisualTransformation,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
-            StudioTextField(
+            StudioTimeField(
                 label = stringResource(Res.string.instructor_studio_registration_opening_time),
                 value = draft.openingTime,
                 placeholder = stringResource(Res.string.instructor_studio_registration_opening_time_placeholder),
@@ -576,16 +579,10 @@ private fun StudioRegistrationForm(
                         null
                     },
                 enabled = !isSubmitting,
-                onValueChange = { onAction(StudioRegistrationAction.OpeningTimeChanged(it)) },
                 modifier = Modifier.weight(1f),
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType = KeyboardType.Ascii,
-                        imeAction = ImeAction.Next,
-                    ),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Right) }),
+                onClick = { selectedTimeField = StudioTimeField.OPENING },
             )
-            StudioTextField(
+            StudioTimeField(
                 label = stringResource(Res.string.instructor_studio_registration_closing_time),
                 value = draft.closingTime,
                 placeholder = stringResource(Res.string.instructor_studio_registration_closing_time_placeholder),
@@ -597,14 +594,8 @@ private fun StudioRegistrationForm(
                         null
                     },
                 enabled = !isSubmitting,
-                onValueChange = { onAction(StudioRegistrationAction.ClosingTimeChanged(it)) },
                 modifier = Modifier.weight(1f),
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType = KeyboardType.Ascii,
-                        imeAction = ImeAction.Next,
-                    ),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                onClick = { selectedTimeField = StudioTimeField.CLOSING },
             )
         }
         StudioTextField(
@@ -634,6 +625,52 @@ private fun StudioRegistrationForm(
                 Text(stringResource(Res.string.instructor_studio_registration_retry))
             }
         }
+    }
+    selectedTimeField?.let { field ->
+        ClassTimePickerDialog(
+            initialTime =
+                when (field) {
+                    StudioTimeField.OPENING -> draft.openingTime.toPickerTime(LocalTime(9, 0))
+                    StudioTimeField.CLOSING -> draft.closingTime.toPickerTime(LocalTime(22, 0))
+                },
+            onDismissRequest = { selectedTimeField = null },
+            onConfirm = { selectedTime ->
+                val timeText = selectedTime.toStudioTimeText()
+                when (field) {
+                    StudioTimeField.OPENING -> onAction(StudioRegistrationAction.OpeningTimeChanged(timeText))
+                    StudioTimeField.CLOSING -> onAction(StudioRegistrationAction.ClosingTimeChanged(timeText))
+                }
+                selectedTimeField = null
+            },
+        )
+    }
+}
+
+@Composable
+private fun StudioTimeField(
+    label: String,
+    value: String,
+    placeholder: String,
+    isError: Boolean,
+    errorMessage: String?,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        StudioTextField(
+            label = label,
+            value = value,
+            placeholder = placeholder,
+            isError = isError,
+            errorMessage = errorMessage,
+            enabled = enabled,
+            readOnly = true,
+            onValueChange = {},
+        )
+        Box(
+            modifier = Modifier.matchParentSize().clickableIf(enabled, onClick),
+        )
     }
 }
 
@@ -891,6 +928,20 @@ private fun Modifier.clickableIf(
     } else {
         this
     }
+
+private enum class StudioTimeField {
+    OPENING,
+    CLOSING,
+}
+
+private fun String.toPickerTime(default: LocalTime): LocalTime =
+    runCatching {
+        val parts = split(':')
+        LocalTime(parts[0].toInt(), parts[1].toInt())
+    }.getOrDefault(default)
+
+private fun LocalTime.toStudioTimeText(): String =
+    "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
 
 private const val STUDIO_PHONE_MAX_DIGITS = 11
 
