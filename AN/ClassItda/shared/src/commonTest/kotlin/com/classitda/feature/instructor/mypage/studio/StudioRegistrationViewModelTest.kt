@@ -92,6 +92,8 @@ class StudioRegistrationViewModelTest {
                 ),
             )
             viewModel.onAction(StudioRegistrationAction.PhoneNumberChanged("02-1234-5678"))
+            viewModel.onAction(StudioRegistrationAction.OpeningTimeChanged("09:00"))
+            viewModel.onAction(StudioRegistrationAction.ClosingTimeChanged("22:00"))
             viewModel.onAction(
                 StudioRegistrationAction.ImageSelected(
                     StudioImageInputUiModel(
