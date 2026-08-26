@@ -138,16 +138,20 @@ internal fun ManagedStudio.toStudioUpdateRequestDto(
     )
 }
 
-internal fun AddressResponseDto.toDomain(): InstructorMyPageResult<StudioAddress> =
-    InstructorMyPageResult.Success(
+internal fun AddressResponseDto.toDomain(): InstructorMyPageResult<StudioAddress> {
+    val requiredZoneCode = zoneCode?.takeIf(String::isFiveDigitZoneCode) ?: return contractFailure()
+    val requiredRoadAddress = roadAddress?.takeIf(String::isNotBlank) ?: return contractFailure()
+
+    return InstructorMyPageResult.Success(
         StudioAddress(
-            zoneCode = zoneCode.orEmpty(),
-            roadAddress = roadAddress.orEmpty(),
+            zoneCode = requiredZoneCode,
+            roadAddress = requiredRoadAddress,
             jibunAddress = jibunAddress.orEmpty(),
             buildingName = buildingName.orEmpty(),
             detailAddress = detailAddress.orEmpty(),
         ),
     )
+}
 
 internal fun StudioResponseDto.toDomain(): InstructorMyPageResult<ManagedStudio> {
     val requiredId = id ?: return contractFailure()
