@@ -11,6 +11,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.touchlab.kermit.Logger
 import com.classitda.core.platform.KakaoPostcodeResult
 import com.classitda.core.platform.KakaoPostcodeSearchState
 import com.classitda.core.platform.StudioImagePickerError
@@ -346,6 +347,7 @@ internal fun InstructorStudioEditRoute(
             }
 
             StudioEditAction.RequestAddressSearch -> {
+                Logger.d("StudioAddress: edit request address search")
                 postcodeSearchSession += 1
                 postcodeSearchState = KakaoPostcodeSearchState.Loading
             }
@@ -379,6 +381,9 @@ internal fun InstructorStudioEditRoute(
             }
         }
     }, modifier = modifier)
+    LaunchedEffect(postcodeSearchState, postcodeSearchSession) {
+        Logger.d("StudioAddress: edit postcode state=$postcodeSearchState session=$postcodeSearchSession")
+    }
     StudioImagePickerOverlay(
         visible = imagePickerVisible,
         onSelected = { selection ->
@@ -400,6 +405,7 @@ internal fun InstructorStudioEditRoute(
             KakaoPostcodeSearchDialog(
                 state = state,
                 onLoadingChanged = { isLoading ->
+                    Logger.d("StudioAddress: edit web loading=$isLoading")
                     if (postcodeSearchState !is KakaoPostcodeSearchState.Error) {
                         postcodeSearchState =
                             if (isLoading) {
@@ -410,11 +416,18 @@ internal fun InstructorStudioEditRoute(
                     }
                 },
                 onResult = { result ->
+                    Logger.d("StudioAddress: edit address result received")
                     postcodeSearchState = null
                     viewModel.onAction(StudioEditAction.AddressSelected(result.toStudioAddress()))
                 },
-                onCancelled = { postcodeSearchState = null },
-                onError = { reason -> postcodeSearchState = KakaoPostcodeSearchState.Error(reason) },
+                onCancelled = {
+                    Logger.d("StudioAddress: edit postcode cancelled")
+                    postcodeSearchState = null
+                },
+                onError = { reason ->
+                    Logger.e("StudioAddress: edit postcode error=$reason")
+                    postcodeSearchState = KakaoPostcodeSearchState.Error(reason)
+                },
                 onRetry = {
                     postcodeSearchState = null
                     postcodeSearchSession += 1
@@ -450,6 +463,7 @@ internal fun InstructorStudioRegistrationRoute(
             }
 
             StudioRegistrationAction.RequestAddressSearch -> {
+                Logger.d("StudioAddress: registration request address search")
                 postcodeSearchSession += 1
                 postcodeSearchState = KakaoPostcodeSearchState.Loading
             }
@@ -477,6 +491,9 @@ internal fun InstructorStudioRegistrationRoute(
             }
         }
     }, modifier = modifier)
+    LaunchedEffect(postcodeSearchState, postcodeSearchSession) {
+        Logger.d("StudioAddress: registration postcode state=$postcodeSearchState session=$postcodeSearchSession")
+    }
     StudioImagePickerOverlay(
         visible = imagePickerVisible,
         onSelected = { selection ->
@@ -498,6 +515,7 @@ internal fun InstructorStudioRegistrationRoute(
             KakaoPostcodeSearchDialog(
                 state = state,
                 onLoadingChanged = { isLoading ->
+                    Logger.d("StudioAddress: registration web loading=$isLoading")
                     if (postcodeSearchState !is KakaoPostcodeSearchState.Error) {
                         postcodeSearchState =
                             if (isLoading) {
@@ -508,11 +526,18 @@ internal fun InstructorStudioRegistrationRoute(
                     }
                 },
                 onResult = { result ->
+                    Logger.d("StudioAddress: registration address result received")
                     postcodeSearchState = null
                     viewModel.onAction(StudioRegistrationAction.AddressSelected(result.toStudioAddress()))
                 },
-                onCancelled = { postcodeSearchState = null },
-                onError = { reason -> postcodeSearchState = KakaoPostcodeSearchState.Error(reason) },
+                onCancelled = {
+                    Logger.d("StudioAddress: registration postcode cancelled")
+                    postcodeSearchState = null
+                },
+                onError = { reason ->
+                    Logger.e("StudioAddress: registration postcode error=$reason")
+                    postcodeSearchState = KakaoPostcodeSearchState.Error(reason)
+                },
                 onRetry = {
                     postcodeSearchState = null
                     postcodeSearchSession += 1

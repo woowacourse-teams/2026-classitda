@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -48,12 +47,17 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import co.touchlab.kermit.Logger
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_camera
@@ -489,11 +493,7 @@ private fun StudioRegistrationForm(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
-            verticalAlignment = Alignment.Top,
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             StudioTextField(
                 label = stringResource(Res.string.instructor_studio_registration_address),
                 value = draft.address.displayAddress,
@@ -508,26 +508,24 @@ private fun StudioRegistrationForm(
                         null
                     },
                 enabled = !isSubmitting,
-                onValueChange = { onAction(StudioRegistrationAction.AddressChanged(it)) },
-                modifier = Modifier.weight(1f),
+                readOnly = true,
+                onValueChange = {},
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_location_on),
+                        contentDescription = stringResource(Res.string.instructor_studio_registration_address_search),
+                        tint = InsColors.Purple,
+                        modifier = Modifier.size(AppSpacing.lg),
+                    )
+                },
             )
-            TextButton(
-                onClick = { onAction(StudioRegistrationAction.RequestAddressSearch) },
-                enabled = !isSubmitting,
-                modifier = Modifier.padding(top = AppSpacing.xxl + AppSpacing.sm),
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_location_on),
-                    contentDescription = null,
-                    tint = InsColors.Purple,
-                    modifier = Modifier.size(AppSpacing.lg),
-                )
-                Text(
-                    text = stringResource(Res.string.instructor_studio_registration_address_search),
-                    modifier = Modifier.padding(start = AppSpacing.xs),
-                    color = InsColors.Purple,
-                )
-            }
+            Box(
+                modifier =
+                    Modifier.matchParentSize().clickableIf(!isSubmitting) {
+                        Logger.d("StudioAddress: address field clicked")
+                        onAction(StudioRegistrationAction.RequestAddressSearch)
+                    },
+            )
         }
         StudioTextField(
             label = stringResource(Res.string.instructor_studio_registration_detail_address),
@@ -542,7 +540,7 @@ private fun StudioRegistrationForm(
         )
         StudioTextField(
             label = stringResource(Res.string.instructor_studio_registration_phone),
-            value = draft.phoneNumber,
+            value = draft.phoneNumber.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS),
             placeholder = stringResource(Res.string.instructor_studio_registration_phone_placeholder),
             isError = phoneError,
             errorMessage =
@@ -554,9 +552,16 @@ private fun StudioRegistrationForm(
                     null
                 },
             enabled = !isSubmitting,
-            onValueChange = { onAction(StudioRegistrationAction.PhoneNumberChanged(it)) },
+            onValueChange = {
+                onAction(
+                    StudioRegistrationAction.PhoneNumberChanged(
+                        it.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS),
+                    ),
+                )
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            visualTransformation = StudioPhoneVisualTransformation,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
             StudioTextField(
@@ -731,6 +736,9 @@ private fun StudioTextField(
     enabled: Boolean,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     singleLine: Boolean = true,
     minLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -753,6 +761,7 @@ private fun StudioTextField(
                     if (isError && errorMessage != null) error(errorMessage)
                 },
             enabled = enabled,
+            readOnly = readOnly,
             placeholder = { Text(placeholder, color = InsColors.TextTertiary) },
             textStyle = appTypography().bodyLarge.copy(color = InsColors.TextPrimary),
             singleLine = singleLine,
@@ -761,6 +770,8 @@ private fun StudioTextField(
             shape = AppShape.Card,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
+            trailingIcon = trailingIcon,
+            visualTransformation = visualTransformation,
             colors = studioFieldColors(),
         )
         errorMessage?.let { StudioFieldError(it) }
@@ -880,6 +891,45 @@ private fun Modifier.clickableIf(
     } else {
         this
     }
+
+private const val STUDIO_PHONE_MAX_DIGITS = 11
+
+private fun formatStudioPhoneNumber(phoneNumber: String): String {
+    val digits = phoneNumber.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS)
+    if (digits.length <= 3) return digits
+
+    return if (digits.startsWith("02")) {
+        when {
+            digits.length <= 6 -> "${digits.take(2)}-${digits.drop(2)}"
+            digits.length <= 9 -> "${digits.take(2)}-${digits.substring(2, 5)}-${digits.drop(5)}"
+            else -> "${digits.take(2)}-${digits.substring(2, 6)}-${digits.drop(6)}"
+        }
+    } else {
+        when {
+            digits.length <= 7 -> "${digits.take(3)}-${digits.drop(3)}"
+            else -> "${digits.take(3)}-${digits.substring(3, 7)}-${digits.drop(7)}"
+        }
+    }
+}
+
+private object StudioPhoneVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val digits = text.text.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS)
+        val formatted = formatStudioPhoneNumber(digits)
+
+        return TransformedText(
+            text = AnnotatedString(formatted),
+            offsetMapping =
+                object : OffsetMapping {
+                    override fun originalToTransformed(offset: Int): Int =
+                        formatStudioPhoneNumber(digits.take(offset.coerceIn(0, digits.length))).length
+
+                    override fun transformedToOriginal(offset: Int): Int =
+                        formatted.take(offset.coerceIn(0, formatted.length)).count(Char::isDigit)
+                },
+        )
+    }
+}
 
 private val emptyStudioRegistrationState =
     StudioRegistrationUiState.Editing(
