@@ -124,6 +124,9 @@ Accepted (YYYY-MM-DD)
 | [0015](0015-defer-enrollment-pass-product-requirement.md)     | 예약의 수강권 필수 제약 유예 | 수강권 도입 전 MVP 기간에만 해제하고 도입 시 원래 형태로 복원해요 |
 | [0016](0016-allow-withdrawn-member-access-token-to-expire.md) | 탈퇴 회원의 Access Token 처리 | 로그인과 재발급은 즉시 차단하고 기존 Access Token은 자연 만료시켜요 |
 | [0017](0017-store-studio-images-in-s3-behind-cloudfront.md) | 시설 이미지 저장과 서빙 | 공유 버킷의 팀 폴더에 두고 CloudFront로 서빙하며 버킷은 OAC로 닫아둬요 |
+| [0018](0018-separate-studio-member-profile-from-account.md) | 시설 회원 정보와 계정 분리 | 소속이 이름과 전화번호를 직접 갖고 가입 시점에 계정과 연결해요 |
+| [0019](0019-delete-membership-by-history.md) | 소속 삭제 방식 | 참조 이력이 없으면 하드 삭제하고 있으면 WITHDRAWN 으로 바꿔요 |
+| [0020](0020-propagate-account-withdrawal-to-membership.md) | 계정 탈퇴의 소속 전파 | 탈퇴 요청 시점에 모든 소속을 종료하고 정리 시점에 개인정보를 지워요 |
 
 ## 다른 문서와의 관계
 

@@ -214,6 +214,7 @@ class StudioPermissionServiceTest {
         entityManager.persist(StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .phoneNumber(member.getPhoneNumber())
                 .name(member.getName())
                 .studioRole(role)
                 .status(status)

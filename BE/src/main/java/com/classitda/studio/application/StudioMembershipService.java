@@ -19,8 +19,10 @@ import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.presentation.dto.StudioMembershipCreateRequest;
 import com.classitda.studio.presentation.dto.StudioMembershipResponse;
+import com.classitda.studio.presentation.dto.StudioMembershipUpdateRequest;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -44,6 +46,7 @@ public class StudioMembershipService {
     private final MemberRepository memberRepository;
     private final AuthAccountRepository authAccountRepository;
     private final StudioPermissionService studioPermissionService;
+    private final StudioMembershipTerminationService studioMembershipTerminationService;
 
     @Transactional
     public void saveStudent(Long memberId, Long studioId, StudioMembershipCreateRequest request) {
@@ -91,7 +94,7 @@ public class StudioMembershipService {
         List<StudioMembershipResponse> items = studioMemberships.stream()
                 .map(studioMembership -> StudioMembershipResponse.of(
                         studioMembership,
-                        registeredMemberIds.contains(studioMembership.getMember().getId())
+                        isRegistered(studioMembership, registeredMemberIds)
                 ))
                 .toList();
 
@@ -108,7 +111,8 @@ public class StudioMembershipService {
 
         return StudioMembershipResponse.of(
                 studioMembership,
-                authAccountRepository.existsByMemberId(studioMembership.getMember().getId())
+                studioMembership.isRegistered()
+                        && authAccountRepository.existsByMemberId(studioMembership.getMember().getId())
         );
     }
 
@@ -125,10 +129,56 @@ public class StudioMembershipService {
         }
 
         StudioRole studioRole = getStudioRole(studioId, systemRole);
-        Member member = getOrCreateMember(request.name(), request.phoneNumber());
-        validateNotRegistered(studioId, member.getId());
 
-        saveStudioMembership(studio, member, studioRole, request.name());
+        saveOrReviveMembership(studio, studioRole, request);
+    }
+
+    @Transactional
+    public void update(
+            Long memberId,
+            Long studioId,
+            Long membershipId,
+            StudioMembershipUpdateRequest request
+    ) {
+        Studio studio = getStudio(studioId);
+        studioPermissionService.validate(studio, memberId, PermissionCode.MEMBER_MANAGE);
+
+        StudioMembership membership = getMembership(studioId, membershipId);
+        membership.updateProfile(request.name(), request.phoneNumber());
+        linkMemberIfRegistered(membership);
+        flushMembership();
+    }
+
+    private void linkMemberIfRegistered(StudioMembership membership) {
+        if (membership.isRegistered()) {
+            return;
+        }
+        memberRepository.findByPhoneNumber(membership.getPhoneNumber())
+                .ifPresent(membership::linkMember);
+    }
+
+    @Transactional
+    public void delete(Long memberId, Long studioId, Long membershipId) {
+        Studio studio = getStudio(studioId);
+        studioPermissionService.validate(studio, memberId, PermissionCode.MEMBER_MANAGE);
+
+        StudioMembership membership = getMembership(studioId, membershipId);
+        validateDeletable(membership, memberId);
+        studioMembershipTerminationService.terminate(membership);
+    }
+
+    private void validateDeletable(StudioMembership membership, Long memberId) {
+        if (membership.getStudioRole().getSystemRole() == SystemRole.OWNER) {
+            throw new StudioException(StudioErrorCode.MEMBERSHIP_OWNER_NOT_DELETABLE);
+        }
+        if (membership.isRegistered() && membership.getMember().getId().equals(memberId)) {
+            throw new StudioException(StudioErrorCode.MEMBERSHIP_SELF_NOT_DELETABLE);
+        }
+    }
+
+    private StudioMembership getMembership(Long studioId, Long membershipId) {
+        return studioMembershipRepository.findByIdAndStudioId(membershipId, studioId)
+                .orElseThrow(() -> new StudioException(StudioErrorCode.MEMBERSHIP_NOT_FOUND));
     }
 
     private Studio getStudio(Long studioId) {
@@ -141,40 +191,71 @@ public class StudioMembershipService {
                 .orElseThrow(() -> new StudioException(StudioErrorCode.STUDIO_ROLE_NOT_FOUND));
     }
 
-    private Member getOrCreateMember(String name, String phoneNumber) {
-        return memberRepository.findByPhoneNumber(phoneNumber)
-                .orElseGet(() -> saveMember(name, phoneNumber));
+    private void saveOrReviveMembership(
+            Studio studio,
+            StudioRole studioRole,
+            StudioMembershipCreateRequest request
+    ) {
+        Member member = memberRepository.findByPhoneNumber(request.phoneNumber()).orElse(null);
+        if (member != null) {
+            validateNotWithdrawing(member);
+            Optional<StudioMembership> byMember = studioMembershipRepository
+                    .findByStudioIdAndMemberId(studio.getId(), member.getId());
+            if (byMember.isPresent()) {
+                reviveOrReject(byMember.get(), studioRole, request);
+                return;
+            }
+        }
+
+        Optional<StudioMembership> byPhone = studioMembershipRepository
+                .findByStudioIdAndPhoneNumber(studio.getId(), request.phoneNumber());
+        if (byPhone.isPresent()) {
+            reviveOrReject(byPhone.get(), studioRole, request);
+            return;
+        }
+
+        saveStudioMembership(studio, member, studioRole, request);
     }
 
-    private Member saveMember(String name, String phoneNumber) {
-        try {
-            return memberRepository.saveAndFlush(Member.builder()
-                    .name(name)
-                    .phoneNumber(phoneNumber)
-                    .build());
-        } catch (DataIntegrityViolationException exception) {
-            return memberRepository.findByPhoneNumber(phoneNumber)
-                    .orElseThrow(() -> new StudioException(StudioErrorCode.MEMBER_NOT_FOUND));
+    private void validateNotWithdrawing(Member member) {
+        if (member.isWithdrawalPending() || member.isCleanedUp()) {
+            throw new StudioException(StudioErrorCode.MEMBERSHIP_WITHDRAWAL_PENDING);
         }
     }
 
-    private void validateNotRegistered(Long studioId, Long memberId) {
-        if (studioMembershipRepository.existsByStudioIdAndMemberId(studioId, memberId)) {
+    private void reviveOrReject(
+            StudioMembership membership,
+            StudioRole studioRole,
+            StudioMembershipCreateRequest request
+    ) {
+        if (!membership.isWithdrawn()) {
             throw new StudioException(StudioErrorCode.MEMBERSHIP_ALREADY_EXISTS);
         }
+        membership.revive(studioRole, request.name(), request.phoneNumber());
+        flushMembership();
     }
 
-    private void saveStudioMembership(Studio studio, Member member, StudioRole studioRole, String name
+    private void saveStudioMembership(
+            Studio studio,
+            Member member,
+            StudioRole studioRole,
+            StudioMembershipCreateRequest request
     ) {
+        studioMembershipRepository.save(StudioMembership.builder()
+                .studio(studio)
+                .member(member)
+                .studioRole(studioRole)
+                .name(request.name())
+                .phoneNumber(request.phoneNumber())
+                .status(MembershipStatus.ACTIVE)
+                .joinedAt(LocalDateTime.now())
+                .build());
+        flushMembership();
+    }
+
+    private void flushMembership() {
         try {
-            studioMembershipRepository.saveAndFlush(StudioMembership.builder()
-                    .studio(studio)
-                    .member(member)
-                    .studioRole(studioRole)
-                    .name(name)
-                    .status(MembershipStatus.ACTIVE)
-                    .joinedAt(LocalDateTime.now())
-                    .build());
+            studioMembershipRepository.flush();
         } catch (DataIntegrityViolationException exception) {
             throw new StudioException(StudioErrorCode.MEMBERSHIP_ALREADY_EXISTS);
         }
@@ -197,14 +278,23 @@ public class StudioMembershipService {
         }
     }
 
+    private boolean isRegistered(StudioMembership studioMembership, Set<Long> registeredMemberIds) {
+        return studioMembership.isRegistered()
+                && registeredMemberIds.contains(studioMembership.getMember().getId());
+    }
+
     private Set<Long> getRegisteredMemberIds(List<StudioMembership> studioMemberships) {
         if (studioMemberships.isEmpty()) {
             return Set.of();
         }
 
         List<Long> memberIds = studioMemberships.stream()
+                .filter(StudioMembership::isRegistered)
                 .map(studioMembership -> studioMembership.getMember().getId())
                 .toList();
+        if (memberIds.isEmpty()) {
+            return Set.of();
+        }
 
         return Set.copyOf(authAccountRepository.findMemberIdsByMemberIdIn(memberIds));
     }

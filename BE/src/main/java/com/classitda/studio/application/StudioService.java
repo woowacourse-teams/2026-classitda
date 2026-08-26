@@ -178,6 +178,7 @@ public class StudioService {
                 .member(owner)
                 .studioRole(ownerRole)
                 .name(owner.getName())
+                .phoneNumber(owner.getPhoneNumber())
                 .status(MembershipStatus.ACTIVE)
                 .joinedAt(LocalDateTime.now())
                 .build());

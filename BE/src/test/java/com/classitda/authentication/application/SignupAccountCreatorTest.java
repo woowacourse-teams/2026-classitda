@@ -23,8 +23,16 @@ import com.classitda.member.exception.MemberErrorCode;
 import com.classitda.member.exception.MemberException;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.member.fixture.TermFixture;
+import com.classitda.studio.domain.MembershipStatus;
+import com.classitda.studio.domain.Studio;
+import com.classitda.studio.domain.StudioMembership;
+import com.classitda.studio.domain.StudioRole;
+import com.classitda.studio.domain.SystemRole;
+import com.classitda.studio.domain.repository.StudioMembershipRepository;
+import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
@@ -51,6 +59,7 @@ class SignupAccountCreatorTest {
     private final TermRepository termRepository;
     private final MemberRepository memberRepository;
     private final AuthAccountRepository authAccountRepository;
+    private final StudioMembershipRepository studioMembershipRepository;
     private final EntityManager entityManager;
 
     @MockitoSpyBean
@@ -62,12 +71,14 @@ class SignupAccountCreatorTest {
             TermRepository termRepository,
             MemberRepository memberRepository,
             AuthAccountRepository authAccountRepository,
+            StudioMembershipRepository studioMembershipRepository,
             EntityManager entityManager
     ) {
         this.signupAccountCreator = signupAccountCreator;
         this.termRepository = termRepository;
         this.memberRepository = memberRepository;
         this.authAccountRepository = authAccountRepository;
+        this.studioMembershipRepository = studioMembershipRepository;
         this.entityManager = entityManager;
     }
 
@@ -123,14 +134,9 @@ class SignupAccountCreatorTest {
     }
 
     @Test
-    void 시설이_미리_등록해_둔_번호로_가입하면_기존_회원에_인증_계정을_붙이고_이름을_덮어쓴다() {
+    void 시설이_미리_등록해_둔_번호로_가입하면_회원을_새로_만들고_소속을_연결한다() {
         // given
-        Member preRegistered = memberRepository.saveAndFlush(Member.builder()
-                .name("시설이적어둔이름")
-                .phoneNumber(PHONE_NUMBER)
-                .build());
-        Long preRegisteredId = preRegistered.getId();
-        long memberCountBefore = memberRepository.count();
+        StudioMembership preRegistered = 소속을_저장한다("시설이적어둔이름", PHONE_NUMBER);
 
         // when
         Long memberId = signupAccountCreator.create(validRequest(), SESSION, PHONE_NUMBER);
@@ -138,13 +144,14 @@ class SignupAccountCreatorTest {
         entityManager.clear();
 
         // then
-        assertThat(memberId).isEqualTo(preRegisteredId);
-        assertThat(memberRepository.count()).isEqualTo(memberCountBefore);
-
         Member member = memberRepository.findById(memberId).orElseThrow();
         assertThat(member.getName()).isEqualTo("가입회원");
         assertThat(member.getPhoneNumber()).isEqualTo(PHONE_NUMBER);
         assertThat(authAccountRepository.existsByMemberId(memberId)).isTrue();
+
+        StudioMembership linked = studioMembershipRepository.findById(preRegistered.getId()).orElseThrow();
+        assertThat(linked.getMember().getId()).isEqualTo(memberId);
+        assertThat(linked.getName()).isEqualTo("시설이적어둔이름");
     }
 
     @Test
@@ -337,5 +344,25 @@ class SignupAccountCreatorTest {
                 .isInstanceOf(MemberException.class)
                 .extracting(exception -> ((MemberException) exception).getErrorCode())
                 .isEqualTo(expected);
+    }
+    private StudioMembership 소속을_저장한다(String name, String phoneNumber) {
+        Member owner = MemberFixture.회원("시설대표", "01099990000");
+        entityManager.persist(owner);
+        Studio studio = StudioFixture.기본_시설(owner);
+        entityManager.persist(studio);
+        StudioRole studentRole = SystemRole.STUDENT.toStudioRole(studio);
+        entityManager.persist(studentRole);
+
+        StudioMembership membership = StudioMembership.builder()
+                .studio(studio)
+                .studioRole(studentRole)
+                .name(name)
+                .phoneNumber(phoneNumber)
+                .status(MembershipStatus.ACTIVE)
+                .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))
+                .build();
+        entityManager.persist(membership);
+        entityManager.flush();
+        return membership;
     }
 }

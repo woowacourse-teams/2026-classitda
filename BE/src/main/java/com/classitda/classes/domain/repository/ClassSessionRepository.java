@@ -18,6 +18,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface ClassSessionRepository extends JpaRepository<ClassSession, Long> {
 
+    boolean existsByInstructorMembershipId(Long membershipId);
+
     Optional<ClassSession> findByIdAndStudioId(Long classSessionId, Long studioId);
 
     @Query("""

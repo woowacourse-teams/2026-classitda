@@ -4,6 +4,7 @@ import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
 import com.classitda.classes.domain.repository.projection.InstructorReservedMemberProjection;
 import com.classitda.classes.domain.repository.projection.StudentEnrollmentCalendarEventProjection;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +14,25 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSessionEnrollment, Long> {
+
+    boolean existsByMembershipId(Long membershipId);
+
+    @Query("""
+            SELECT enrollment
+            FROM ClassSessionEnrollment enrollment
+            JOIN FETCH enrollment.classSession classSession
+            WHERE enrollment.membership.id IN :membershipIds
+              AND classSession.startAt > :now
+              AND enrollment.state.status IN (
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED,
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING,
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED
+              )
+            """)
+    List<ClassSessionEnrollment> findActiveUpcomingByMembershipIds(
+            @Param("membershipIds") Collection<Long> membershipIds,
+            @Param("now") LocalDateTime now
+    );
 
     @EntityGraph(attributePaths = {
             "classSession.instructorMembership.member",

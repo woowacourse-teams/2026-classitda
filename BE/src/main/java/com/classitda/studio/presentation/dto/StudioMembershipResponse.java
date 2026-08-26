@@ -21,7 +21,7 @@ public record StudioMembershipResponse(
         return new StudioMembershipResponse(
                 studioMembership.getId(),
                 studioMembership.getName(),
-                studioMembership.getMember().getPhoneNumber(),
+                studioMembership.getPhoneNumber(),
                 StudioRoleResponse.from(studioMembership.getStudioRole()),
                 registered,
                 studioMembership.getStatus(),

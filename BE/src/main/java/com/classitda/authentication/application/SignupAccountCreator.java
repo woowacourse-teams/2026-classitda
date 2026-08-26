@@ -13,6 +13,8 @@ import com.classitda.member.domain.repository.MemberTermAgreementRepository;
 import com.classitda.member.domain.repository.TermRepository;
 import com.classitda.member.exception.MemberErrorCode;
 import com.classitda.member.exception.MemberException;
+import com.classitda.studio.domain.StudioMembership;
+import com.classitda.studio.domain.repository.StudioMembershipRepository;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,13 +33,15 @@ public class SignupAccountCreator {
     private final MemberRepository memberRepository;
     private final AuthAccountRepository authAccountRepository;
     private final MemberTermAgreementRepository memberTermAgreementRepository;
+    private final StudioMembershipRepository studioMembershipRepository;
 
     public Long create(SignupRequest request, SignupSession signupSession, String verifiedPhoneNumber) {
         List<Term> agreedTerms = findAndValidateAgreedTerms(request.agreedTermIds());
 
-        Member member = saveOrUpdateMember(request.name(), verifiedPhoneNumber);
+        Member member = saveMember(request.name(), verifiedPhoneNumber);
         saveAuthAccount(member.getId(), signupSession);
         saveAgreements(member, agreedTerms);
+        linkStudioMemberships(member);
         return member.getId();
     }
 
@@ -106,17 +110,6 @@ public class SignupAccountCreator {
         }
     }
 
-    private Member saveOrUpdateMember(String name, String verifiedPhoneNumber) {
-        return memberRepository.findByPhoneNumber(verifiedPhoneNumber)
-                .map(member -> updateMemberName(member, name))
-                .orElseGet(() -> saveMember(name, verifiedPhoneNumber));
-    }
-
-    private Member updateMemberName(Member member, String name) {
-        member.updateName(name);
-        return memberRepository.saveAndFlush(member);
-    }
-
     private Member saveMember(String name, String verifiedPhoneNumber) {
         Member member = Member.builder()
                 .name(name)
@@ -124,6 +117,12 @@ public class SignupAccountCreator {
                 .build();
 
         return memberRepository.saveAndFlush(member);
+    }
+
+    private void linkStudioMemberships(Member member) {
+        List<StudioMembership> memberships =
+                studioMembershipRepository.findAllByPhoneNumber(member.getPhoneNumber());
+        memberships.forEach(membership -> membership.linkMember(member));
     }
 
     private void saveAuthAccount(Long memberId, SignupSession signupSession) {
