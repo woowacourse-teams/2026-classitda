@@ -1,16 +1,13 @@
 package com.classitda.core.platform
 
-import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.MediaStore
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -30,42 +27,35 @@ internal actual fun StudioImagePicker(
 ) {
     val context = LocalContext.current
     val currentOnResult by rememberUpdatedState(onResult)
-    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
+    var pendingCameraCapture by remember { mutableStateOf<CameraCapture?>(null) }
 
     val cameraLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { captured ->
-            val uri = pendingCameraUri
-            pendingCameraUri = null
-            if (uri == null) {
+            val capture = pendingCameraCapture
+            pendingCameraCapture = null
+            if (capture == null) {
                 currentOnResult(StudioImagePickerResult.Error(StudioImagePickerError.READ_FAILED))
-                return@rememberLauncherForActivityResult
-            }
-
-            if (!captured) {
-                deleteCameraUri(context, uri)
-                currentOnResult(StudioImagePickerResult.Cancelled)
                 return@rememberLauncherForActivityResult
             }
 
             val result =
                 runCatching {
-                    val selection = copyContentUriToCache(context, uri).getOrThrow()
-                    markCameraUriReady(context, uri)
-                    selection
+                    copyContentUriToCache(context, capture.uri, fallbackMimeType = "image/jpeg").getOrThrow()
                 }
-            deleteCameraUri(context, uri)
-            currentOnResult(result.toPickerResult())
+            capture.file.delete()
+            val pickerResult = result.toPickerResult()
+            currentOnResult(if (captured || result.isSuccess) pickerResult else StudioImagePickerResult.Cancelled)
         }
 
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            val uri = pendingCameraUri
-            if (!granted || uri == null) {
-                pendingCameraUri = null
-                uri?.let { deleteCameraUri(context, it) }
+            val capture = pendingCameraCapture
+            if (!granted || capture == null) {
+                pendingCameraCapture = null
+                capture?.file?.delete()
                 currentOnResult(StudioImagePickerResult.Error(StudioImagePickerError.PERMISSION_DENIED))
             } else {
-                cameraLauncher.launch(uri)
+                cameraLauncher.launch(capture.uri)
             }
         }
 
@@ -83,14 +73,14 @@ internal actual fun StudioImagePicker(
             currentOnResult(StudioImagePickerResult.Error(StudioImagePickerError.CAMERA_UNAVAILABLE))
             return
         }
-        val uri = createCameraUri(context)
-        if (uri == null) {
+        val capture = createCameraCapture(context)
+        if (capture == null) {
             currentOnResult(StudioImagePickerResult.Error(StudioImagePickerError.READ_FAILED))
             return
         }
-        pendingCameraUri = uri
+        pendingCameraCapture = capture
         if (context.checkSelfPermission(android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-            cameraLauncher.launch(uri)
+            cameraLauncher.launch(capture.uri)
         } else {
             permissionLauncher.launch(android.Manifest.permission.CAMERA)
         }
@@ -112,11 +102,16 @@ internal actual fun StudioImagePicker(
 
     DisposableEffect(Unit) {
         onDispose {
-            pendingCameraUri?.let { deleteCameraUri(context, it) }
-            pendingCameraUri = null
+            pendingCameraCapture?.file?.delete()
+            pendingCameraCapture = null
         }
     }
 }
+
+private data class CameraCapture(
+    val file: File,
+    val uri: Uri,
+)
 
 internal actual fun releaseStudioImage(handle: String) {
     val file = File(handle)
@@ -125,57 +120,26 @@ internal actual fun releaseStudioImage(handle: String) {
     }
 }
 
-private fun createCameraUri(context: Context): Uri? {
-    val values =
-        ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, "classitda-studio-${UUID.randomUUID()}.jpg")
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(
-                    MediaStore.Images.Media.RELATIVE_PATH,
-                    Environment.DIRECTORY_PICTURES + "/Classitda",
-                )
-                put(MediaStore.Images.Media.IS_PENDING, 1)
-            }
-        }
-    return try {
-        context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-    } catch (_: SecurityException) {
-        null
-    } catch (_: IllegalArgumentException) {
-        null
-    }
-}
-
-private fun markCameraUriReady(
-    context: Context,
-    uri: Uri,
-) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-        context.contentResolver.update(
-            uri,
-            ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) },
-            null,
-            null,
+private fun createCameraCapture(context: Context): CameraCapture? =
+    runCatching {
+        val file = File.createTempFile("classitda-camera-", ".jpg", context.cacheDir)
+        val authority = "${context.packageName}.fileprovider"
+        CameraCapture(
+            file = file,
+            uri = FileProvider.getUriForFile(context, authority, file),
         )
-    }
-}
-
-private fun deleteCameraUri(
-    context: Context,
-    uri: Uri,
-) {
-    context.contentResolver.delete(uri, null, null)
-}
+    }.getOrNull()
 
 private fun copyContentUriToCache(
     context: Context,
     uri: Uri,
+    fallbackMimeType: String? = null,
 ): Result<StudioImagePickerSelection> =
     runCatching {
         val resolver = context.contentResolver
         val mimeType =
             resolver.getType(uri)
+                ?: fallbackMimeType
                 ?: throw StudioImagePickerException(StudioImagePickerError.INVALID_MIME)
         if (mimeType !in STUDIO_IMAGE_ALLOWED_MIME_TYPES) {
             throw StudioImagePickerException(StudioImagePickerError.INVALID_MIME)
@@ -200,7 +164,7 @@ private fun copyContentUriToCache(
             val selection =
                 StudioImagePickerSelection(
                     handle = file.absolutePath,
-                    previewReference = file.absolutePath,
+                    previewReference = Uri.fromFile(file).toString(),
                     mimeType = mimeType,
                     fileName = file.name,
                     sizeBytes = sizeBytes,
