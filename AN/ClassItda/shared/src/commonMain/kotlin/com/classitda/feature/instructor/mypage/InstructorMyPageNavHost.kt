@@ -33,9 +33,11 @@ private data class InstructorStudioEditDestination(
 @Serializable
 private data object InstructorPrivacyPolicyDestination
 
-/** Temporary feature graph used until the app-level instructor graph is assembled. */
 @Composable
-internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
+internal fun InstructorMyPageNavHost(
+    bottomBar: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val navController = rememberNavController()
     var profileRefreshToken by remember { mutableStateOf(0) }
     var memberRefreshToken by remember { mutableStateOf(0) }
@@ -58,6 +60,7 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
                         launchSingleTop = true
                     }
                 },
+                bottomBar = bottomBar,
             )
         }
 
