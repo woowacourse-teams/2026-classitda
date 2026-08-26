@@ -29,7 +29,12 @@ internal fun createClassItdaHttpClient(
     HttpClient(engine) {
         expectSuccess = true
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    explicitNulls = false
+                },
+            )
         }
 
         defaultRequest {
@@ -46,7 +51,12 @@ internal fun createConfiguredHttpClient(
     HttpClient {
         expectSuccess = true
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    explicitNulls = false
+                },
+            )
         }
         defaultRequest {
             url.takeFrom(config.baseUrl)
