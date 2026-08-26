@@ -29,6 +29,7 @@ import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun InstructorHomeHeader(
+    instructorName: String,
     studioName: String,
     onStudioClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -38,7 +39,7 @@ internal fun InstructorHomeHeader(
         verticalAlignment = Alignment.Top,
     ) {
         Column(Modifier.weight(1f)) {
-            Text("안녕하세요, 이지은 강사님", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            Text("안녕하세요, ${instructorName}님", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
             Spacer(Modifier.height(AppSpacing.xs))
             Row(
                 modifier = Modifier.clickable(onClick = onStudioClick),
@@ -66,6 +67,7 @@ internal fun InstructorHomeHeader(
 private fun InstructorHomeHeaderPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         InstructorHomeHeader(
+            instructorName = "이지은",
             studioName = "클래스잇다 요가&필라테스",
             onStudioClick = {},
         )
