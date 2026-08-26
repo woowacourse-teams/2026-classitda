@@ -329,13 +329,14 @@ internal fun InstructorStudioEditRoute(
         ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val currentUiState by rememberUpdatedState(uiState)
+    var lastLocalStudioImageHandle by remember { mutableStateOf<String?>(null) }
+    val currentLocalStudioImageHandle by rememberUpdatedState(lastLocalStudioImageHandle)
     var postcodeSearchState by remember { mutableStateOf<KakaoPostcodeSearchState?>(null) }
     var postcodeSearchSession by remember { mutableStateOf(0) }
     var imagePickerVisible by remember { mutableStateOf(false) }
     DisposableEffect(Unit) {
         onDispose {
-            currentUiState.localStudioImageHandle()?.let(::releaseStudioImage)
+            currentLocalStudioImageHandle?.let(::releaseStudioImage)
         }
     }
     StudioEditScreen(uiState, onAction = { action ->
@@ -354,18 +355,21 @@ internal fun InstructorStudioEditRoute(
             }
 
             StudioEditAction.RemoveImage -> {
-                uiState.localStudioImageHandle()?.let(::releaseStudioImage)
+                lastLocalStudioImageHandle?.let(::releaseStudioImage)
+                lastLocalStudioImageHandle = null
                 viewModel.onAction(action)
             }
 
             is StudioEditAction.ImageSelected -> {
-                uiState.localStudioImageHandle()?.let { handle ->
+                lastLocalStudioImageHandle?.let { handle ->
                     if (handle != action.image.selection.localHandle()) releaseStudioImage(handle)
                 }
+                lastLocalStudioImageHandle = action.image.selection.localHandle()
                 viewModel.onAction(action)
             }
 
             is StudioEditAction.SuccessAcknowledged -> {
+                lastLocalStudioImageHandle = null
                 onSaved(action.studioId)
             }
 
@@ -378,7 +382,10 @@ internal fun InstructorStudioEditRoute(
         visible = imagePickerVisible,
         onSelected = { selection ->
             imagePickerVisible = false
-            uiState.localStudioImageHandle()?.let(::releaseStudioImage)
+            lastLocalStudioImageHandle?.let { handle ->
+                if (handle != selection.handle) releaseStudioImage(handle)
+            }
+            lastLocalStudioImageHandle = selection.handle
             viewModel.onAction(StudioEditAction.ImageSelected(selection.toInputUiModel()))
         },
         onCancelled = { imagePickerVisible = false },
@@ -425,13 +432,14 @@ internal fun InstructorStudioRegistrationRoute(
     viewModel: StudioRegistrationViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val currentUiState by rememberUpdatedState(uiState)
+    var lastLocalStudioImageHandle by remember { mutableStateOf<String?>(null) }
+    val currentLocalStudioImageHandle by rememberUpdatedState(lastLocalStudioImageHandle)
     var postcodeSearchState by remember { mutableStateOf<KakaoPostcodeSearchState?>(null) }
     var postcodeSearchSession by remember { mutableStateOf(0) }
     var imagePickerVisible by remember { mutableStateOf(false) }
     DisposableEffect(Unit) {
         onDispose {
-            currentUiState.localStudioImageHandle()?.let(::releaseStudioImage)
+            currentLocalStudioImageHandle?.let(::releaseStudioImage)
         }
     }
     StudioRegistrationScreen(uiState, onAction = { action ->
@@ -450,14 +458,16 @@ internal fun InstructorStudioRegistrationRoute(
             }
 
             StudioRegistrationAction.RemoveImage -> {
-                uiState.localStudioImageHandle()?.let(::releaseStudioImage)
+                lastLocalStudioImageHandle?.let(::releaseStudioImage)
+                lastLocalStudioImageHandle = null
                 viewModel.onAction(action)
             }
 
             is StudioRegistrationAction.ImageSelected -> {
-                uiState.localStudioImageHandle()?.let { handle ->
+                lastLocalStudioImageHandle?.let { handle ->
                     if (handle != action.image.selection.localHandle()) releaseStudioImage(handle)
                 }
+                lastLocalStudioImageHandle = action.image.selection.localHandle()
                 viewModel.onAction(action)
             }
 
@@ -470,7 +480,10 @@ internal fun InstructorStudioRegistrationRoute(
         visible = imagePickerVisible,
         onSelected = { selection ->
             imagePickerVisible = false
-            uiState.localStudioImageHandle()?.let(::releaseStudioImage)
+            lastLocalStudioImageHandle?.let { handle ->
+                if (handle != selection.handle) releaseStudioImage(handle)
+            }
+            lastLocalStudioImageHandle = selection.handle
             viewModel.onAction(StudioRegistrationAction.ImageSelected(selection.toInputUiModel()))
         },
         onCancelled = { imagePickerVisible = false },
@@ -508,7 +521,12 @@ internal fun InstructorStudioRegistrationRoute(
         }
     }
     val success = uiState as? com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState.Success
-    LaunchedEffect(success) { if (success != null) onSuccess() }
+    LaunchedEffect(success) {
+        if (success != null) {
+            lastLocalStudioImageHandle = null
+            onSuccess()
+        }
+    }
 }
 
 private fun KakaoPostcodeResult.toStudioAddress(): StudioAddress =
