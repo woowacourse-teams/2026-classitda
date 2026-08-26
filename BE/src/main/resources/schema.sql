@@ -191,17 +191,21 @@ CREATE TABLE studio_role_permission
 
 CREATE TABLE studio_membership
 (
-    id              BIGINT      NOT NULL AUTO_INCREMENT,
-    studio_id       BIGINT      NOT NULL,
-    member_id       BIGINT      NOT NULL,
-    studio_role_id  BIGINT      NOT NULL,
-    name            VARCHAR(50) NOT NULL,
-    status          VARCHAR(20) NOT NULL,
-    joined_at       DATETIME(6) NOT NULL,
-    created_at      DATETIME(6) NOT NULL,
-    updated_at      DATETIME(6) NULL,
+    id             BIGINT      NOT NULL AUTO_INCREMENT,
+    studio_id      BIGINT      NOT NULL,
+    member_id      BIGINT      NULL,
+    studio_role_id BIGINT      NOT NULL,
+    name           VARCHAR(50) NOT NULL,
+    phone_number   VARCHAR(20) NULL,
+    status         VARCHAR(20) NOT NULL,
+    joined_at      DATETIME(6) NOT NULL,
+    created_at     DATETIME(6) NOT NULL,
+    updated_at     DATETIME(6) NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uk_membership_studio_member (studio_id, member_id),
+    UNIQUE KEY uk_membership_studio_phone (studio_id, phone_number),
+    CONSTRAINT chk_membership_phone_by_status
+        CHECK (phone_number IS NOT NULL OR status = 'WITHDRAWN'),
     CONSTRAINT fk_membership_studio FOREIGN KEY (studio_id) REFERENCES studio (id),
     CONSTRAINT fk_membership_member FOREIGN KEY (member_id) REFERENCES member (id),
     CONSTRAINT fk_membership_role FOREIGN KEY (studio_role_id) REFERENCES studio_role (id)

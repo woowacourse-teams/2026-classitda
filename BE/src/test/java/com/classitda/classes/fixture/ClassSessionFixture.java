@@ -66,6 +66,7 @@ public final class ClassSessionFixture {
         return StudioMembership.builder()
                 .studio(studio)
                 .member(instructor)
+                .phoneNumber(instructor.getPhoneNumber())
                 .name(instructor.getName())
                 .studioRole(SystemRole.INSTRUCTOR.toStudioRole(studio))
                 .status(MembershipStatus.ACTIVE)

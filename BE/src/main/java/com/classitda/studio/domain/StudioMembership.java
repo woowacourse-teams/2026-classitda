@@ -28,6 +28,7 @@ import lombok.NoArgsConstructor;
 public class StudioMembership extends BaseEntity {
 
     private static final int MAX_NAME_LENGTH = 50;
+    private static final String CANONICAL_PHONE_NUMBER_PATTERN = "^010[0-9]{8}$";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,8 +38,8 @@ public class StudioMembership extends BaseEntity {
     @JoinColumn(name = "studio_id", nullable = false)
     private Studio studio;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "member_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "member_id")
     private Member member;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -47,6 +48,9 @@ public class StudioMembership extends BaseEntity {
 
     @Column(nullable = false, length = MAX_NAME_LENGTH)
     private String name;
+
+    @Column(length = 20)
+    private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -61,14 +65,17 @@ public class StudioMembership extends BaseEntity {
             Member member,
             StudioRole studioRole,
             String name,
+            String phoneNumber,
             MembershipStatus status,
             LocalDateTime joinedAt
     ) {
         validateName(name);
+        validatePhoneNumber(phoneNumber);
         this.studio = studio;
         this.member = member;
         this.studioRole = studioRole;
         this.name = name;
+        this.phoneNumber = phoneNumber;
         this.status = status;
         this.joinedAt = joinedAt;
     }
@@ -78,6 +85,9 @@ public class StudioMembership extends BaseEntity {
     }
 
     public boolean belongsTo(Member member) {
+        if (this.member == null) {
+            return false;
+        }
         if (this.member == member) {
             return true;
         }
@@ -86,8 +96,53 @@ public class StudioMembership extends BaseEntity {
                 && this.member.getId().equals(member.getId());
     }
 
+    public boolean isRegistered() {
+        return member != null;
+    }
+
+    public boolean isWithdrawn() {
+        return status == MembershipStatus.WITHDRAWN;
+    }
+
+    public void linkMember(Member member) {
+        if (member == null) {
+            throw new StudioException(StudioErrorCode.MEMBER_NOT_FOUND);
+        }
+        this.member = member;
+    }
+
+    public void updateProfile(String name, String phoneNumber) {
+        validateName(name);
+        validatePhoneNumber(phoneNumber);
+        if (isRegistered() && !phoneNumber.equals(this.phoneNumber)) {
+            throw new StudioException(StudioErrorCode.MEMBERSHIP_PHONE_NUMBER_NOT_EDITABLE);
+        }
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void withdraw() {
+        status = MembershipStatus.WITHDRAWN;
+    }
+
+    public void revive(String name, String phoneNumber) {
+        validateName(name);
+        validatePhoneNumber(phoneNumber);
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.status = MembershipStatus.ACTIVE;
+    }
+
     public void clearPersonalInformation() {
         name = Member.WITHDRAWN_MEMBER_NAME;
+        phoneNumber = null;
+        status = MembershipStatus.WITHDRAWN;
+    }
+
+    private void validatePhoneNumber(String phoneNumber) {
+        if (phoneNumber == null || !phoneNumber.matches(CANONICAL_PHONE_NUMBER_PATTERN)) {
+            throw new StudioException(StudioErrorCode.INVALID_MEMBERSHIP_PHONE_NUMBER);
+        }
     }
 
     private void validateName(String name) {

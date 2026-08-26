@@ -8,6 +8,7 @@ import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
 import com.classitda.classes.application.ClassTypeService;
+import com.classitda.common.config.TimeConfig;
 import com.classitda.common.pagination.CursorResponse;
 import com.classitda.member.domain.Member;
 import com.classitda.member.domain.repository.MemberRepository;
@@ -28,6 +29,7 @@ import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.fixture.StudioMembershipFixture;
+import com.classitda.studio.presentation.dto.StudioMembershipUpdateRequest;
 import com.classitda.studio.presentation.dto.StudioMembershipResponse;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
@@ -41,7 +43,10 @@ import org.springframework.context.annotation.Import;
         StudioMembershipService.class,
         ClassTypeService.class,
         StudioService.class,
-        StudioPermissionService.class, StudioPolicyService.class})
+        StudioPermissionService.class,
+        StudioPolicyService.class,
+        StudioMembershipTerminationService.class,
+        TimeConfig.class})
 @MySqlRepositoryTest
 class StudioMembershipServiceTest {
 
@@ -82,7 +87,7 @@ class StudioMembershipServiceTest {
     }
 
     @Test
-    void 가입하지_않은_사람을_등록하면_회원과_소속을_함께_만든다() {
+    void 가입하지_않은_사람을_등록하면_회원을_만들지_않고_소속만_만든다() {
         // given
         Member owner = 회원을_저장한다("membership-owner", "01011110001");
         Studio studio = 시설을_만든다(owner);
@@ -93,17 +98,17 @@ class StudioMembershipServiceTest {
         entityManager.clear();
 
         // then
-        Member created = memberRepository.findByPhoneNumber(StudioMembershipFixture.기본_전화번호).orElseThrow();
-        StudioMembership studioMembership = studioMembershipRepository
-                .findByStudioIdAndMemberId(studio.getId(), created.getId()).orElseThrow();
+        assertThat(memberRepository.findByPhoneNumber(StudioMembershipFixture.기본_전화번호)).isEmpty();
+        StudioMembership studioMembership = 소속을_찾는다(studio, StudioMembershipFixture.기본_전화번호);
         assertThat(studioMembership.getName()).isEqualTo(StudioMembershipFixture.기본_이름);
+        assertThat(studioMembership.getPhoneNumber()).isEqualTo(StudioMembershipFixture.기본_전화번호);
         assertThat(studioMembership.getStatus()).isEqualTo(MembershipStatus.ACTIVE);
         assertThat(studioMembership.isInstructor()).isFalse();
-        assertThat(authAccountRepository.existsByMemberId(created.getId())).isFalse();
+        assertThat(studioMembership.isRegistered()).isFalse();
     }
 
     @Test
-    void 이미_가입한_사람을_등록하면_회원을_재사용하고_소속만_만든다() {
+    void 이미_가입한_사람을_등록하면_소속에_회원이_연결된다() {
         // given
         Member owner = 회원을_저장한다("registered-owner", "01011110002");
         Studio studio = 시설을_만든다(owner);
@@ -117,13 +122,13 @@ class StudioMembershipServiceTest {
 
         // then
         assertThat(memberRepository.count()).isEqualTo(memberCountBefore);
-        assertThat(studioMembershipRepository.findByStudioIdAndMemberId(studio.getId(), registered.getId()))
-                .isPresent();
-        assertThat(authAccountRepository.existsByMemberId(registered.getId())).isTrue();
+        StudioMembership studioMembership = 소속을_찾는다(studio, StudioMembershipFixture.기본_전화번호);
+        assertThat(studioMembership.isRegistered()).isTrue();
+        assertThat(studioMembership.getMember().getId()).isEqualTo(registered.getId());
     }
 
     @Test
-    void 다른_시설이_먼저_등록한_번호는_회원을_재사용하고_등록한_이름을_그대로_쓴다() {
+    void 다른_시설이_먼저_등록한_번호여도_시설마다_이름을_따로_쓴다() {
         // given
         Member owner = 회원을_저장한다("shared-owner", "01011110003");
         Studio firstStudio = 시설을_만든다(owner);
@@ -140,13 +145,11 @@ class StudioMembershipServiceTest {
         entityManager.clear();
 
         // then
-        Member shared = memberRepository.findByPhoneNumber(StudioMembershipFixture.기본_전화번호).orElseThrow();
         assertThat(memberRepository.count()).isEqualTo(memberCountBefore);
-        assertThat(shared.getName()).isEqualTo("첫째시설이름");
-        assertThat(studioMembershipRepository.findByStudioIdAndMemberId(secondStudio.getId(), shared.getId())
-                .orElseThrow().getName()).isEqualTo("둘째시설이름");
-        assertThat(studioMembershipRepository.findByStudioIdAndMemberId(firstStudio.getId(), shared.getId())
-                .orElseThrow().getName()).isEqualTo("첫째시설이름");
+        assertThat(소속을_찾는다(secondStudio, StudioMembershipFixture.기본_전화번호).getName())
+                .isEqualTo("둘째시설이름");
+        assertThat(소속을_찾는다(firstStudio, StudioMembershipFixture.기본_전화번호).getName())
+                .isEqualTo("첫째시설이름");
     }
 
     @Test
@@ -178,9 +181,7 @@ class StudioMembershipServiceTest {
         entityManager.clear();
 
         // then
-        Member created = memberRepository.findByPhoneNumber(StudioMembershipFixture.기본_전화번호).orElseThrow();
-        StudioMembership studioMembership = studioMembershipRepository
-                .findByStudioIdAndMemberId(studio.getId(), created.getId()).orElseThrow();
+        StudioMembership studioMembership = 소속을_찾는다(studio, StudioMembershipFixture.기본_전화번호);
         assertThat(studioMembership.isInstructor()).isTrue();
         assertThat(studioMembership.getStudioRole().getSystemRole()).isEqualTo(SystemRole.INSTRUCTOR);
     }
@@ -213,9 +214,7 @@ class StudioMembershipServiceTest {
         entityManager.flush();
 
         // then
-        Member created = memberRepository.findByPhoneNumber(StudioMembershipFixture.기본_전화번호).orElseThrow();
-        assertThat(studioMembershipRepository.findByStudioIdAndMemberId(studio.getId(), created.getId())
-                .orElseThrow().isInstructor()).isFalse();
+        assertThat(소속을_찾는다(studio, StudioMembershipFixture.기본_전화번호).isInstructor()).isFalse();
     }
 
     @Test
@@ -394,10 +393,161 @@ class StudioMembershipServiceTest {
     }
 
     private Long 소속_아이디를_찾는다(Studio studio, String phoneNumber) {
-        Member member = memberRepository.findByPhoneNumber(phoneNumber).orElseThrow();
-        return studioMembershipRepository.findByStudioIdAndMemberId(studio.getId(), member.getId())
-                .orElseThrow()
-                .getId();
+        return 소속을_찾는다(studio, phoneNumber).getId();
+    }
+
+    private StudioMembership 소속을_찾는다(Studio studio, String phoneNumber) {
+        return studioMembershipRepository
+                .findByStudioIdAndPhoneNumber(studio.getId(), phoneNumber)
+                .orElseThrow();
+    }
+
+    @Test
+    void 가입하지_않은_회원은_이름과_번호를_모두_수정할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("update-owner", "01011120001");
+        Studio studio = 시설을_만든다(owner);
+        studioMembershipService.saveStudent(
+                owner.getId(), studio.getId(), StudioMembershipFixture.기본_소속_등록_요청());
+        entityManager.flush();
+        Long membershipId = 소속_아이디를_찾는다(studio, StudioMembershipFixture.기본_전화번호);
+
+        // when
+        studioMembershipService.update(owner.getId(), studio.getId(), membershipId,
+                StudioMembershipUpdateRequest.of("바뀐이름", "01099998888"));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        StudioMembership updated = studioMembershipRepository.findById(membershipId).orElseThrow();
+        assertThat(updated.getName()).isEqualTo("바뀐이름");
+        assertThat(updated.getPhoneNumber()).isEqualTo("01099998888");
+    }
+
+    @Test
+    void 가입한_회원의_번호를_바꾸면_MEMBERSHIP_007이_발생한다() {
+        // given
+        Member owner = 회원을_저장한다("locked-owner", "01011120002");
+        Studio studio = 시설을_만든다(owner);
+        가입한_회원을_저장한다("locked-member", StudioMembershipFixture.기본_전화번호);
+        studioMembershipService.saveStudent(
+                owner.getId(), studio.getId(), StudioMembershipFixture.기본_소속_등록_요청());
+        entityManager.flush();
+        Long membershipId = 소속_아이디를_찾는다(studio, StudioMembershipFixture.기본_전화번호);
+
+        // when / then
+        assertThatThrownBy(() -> studioMembershipService.update(owner.getId(), studio.getId(), membershipId,
+                StudioMembershipUpdateRequest.of("바뀐이름", "01099998888")))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(StudioErrorCode.MEMBERSHIP_PHONE_NUMBER_NOT_EDITABLE));
+    }
+
+    @Test
+    void 가입한_회원도_이름은_수정할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("name-owner", "01011120003");
+        Studio studio = 시설을_만든다(owner);
+        가입한_회원을_저장한다("name-member", StudioMembershipFixture.기본_전화번호);
+        studioMembershipService.saveStudent(
+                owner.getId(), studio.getId(), StudioMembershipFixture.기본_소속_등록_요청());
+        entityManager.flush();
+        Long membershipId = 소속_아이디를_찾는다(studio, StudioMembershipFixture.기본_전화번호);
+
+        // when
+        studioMembershipService.update(owner.getId(), studio.getId(), membershipId,
+                StudioMembershipUpdateRequest.of("바뀐이름", StudioMembershipFixture.기본_전화번호));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(studioMembershipRepository.findById(membershipId).orElseThrow().getName())
+                .isEqualTo("바뀐이름");
+    }
+
+    @Test
+    void 이력이_없는_소속을_삭제하면_기록이_남지_않는다() {
+        // given
+        Member owner = 회원을_저장한다("delete-owner", "01011120004");
+        Studio studio = 시설을_만든다(owner);
+        studioMembershipService.saveStudent(
+                owner.getId(), studio.getId(), StudioMembershipFixture.기본_소속_등록_요청());
+        entityManager.flush();
+        Long membershipId = 소속_아이디를_찾는다(studio, StudioMembershipFixture.기본_전화번호);
+
+        // when
+        studioMembershipService.delete(owner.getId(), studio.getId(), membershipId);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(studioMembershipRepository.findById(membershipId)).isEmpty();
+    }
+
+    @Test
+    void 삭제한_번호로_다시_등록할_수_있다() {
+        // given
+        Member owner = 회원을_저장한다("recreate-owner", "01011120005");
+        Studio studio = 시설을_만든다(owner);
+        studioMembershipService.saveStudent(
+                owner.getId(), studio.getId(), StudioMembershipFixture.기본_소속_등록_요청());
+        entityManager.flush();
+        studioMembershipService.delete(
+                owner.getId(), studio.getId(), 소속_아이디를_찾는다(studio, StudioMembershipFixture.기본_전화번호));
+        entityManager.flush();
+
+        // when
+        studioMembershipService.saveStudent(owner.getId(), studio.getId(),
+                StudioMembershipFixture.소속_등록_요청("다시등록", StudioMembershipFixture.기본_전화번호));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(소속을_찾는다(studio, StudioMembershipFixture.기본_전화번호).getName()).isEqualTo("다시등록");
+    }
+
+    @Test
+    void 대표_강사는_삭제할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("owner-delete", "01011120006");
+        Studio studio = 시설을_만든다(owner);
+        Long ownerMembershipId = 소속을_찾는다(studio, owner.getPhoneNumber()).getId();
+
+        // when / then
+        assertThatThrownBy(() -> studioMembershipService.delete(
+                owner.getId(), studio.getId(), ownerMembershipId))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(StudioErrorCode.MEMBERSHIP_OWNER_NOT_DELETABLE));
+    }
+
+    @Test
+    void 없는_소속을_삭제하면_MEMBERSHIP_005가_발생한다() {
+        // given
+        Member owner = 회원을_저장한다("missing-delete-owner", "01011120007");
+        Studio studio = 시설을_만든다(owner);
+
+        // when / then
+        assertThatThrownBy(() -> studioMembershipService.delete(owner.getId(), studio.getId(), 999L))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode()).isEqualTo(StudioErrorCode.MEMBERSHIP_NOT_FOUND));
+    }
+
+    @Test
+    void 탈퇴를_요청한_회원의_번호로는_등록할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("withdrawing-owner", "01011120008");
+        Studio studio = 시설을_만든다(owner);
+        Member withdrawing = 가입한_회원을_저장한다("withdrawing", StudioMembershipFixture.기본_전화번호);
+        withdrawing.withdraw(LocalDateTime.now());
+        entityManager.flush();
+
+        // when / then
+        assertThatThrownBy(() -> studioMembershipService.saveStudent(
+                owner.getId(), studio.getId(), StudioMembershipFixture.기본_소속_등록_요청()))
+                .isInstanceOfSatisfying(StudioException.class, exception ->
+                        assertThat(exception.getErrorCode())
+                                .isEqualTo(StudioErrorCode.MEMBERSHIP_WITHDRAWAL_PENDING));
     }
 
     private Member 회원을_저장한다(String name, String phoneNumber) {
@@ -450,6 +600,7 @@ class StudioMembershipServiceTest {
         entityManager.persist(StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .phoneNumber(member.getPhoneNumber())
                 .studioRole(역할을_찾는다(studio, systemRole))
                 .name(member.getName())
                 .status(MembershipStatus.ACTIVE)

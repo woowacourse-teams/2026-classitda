@@ -596,6 +596,7 @@ class StudentEnrollmentDetailQueryServiceTest {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .phoneNumber(member.getPhoneNumber())
                 .studioRole(role)
                 .name(name)
                 .status(status)

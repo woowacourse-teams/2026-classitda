@@ -18,6 +18,10 @@ public interface StudioMembershipRepository extends JpaRepository<StudioMembersh
 
     Optional<StudioMembership> findByStudioIdAndMemberId(Long studioId, Long memberId);
 
+    Optional<StudioMembership> findByStudioIdAndPhoneNumber(Long studioId, String phoneNumber);
+
+    List<StudioMembership> findAllByPhoneNumber(String phoneNumber);
+
     boolean existsByStudioIdAndMemberId(Long studioId, Long memberId);
 
     List<StudioMembership> findAllByMemberIdIn(Collection<Long> memberIds);
@@ -34,7 +38,7 @@ public interface StudioMembershipRepository extends JpaRepository<StudioMembersh
     List<StudioMembership> findActiveStudents(@Param("studioId") Long studioId);
 
     @Query("select studioMembership from StudioMembership studioMembership "
-            + "join fetch studioMembership.member "
+            + "left join fetch studioMembership.member "
             + "join fetch studioMembership.studioRole studioRole "
             + "where studioMembership.studio.id = :studioId "
             + "and studioRole.instructor = :instructor "
@@ -53,7 +57,7 @@ public interface StudioMembershipRepository extends JpaRepository<StudioMembersh
     List<Studio> findAllStudiosByMemberId(@Param("memberId") Long memberId);
 
     @Query("select studioMembership from StudioMembership studioMembership "
-            + "join fetch studioMembership.member "
+            + "left join fetch studioMembership.member "
             + "join fetch studioMembership.studioRole "
             + "where studioMembership.id = :membershipId "
             + "and studioMembership.studio.id = :studioId")

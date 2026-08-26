@@ -29,6 +29,11 @@ public enum StudioErrorCode implements ErrorCode {
     INVALID_MEMBERSHIP_NAME("MEMBERSHIP-003", "소속 이름은 1자 이상 50자 이하여야 합니다.", HttpStatus.BAD_REQUEST),
     MEMBERSHIP_ALREADY_EXISTS("MEMBERSHIP-004", "이미 시설에 등록된 회원입니다.", HttpStatus.CONFLICT),
     MEMBERSHIP_NOT_FOUND("MEMBERSHIP-005", "시설 소속을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    INVALID_MEMBERSHIP_PHONE_NUMBER("MEMBERSHIP-006", "휴대전화 번호는 010으로 시작하는 숫자 11자리여야 합니다.", HttpStatus.BAD_REQUEST),
+    MEMBERSHIP_PHONE_NUMBER_NOT_EDITABLE("MEMBERSHIP-007", "가입한 회원의 휴대전화 번호는 수정할 수 없습니다.", HttpStatus.CONFLICT),
+    MEMBERSHIP_WITHDRAWAL_PENDING("MEMBERSHIP-008", "탈퇴 처리 중인 회원의 번호입니다.", HttpStatus.CONFLICT),
+    MEMBERSHIP_OWNER_NOT_DELETABLE("MEMBERSHIP-009", "시설 대표는 삭제할 수 없습니다.", HttpStatus.CONFLICT),
+    MEMBERSHIP_SELF_NOT_DELETABLE("MEMBERSHIP-010", "자기 자신은 삭제할 수 없습니다.", HttpStatus.CONFLICT),
 
     STUDIO_ROLE_NOT_FOUND("ROLE-001", "시설 역할을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 

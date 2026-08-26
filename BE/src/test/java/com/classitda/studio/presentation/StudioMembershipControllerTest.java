@@ -17,6 +17,7 @@ import com.classitda.studio.application.StudioMembershipService;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
+import com.classitda.studio.presentation.dto.StudioMembershipUpdateRequest;
 import com.classitda.studio.fixture.StudioMembershipFixture;
 import com.classitda.studio.presentation.dto.StudioMembershipCreateRequest;
 import com.classitda.studio.presentation.dto.StudioMembershipResponse;
@@ -321,5 +322,94 @@ class StudioMembershipControllerTest {
                 .json("""
                         {"code":"%s","message":"%s"}
                         """.formatted(code, message), JsonCompareMode.STRICT);
+    }
+    @Test
+    void 회원_정보를_수정하면_204를_반환하고_서비스에_위임한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri("/api/studios/1/memberships/2")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(StudioMembershipUpdateRequest.of("김민수", "01012345678"))
+                .exchange();
+
+        // then
+        result.expectStatus().isNoContent();
+        verify(studioMembershipService)
+                .update(1L, 1L, 2L, StudioMembershipUpdateRequest.of("김민수", "01012345678"));
+    }
+
+    @Test
+    void 전화번호_형식이_틀리면_COMMON_001을_반환한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri("/api/studios/1/memberships/2")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(StudioMembershipUpdateRequest.of("김민수", "0212345678"))
+                .exchange();
+
+        // then
+        result.expectStatus().isBadRequest()
+                .expectBody()
+                .json("""
+                        {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
+                        """, JsonCompareMode.STRICT);
+    }
+
+    @Test
+    void 가입한_회원의_번호를_바꾸면_MEMBERSHIP_007을_반환한다() {
+        // given
+        doThrow(new StudioException(StudioErrorCode.MEMBERSHIP_PHONE_NUMBER_NOT_EDITABLE))
+                .when(studioMembershipService)
+                .update(anyLong(), anyLong(), anyLong(), any(StudioMembershipUpdateRequest.class));
+
+        // when
+        RestTestClient.ResponseSpec result = client.patch()
+                .uri("/api/studios/1/memberships/2")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(StudioMembershipUpdateRequest.of("김민수", "01099998888"))
+                .exchange();
+
+        // then
+        result.expectStatus().isEqualTo(409)
+                .expectBody()
+                .json("""
+                        {"code":"MEMBERSHIP-007","message":"가입한 회원의 휴대전화 번호는 수정할 수 없습니다."}
+                        """, JsonCompareMode.STRICT);
+    }
+
+    @Test
+    void 회원을_삭제하면_204를_반환하고_서비스에_위임한다() {
+        // when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri("/api/studios/1/memberships/2")
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        result.expectStatus().isNoContent();
+        verify(studioMembershipService).delete(1L, 1L, 2L);
+    }
+
+    @Test
+    void 대표_강사를_삭제하면_MEMBERSHIP_009를_반환한다() {
+        // given
+        doThrow(new StudioException(StudioErrorCode.MEMBERSHIP_OWNER_NOT_DELETABLE))
+                .when(studioMembershipService).delete(anyLong(), anyLong(), anyLong());
+
+        // when
+        RestTestClient.ResponseSpec result = client.delete()
+                .uri("/api/studios/1/memberships/2")
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        result.expectStatus().isEqualTo(409)
+                .expectBody()
+                .json("""
+                        {"code":"MEMBERSHIP-009","message":"시설 대표는 삭제할 수 없습니다."}
+                        """, JsonCompareMode.STRICT);
     }
 }

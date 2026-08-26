@@ -9,6 +9,7 @@ import com.classitda.member.exception.MemberErrorCode;
 import com.classitda.member.exception.MemberException;
 import com.classitda.member.presentation.dto.MyNameUpdateRequest;
 import com.classitda.member.presentation.dto.MyProfileResponse;
+import com.classitda.studio.application.StudioMembershipTerminationService;
 import com.classitda.studio.domain.repository.StudioRepository;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final AuthAccountRepository authAccountRepository;
     private final StudioRepository studioRepository;
+    private final StudioMembershipTerminationService studioMembershipTerminationService;
     private final Clock clock;
 
     public MyProfileResponse findMe(Long memberId) {
@@ -53,6 +55,7 @@ public class MemberService {
         }
 
         member.withdraw(LocalDateTime.now(clock));
+        studioMembershipTerminationService.terminateByMemberId(memberId);
     }
 
     private Member getMember(Long memberId) {

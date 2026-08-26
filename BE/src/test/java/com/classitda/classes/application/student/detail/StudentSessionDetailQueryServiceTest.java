@@ -312,6 +312,7 @@ class StudentSessionDetailQueryServiceTest {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .phoneNumber(member.getPhoneNumber())
                 .studioRole(role)
                 .status(MembershipStatus.ACTIVE)
                 .name(name)

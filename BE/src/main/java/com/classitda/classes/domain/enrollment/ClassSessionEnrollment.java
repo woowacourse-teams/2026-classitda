@@ -129,6 +129,14 @@ public class ClassSessionEnrollment extends BaseEntity {
         state = acceptedState;
     }
 
+    public void cancelByMembershipTermination(LocalDateTime occurredAt) {
+        if (state.getStatus() == EnrollmentStatus.RESERVED) {
+            cancelReservation(occurredAt);
+            return;
+        }
+        cancelWaiting(occurredAt);
+    }
+
     public void cancelWaiting(LocalDateTime occurredAt) {
         state = state.cancelWaiting(occurredAt);
     }

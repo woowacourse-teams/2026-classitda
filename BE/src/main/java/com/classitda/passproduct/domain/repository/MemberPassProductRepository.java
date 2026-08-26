@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface MemberPassProductRepository extends JpaRepository<MemberPassProduct, Long> {
 
+    boolean existsByMembershipId(Long membershipId);
+
     @Query("""
             SELECT memberPassProduct.id AS memberPassProductId,
                    passProduct.classForm AS classForm,

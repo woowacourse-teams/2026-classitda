@@ -13,6 +13,7 @@ import com.classitda.member.exception.MemberException;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.member.presentation.dto.MyNameUpdateRequest;
 import com.classitda.member.presentation.dto.MyProfileResponse;
+import com.classitda.studio.application.StudioMembershipTerminationService;
 import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
@@ -26,7 +27,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
-@Import({MemberService.class, MemberServiceTest.FixedClockConfig.class})
+@Import({MemberService.class, MemberServiceTest.FixedClockConfig.class, StudioMembershipTerminationService.class})
 @MySqlRepositoryTest
 class MemberServiceTest {
 

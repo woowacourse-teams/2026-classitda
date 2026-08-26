@@ -83,7 +83,7 @@ class StudioMembershipTest {
     }
 
     @Test
-    void 개인정보를_정리하면_시설이_부르는_이름을_익명화한다() {
+    void 개인정보를_정리하면_이름과_번호를_지우고_탈퇴_상태로_바꾼다() {
         // given
         StudioMembership studioMembership = 소속을_만든다(기본_시설(), "김철수");
 
@@ -92,7 +92,8 @@ class StudioMembershipTest {
 
         // then
         assertThat(studioMembership.getName()).isEqualTo(Member.WITHDRAWN_MEMBER_NAME);
-        assertThat(studioMembership.getStatus()).isEqualTo(MembershipStatus.ACTIVE);
+        assertThat(studioMembership.getPhoneNumber()).isNull();
+        assertThat(studioMembership.getStatus()).isEqualTo(MembershipStatus.WITHDRAWN);
     }
 
     @Test
@@ -118,6 +119,7 @@ class StudioMembershipTest {
         return StudioMembership.builder()
                 .studio(studio)
                 .member(StudioFixture.기본_소유자())
+                .phoneNumber(StudioFixture.기본_소유자().getPhoneNumber())
                 .studioRole(SystemRole.STUDENT.toStudioRole(studio))
                 .name(name)
                 .status(MembershipStatus.ACTIVE)
@@ -129,6 +131,7 @@ class StudioMembershipTest {
         return StudioMembership.builder()
                 .studio(studio)
                 .member(StudioFixture.기본_소유자())
+                .phoneNumber(StudioFixture.기본_소유자().getPhoneNumber())
                 .studioRole(systemRole.toStudioRole(studio))
                 .name("김철수")
                 .status(MembershipStatus.ACTIVE)

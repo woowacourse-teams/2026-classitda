@@ -9,6 +9,7 @@ import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.enrollment.AttendanceResult;
 import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
+import com.classitda.classes.domain.enrollment.EnrollmentStatus;
 import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.member.domain.Member;
 import com.classitda.member.domain.repository.MemberRepository;
@@ -20,6 +21,7 @@ import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.StudioRole;
+import com.classitda.studio.application.StudioMembershipTerminationService;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
@@ -35,7 +37,11 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
-@Import({MemberCleanupService.class, MemberCleanupServiceTest.FixedClockConfig.class})
+@Import({
+        MemberCleanupService.class,
+        MemberService.class,
+        StudioMembershipTerminationService.class,
+        MemberCleanupServiceTest.FixedClockConfig.class})
 @MySqlRepositoryTest
 class MemberCleanupServiceTest {
 
@@ -43,6 +49,8 @@ class MemberCleanupServiceTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 31, 15, 30);
 
     private final MemberCleanupService memberCleanupService;
+    private final MemberService memberService;
+    private final StudioMembershipTerminationService studioMembershipTerminationService;
     private final MemberRepository memberRepository;
     private final AuthAccountRepository authAccountRepository;
     private final EntityManager entityManager;
@@ -50,11 +58,15 @@ class MemberCleanupServiceTest {
     @Autowired
     MemberCleanupServiceTest(
             MemberCleanupService memberCleanupService,
+            MemberService memberService,
+            StudioMembershipTerminationService studioMembershipTerminationService,
             MemberRepository memberRepository,
             AuthAccountRepository authAccountRepository,
             EntityManager entityManager
     ) {
         this.memberCleanupService = memberCleanupService;
+        this.memberService = memberService;
+        this.studioMembershipTerminationService = studioMembershipTerminationService;
         this.memberRepository = memberRepository;
         this.authAccountRepository = authAccountRepository;
         this.entityManager = entityManager;
@@ -132,8 +144,11 @@ class MemberCleanupServiceTest {
                 .extracting(StudioMembership::getName)
                 .containsExactly(Member.WITHDRAWN_MEMBER_NAME, Member.WITHDRAWN_MEMBER_NAME);
         assertThat(memberships)
+                .extracting(StudioMembership::getPhoneNumber)
+                .containsOnlyNulls();
+        assertThat(memberships)
                 .extracting(StudioMembership::getStatus)
-                .containsOnly(MembershipStatus.ACTIVE);
+                .containsOnly(MembershipStatus.WITHDRAWN);
 
         MemberPassProduct memberPassProduct = entityManager.find(
                 MemberPassProduct.class,
@@ -260,6 +275,7 @@ class MemberCleanupServiceTest {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .phoneNumber(member.getPhoneNumber())
                 .studioRole(studioRole)
                 .name(name)
                 .status(MembershipStatus.ACTIVE)
@@ -268,6 +284,107 @@ class MemberCleanupServiceTest {
         entityManager.persist(membership);
         entityManager.flush();
         return membership;
+    }
+
+    @Test
+    void 이력이_있는_소속을_종료하면_기록을_남기고_탈퇴_상태가_된다() {
+        // given
+        Member owner = 회원을_저장한다("이력 시설 대표", "01033333333");
+        Member student = 회원을_저장한다("이력 회원", "01044444444");
+        Studio studio = 시설을_저장한다(owner);
+        StudioMembership instructorMembership = 소속을_저장한다(studio, owner, SystemRole.OWNER, "대표 강사");
+        StudioMembership studentMembership = 소속을_저장한다(studio, student, SystemRole.STUDENT, "이력 별칭");
+        OperationalHistoryIds historyIds = 운영_이력을_저장한다(studio, instructorMembership, studentMembership);
+        entityManager.flush();
+
+        // when
+        studioMembershipTerminationService.terminate(studentMembership);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        StudioMembership terminated = entityManager.find(StudioMembership.class, studentMembership.getId());
+        assertThat(terminated).isNotNull();
+        assertThat(terminated.getStatus()).isEqualTo(MembershipStatus.WITHDRAWN);
+        assertThat(terminated.getPhoneNumber()).isEqualTo("01044444444");
+
+        ClassSessionEnrollment enrollment = entityManager.find(
+                ClassSessionEnrollment.class, historyIds.enrollmentId());
+        assertThat(enrollment.getAttendance().getResult()).isEqualTo(AttendanceResult.ATTENDED);
+    }
+
+    @Test
+    void 소속을_종료하면_아직_시작하지_않은_예약이_취소된다() {
+        // given
+        Member owner = 회원을_저장한다("미래 시설 대표", "01055555555");
+        Member student = 회원을_저장한다("미래 회원", "01066666666");
+        Studio studio = 시설을_저장한다(owner);
+        StudioMembership instructorMembership = 소속을_저장한다(studio, owner, SystemRole.OWNER, "대표 강사");
+        StudioMembership studentMembership = 소속을_저장한다(studio, student, SystemRole.STUDENT, "미래 별칭");
+        Long upcomingId = 미래_예약을_저장한다(studio, instructorMembership, studentMembership);
+        entityManager.flush();
+
+        // when
+        studioMembershipTerminationService.terminate(studentMembership);
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        ClassSessionEnrollment canceled = entityManager.find(ClassSessionEnrollment.class, upcomingId);
+        assertThat(canceled.getState().getStatus()).isEqualTo(EnrollmentStatus.CANCELED);
+    }
+
+    @Test
+    void 탈퇴를_요청하면_모든_소속이_종료된다() {
+        // given
+        Member owner = 회원을_저장한다("전파 시설 대표", "01077777777");
+        Member student = 회원을_저장한다("전파 회원", "01088888888");
+        Studio firstStudio = 시설을_저장한다(owner);
+        Studio secondStudio = 시설을_저장한다(owner);
+        StudioMembership firstInstructor = 소속을_저장한다(firstStudio, owner, SystemRole.OWNER, "대표 강사");
+        StudioMembership secondInstructor = 소속을_저장한다(secondStudio, owner, SystemRole.OWNER, "대표 강사");
+        StudioMembership first = 소속을_저장한다(firstStudio, student, SystemRole.STUDENT, "첫 별칭");
+        StudioMembership second = 소속을_저장한다(secondStudio, student, SystemRole.STUDENT, "둘째 별칭");
+        운영_이력을_저장한다(firstStudio, firstInstructor, first);
+        운영_이력을_저장한다(secondStudio, secondInstructor, second);
+        entityManager.flush();
+
+        // when
+        memberService.withdraw(student.getId());
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(entityManager.find(StudioMembership.class, first.getId()).getStatus())
+                .isEqualTo(MembershipStatus.WITHDRAWN);
+        assertThat(entityManager.find(StudioMembership.class, second.getId()).getStatus())
+                .isEqualTo(MembershipStatus.WITHDRAWN);
+    }
+
+    private Long 미래_예약을_저장한다(
+            Studio studio,
+            StudioMembership instructorMembership,
+            StudioMembership studentMembership
+    ) {
+        ClassSession classSession = ClassSession.builder()
+                .studioId(studio.getId())
+                .instructorMembership(instructorMembership)
+                .name("다음 주 요가")
+                .classForm(ClassForm.GROUP)
+                .durationMinutes(60)
+                .capacity(10)
+                .startAt(NOW.plusDays(7))
+                .build();
+        entityManager.persist(classSession);
+
+        ClassSessionEnrollment enrollment = ClassSessionEnrollment.reservedWithoutPassProduct(
+                studentMembership,
+                classSession,
+                NOW.minusDays(1)
+        );
+        entityManager.persist(enrollment);
+        entityManager.flush();
+        return enrollment.getId();
     }
 
     private OperationalHistoryIds 운영_이력을_저장한다(

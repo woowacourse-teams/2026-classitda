@@ -511,6 +511,7 @@ class InstructorDailyQueryServiceTest {
         StudioMembership membership = StudioMembership.builder()
                 .studio(studio)
                 .member(member)
+                .phoneNumber(member.getPhoneNumber())
                 .name(name)
                 .studioRole(role)
                 .status(status)
