@@ -430,9 +430,9 @@ private fun StudioRegistrationForm(
                 imageError
             } else if (StudioRegistrationField.IMAGE in fieldErrors) {
                 StudioImageUiError.UPLOAD_UNAVAILABLE
-        } else {
-            null
-        }
+            } else {
+                null
+            }
         val displayedImageErrorText =
             displayedImageError?.let { error ->
                 stringResource(
