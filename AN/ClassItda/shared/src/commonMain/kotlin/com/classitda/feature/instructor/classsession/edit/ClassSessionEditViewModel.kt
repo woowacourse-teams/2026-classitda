@@ -89,6 +89,7 @@ private fun InstructorSessionDetail.toEditForm(): ClassSessionEditFormUiModel {
     val formClassType =
         when (classForm) {
             InstructorClassForm.INDIVIDUAL -> ClassType.PERSONAL
+
             InstructorClassForm.GROUP,
             InstructorClassForm.UNKNOWN,
             -> ClassType.GROUP

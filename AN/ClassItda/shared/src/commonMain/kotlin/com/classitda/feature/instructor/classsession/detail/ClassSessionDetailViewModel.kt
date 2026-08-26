@@ -57,13 +57,14 @@ private fun InstructorSessionDetail.toDetailUiModel(): ClassSessionDetailUiModel
         description = description.orEmpty(),
         location = "장소 정보 없음",
         status = sessionPhase.toUiStatus(),
-        members = reservedMembers.map { member ->
-            ClassSessionMemberUiModel(
-                id = member.membershipId,
-                name = member.name,
-                enrollmentId = member.enrollmentId,
-            )
-        },
+        members =
+            reservedMembers.map { member ->
+                ClassSessionMemberUiModel(
+                    id = member.membershipId,
+                    name = member.name,
+                    enrollmentId = member.enrollmentId,
+                )
+            },
     )
 
 private fun LocalDate.toInstructorDateText(): String {

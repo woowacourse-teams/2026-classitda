@@ -39,8 +39,8 @@ import com.classitda.feature.instructor.home.component.InstructorHomeHeader
 import com.classitda.feature.instructor.home.component.InstructorHomeSummary
 import com.classitda.feature.instructor.home.component.InstructorStudioSwitchSheet
 import com.classitda.feature.instructor.home.component.InstructorTimeline
-import kotlinx.datetime.LocalDateTime
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -105,12 +105,12 @@ internal fun InstructorHomeStateful(
                     onStudioClick = {
                         scope.launch {
                             studioLoadError = null
-                            runCatching { studioContext.getStudios() }
-                                .onSuccess { loadedStudios ->
-                                    studios = loadedStudios
-                                    pendingStudio = selectedStudio
-                                }
-                                .onFailure { error -> studioLoadError = error.message }
+                            runCatching {
+                                studioContext.getStudios()
+                            }.onSuccess { loadedStudios ->
+                                studios = loadedStudios
+                                pendingStudio = selectedStudio
+                            }.onFailure { error -> studioLoadError = error.message }
                             isStudioSheetVisible = true
                         }
                     },
@@ -128,12 +128,12 @@ internal fun InstructorHomeStateful(
                 onRetry = {
                     scope.launch {
                         studioLoadError = null
-                        runCatching { studioContext.getStudios() }
-                            .onSuccess { loadedStudios ->
-                                studios = loadedStudios
-                                pendingStudio = selectedStudio
-                            }
-                            .onFailure { error -> studioLoadError = error.message }
+                        runCatching {
+                            studioContext.getStudios()
+                        }.onSuccess { loadedStudios ->
+                            studios = loadedStudios
+                            pendingStudio = selectedStudio
+                        }.onFailure { error -> studioLoadError = error.message }
                     }
                 },
                 onStudioClick = { studio ->

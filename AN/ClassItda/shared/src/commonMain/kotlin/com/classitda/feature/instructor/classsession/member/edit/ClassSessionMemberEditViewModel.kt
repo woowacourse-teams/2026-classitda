@@ -37,7 +37,8 @@ internal class ClassSessionMemberEditViewModel(
             viewModelScope.launch {
                 try {
                     val studio = studioContext.getSelectedStudio()
-                    val session = repository.getSession(studio.id, sessionId)
+                    val session =
+                        repository.getSession(studio.id, sessionId)
                     val availableMembers =
                         memberRepository
                             .getStudents(studio.id)
@@ -49,17 +50,19 @@ internal class ClassSessionMemberEditViewModel(
                                     name = member.name,
                                 )
                             }
-                    val bookedMembers = session.reservedMembers.map { member ->
-                        ClassSessionMemberUiModel(
-                            id = member.membershipId,
-                            name = member.name,
-                            enrollmentId = member.enrollmentId,
-                        )
-                    }
+                    val bookedMembers =
+                        session.reservedMembers.map { member ->
+                            ClassSessionMemberUiModel(
+                                id = member.membershipId,
+                                name = member.name,
+                                enrollmentId = member.enrollmentId,
+                            )
+                        }
                     initialMembers = bookedMembers
-                    _uiState.value = ClassSessionMemberEditUiState.Success(
-                        session.toMemberEditUiModel(availableMembers, bookedMembers),
-                    )
+                    _uiState.value =
+                        ClassSessionMemberEditUiState.Success(
+                            session.toMemberEditUiModel(availableMembers, bookedMembers),
+                        )
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {

@@ -7,11 +7,11 @@ import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.session.InstructorCalendarDay
 import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.feature.instructor.session.toClassSession
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -38,23 +38,24 @@ internal class InstructorScheduleViewModel(
         lastRequestedDate = date
         loadJob?.cancel()
         _uiState.value = InstructorScheduleUiState.Loading
-        loadJob = viewModelScope.launch {
-            try {
-                val studio = studioContext.getSelectedStudio()
-                val calendarDays =
-                    repository.getCalendar(
-                        studioId = studio.id,
-                        from = date.minus(DatePeriod(days = 20)),
-                        to = date.plus(DatePeriod(days = 20)),
-                    )
-                val sessions = repository.getDailySessions(studio.id, date).map { it.toClassSession() }
-                _uiState.value = InstructorScheduleUiState.Success(sessions, calendarDays)
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                _uiState.value = InstructorScheduleUiState.Error(exception.message)
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    val studio = studioContext.getSelectedStudio()
+                    val calendarDays =
+                        repository.getCalendar(
+                            studioId = studio.id,
+                            from = date.minus(DatePeriod(days = 20)),
+                            to = date.plus(DatePeriod(days = 20)),
+                        )
+                    val sessions = repository.getDailySessions(studio.id, date).map { it.toClassSession() }
+                    _uiState.value = InstructorScheduleUiState.Success(sessions, calendarDays)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    _uiState.value = InstructorScheduleUiState.Error(exception.message)
+                }
             }
-        }
     }
 }
 

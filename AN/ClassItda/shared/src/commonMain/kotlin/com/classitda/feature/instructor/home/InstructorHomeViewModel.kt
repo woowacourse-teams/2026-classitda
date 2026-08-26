@@ -6,14 +6,14 @@ import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.feature.instructor.session.toClassSession
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
@@ -40,28 +40,30 @@ internal class InstructorHomeViewModel(
     private fun load() {
         loadJob?.cancel()
         _uiState.value = InstructorHomeUiState.Loading
-        loadJob = viewModelScope.launch {
-            try {
-                val studio = studioContext.getSelectedStudio()
-                val today = Clock.System.todayIn(TimeZone.of("Asia/Seoul"))
-                val sessions = coroutineScope {
-                    (0..6)
-                        .map { offset ->
-                            async {
-                                repository
-                                    .getDailySessions(studio.id, today.plus(DatePeriod(days = offset)))
-                                    .map { it.toClassSession() }
-                            }
-                        }.awaitAll()
-                        .flatten()
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    val studio = studioContext.getSelectedStudio()
+                    val today = Clock.System.todayIn(TimeZone.of("Asia/Seoul"))
+                    val sessions =
+                        coroutineScope {
+                            (0..6)
+                                .map { offset ->
+                                    async {
+                                        repository
+                                            .getDailySessions(studio.id, today.plus(DatePeriod(days = offset)))
+                                            .map { it.toClassSession() }
+                                    }
+                                }.awaitAll()
+                                .flatten()
+                        }
+                    _uiState.value = InstructorHomeUiState.Success(sessions.sortedBy { it.startAt })
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    _uiState.value = InstructorHomeUiState.Error(exception.message)
                 }
-                _uiState.value = InstructorHomeUiState.Success(sessions.sortedBy { it.startAt })
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (exception: Exception) {
-                _uiState.value = InstructorHomeUiState.Error(exception.message)
             }
-        }
     }
 }
 

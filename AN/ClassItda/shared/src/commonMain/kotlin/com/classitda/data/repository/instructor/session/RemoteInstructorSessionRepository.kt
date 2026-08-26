@@ -10,8 +10,8 @@ import com.classitda.domain.model.instructor.session.InstructorCalendarDay
 import com.classitda.domain.model.instructor.session.InstructorClassForm
 import com.classitda.domain.model.instructor.session.InstructorClassType
 import com.classitda.domain.model.instructor.session.InstructorDailySession
-import com.classitda.domain.model.instructor.session.InstructorSessionDetail
 import com.classitda.domain.model.instructor.session.InstructorReservedMember
+import com.classitda.domain.model.instructor.session.InstructorSessionDetail
 import com.classitda.domain.model.instructor.session.InstructorSessionStatus
 import com.classitda.domain.model.instructor.session.InstructorSessionUpdate
 import com.classitda.domain.model.studio.StudioId
@@ -110,14 +110,15 @@ private fun ClassSessionDetailResponseDto.toDomain(studioId: StudioId) =
         startAt = LocalDateTime.parse(startAt),
         endAt = LocalDateTime.parse(endAt),
         sessionPhase = status.toSessionStatus(),
-        reservedMembers = reservedMembers.map { member ->
-            InstructorReservedMember(
-                enrollmentId = member.enrollmentId.toString(),
-                membershipId = member.membershipId.toString(),
-                name = member.name,
-                profileImageUrl = member.profileImageUrl,
-            )
-        },
+        reservedMembers =
+            reservedMembers.map { member ->
+                InstructorReservedMember(
+                    enrollmentId = member.enrollmentId.toString(),
+                    membershipId = member.membershipId.toString(),
+                    name = member.name,
+                    profileImageUrl = member.profileImageUrl,
+                )
+            },
     )
 
 private fun durationMinutesBetween(

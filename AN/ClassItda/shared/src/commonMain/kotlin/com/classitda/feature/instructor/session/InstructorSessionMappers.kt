@@ -24,7 +24,9 @@ internal fun InstructorSessionStatus.toUiStatus() =
         -> ClassSessionStatus.SCHEDULED
 
         InstructorSessionStatus.COMPLETED -> ClassSessionStatus.COMPLETED
+
         InstructorSessionStatus.CANCELED -> ClassSessionStatus.CANCELLED
+
         InstructorSessionStatus.IN_PROGRESS,
         InstructorSessionStatus.UNKNOWN,
         -> ClassSessionStatus.SCHEDULED
