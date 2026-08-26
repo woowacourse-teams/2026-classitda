@@ -46,7 +46,6 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
     } else if (sessionId != null && isSessionEditing) {
         ClassSessionEditRoute(
             sessionId = sessionId,
-            categories = listOf("필라테스", "요가", "그룹 PT"),
             onBackClick = { isSessionEditing = false },
             onSaved = {
                 isSessionEditing = false
