@@ -140,15 +140,15 @@ fun StudioRegistrationScreen(
 ) {
     var successDialogVisible by remember { mutableStateOf(false) }
     var successDialogPresented by remember { mutableStateOf(false) }
-    LaunchedEffect(uiState, isEditing) {
-        if (isEditing && uiState is StudioRegistrationUiState.Success) {
+    LaunchedEffect(uiState) {
+        if (uiState is StudioRegistrationUiState.Success) {
             successDialogPresented = true
             successDialogVisible = true
         }
     }
     LaunchedEffect(successDialogVisible) {
         val success = uiState as? StudioRegistrationUiState.Success
-        if (isEditing && successDialogPresented && !successDialogVisible && success != null) {
+        if (successDialogPresented && !successDialogVisible && success != null) {
             onSuccessAcknowledged()
         }
     }
@@ -273,14 +273,33 @@ fun StudioRegistrationScreen(
             }
         }
     }
-    if (isEditing && uiState is StudioRegistrationUiState.Success && successDialogVisible) {
-        StudioEditSuccessDialog(onClose = { successDialogVisible = false })
+    if (uiState is StudioRegistrationUiState.Success && successDialogVisible) {
+        StudioSuccessDialog(
+            isEditing = isEditing,
+            onClose = { successDialogVisible = false },
+        )
     }
 }
 
 @Composable
-private fun StudioEditSuccessDialog(onClose: () -> Unit) {
-    val paneTitle = stringResource(Res.string.instructor_studio_edit_success_title)
+private fun StudioSuccessDialog(
+    isEditing: Boolean,
+    onClose: () -> Unit,
+) {
+    val successMessage =
+        stringResource(
+            if (isEditing) {
+                Res.string.instructor_studio_edit_success
+            } else {
+                Res.string.instructor_studio_registration_success
+            },
+        )
+    val paneTitle =
+        if (isEditing) {
+            stringResource(Res.string.instructor_studio_edit_success_title)
+        } else {
+            successMessage
+        }
     Dialog(
         onDismissRequest = {},
         properties =
@@ -319,7 +338,7 @@ private fun StudioEditSuccessDialog(onClose: () -> Unit) {
                     }
                 }
                 Text(
-                    text = stringResource(Res.string.instructor_studio_edit_success),
+                    text = successMessage,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
                     style = appTypography().bodyLarge,
                     color = InsColors.TextSecondary,

@@ -490,7 +490,11 @@ internal fun InstructorStudioRegistrationRoute(
                 viewModel.onAction(action)
             }
         }
-    }, modifier = modifier)
+    }, modifier = modifier, onSuccessAcknowledged = {
+        lastLocalStudioImageHandle?.let(::releaseStudioImage)
+        lastLocalStudioImageHandle = null
+        onSuccess()
+    })
     LaunchedEffect(postcodeSearchState, postcodeSearchSession) {
         Logger.d("StudioAddress: registration postcode state=$postcodeSearchState session=$postcodeSearchSession")
     }
@@ -544,14 +548,6 @@ internal fun InstructorStudioRegistrationRoute(
                     postcodeSearchState = KakaoPostcodeSearchState.Loading
                 },
             )
-        }
-    }
-    val success = uiState as? com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState.Success
-    LaunchedEffect(success) {
-        if (success != null) {
-            lastLocalStudioImageHandle?.let(::releaseStudioImage)
-            lastLocalStudioImageHandle = null
-            onSuccess()
         }
     }
 }
