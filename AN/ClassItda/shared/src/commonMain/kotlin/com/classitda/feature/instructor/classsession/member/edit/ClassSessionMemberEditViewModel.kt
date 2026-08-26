@@ -117,7 +117,6 @@ private fun com.classitda.domain.model.instructor.session.InstructorSessionDetai
             reservedCount = bookedMembers.size,
             capacity = capacity,
             description = description.orEmpty(),
-            location = "장소 정보 없음",
             status = sessionPhase.toUiStatus(),
             members = bookedMembers,
         )
