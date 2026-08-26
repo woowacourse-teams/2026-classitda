@@ -4,6 +4,7 @@ import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.Base64;
 import java.util.regex.Pattern;
 
@@ -29,7 +30,7 @@ record InstructorSessionCursor(LocalDateTime startAt, Long id) {
                 throw invalidCursor();
             }
             return new InstructorSessionCursor(startAt, id);
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException | DateTimeParseException exception) {
             throw invalidCursor();
         }
     }
