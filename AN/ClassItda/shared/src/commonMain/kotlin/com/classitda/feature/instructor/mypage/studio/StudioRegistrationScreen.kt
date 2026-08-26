@@ -57,7 +57,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import co.touchlab.kermit.Logger
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_camera
@@ -109,6 +108,7 @@ import classitda.shared.generated.resources.instructor_studio_registration_submi
 import classitda.shared.generated.resources.instructor_studio_registration_success
 import classitda.shared.generated.resources.instructor_studio_registration_title
 import classitda.shared.generated.resources.phone_number_change_close
+import co.touchlab.kermit.Logger
 import coil3.compose.SubcomposeAsyncImage
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
