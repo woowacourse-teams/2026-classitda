@@ -238,7 +238,9 @@ private class KakaoPostcodeNavigationDelegate(
         NSLog(
             "$KAKAO_POSTCODE_LOG_PREFIX provisional navigation failed: domain=${withError.domain}, code=${withError.code}, description=${withError.localizedDescription}",
         )
-        onNetworkError()
+        if (!withError.isExpectedNavigationCancellation()) {
+            onNetworkError()
+        }
     }
 
     @ObjCSignatureOverride
@@ -250,7 +252,9 @@ private class KakaoPostcodeNavigationDelegate(
         NSLog(
             "$KAKAO_POSTCODE_LOG_PREFIX navigation failed: domain=${withError.domain}, code=${withError.code}, description=${withError.localizedDescription}",
         )
-        onNetworkError()
+        if (!withError.isExpectedNavigationCancellation()) {
+            onNetworkError()
+        }
     }
 }
 
@@ -275,3 +279,6 @@ private fun NSURL.safeLogLocation(): String =
         append(host.orEmpty())
         append(path.orEmpty())
     }
+
+@OptIn(ExperimentalForeignApi::class)
+private fun NSError.isExpectedNavigationCancellation(): Boolean = code == -999L || code == 102L
