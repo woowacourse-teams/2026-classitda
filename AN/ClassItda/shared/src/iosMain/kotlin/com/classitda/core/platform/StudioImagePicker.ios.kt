@@ -20,10 +20,8 @@ import platform.AVFoundation.requestAccessForMediaType
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
-import platform.Foundation.NSNumber
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
-import platform.Foundation.NSURLFileSizeKey
 import platform.Foundation.NSUUID
 import platform.Foundation.writeToFile
 import platform.Photos.PHPhotoLibrary
@@ -232,48 +230,16 @@ private fun writeCameraImage(image: UIImage): StudioImagePickerResult {
 
 @OptIn(ExperimentalForeignApi::class)
 private fun copyGalleryImage(url: NSURL): StudioImagePickerResult {
-    val extension = url.pathExtension?.lowercase() ?: "jpg"
-    val mimeType =
-        extension.toImageMimeType()
-            ?: return StudioImagePickerResult.Error(StudioImagePickerError.INVALID_MIME)
     val sourcePath =
         url.path ?: return StudioImagePickerResult.Error(StudioImagePickerError.READ_FAILED)
-    val fileName = url.lastPathComponent ?: "studio-gallery.$extension"
-    val path = NSTemporaryDirectory() + "classitda-studio-image-${NSUUID().UUIDString}.$extension"
-    val copied =
-        NSFileManager.defaultManager.copyItemAtPath(
-            srcPath = sourcePath,
-            toPath = path,
-            error = null,
-        )
-    if (!copied) {
+    val image = UIImage.imageWithContentsOfFile(sourcePath)
+    if (image == null) {
         return StudioImagePickerResult.Error(StudioImagePickerError.READ_FAILED)
     }
-    val resourceValues =
-        NSURL.fileURLWithPath(path).resourceValuesForKeys(
-            listOf(NSURLFileSizeKey),
-            error = null,
-        )
-    val sizeBytes =
-        (resourceValues?.get(NSURLFileSizeKey) as? NSNumber)?.longLongValue
-            ?: 0L
-    if (sizeBytes <= 0L) {
-        NSFileManager.defaultManager.removeItemAtPath(path, error = null)
-        return StudioImagePickerResult.Error(StudioImagePickerError.READ_FAILED)
-    }
-    if (sizeBytes > STUDIO_IMAGE_MAX_SIZE_BYTES) {
-        NSFileManager.defaultManager.removeItemAtPath(path, error = null)
-        return StudioImagePickerResult.Error(StudioImagePickerError.FILE_TOO_LARGE)
-    }
-    return StudioImagePickerResult.Selected(
-        StudioImagePickerSelection(
-            handle = path,
-            previewReference = path,
-            mimeType = mimeType,
-            fileName = fileName,
-            sizeBytes = sizeBytes,
-        ),
-    )
+    val data =
+        UIImageJPEGRepresentation(image, 0.9)
+            ?: return StudioImagePickerResult.Error(StudioImagePickerError.READ_FAILED)
+    return writeImageData(data, "jpg", "image/jpeg", "studio-gallery.jpg")
 }
 
 @OptIn(ExperimentalForeignApi::class)
@@ -303,11 +269,3 @@ private fun writeImageData(
     }
     return StudioImagePickerResult.Selected(selection)
 }
-
-private fun String.toImageMimeType(): String? =
-    when (this) {
-        "jpg", "jpeg" -> "image/jpeg"
-        "png" -> "image/png"
-        "webp" -> "image/webp"
-        else -> null
-    }
