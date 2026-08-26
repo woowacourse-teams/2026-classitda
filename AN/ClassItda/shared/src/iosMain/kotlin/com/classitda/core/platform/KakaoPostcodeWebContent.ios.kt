@@ -52,10 +52,10 @@ internal actual fun KakaoPostcodeWebContent(
                     is KakaoPostcodeBridgeMessage.Result -> {
                         NSLog(
                             "$KAKAO_POSTCODE_LOG_PREFIX address selected: " +
-                                "zoneCode=${message.value.zoneCode}, " +
-                                "roadAddress=${message.value.roadAddress}, " +
-                                "jibunAddress=${message.value.jibunAddress}, " +
-                                "buildingName=${message.value.buildingName}, " +
+                                "zoneCodePresent=${message.value.zoneCode.isNotBlank()}, " +
+                                "roadAddressPresent=${message.value.roadAddress.isNotBlank()}, " +
+                                "jibunAddressPresent=${message.value.jibunAddress.isNotBlank()}, " +
+                                "buildingNamePresent=${message.value.buildingName.isNotBlank()}, " +
                                 "detailAddress=<app input>",
                         )
                         currentOnResult(message.value)
