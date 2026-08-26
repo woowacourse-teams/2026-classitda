@@ -11,7 +11,7 @@ class InstructorMyPageDomainTest {
         listOf<(String) -> Any>(
             ::InstructorPhoneVerificationId,
             ::InstructorMemberId,
-            ::InstructorFacilityId,
+            ::InstructorStudioId,
         ).forEach { createId ->
             assertFailsWith<IllegalArgumentException> { createId("") }
             assertFailsWith<IllegalArgumentException> { createId(" \t\n") }
@@ -28,11 +28,11 @@ class InstructorMyPageDomainTest {
         }
 
         assertFailsWith<IllegalArgumentException> {
-            FacilityImageSelection.Local(
+            StudioImageSelection.Local(
                 handle = "",
                 previewReference = "opaque-reference",
                 mimeType = "image/jpeg",
-                fileName = "facility.jpg",
+                fileName = "studio.jpg",
                 sizeBytes = 1,
             )
         }
@@ -42,9 +42,9 @@ class InstructorMyPageDomainTest {
     fun `강사 회원 시설 인증 ID는 같은 원문이어도 서로 다른 타입이다`() {
         val rawValue = "same-id"
 
-        assertNotEquals<Any>(InstructorMemberId(rawValue), InstructorFacilityId(rawValue))
+        assertNotEquals<Any>(InstructorMemberId(rawValue), InstructorStudioId(rawValue))
         assertNotEquals<Any>(InstructorMemberId(rawValue), InstructorPhoneVerificationId(rawValue))
-        assertNotEquals<Any>(InstructorFacilityId(rawValue), InstructorPhoneVerificationId(rawValue))
+        assertNotEquals<Any>(InstructorStudioId(rawValue), InstructorPhoneVerificationId(rawValue))
     }
 
     @Test
@@ -63,12 +63,12 @@ class InstructorMyPageDomainTest {
                 name = "  회원  ",
                 phoneNumber = "01012345678",
             )
-        val facility =
-            ManagedFacility(
-                id = InstructorFacilityId("facility-1"),
+        val studio =
+            ManagedStudio(
+                id = InstructorStudioId("studio-1"),
                 name = "  Studio / 강남  ",
                 address =
-                    FacilityAddress(
+                    StudioAddress(
                         roadAddress = "서울시",
                         detailAddress = "상세 주소",
                     ),
@@ -78,14 +78,14 @@ class InstructorMyPageDomainTest {
         assertEquals("+821012345678", profile.phoneNumber)
         assertEquals("  회원  ", member.name)
         assertEquals("01012345678", member.phoneNumber)
-        assertEquals("서울시", facility.address.displayAddress)
-        assertEquals("상세 주소", facility.address.detailAddress)
+        assertEquals("서울시", studio.address.displayAddress)
+        assertEquals("상세 주소", studio.address.detailAddress)
     }
 
     @Test
     fun `시설 주소는 다섯 필드를 보존하고 도로명 없을 때 지번을 표시한다`() {
         val address =
-            FacilityAddress(
+            StudioAddress(
                 zoneCode = "13494",
                 roadAddress = "경기 성남시 분당구 판교역로 166",
                 jibunAddress = "경기 성남시 분당구 백현동 532",
@@ -104,8 +104,8 @@ class InstructorMyPageDomainTest {
 
     @Test
     fun `시설 등록 draft는 단일 이미지를 보유한다`() {
-        val image = FacilityImageSelection.Remote("https://example.com/facility.jpg")
-        val draft = FacilityRegistrationDraft(image = image)
+        val image = StudioImageSelection.Remote("https://example.com/studio.jpg")
+        val draft = StudioRegistrationDraft(image = image)
 
         assertEquals(image, draft.image)
     }

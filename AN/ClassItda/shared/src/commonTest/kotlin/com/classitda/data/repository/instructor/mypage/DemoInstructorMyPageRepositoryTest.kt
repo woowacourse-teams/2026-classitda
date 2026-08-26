@@ -1,11 +1,11 @@
 package com.classitda.data.repository.instructor.mypage
 
-import com.classitda.domain.model.instructor.mypage.FacilityImageMutation
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
-import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
-import com.classitda.domain.repository.instructor.mypage.FacilityList
+import com.classitda.domain.model.instructor.mypage.InstructorStudioId
+import com.classitda.domain.model.instructor.mypage.ManagedStudio
+import com.classitda.domain.model.instructor.mypage.StudioImageMutation
+import com.classitda.domain.model.instructor.mypage.StudioRegistrationDraft
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
+import com.classitda.domain.repository.instructor.mypage.StudioList
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -17,32 +17,32 @@ class DemoInstructorMyPageRepositoryTest {
         runBlocking {
             val repository = DemoInstructorMyPageRepository()
 
-            val facilityList =
-                assertIs<InstructorMyPageResult.Success<FacilityList>>(repository.getFacilities()).value
-            assertEquals(1, facilityList.facilities.size)
+            val studioList =
+                assertIs<InstructorMyPageResult.Success<StudioList>>(repository.getStudios()).value
+            assertEquals(1, studioList.studios.size)
 
-            val facility =
-                assertIs<InstructorMyPageResult.Success<ManagedFacility>>(
-                    repository.getFacility(InstructorFacilityId("facility-1")),
+            val studio =
+                assertIs<InstructorMyPageResult.Success<ManagedStudio>>(
+                    repository.getStudio(InstructorStudioId("studio-1")),
                 ).value
-            assertEquals("서울특별시 강남구 테헤란로", facility.address.displayAddress)
-            assertEquals("5층 501호", facility.address.detailAddress)
+            assertEquals("서울특별시 강남구 테헤란로", studio.address.displayAddress)
+            assertEquals("5층 501호", studio.address.detailAddress)
         }
 
     @Test
     fun `demo 시설 생성과 수정 성공은 Unit을 반환한다`() =
         runBlocking {
             val repository = DemoInstructorMyPageRepository()
-            val draft = FacilityRegistrationDraft(name = "새 시설")
+            val draft = StudioRegistrationDraft(name = "새 시설")
 
-            assertEquals(InstructorMyPageResult.Success(Unit), repository.registerFacility(draft))
+            assertEquals(InstructorMyPageResult.Success(Unit), repository.registerStudio(draft))
             assertEquals(
                 InstructorMyPageResult.Success(Unit),
-                repository.updateFacility(
-                    InstructorFacilityId("facility-1"),
-                    ManagedFacility(InstructorFacilityId("facility-1"), name = "기존 시설"),
+                repository.updateStudio(
+                    InstructorStudioId("studio-1"),
+                    ManagedStudio(InstructorStudioId("studio-1"), name = "기존 시설"),
                     draft,
-                    FacilityImageMutation.Unchanged,
+                    StudioImageMutation.Unchanged,
                 ),
             )
         }

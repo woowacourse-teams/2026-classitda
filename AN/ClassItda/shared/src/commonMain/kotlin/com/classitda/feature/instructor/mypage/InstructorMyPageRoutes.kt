@@ -11,40 +11,30 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.classitda.core.platform.FacilityImagePickerError
-import com.classitda.core.platform.FacilityImagePickerSelection
 import com.classitda.core.platform.KakaoPostcodeResult
 import com.classitda.core.platform.KakaoPostcodeSearchState
-import com.classitda.core.platform.releaseFacilityImage
-import com.classitda.domain.model.instructor.mypage.FacilityAddress
-import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
+import com.classitda.core.platform.StudioImagePickerError
+import com.classitda.core.platform.StudioImagePickerSelection
+import com.classitda.core.platform.releaseStudioImage
+import com.classitda.domain.model.instructor.mypage.StudioAddress
+import com.classitda.domain.model.instructor.mypage.StudioImageSelection
 import com.classitda.feature.common.profile.PhoneNumberChangeScreen
 import com.classitda.feature.common.profile.ProfileEditScreen
 import com.classitda.feature.common.profile.ProfileViewScreen
 import com.classitda.feature.common.profile.contract.PhoneNumberChangeAction
 import com.classitda.feature.common.profile.contract.ProfileEditAction
 import com.classitda.feature.common.profile.contract.ProfileViewAction
-import com.classitda.feature.instructor.mypage.contract.FacilityDetailAction
-import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
-import com.classitda.feature.instructor.mypage.contract.FacilityEditUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.MemberEditAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
-import com.classitda.feature.instructor.mypage.facility.FacilityDetailScreen
-import com.classitda.feature.instructor.mypage.facility.FacilityDetailViewModel
-import com.classitda.feature.instructor.mypage.facility.FacilityEditScreen
-import com.classitda.feature.instructor.mypage.facility.FacilityEditViewModel
-import com.classitda.feature.instructor.mypage.facility.FacilityManagementScreen
-import com.classitda.feature.instructor.mypage.facility.FacilityManagementViewModel
-import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationScreen
-import com.classitda.feature.instructor.mypage.facility.FacilityRegistrationViewModel
-import com.classitda.feature.instructor.mypage.facility.address.KakaoPostcodeSearchDialog
-import com.classitda.feature.instructor.mypage.facility.image.FacilityImagePickerOverlay
+import com.classitda.feature.instructor.mypage.contract.StudioDetailAction
+import com.classitda.feature.instructor.mypage.contract.StudioDetailUiState
+import com.classitda.feature.instructor.mypage.contract.StudioEditAction
+import com.classitda.feature.instructor.mypage.contract.StudioEditUiState
+import com.classitda.feature.instructor.mypage.contract.StudioManagementAction
+import com.classitda.feature.instructor.mypage.contract.StudioRegistrationAction
+import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
 import com.classitda.feature.instructor.mypage.member.MemberEditScreen
 import com.classitda.feature.instructor.mypage.member.MemberEditViewModel
 import com.classitda.feature.instructor.mypage.member.MemberManagementScreen
@@ -54,6 +44,16 @@ import com.classitda.feature.instructor.mypage.member.MemberRegistrationViewMode
 import com.classitda.feature.instructor.mypage.profile.InstructorPhoneNumberChangeViewModel
 import com.classitda.feature.instructor.mypage.profile.InstructorProfileEditViewModel
 import com.classitda.feature.instructor.mypage.profile.InstructorProfileViewModel
+import com.classitda.feature.instructor.mypage.studio.StudioDetailScreen
+import com.classitda.feature.instructor.mypage.studio.StudioDetailViewModel
+import com.classitda.feature.instructor.mypage.studio.StudioEditScreen
+import com.classitda.feature.instructor.mypage.studio.StudioEditViewModel
+import com.classitda.feature.instructor.mypage.studio.StudioManagementScreen
+import com.classitda.feature.instructor.mypage.studio.StudioManagementViewModel
+import com.classitda.feature.instructor.mypage.studio.StudioRegistrationScreen
+import com.classitda.feature.instructor.mypage.studio.StudioRegistrationViewModel
+import com.classitda.feature.instructor.mypage.studio.address.KakaoPostcodeSearchDialog
+import com.classitda.feature.instructor.mypage.studio.image.StudioImagePickerOverlay
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -62,7 +62,7 @@ internal fun InstructorMyPageRoute(
     onBack: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenMemberManagement: () -> Unit,
-    onOpenFacilityManagement: () -> Unit,
+    onOpenStudioManagement: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: InstructorMyPageViewModel = koinViewModel(),
@@ -72,7 +72,7 @@ internal fun InstructorMyPageRoute(
         when (action) {
             InstructorMyPageAction.OpenProfile -> onOpenProfile()
             InstructorMyPageAction.OpenMemberManagement -> onOpenMemberManagement()
-            InstructorMyPageAction.OpenFacilityManagement -> onOpenFacilityManagement()
+            InstructorMyPageAction.OpenStudioManagement -> onOpenStudioManagement()
             InstructorMyPageAction.OpenPrivacyPolicy -> onOpenPrivacyPolicy()
             InstructorMyPageAction.Retry -> viewModel.onAction(action)
         }
@@ -270,62 +270,62 @@ internal fun InstructorMemberEditRoute(
 }
 
 @Composable
-internal fun InstructorFacilityManagementRoute(
+internal fun InstructorStudioManagementRoute(
     onBack: () -> Unit,
-    onEditFacility: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
-    onOpenFacilityDetail: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
-    onOpenFacilityRegistration: () -> Unit,
+    onEditStudio: (com.classitda.domain.model.instructor.mypage.InstructorStudioId) -> Unit,
+    onOpenStudioDetail: (com.classitda.domain.model.instructor.mypage.InstructorStudioId) -> Unit,
+    onOpenStudioRegistration: () -> Unit,
     refreshToken: Int = 0,
     modifier: Modifier = Modifier,
-    viewModel: FacilityManagementViewModel = koinViewModel(),
+    viewModel: StudioManagementViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
-    FacilityManagementScreen(uiState, onAction = { action ->
+    StudioManagementScreen(uiState, onAction = { action ->
         when (action) {
-            FacilityManagementAction.Back -> onBack()
-            is FacilityManagementAction.EditFacility -> onEditFacility(action.facilityId)
-            is FacilityManagementAction.OpenFacilityDetail -> onOpenFacilityDetail(action.facilityId)
-            FacilityManagementAction.OpenFacilityRegistration -> onOpenFacilityRegistration()
-            FacilityManagementAction.Retry -> viewModel.onAction(action)
+            StudioManagementAction.Back -> onBack()
+            is StudioManagementAction.EditStudio -> onEditStudio(action.studioId)
+            is StudioManagementAction.OpenStudioDetail -> onOpenStudioDetail(action.studioId)
+            StudioManagementAction.OpenStudioRegistration -> onOpenStudioRegistration()
+            StudioManagementAction.Retry -> viewModel.onAction(action)
         }
     }, modifier = modifier)
 }
 
 @Composable
-internal fun InstructorFacilityDetailRoute(
-    facilityId: com.classitda.domain.model.instructor.mypage.InstructorFacilityId,
+internal fun InstructorStudioDetailRoute(
+    studioId: com.classitda.domain.model.instructor.mypage.InstructorStudioId,
     onBack: () -> Unit,
-    onOpenEdit: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
-    onDeleted: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
+    onOpenEdit: (com.classitda.domain.model.instructor.mypage.InstructorStudioId) -> Unit,
+    onDeleted: (com.classitda.domain.model.instructor.mypage.InstructorStudioId) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FacilityDetailViewModel =
+    viewModel: StudioDetailViewModel =
         koinViewModel(
-            key = "instructor-facility-detail-${facilityId.value}",
-            parameters = { parametersOf(facilityId) },
+            key = "instructor-studio-detail-${studioId.value}",
+            parameters = { parametersOf(studioId) },
         ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    FacilityDetailScreen(uiState, onAction = { action ->
+    StudioDetailScreen(uiState, onAction = { action ->
         when (action) {
-            FacilityDetailAction.Back -> onBack()
-            FacilityDetailAction.OpenEdit -> onOpenEdit(facilityId)
-            is FacilityDetailAction.DeleteAcknowledged -> onDeleted(action.facilityId)
+            StudioDetailAction.Back -> onBack()
+            StudioDetailAction.OpenEdit -> onOpenEdit(studioId)
+            is StudioDetailAction.DeleteAcknowledged -> onDeleted(action.studioId)
             else -> viewModel.onAction(action)
         }
     }, modifier = modifier)
 }
 
 @Composable
-internal fun InstructorFacilityEditRoute(
-    facilityId: com.classitda.domain.model.instructor.mypage.InstructorFacilityId,
+internal fun InstructorStudioEditRoute(
+    studioId: com.classitda.domain.model.instructor.mypage.InstructorStudioId,
     onBack: () -> Unit,
-    onSaved: (com.classitda.domain.model.instructor.mypage.InstructorFacilityId) -> Unit,
+    onSaved: (com.classitda.domain.model.instructor.mypage.InstructorStudioId) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: FacilityEditViewModel =
+    viewModel: StudioEditViewModel =
         koinViewModel(
-            key = "instructor-facility-edit-${facilityId.value}",
-            parameters = { parametersOf(facilityId) },
+            key = "instructor-studio-edit-${studioId.value}",
+            parameters = { parametersOf(studioId) },
         ),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -335,38 +335,38 @@ internal fun InstructorFacilityEditRoute(
     var imagePickerVisible by remember { mutableStateOf(false) }
     DisposableEffect(Unit) {
         onDispose {
-            currentUiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+            currentUiState.localStudioImageHandle()?.let(::releaseStudioImage)
         }
     }
-    FacilityEditScreen(uiState, onAction = { action ->
+    StudioEditScreen(uiState, onAction = { action ->
         when (action) {
-            FacilityEditAction.Back -> {
+            StudioEditAction.Back -> {
                 onBack()
             }
 
-            FacilityEditAction.RequestAddressSearch -> {
+            StudioEditAction.RequestAddressSearch -> {
                 postcodeSearchSession += 1
                 postcodeSearchState = KakaoPostcodeSearchState.Loading
             }
 
-            FacilityEditAction.RequestImageSource -> {
+            StudioEditAction.RequestImageSource -> {
                 imagePickerVisible = true
             }
 
-            FacilityEditAction.RemoveImage -> {
-                uiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+            StudioEditAction.RemoveImage -> {
+                uiState.localStudioImageHandle()?.let(::releaseStudioImage)
                 viewModel.onAction(action)
             }
 
-            is FacilityEditAction.ImageSelected -> {
-                uiState.localFacilityImageHandle()?.let { handle ->
-                    if (handle != action.image.selection.localHandle()) releaseFacilityImage(handle)
+            is StudioEditAction.ImageSelected -> {
+                uiState.localStudioImageHandle()?.let { handle ->
+                    if (handle != action.image.selection.localHandle()) releaseStudioImage(handle)
                 }
                 viewModel.onAction(action)
             }
 
-            is FacilityEditAction.SuccessAcknowledged -> {
-                onSaved(action.facilityId)
+            is StudioEditAction.SuccessAcknowledged -> {
+                onSaved(action.studioId)
             }
 
             else -> {
@@ -374,17 +374,17 @@ internal fun InstructorFacilityEditRoute(
             }
         }
     }, modifier = modifier)
-    FacilityImagePickerOverlay(
+    StudioImagePickerOverlay(
         visible = imagePickerVisible,
         onSelected = { selection ->
             imagePickerVisible = false
-            uiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
-            viewModel.onAction(FacilityEditAction.ImageSelected(selection.toInputUiModel()))
+            uiState.localStudioImageHandle()?.let(::releaseStudioImage)
+            viewModel.onAction(StudioEditAction.ImageSelected(selection.toInputUiModel()))
         },
         onCancelled = { imagePickerVisible = false },
         onError = { reason ->
             imagePickerVisible = false
-            viewModel.onAction(FacilityEditAction.ImagePickerFailed(reason.toUiError()))
+            viewModel.onAction(StudioEditAction.ImagePickerFailed(reason.toUiError()))
         },
     )
     postcodeSearchState?.let { state ->
@@ -403,7 +403,7 @@ internal fun InstructorFacilityEditRoute(
                 },
                 onResult = { result ->
                     postcodeSearchState = null
-                    viewModel.onAction(FacilityEditAction.AddressSelected(result.toFacilityAddress()))
+                    viewModel.onAction(StudioEditAction.AddressSelected(result.toStudioAddress()))
                 },
                 onCancelled = { postcodeSearchState = null },
                 onError = { reason -> postcodeSearchState = KakaoPostcodeSearchState.Error(reason) },
@@ -418,11 +418,11 @@ internal fun InstructorFacilityEditRoute(
 }
 
 @Composable
-internal fun InstructorFacilityRegistrationRoute(
+internal fun InstructorStudioRegistrationRoute(
     onBack: () -> Unit,
     onSuccess: () -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: FacilityRegistrationViewModel = koinViewModel(),
+    viewModel: StudioRegistrationViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val currentUiState by rememberUpdatedState(uiState)
@@ -431,32 +431,32 @@ internal fun InstructorFacilityRegistrationRoute(
     var imagePickerVisible by remember { mutableStateOf(false) }
     DisposableEffect(Unit) {
         onDispose {
-            currentUiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+            currentUiState.localStudioImageHandle()?.let(::releaseStudioImage)
         }
     }
-    FacilityRegistrationScreen(uiState, onAction = { action ->
+    StudioRegistrationScreen(uiState, onAction = { action ->
         when (action) {
-            FacilityRegistrationAction.Back -> {
+            StudioRegistrationAction.Back -> {
                 onBack()
             }
 
-            FacilityRegistrationAction.RequestAddressSearch -> {
+            StudioRegistrationAction.RequestAddressSearch -> {
                 postcodeSearchSession += 1
                 postcodeSearchState = KakaoPostcodeSearchState.Loading
             }
 
-            FacilityRegistrationAction.RequestImageSource -> {
+            StudioRegistrationAction.RequestImageSource -> {
                 imagePickerVisible = true
             }
 
-            FacilityRegistrationAction.RemoveImage -> {
-                uiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
+            StudioRegistrationAction.RemoveImage -> {
+                uiState.localStudioImageHandle()?.let(::releaseStudioImage)
                 viewModel.onAction(action)
             }
 
-            is FacilityRegistrationAction.ImageSelected -> {
-                uiState.localFacilityImageHandle()?.let { handle ->
-                    if (handle != action.image.selection.localHandle()) releaseFacilityImage(handle)
+            is StudioRegistrationAction.ImageSelected -> {
+                uiState.localStudioImageHandle()?.let { handle ->
+                    if (handle != action.image.selection.localHandle()) releaseStudioImage(handle)
                 }
                 viewModel.onAction(action)
             }
@@ -466,17 +466,17 @@ internal fun InstructorFacilityRegistrationRoute(
             }
         }
     }, modifier = modifier)
-    FacilityImagePickerOverlay(
+    StudioImagePickerOverlay(
         visible = imagePickerVisible,
         onSelected = { selection ->
             imagePickerVisible = false
-            uiState.localFacilityImageHandle()?.let(::releaseFacilityImage)
-            viewModel.onAction(FacilityRegistrationAction.ImageSelected(selection.toInputUiModel()))
+            uiState.localStudioImageHandle()?.let(::releaseStudioImage)
+            viewModel.onAction(StudioRegistrationAction.ImageSelected(selection.toInputUiModel()))
         },
         onCancelled = { imagePickerVisible = false },
         onError = { reason ->
             imagePickerVisible = false
-            viewModel.onAction(FacilityRegistrationAction.ImagePickerFailed(reason.toUiError()))
+            viewModel.onAction(StudioRegistrationAction.ImagePickerFailed(reason.toUiError()))
         },
     )
     postcodeSearchState?.let { state ->
@@ -495,7 +495,7 @@ internal fun InstructorFacilityRegistrationRoute(
                 },
                 onResult = { result ->
                     postcodeSearchState = null
-                    viewModel.onAction(FacilityRegistrationAction.AddressSelected(result.toFacilityAddress()))
+                    viewModel.onAction(StudioRegistrationAction.AddressSelected(result.toStudioAddress()))
                 },
                 onCancelled = { postcodeSearchState = null },
                 onError = { reason -> postcodeSearchState = KakaoPostcodeSearchState.Error(reason) },
@@ -507,12 +507,12 @@ internal fun InstructorFacilityRegistrationRoute(
             )
         }
     }
-    val success = uiState as? com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState.Success
+    val success = uiState as? com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState.Success
     LaunchedEffect(success) { if (success != null) onSuccess() }
 }
 
-private fun KakaoPostcodeResult.toFacilityAddress(): FacilityAddress =
-    FacilityAddress(
+private fun KakaoPostcodeResult.toStudioAddress(): StudioAddress =
+    StudioAddress(
         zoneCode = zoneCode,
         roadAddress = roadAddress,
         jibunAddress = jibunAddress,
@@ -520,9 +520,9 @@ private fun KakaoPostcodeResult.toFacilityAddress(): FacilityAddress =
         detailAddress = "",
     )
 
-private fun FacilityImagePickerSelection.toInputUiModel() =
-    com.classitda.feature.instructor.mypage.contract.FacilityImageInputUiModel(
-        FacilityImageSelection.Local(
+private fun StudioImagePickerSelection.toInputUiModel() =
+    com.classitda.feature.instructor.mypage.contract.StudioImageInputUiModel(
+        StudioImageSelection.Local(
             handle = handle,
             previewReference = previewReference,
             mimeType = mimeType,
@@ -531,47 +531,47 @@ private fun FacilityImagePickerSelection.toInputUiModel() =
         ),
     )
 
-private fun FacilityImageSelection.localHandle(): String? = (this as? FacilityImageSelection.Local)?.handle
+private fun StudioImageSelection.localHandle(): String? = (this as? StudioImageSelection.Local)?.handle
 
-private fun FacilityImagePickerError.toUiError() =
+private fun StudioImagePickerError.toUiError() =
     when (this) {
-        FacilityImagePickerError.PERMISSION_DENIED -> {
-            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.PERMISSION_DENIED
+        StudioImagePickerError.PERMISSION_DENIED -> {
+            com.classitda.feature.instructor.mypage.contract.StudioImageUiError.PERMISSION_DENIED
         }
 
-        FacilityImagePickerError.CAMERA_UNAVAILABLE -> {
-            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.CAMERA_UNAVAILABLE
+        StudioImagePickerError.CAMERA_UNAVAILABLE -> {
+            com.classitda.feature.instructor.mypage.contract.StudioImageUiError.CAMERA_UNAVAILABLE
         }
 
-        FacilityImagePickerError.READ_FAILED -> {
-            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.READ_FAILED
+        StudioImagePickerError.READ_FAILED -> {
+            com.classitda.feature.instructor.mypage.contract.StudioImageUiError.READ_FAILED
         }
 
-        FacilityImagePickerError.INVALID_MIME -> {
-            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.INVALID_MIME
+        StudioImagePickerError.INVALID_MIME -> {
+            com.classitda.feature.instructor.mypage.contract.StudioImageUiError.INVALID_MIME
         }
 
-        FacilityImagePickerError.FILE_TOO_LARGE -> {
-            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.FILE_TOO_LARGE
+        StudioImagePickerError.FILE_TOO_LARGE -> {
+            com.classitda.feature.instructor.mypage.contract.StudioImageUiError.FILE_TOO_LARGE
         }
 
-        FacilityImagePickerError.UNKNOWN -> {
-            com.classitda.feature.instructor.mypage.contract.FacilityImageUiError.READ_FAILED
+        StudioImagePickerError.UNKNOWN -> {
+            com.classitda.feature.instructor.mypage.contract.StudioImageUiError.READ_FAILED
         }
     }
 
-private fun FacilityEditUiState.localFacilityImageHandle(): String? =
-    (this as? FacilityEditUiState.Editing)
+private fun StudioEditUiState.localStudioImageHandle(): String? =
+    (this as? StudioEditUiState.Editing)
         ?.draft
         ?.image
         ?.selection
-        ?.let { it as? FacilityImageSelection.Local }
+        ?.let { it as? StudioImageSelection.Local }
         ?.handle
 
-private fun FacilityRegistrationUiState.localFacilityImageHandle(): String? =
-    (this as? FacilityRegistrationUiState.Editing)
+private fun StudioRegistrationUiState.localStudioImageHandle(): String? =
+    (this as? StudioRegistrationUiState.Editing)
         ?.draft
         ?.image
         ?.selection
-        ?.let { it as? FacilityImageSelection.Local }
+        ?.let { it as? StudioImageSelection.Local }
         ?.handle

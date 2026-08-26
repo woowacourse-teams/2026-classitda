@@ -1,9 +1,9 @@
 package com.classitda.feature.instructor.mypage.contract
 
-import com.classitda.domain.model.instructor.mypage.FacilityAddress
-import com.classitda.domain.model.instructor.mypage.FacilityImageSelection
-import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.domain.model.instructor.mypage.InstructorStudioId
+import com.classitda.domain.model.instructor.mypage.StudioAddress
+import com.classitda.domain.model.instructor.mypage.StudioImageSelection
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -35,16 +35,16 @@ class InstructorMyPageContractTest {
     }
 
     @Test
-    fun facilityActionsKeepStableFacilityIdAndRemainDistinct() {
-        val id = InstructorFacilityId("facility-1")
+    fun studioActionsKeepStableStudioIdAndRemainDistinct() {
+        val id = InstructorStudioId("studio-1")
 
-        val edit = FacilityManagementAction.EditFacility(id)
-        val detail = FacilityManagementAction.OpenFacilityDetail(id)
+        val edit = StudioManagementAction.EditStudio(id)
+        val detail = StudioManagementAction.OpenStudioDetail(id)
 
-        assertEquals(id, edit.facilityId)
-        assertEquals(id, detail.facilityId)
-        assertIs<FacilityManagementAction.EditFacility>(edit)
-        assertIs<FacilityManagementAction.OpenFacilityDetail>(detail)
+        assertEquals(id, edit.studioId)
+        assertEquals(id, detail.studioId)
+        assertIs<StudioManagementAction.EditStudio>(edit)
+        assertIs<StudioManagementAction.OpenStudioDetail>(detail)
     }
 
     @Test
@@ -101,16 +101,16 @@ class InstructorMyPageContractTest {
             memberId,
             assertIs<MemberRegistrationUiState.Success>(MemberRegistrationUiState.Success(memberId)).memberId,
         )
-        assertIs<FacilityRegistrationUiState.Success>(FacilityRegistrationUiState.Success)
+        assertIs<StudioRegistrationUiState.Success>(StudioRegistrationUiState.Success)
     }
 
     @Test
-    fun facilityRegistrationActionsExposeExternalSelectionBoundaries() {
-        val image = FacilityImageInputUiModel(FacilityImageSelection.Remote("https://example.com/facility.jpg"))
-        val selectedImage = FacilityRegistrationAction.ImageSelected(image)
+    fun studioRegistrationActionsExposeExternalSelectionBoundaries() {
+        val image = StudioImageInputUiModel(StudioImageSelection.Remote("https://example.com/studio.jpg"))
+        val selectedImage = StudioRegistrationAction.ImageSelected(image)
         val address =
-            FacilityRegistrationAction.AddressSelected(
-                FacilityAddress(
+            StudioRegistrationAction.AddressSelected(
+                StudioAddress(
                     roadAddress = "Seoul",
                     detailAddress = "Jongno",
                 ),
@@ -122,30 +122,30 @@ class InstructorMyPageContractTest {
     }
 
     @Test
-    fun facilityImageContractSupportsSelectionReplacementAndRemoval() {
+    fun studioImageContractSupportsSelectionReplacementAndRemoval() {
         val first =
-            FacilityImageInputUiModel(
-                FacilityImageSelection.Local("handle-1", "preview-1", "image/jpeg", "one.jpg", 10),
+            StudioImageInputUiModel(
+                StudioImageSelection.Local("handle-1", "preview-1", "image/jpeg", "one.jpg", 10),
             )
         val replacement =
-            FacilityImageInputUiModel(
-                FacilityImageSelection.Local("handle-2", "preview-2", "image/png", "two.png", 20),
+            StudioImageInputUiModel(
+                StudioImageSelection.Local("handle-2", "preview-2", "image/png", "two.png", 20),
             )
-        val initial = FacilityInputUiModel(image = first)
+        val initial = StudioInputUiModel(image = first)
 
         assertEquals(first, initial.image)
         assertEquals(replacement, initial.copy(image = replacement).image)
         assertEquals(null, initial.copy(image = null).image)
-        assertIs<FacilityRegistrationAction.RemoveImage>(FacilityRegistrationAction.RemoveImage)
+        assertIs<StudioRegistrationAction.RemoveImage>(StudioRegistrationAction.RemoveImage)
     }
 
     @Test
-    fun facilityRegistrationValidationKeepsInitialFieldsNeutralUntilSubmit() {
-        val emptyDraft = FacilityInputUiModel()
+    fun studioRegistrationValidationKeepsInitialFieldsNeutralUntilSubmit() {
+        val emptyDraft = StudioInputUiModel()
         val validDraft =
-            FacilityInputUiModel(
-                name = "Facility",
-                address = FacilityAddress(roadAddress = "Seoul"),
+            StudioInputUiModel(
+                name = "Studio",
+                address = StudioAddress(roadAddress = "Seoul"),
                 phoneNumber = "0212345678",
                 openingTime = "09:00",
                 closingTime = "22:00",
@@ -159,21 +159,21 @@ class InstructorMyPageContractTest {
 
         assertEquals(
             setOf(
-                FacilityRegistrationField.NAME,
-                FacilityRegistrationField.ADDRESS,
-                FacilityRegistrationField.PHONE_NUMBER,
+                StudioRegistrationField.NAME,
+                StudioRegistrationField.ADDRESS,
+                StudioRegistrationField.PHONE_NUMBER,
             ),
-            facilityRegistrationFieldErrors(emptyDraft),
+            studioRegistrationFieldErrors(emptyDraft),
         )
-        assertTrue(facilityRegistrationFieldErrors(validDraft).isEmpty())
-        assertTrue(validDraft.isFacilityRegistrationValid())
+        assertTrue(studioRegistrationFieldErrors(validDraft).isEmpty())
+        assertTrue(validDraft.isStudioRegistrationValid())
         assertEquals(
             setOf(
-                FacilityRegistrationField.PHONE_NUMBER,
-                FacilityRegistrationField.OPENING_TIME,
-                FacilityRegistrationField.CLOSING_TIME,
+                StudioRegistrationField.PHONE_NUMBER,
+                StudioRegistrationField.OPENING_TIME,
+                StudioRegistrationField.CLOSING_TIME,
             ),
-            facilityRegistrationFieldErrors(invalidFormatDraft),
+            studioRegistrationFieldErrors(invalidFormatDraft),
         )
     }
 
@@ -187,37 +187,37 @@ class InstructorMyPageContractTest {
     }
 
     @Test
-    fun facilityDetailStateKeepsStableIdAndDeleteInputSeparate() {
-        val facility = InstructorFacilityId("facility-1")
-        val confirming = FacilityDeleteState.Confirming(typedName = "다른 이름")
+    fun studioDetailStateKeepsStableIdAndDeleteInputSeparate() {
+        val studio = InstructorStudioId("studio-1")
+        val confirming = StudioDeleteState.Confirming(typedName = "다른 이름")
         val state =
-            FacilityDetailUiState.Content(
-                facility =
-                    FacilityUiModel(
-                        id = facility,
+            StudioDetailUiState.Content(
+                studio =
+                    StudioUiModel(
+                        id = studio,
                         name = "클래스잇다 스튜디오",
-                        address = FacilityAddress(roadAddress = "서울"),
+                        address = StudioAddress(roadAddress = "서울"),
                     ),
                 deleteState = confirming,
             )
 
-        assertEquals(facility, state.facility.id)
-        assertEquals("다른 이름", assertIs<FacilityDeleteState.Confirming>(state.deleteState).typedName)
+        assertEquals(studio, state.studio.id)
+        assertEquals("다른 이름", assertIs<StudioDeleteState.Confirming>(state.deleteState).typedName)
         assertEquals(
             "다른 이름",
-            assertIs<FacilityDetailAction.DeleteNameChanged>(
-                FacilityDetailAction.DeleteNameChanged("다른 이름"),
+            assertIs<StudioDetailAction.DeleteNameChanged>(
+                StudioDetailAction.DeleteNameChanged("다른 이름"),
             ).name,
         )
     }
 
     @Test
-    fun facilityEditSuccessCarriesStableFacilityId() {
-        val id = InstructorFacilityId("facility-1")
+    fun studioEditSuccessCarriesStableStudioId() {
+        val id = InstructorStudioId("studio-1")
 
         assertEquals(
             id,
-            assertIs<FacilityEditUiState.Success>(FacilityEditUiState.Success(id)).facilityId,
+            assertIs<StudioEditUiState.Success>(StudioEditUiState.Success(id)).studioId,
         )
     }
 }

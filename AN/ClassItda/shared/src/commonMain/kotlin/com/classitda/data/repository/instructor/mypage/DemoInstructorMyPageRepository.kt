@@ -1,30 +1,30 @@
 package com.classitda.data.repository.instructor.mypage
 
-import com.classitda.domain.model.instructor.mypage.FacilityAddress
-import com.classitda.domain.model.instructor.mypage.FacilityImageMutation
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.InstructorAccountProfile
-import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.domain.model.instructor.mypage.InstructorMyPageSummary
 import com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
+import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.domain.model.instructor.mypage.ManagedMember
+import com.classitda.domain.model.instructor.mypage.ManagedStudio
 import com.classitda.domain.model.instructor.mypage.MemberListPage
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.MemberSortOrder
-import com.classitda.domain.repository.instructor.mypage.FacilityList
-import com.classitda.domain.repository.instructor.mypage.InstructorFacilityRepository
+import com.classitda.domain.model.instructor.mypage.StudioAddress
+import com.classitda.domain.model.instructor.mypage.StudioImageMutation
+import com.classitda.domain.model.instructor.mypage.StudioRegistrationDraft
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.domain.repository.instructor.mypage.InstructorPhoneVerificationChallenge
+import com.classitda.domain.repository.instructor.mypage.InstructorStudioRepository
+import com.classitda.domain.repository.instructor.mypage.StudioList
 
 private typealias MemberRegistrationResult = InstructorMyPageResult<InstructorMemberId>
 
 /** Deterministic app-smoke fixture; it is not an operational repository. */
 internal class DemoInstructorMyPageRepository :
     InstructorMyPageRepository,
-    InstructorFacilityRepository {
+    InstructorStudioRepository {
     private var profile =
         InstructorAccountProfile(
             id = "instructor-demo",
@@ -38,13 +38,13 @@ internal class DemoInstructorMyPageRepository :
             ManagedMember(InstructorMemberId("member-1"), "김민지", "01012345678"),
             ManagedMember(InstructorMemberId("member-2"), "박서준", "01098765432"),
         )
-    private val facilities =
+    private val studios =
         mutableListOf(
-            ManagedFacility(
-                id = InstructorFacilityId("facility-1"),
+            ManagedStudio(
+                id = InstructorStudioId("studio-1"),
                 name = "클래스잇다 스튜디오",
                 address =
-                    FacilityAddress(
+                    StudioAddress(
                         roadAddress = "서울특별시 강남구 테헤란로",
                         detailAddress = "5층 501호",
                     ),
@@ -124,43 +124,42 @@ internal class DemoInstructorMyPageRepository :
             )
         }
 
-    override suspend fun getFacilities() =
-        InstructorMyPageResult.Success(FacilityList(facilities.size, facilities.toList()))
+    override suspend fun getStudios() = InstructorMyPageResult.Success(StudioList(studios.size, studios.toList()))
 
-    override suspend fun getFacility(facilityId: InstructorFacilityId) =
-        facilities
-            .firstOrNull { it.id == facilityId }
+    override suspend fun getStudio(studioId: InstructorStudioId) =
+        studios
+            .firstOrNull { it.id == studioId }
             ?.let { InstructorMyPageResult.Success(it) }
             ?: InstructorMyPageResult.Failure(
                 com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
             )
 
-    override suspend fun registerFacility(draft: FacilityRegistrationDraft): InstructorMyPageResult<Unit> {
-        val id = InstructorFacilityId("facility-${facilities.size + 1}")
-        facilities += draft.toManagedFacility(id)
+    override suspend fun registerStudio(draft: StudioRegistrationDraft): InstructorMyPageResult<Unit> {
+        val id = InstructorStudioId("studio-${studios.size + 1}")
+        studios += draft.toManagedStudio(id)
         return InstructorMyPageResult.Success(Unit)
     }
 
-    override suspend fun updateFacility(
-        facilityId: InstructorFacilityId,
-        original: ManagedFacility,
-        draft: FacilityRegistrationDraft,
-        imageMutation: FacilityImageMutation,
+    override suspend fun updateStudio(
+        studioId: InstructorStudioId,
+        original: ManagedStudio,
+        draft: StudioRegistrationDraft,
+        imageMutation: StudioImageMutation,
     ): InstructorMyPageResult<Unit> =
-        facilities
-            .indexOfFirst { it.id == facilityId }
+        studios
+            .indexOfFirst { it.id == studioId }
             .takeIf { it >= 0 }
             ?.let { index ->
-                val updated = draft.toManagedFacility(facilityId)
-                facilities[index] = updated
+                val updated = draft.toManagedStudio(studioId)
+                studios[index] = updated
                 InstructorMyPageResult.Success(Unit)
             }
             ?: InstructorMyPageResult.Failure(
                 com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
             )
 
-    private fun FacilityRegistrationDraft.toManagedFacility(id: InstructorFacilityId) =
-        ManagedFacility(
+    private fun StudioRegistrationDraft.toManagedStudio(id: InstructorStudioId) =
+        ManagedStudio(
             id = id,
             name = name,
             address = address,

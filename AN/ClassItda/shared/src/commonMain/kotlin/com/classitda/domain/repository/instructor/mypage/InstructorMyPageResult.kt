@@ -1,7 +1,7 @@
 package com.classitda.domain.repository.instructor.mypage
 
 import com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
+import com.classitda.domain.model.instructor.mypage.ManagedStudio
 
 sealed interface InstructorMyPageResult<out T> {
     data class Success<T>(
@@ -10,11 +10,11 @@ sealed interface InstructorMyPageResult<out T> {
 
     data class Failure(
         val reason: InstructorMyPageFailureReason,
-        val completedFacilityUpdateOperations: Set<FacilityUpdateOperation> = emptySet(),
+        val completedStudioUpdateOperations: Set<StudioUpdateOperation> = emptySet(),
     ) : InstructorMyPageResult<Nothing>
 }
 
-enum class FacilityUpdateOperation {
+enum class StudioUpdateOperation {
     PATCH,
     DELETE_IMAGE,
 }
@@ -41,9 +41,9 @@ data class InstructorPhoneVerificationChallenge(
     val verificationId: InstructorPhoneVerificationId,
 )
 
-data class FacilityList(
+data class StudioList(
     val totalCount: Int,
-    val facilities: List<ManagedFacility>,
+    val studios: List<ManagedStudio>,
 ) {
     init {
         require(totalCount >= 0) { "시설 총원은 음수일 수 없습니다." }
