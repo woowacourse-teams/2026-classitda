@@ -145,7 +145,16 @@ public class StudioMembershipService {
 
         StudioMembership membership = getMembership(studioId, membershipId);
         membership.updateProfile(request.name(), request.phoneNumber());
+        linkMemberIfRegistered(membership);
         flushMembership();
+    }
+
+    private void linkMemberIfRegistered(StudioMembership membership) {
+        if (membership.isRegistered()) {
+            return;
+        }
+        memberRepository.findByPhoneNumber(membership.getPhoneNumber())
+                .ifPresent(membership::linkMember);
     }
 
     @Transactional

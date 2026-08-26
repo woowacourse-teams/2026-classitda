@@ -466,6 +466,51 @@ class StudioMembershipServiceTest {
     }
 
     @Test
+    void 번호를_고치면_그_번호로_가입한_회원과_연결된다() {
+        // given
+        Member owner = 회원을_저장한다("link-owner", "01011130001");
+        Studio studio = 시설을_만든다(owner);
+        studioMembershipService.saveStudent(owner.getId(), studio.getId(),
+                StudioMembershipFixture.소속_등록_요청("오타회원", "01000000001"));
+        entityManager.flush();
+        Member registered = 가입한_회원을_저장한다("실제회원", "01012349999");
+        Long membershipId = 소속_아이디를_찾는다(studio, "01000000001");
+
+        // when
+        studioMembershipService.update(owner.getId(), studio.getId(), membershipId,
+                StudioMembershipUpdateRequest.of("실제회원", "01012349999"));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        StudioMembership updated = studioMembershipRepository.findById(membershipId).orElseThrow();
+        assertThat(updated.isRegistered()).isTrue();
+        assertThat(updated.getMember().getId()).isEqualTo(registered.getId());
+    }
+
+    @Test
+    void 가입하지_않은_번호로_고치면_연결되지_않는다() {
+        // given
+        Member owner = 회원을_저장한다("nolink-owner", "01011130002");
+        Studio studio = 시설을_만든다(owner);
+        studioMembershipService.saveStudent(owner.getId(), studio.getId(),
+                StudioMembershipFixture.소속_등록_요청("오타회원", "01000000002"));
+        entityManager.flush();
+        Long membershipId = 소속_아이디를_찾는다(studio, "01000000002");
+
+        // when
+        studioMembershipService.update(owner.getId(), studio.getId(), membershipId,
+                StudioMembershipUpdateRequest.of("고친이름", "01000000003"));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        StudioMembership updated = studioMembershipRepository.findById(membershipId).orElseThrow();
+        assertThat(updated.isRegistered()).isFalse();
+        assertThat(updated.getPhoneNumber()).isEqualTo("01000000003");
+    }
+
+    @Test
     void 이력이_없는_소속을_삭제하면_기록이_남지_않는다() {
         // given
         Member owner = 회원을_저장한다("delete-owner", "01011120004");
