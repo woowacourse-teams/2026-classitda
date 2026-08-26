@@ -12,6 +12,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
 import io.ktor.utils.io.ByteWriteChannel
+import kotlinx.coroutines.CancellationException
 
 internal class ObjectStorageUploadDataSource(
     private val client: HttpClient,
@@ -47,6 +48,8 @@ internal class ObjectStorageUploadDataSource(
             }
         } catch (_: FacilityImageBinaryReadException) {
             ObjectStorageUploadResult.ReadFailed
+        } catch (exception: CancellationException) {
+            throw exception
         } catch (_: Throwable) {
             ObjectStorageUploadResult.NetworkFailure
         }

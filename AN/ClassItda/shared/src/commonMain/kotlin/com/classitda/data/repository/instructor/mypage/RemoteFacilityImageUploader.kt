@@ -134,6 +134,7 @@ private fun Throwable.toImageUploadFailureReason(): InstructorMyPageFailureReaso
                 401 -> InstructorMyPageFailureReason.UNAUTHORIZED
                 403 -> InstructorMyPageFailureReason.FORBIDDEN
                 404 -> InstructorMyPageFailureReason.NOT_FOUND
+                409 -> InstructorMyPageFailureReason.CONFLICT
                 in 500..599 -> InstructorMyPageFailureReason.SERVER
                 else -> InstructorMyPageFailureReason.UNKNOWN
             }

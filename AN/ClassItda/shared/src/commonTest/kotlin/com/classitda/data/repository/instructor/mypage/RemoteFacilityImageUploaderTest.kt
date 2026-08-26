@@ -218,6 +218,36 @@ class RemoteFacilityImageUploaderTest {
         }
 
     @Test
+    fun `업로드 URL 발급 409는 CONFLICT로 매핑한다`() =
+        runBlocking {
+            val issueClient =
+                createClassItdaHttpClient(
+                    MockEngine {
+                        respond("", status = HttpStatusCode.Conflict)
+                    },
+                    BASE_URL,
+                )
+            val objectClient = createObjectStorageHttpClient(MockEngine { error("PUT하면 안 됩니다") })
+
+            try {
+                val result =
+                    RemoteFacilityImageUploader(
+                        FacilityImageUploadApi(issueClient),
+                        ObjectStorageUploadDataSource(objectClient, TestReader("raw")),
+                        releaseLocalImage = {},
+                    ).upload(localImage())
+
+                assertEquals(
+                    InstructorMyPageResult.Failure(InstructorMyPageFailureReason.CONFLICT),
+                    result,
+                )
+            } finally {
+                issueClient.close()
+                objectClient.close()
+            }
+        }
+
+    @Test
     fun `reader boundary는 읽기 실패를 전용 예외로 표현한다`() =
         runBlocking {
             try {
