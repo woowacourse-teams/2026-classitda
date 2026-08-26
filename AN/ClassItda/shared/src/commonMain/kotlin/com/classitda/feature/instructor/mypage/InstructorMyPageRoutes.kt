@@ -369,6 +369,7 @@ internal fun InstructorStudioEditRoute(
             }
 
             is StudioEditAction.SuccessAcknowledged -> {
+                lastLocalStudioImageHandle?.let(::releaseStudioImage)
                 lastLocalStudioImageHandle = null
                 onSaved(action.studioId)
             }
@@ -523,6 +524,7 @@ internal fun InstructorStudioRegistrationRoute(
     val success = uiState as? com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState.Success
     LaunchedEffect(success) {
         if (success != null) {
+            lastLocalStudioImageHandle?.let(::releaseStudioImage)
             lastLocalStudioImageHandle = null
             onSuccess()
         }
