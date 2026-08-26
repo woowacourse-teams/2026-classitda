@@ -12,14 +12,29 @@ import com.classitda.domain.repository.instructor.mypage.StudioList
 import com.classitda.feature.instructor.mypage.contract.StudioImageInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioImageUiError
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationAction
-import com.classitda.feature.instructor.mypage.contract.StudioRegistrationField
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertIs
 
 class StudioRegistrationViewModelTest {
+    @BeforeTest
+    fun setUpMainDispatcher() {
+        Dispatchers.setMain(Dispatchers.Unconfined)
+    }
+
+    @AfterTest
+    fun resetMainDispatcher() {
+        Dispatchers.resetMain()
+    }
+
     @Test
     fun `주소 선택은 다섯 값을 보존하고 기존 상세 주소를 초기화한다`() {
         val viewModel = StudioRegistrationViewModel(NoOpStudioRepository)
@@ -66,26 +81,35 @@ class StudioRegistrationViewModelTest {
     }
 
     @Test
-    fun `새 Local 이미지는 생성 요청을 위해 이미지 필드 오류로 막지 않는다`() {
-        val viewModel = StudioRegistrationViewModel(NoOpStudioRepository)
-        viewModel.onAction(StudioRegistrationAction.NameChanged("시설"))
-        viewModel.onAction(
-            StudioRegistrationAction.AddressSelected(
-                StudioAddress(roadAddress = "서울시 강남구 테헤란로 1"),
-            ),
-        )
-        viewModel.onAction(StudioRegistrationAction.PhoneNumberChanged("02-1234-5678"))
-        viewModel.onAction(
-            StudioRegistrationAction.ImageSelected(
-                StudioImageInputUiModel(
-                    StudioImageSelection.Local("handle", "preview", "image/jpeg", "one.jpg", 10),
+    fun `새 Local 이미지는 제출 후 repository로 전달된다`() =
+        runTest {
+            val repository = RecordingStudioRepository()
+            val viewModel = StudioRegistrationViewModel(repository)
+            viewModel.onAction(StudioRegistrationAction.NameChanged("시설"))
+            viewModel.onAction(
+                StudioRegistrationAction.AddressSelected(
+                    StudioAddress(roadAddress = "서울시 강남구 테헤란로 1"),
                 ),
-            ),
-        )
+            )
+            viewModel.onAction(StudioRegistrationAction.PhoneNumberChanged("02-1234-5678"))
+            viewModel.onAction(
+                StudioRegistrationAction.ImageSelected(
+                    StudioImageInputUiModel(
+                        StudioImageSelection.Local("handle", "preview", "image/jpeg", "one.jpg", 10),
+                    ),
+                ),
+            )
 
-        val state = assertIs<StudioRegistrationUiState.Editing>(viewModel.uiState.value)
-        assertFalse(StudioRegistrationField.IMAGE in state.fieldErrors)
-    }
+            viewModel.onAction(StudioRegistrationAction.Submit)
+            advanceUntilIdle()
+
+            assertIs<StudioRegistrationUiState.Success>(viewModel.uiState.value)
+            val registeredImage =
+                assertIs<StudioImageSelection.Local>(
+                    repository.registeredDraft?.image,
+                )
+            assertEquals("handle", registeredImage.handle)
+        }
 
     @Test
     fun `이미지 선택 오류는 기존 이미지를 유지하고 오류 상태만 기록한다`() {
@@ -116,6 +140,27 @@ private object NoOpStudioRepository : InstructorStudioRepository {
 
     override suspend fun registerStudio(draft: StudioRegistrationDraft): InstructorMyPageResult<Unit> =
         error("not used")
+
+    override suspend fun updateStudio(
+        studioId: InstructorStudioId,
+        original: ManagedStudio,
+        draft: StudioRegistrationDraft,
+        imageMutation: StudioImageMutation,
+    ): InstructorMyPageResult<Unit> = error("not used")
+}
+
+private class RecordingStudioRepository : InstructorStudioRepository {
+    var registeredDraft: StudioRegistrationDraft? = null
+
+    override suspend fun getStudios(): InstructorMyPageResult<StudioList> = error("not used")
+
+    override suspend fun getStudio(studioId: InstructorStudioId): InstructorMyPageResult<ManagedStudio> =
+        error("not used")
+
+    override suspend fun registerStudio(draft: StudioRegistrationDraft): InstructorMyPageResult<Unit> {
+        registeredDraft = draft
+        return InstructorMyPageResult.Success(Unit)
+    }
 
     override suspend fun updateStudio(
         studioId: InstructorStudioId,
