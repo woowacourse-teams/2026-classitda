@@ -65,7 +65,6 @@ import classitda.shared.generated.resources.ic_close
 import classitda.shared.generated.resources.ic_location_on
 import classitda.shared.generated.resources.instructor_member_registration_success_confirm
 import classitda.shared.generated.resources.instructor_studio_edit_back
-import classitda.shared.generated.resources.instructor_studio_edit_error
 import classitda.shared.generated.resources.instructor_studio_edit_submit
 import classitda.shared.generated.resources.instructor_studio_edit_submitting
 import classitda.shared.generated.resources.instructor_studio_edit_success
@@ -83,7 +82,6 @@ import classitda.shared.generated.resources.instructor_studio_registration_descr
 import classitda.shared.generated.resources.instructor_studio_registration_description_placeholder
 import classitda.shared.generated.resources.instructor_studio_registration_detail_address
 import classitda.shared.generated.resources.instructor_studio_registration_detail_address_placeholder
-import classitda.shared.generated.resources.instructor_studio_registration_error
 import classitda.shared.generated.resources.instructor_studio_registration_image_camera_unavailable
 import classitda.shared.generated.resources.instructor_studio_registration_image_file_too_large
 import classitda.shared.generated.resources.instructor_studio_registration_image_invalid_mime
@@ -106,7 +104,6 @@ import classitda.shared.generated.resources.instructor_studio_registration_phone
 import classitda.shared.generated.resources.instructor_studio_registration_phone_error
 import classitda.shared.generated.resources.instructor_studio_registration_phone_placeholder
 import classitda.shared.generated.resources.instructor_studio_registration_register
-import classitda.shared.generated.resources.instructor_studio_registration_retry
 import classitda.shared.generated.resources.instructor_studio_registration_step
 import classitda.shared.generated.resources.instructor_studio_registration_submitting
 import classitda.shared.generated.resources.instructor_studio_registration_success
@@ -128,6 +125,7 @@ import com.classitda.feature.instructor.mypage.contract.StudioInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationField
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.studioRegistrationFieldErrors
 import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -164,7 +162,11 @@ fun StudioRegistrationScreen(
             else -> StudioInputUiModel()
         }
     val fieldErrors =
-        (uiState as? StudioRegistrationUiState.Editing)?.fieldErrors.orEmpty()
+        when (uiState) {
+            is StudioRegistrationUiState.Editing -> uiState.fieldErrors
+            is StudioRegistrationUiState.Error -> studioRegistrationFieldErrors(uiState.draft)
+            else -> emptySet()
+        }
     val imageError =
         (uiState as? StudioRegistrationUiState.Editing)?.imageError
     val canAttemptSubmit =
@@ -265,18 +267,6 @@ fun StudioRegistrationScreen(
                     fieldErrors = fieldErrors,
                     imageError = imageError,
                     isSubmitting = false,
-                    errorMessage =
-                        if (uiState is StudioRegistrationUiState.Error) {
-                            stringResource(
-                                if (isEditing) {
-                                    Res.string.instructor_studio_edit_error
-                                } else {
-                                    Res.string.instructor_studio_registration_error
-                                },
-                            )
-                        } else {
-                            null
-                        },
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -386,7 +376,6 @@ private fun StudioRegistrationForm(
     fieldErrors: Set<StudioRegistrationField>,
     imageError: StudioImageUiError?,
     isSubmitting: Boolean,
-    errorMessage: String?,
     onAction: (StudioRegistrationAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -605,21 +594,6 @@ private fun StudioRegistrationForm(
             minLines = 4,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
         )
-        errorMessage?.let { message ->
-            Text(
-                text = message,
-                modifier =
-                    Modifier.semantics {
-                        error(message)
-                        liveRegion = LiveRegionMode.Assertive
-                    },
-                style = appTypography().bodySmall,
-                color = InsColors.Red,
-            )
-            TextButton(onClick = { onAction(StudioRegistrationAction.Retry) }) {
-                Text(stringResource(Res.string.instructor_studio_registration_retry))
-            }
-        }
     }
     selectedTimeField?.let { field ->
         ClassTimePickerDialog(
@@ -806,7 +780,6 @@ private fun StudioTextField(
             visualTransformation = visualTransformation,
             colors = studioFieldColors(),
         )
-        errorMessage?.let { StudioFieldError(it) }
     }
 }
 
@@ -823,15 +796,6 @@ private fun RegistrationStudioImageFallback(modifier: Modifier = Modifier) {
             modifier = Modifier.size(AppSpacing.xxxl),
         )
     }
-}
-
-@Composable
-private fun StudioFieldError(message: String) {
-    Text(
-        text = message,
-        style = appTypography().bodySmall,
-        color = InsColors.Red,
-    )
 }
 
 @Composable
