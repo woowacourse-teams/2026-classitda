@@ -11,6 +11,7 @@ import com.classitda.domain.model.instructor.session.InstructorClassForm
 import com.classitda.domain.model.instructor.session.InstructorClassType
 import com.classitda.domain.model.instructor.session.InstructorDailySession
 import com.classitda.domain.model.instructor.session.InstructorSessionDetail
+import com.classitda.domain.model.instructor.session.InstructorReservedMember
 import com.classitda.domain.model.instructor.session.InstructorSessionStatus
 import com.classitda.domain.model.instructor.session.InstructorSessionUpdate
 import com.classitda.domain.model.studio.StudioId
@@ -105,11 +106,29 @@ private fun ClassSessionDetailResponseDto.toDomain(studioId: StudioId) =
         className = className,
         description = description,
         capacity = capacity,
-        durationMinutes = durationMinutes,
+        durationMinutes = durationMinutesBetween(startAt, endAt),
         startAt = LocalDateTime.parse(startAt),
         endAt = LocalDateTime.parse(endAt),
-        sessionPhase = sessionPhase.toSessionStatus(),
+        sessionPhase = status.toSessionStatus(),
+        reservedMembers = reservedMembers.map { member ->
+            InstructorReservedMember(
+                enrollmentId = member.enrollmentId.toString(),
+                membershipId = member.membershipId.toString(),
+                name = member.name,
+                profileImageUrl = member.profileImageUrl,
+            )
+        },
     )
+
+private fun durationMinutesBetween(
+    startAt: String,
+    endAt: String,
+): Int {
+    val start = LocalDateTime.parse(startAt)
+    val end = LocalDateTime.parse(endAt)
+    return (end.time.hour * 60 + end.time.minute - (start.time.hour * 60 + start.time.minute))
+        .coerceAtLeast(0)
+}
 
 private fun ClassTypeResponseDto.toDomain() =
     InstructorClassType(

@@ -49,6 +49,14 @@ data class InstructorSessionDetail(
     val startAt: LocalDateTime,
     val endAt: LocalDateTime,
     val sessionPhase: InstructorSessionStatus,
+    val reservedMembers: List<InstructorReservedMember> = emptyList(),
+)
+
+data class InstructorReservedMember(
+    val enrollmentId: String,
+    val membershipId: String,
+    val name: String,
+    val profileImageUrl: String?,
 )
 
 data class InstructorSessionUpdate(

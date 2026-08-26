@@ -10,6 +10,8 @@ import com.classitda.feature.instructor.session.toClassSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
@@ -26,6 +28,7 @@ internal class InstructorScheduleViewModel(
     private val _uiState = MutableStateFlow<InstructorScheduleUiState>(InstructorScheduleUiState.Loading)
     val uiState: StateFlow<InstructorScheduleUiState> = _uiState.asStateFlow()
     private var lastRequestedDate: LocalDate? = null
+    private var loadJob: Job? = null
 
     fun retry() {
         load(lastRequestedDate ?: Clock.System.todayIn(TimeZone.of("Asia/Seoul")))
@@ -33,9 +36,10 @@ internal class InstructorScheduleViewModel(
 
     fun load(date: LocalDate = Clock.System.todayIn(TimeZone.of("Asia/Seoul"))) {
         lastRequestedDate = date
+        loadJob?.cancel()
         _uiState.value = InstructorScheduleUiState.Loading
-        viewModelScope.launch {
-            runCatching {
+        loadJob = viewModelScope.launch {
+            try {
                 val studio = studioContext.getSelectedStudio()
                 val calendarDays =
                     repository.getCalendar(
@@ -44,12 +48,12 @@ internal class InstructorScheduleViewModel(
                         to = date.plus(DatePeriod(days = 20)),
                     )
                 val sessions = repository.getDailySessions(studio.id, date).map { it.toClassSession() }
-                sessions to calendarDays
+                _uiState.value = InstructorScheduleUiState.Success(sessions, calendarDays)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                _uiState.value = InstructorScheduleUiState.Error(exception.message)
             }
-                .onSuccess { (sessions, calendarDays) ->
-                    _uiState.value = InstructorScheduleUiState.Success(sessions, calendarDays)
-                }
-                .onFailure { error -> _uiState.value = InstructorScheduleUiState.Error(error.message) }
         }
     }
 }

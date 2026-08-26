@@ -9,9 +9,11 @@ import com.classitda.feature.instructor.session.toClassSession
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.TimeZone
@@ -25,6 +27,7 @@ internal class InstructorHomeViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<InstructorHomeUiState>(InstructorHomeUiState.Loading)
     val uiState: StateFlow<InstructorHomeUiState> = _uiState.asStateFlow()
+    private var loadJob: Job? = null
 
     init {
         load()
@@ -35,12 +38,13 @@ internal class InstructorHomeViewModel(
     }
 
     private fun load() {
+        loadJob?.cancel()
         _uiState.value = InstructorHomeUiState.Loading
-        viewModelScope.launch {
-            runCatching {
+        loadJob = viewModelScope.launch {
+            try {
                 val studio = studioContext.getSelectedStudio()
                 val today = Clock.System.todayIn(TimeZone.of("Asia/Seoul"))
-                coroutineScope {
+                val sessions = coroutineScope {
                     (0..6)
                         .map { offset ->
                             async {
@@ -51,12 +55,12 @@ internal class InstructorHomeViewModel(
                         }.awaitAll()
                         .flatten()
                 }
+                _uiState.value = InstructorHomeUiState.Success(sessions.sortedBy { it.startAt })
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                _uiState.value = InstructorHomeUiState.Error(exception.message)
             }
-                .onSuccess { sessions ->
-                    _uiState.value = InstructorHomeUiState.Success(sessions.sortedBy { it.startAt })
-                }.onFailure { error ->
-                    _uiState.value = InstructorHomeUiState.Error(error.message)
-                }
         }
     }
 }

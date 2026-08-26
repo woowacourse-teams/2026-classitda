@@ -45,10 +45,19 @@ internal data class ClassSessionDetailResponseDto(
     val className: String,
     val description: String? = null,
     val capacity: Int,
-    val durationMinutes: Int,
     val startAt: String,
     val endAt: String,
-    val sessionPhase: String,
+    val status: String,
+    val mine: Boolean,
+    val reservedMembers: List<ReservedMemberResponseDto> = emptyList(),
+)
+
+@Serializable
+internal data class ReservedMemberResponseDto(
+    val enrollmentId: Long,
+    val membershipId: Long,
+    val name: String,
+    val profileImageUrl: String? = null,
 )
 
 @Serializable

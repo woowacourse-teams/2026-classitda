@@ -51,6 +51,8 @@ internal fun InstructorStudioSwitchSheet(
     onStudioClick: (Studio) -> Unit,
     onConfirmClick: () -> Unit,
     onDismissRequest: () -> Unit,
+    errorMessage: String? = null,
+    onRetry: () -> Unit = {},
     modifier: Modifier = Modifier,
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
 ) {
@@ -65,6 +67,8 @@ internal fun InstructorStudioSwitchSheet(
             selectedStudioId = selectedStudioId,
             onStudioClick = onStudioClick,
             onConfirmClick = onConfirmClick,
+            errorMessage = errorMessage,
+            onRetry = onRetry,
         )
     }
 }
@@ -75,6 +79,8 @@ private fun InstructorStudioSwitchSheetContent(
     selectedStudioId: String?,
     onStudioClick: (Studio) -> Unit,
     onConfirmClick: () -> Unit,
+    errorMessage: String? = null,
+    onRetry: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -100,26 +106,40 @@ private fun InstructorStudioSwitchSheetContent(
                 color = InsColors.TextSecondary,
             )
             Spacer(Modifier.height(AppSpacing.sectionGap))
-            Text(
-                text = "강사모드",
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                color = InsColors.TextTertiary,
-            )
-            Spacer(Modifier.height(AppSpacing.sm))
-            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-                studios.forEach { studio ->
-                    StudioOption(
-                        studio = studio,
-                        isSelected = studio.id.value == selectedStudioId,
-                        onClick = { onStudioClick(studio) },
-                    )
+            if (errorMessage != null) {
+                Text(
+                    text = errorMessage,
+                    color = InsColors.TextSecondary,
+                )
+                Spacer(Modifier.height(AppSpacing.sm))
+                Button(
+                    onClick = onRetry,
+                    colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary),
+                ) {
+                    Text("다시 시도")
+                }
+            } else {
+                Text(
+                    text = "강사모드",
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                    color = InsColors.TextTertiary,
+                )
+                Spacer(Modifier.height(AppSpacing.sm))
+                Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+                    studios.forEach { studio ->
+                        StudioOption(
+                            studio = studio,
+                            isSelected = studio.id.value == selectedStudioId,
+                            onClick = { onStudioClick(studio) },
+                        )
+                    }
                 }
             }
         }
         Spacer(Modifier.height(AppSpacing.sectionGap))
         Button(
             onClick = onConfirmClick,
-            enabled = studios.any { it.id.value == selectedStudioId },
+            enabled = errorMessage == null && studios.any { it.id.value == selectedStudioId },
             modifier = Modifier.fillMaxWidth(),
             shape = AppShape.Card,
             colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary),

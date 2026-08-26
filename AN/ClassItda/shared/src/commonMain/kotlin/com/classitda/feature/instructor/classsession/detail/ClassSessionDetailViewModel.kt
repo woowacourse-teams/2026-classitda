@@ -52,12 +52,18 @@ private fun InstructorSessionDetail.toDetailUiModel(): ClassSessionDetailUiModel
         tags = listOf(classType.name),
         title = className,
         timeText = "${startAt.time.toAmPmText()} ~ ${endAt.time.toPlainText()}",
-        reservedCount = 0,
+        reservedCount = reservedMembers.size,
         capacity = capacity,
         description = description.orEmpty(),
         location = "장소 정보 없음",
         status = sessionPhase.toUiStatus(),
-        members = emptyList<ClassSessionMemberUiModel>(),
+        members = reservedMembers.map { member ->
+            ClassSessionMemberUiModel(
+                id = member.membershipId,
+                name = member.name,
+                enrollmentId = member.enrollmentId,
+            )
+        },
     )
 
 private fun LocalDate.toInstructorDateText(): String {

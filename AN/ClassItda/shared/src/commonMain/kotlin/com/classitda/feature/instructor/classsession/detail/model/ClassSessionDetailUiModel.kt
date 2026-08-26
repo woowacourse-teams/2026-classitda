@@ -20,4 +20,5 @@ internal data class ClassSessionMemberUiModel(
     val id: String,
     val name: String,
     val isTemporary: Boolean = false,
+    val enrollmentId: String? = null,
 )

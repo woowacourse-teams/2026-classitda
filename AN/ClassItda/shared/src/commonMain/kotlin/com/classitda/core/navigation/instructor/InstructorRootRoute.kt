@@ -23,7 +23,6 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
     var isMemberEditing by remember { mutableStateOf(false) }
     var scheduleRefreshKey by remember { mutableStateOf(0) }
     var detailRefreshKey by remember { mutableStateOf(0) }
-    var studioRefreshKey by remember { mutableStateOf(0) }
 
     val topLevelBottomBar: @Composable () -> Unit = {
         InstructorBottomBar(
@@ -76,9 +75,8 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             InstructorBottomTab.HOME -> {
                 InstructorHomeRoute(
                     onSessionClick = { selectedSessionId = it },
-                    onStudioChanged = { studioRefreshKey++ },
+                    onStudioChanged = { scheduleRefreshKey++ },
                     bottomBar = {},
-                    refreshKey = studioRefreshKey,
                     modifier = modifier,
                 )
             }
@@ -87,7 +85,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
                 InstructorScheduleRoute(
                     bottomBar = topLevelBottomBar,
                     onSessionClick = { selectedSessionId = it },
-                    refreshKey = scheduleRefreshKey + studioRefreshKey,
+                    refreshKey = scheduleRefreshKey,
                     modifier = modifier,
                 )
             }
@@ -101,6 +99,7 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             -> {
                 InstructorHomeRoute(
                     onSessionClick = { selectedSessionId = it },
+                    onStudioChanged = { scheduleRefreshKey++ },
                     bottomBar = {},
                     modifier = modifier,
                 )

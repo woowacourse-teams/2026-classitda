@@ -8,6 +8,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -16,7 +17,6 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.takeFrom
@@ -62,13 +62,6 @@ internal fun createConfiguredHttpClient(
                     explicitNulls = false
                 },
             )
-        }
-        HttpResponseValidator {
-            handleResponseExceptionWithRequest { cause, request ->
-                if (cause is ResponseException) {
-                    Logger.e("${request.method.value} ${request.url}: ${cause.response.status}", cause)
-                }
-            }
         }
         defaultRequest {
             url.takeFrom(config.baseUrl)
@@ -137,12 +130,10 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
 
 private fun io.ktor.client.HttpClientConfig<*>.installClassItdaErrorLogging() {
     HttpResponseValidator {
-        validateResponse { response ->
-            if (response.status.value >= 400) {
-                val responseBody = response.bodyAsText()
-                val request = response.call.request
+        handleResponseExceptionWithRequest { cause, request ->
+            if (cause is ResponseException) {
                 networkLogger.e {
-                    "HTTP ${response.status.value} ${request.method.value} ${request.url} body=$responseBody"
+                    "HTTP ${cause.response.status.value} ${request.method.value} ${request.url.encodedPath}"
                 }
             }
         }

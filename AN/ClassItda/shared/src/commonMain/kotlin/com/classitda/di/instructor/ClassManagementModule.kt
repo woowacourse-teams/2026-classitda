@@ -19,7 +19,6 @@ import org.koin.dsl.module
 internal val classManagementModule =
     module {
         single<ClassManagementRepository> { FakeClassManagementRepository() }
-        viewModel { ClassManagementViewModel(get()) }
         viewModel { ClassSessionDetailViewModel(get(), get()) }
         viewModel { ClassSessionEditViewModel(get(), get()) }
         viewModel { ClassSessionMemberEditViewModel(get(), get(), get()) }
@@ -28,9 +27,6 @@ internal val classManagementModule =
         single<ClassTemplateManagementRepository> { ClassTemplateManagementRepositoryImpl(get(), get()) }
         viewModel { ClassTemplateManagementViewModel(get()) }
         viewModel { ClassListViewModel(get()) }
-        viewModel { ClassSessionDetailViewModel(get()) }
-        viewModel { ClassSessionEditViewModel(get()) }
-        viewModel { ClassSessionMemberEditViewModel(get()) }
         viewModel { parameters ->
             ClassTemplateCreateViewModel(
                 templateId = parameters.getOrNull(),

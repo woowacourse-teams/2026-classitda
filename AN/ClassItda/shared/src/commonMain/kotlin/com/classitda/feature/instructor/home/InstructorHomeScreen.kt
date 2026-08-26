@@ -49,14 +49,12 @@ internal fun InstructorHomeRoute(
     onSessionClick: (String) -> Unit,
     onStudioChanged: () -> Unit = {},
     bottomBar: @Composable () -> Unit,
-    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: InstructorHomeViewModel = koinViewModel(),
 ) = InstructorHomeStateful(
     onSessionClick = onSessionClick,
     onStudioChanged = onStudioChanged,
     bottomBar = bottomBar,
-    refreshKey = refreshKey,
     modifier = modifier,
     viewModel = viewModel,
 )
@@ -67,7 +65,6 @@ internal fun InstructorHomeStateful(
     onSessionClick: (String) -> Unit,
     onStudioChanged: () -> Unit = {},
     bottomBar: @Composable () -> Unit,
-    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: InstructorHomeViewModel = koinViewModel(),
 ) {
@@ -77,18 +74,12 @@ internal fun InstructorHomeStateful(
     var selectedStudio by remember { mutableStateOf<Studio?>(null) }
     var pendingStudio by remember { mutableStateOf<Studio?>(null) }
     var studios by remember { mutableStateOf<List<Studio>>(emptyList()) }
+    var studioLoadError by remember { mutableStateOf<String?>(null) }
     var isStudioSheetVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         selectedStudio = runCatching { studioContext.getSelectedStudio() }.getOrNull()
     }
-    LaunchedEffect(refreshKey) {
-        if (refreshKey > 0) {
-            selectedStudio = runCatching { studioContext.getSelectedStudio() }.getOrNull()
-            viewModel.retry()
-        }
-    }
-
     Scaffold(
         modifier = modifier,
         containerColor = InsColors.Background,
@@ -113,8 +104,13 @@ internal fun InstructorHomeStateful(
                     studioName = selectedStudio?.name ?: "시설 선택",
                     onStudioClick = {
                         scope.launch {
-                            studios = studioContext.getStudios()
-                            pendingStudio = selectedStudio
+                            studioLoadError = null
+                            runCatching { studioContext.getStudios() }
+                                .onSuccess { loadedStudios ->
+                                    studios = loadedStudios
+                                    pendingStudio = selectedStudio
+                                }
+                                .onFailure { error -> studioLoadError = error.message }
                             isStudioSheetVisible = true
                         }
                     },
@@ -128,6 +124,18 @@ internal fun InstructorHomeStateful(
             InstructorStudioSwitchSheet(
                 studios = studios,
                 selectedStudioId = pendingStudio?.id?.value,
+                errorMessage = studioLoadError,
+                onRetry = {
+                    scope.launch {
+                        studioLoadError = null
+                        runCatching { studioContext.getStudios() }
+                            .onSuccess { loadedStudios ->
+                                studios = loadedStudios
+                                pendingStudio = selectedStudio
+                            }
+                            .onFailure { error -> studioLoadError = error.message }
+                    }
+                },
                 onStudioClick = { studio ->
                     pendingStudio = studio
                 },
@@ -135,6 +143,7 @@ internal fun InstructorHomeStateful(
                     pendingStudio?.let { studio ->
                         scope.launch {
                             studioContext.selectStudio(studio.id.value)
+                            viewModel.retry()
                             selectedStudio = studio
                             isStudioSheetVisible = false
                             onStudioChanged()
