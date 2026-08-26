@@ -35,6 +35,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/terms").hasAuthority(TokenUse.SIGNUP.authority())
                         .requestMatchers(HttpMethod.POST, "/api/auth/phone-verifications", "/api/auth/phone-verifications/*/confirm", "/api/auth/signup").hasAuthority(TokenUse.SIGNUP.authority())
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").hasAuthority(TokenUse.ACCESS.authority())
+                        .requestMatchers(HttpMethod.GET, "/api/members/me").hasAuthority(TokenUse.ACCESS.authority())
+                        .requestMatchers(HttpMethod.PATCH, "/api/members/me/name").hasAuthority(TokenUse.ACCESS.authority())
                         .requestMatchers(HttpMethod.DELETE, "/api/members/me").hasAuthority(TokenUse.ACCESS.authority())
                         .requestMatchers("/api/studios/**").hasAuthority(TokenUse.ACCESS.authority())
                         .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
