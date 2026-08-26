@@ -28,7 +28,7 @@ internal class InstructorMemberApi(
         membershipId: Long,
     ) {
         client
-            .post("api/studios/$studioId/class-sessions/$sessionId/enrollments") {
+            .post("api/studios/$studioId/instructor/class-sessions/$sessionId/enrollments") {
                 setBody(InstructorEnrollmentCreateRequestDto(membershipId))
             }
     }
@@ -38,6 +38,6 @@ internal class InstructorMemberApi(
         sessionId: String,
         enrollmentId: String,
     ) {
-        client.delete("api/studios/$studioId/class-sessions/$sessionId/enrollments/$enrollmentId")
+        client.delete("api/studios/$studioId/instructor/class-sessions/$sessionId/enrollments/$enrollmentId")
     }
 }

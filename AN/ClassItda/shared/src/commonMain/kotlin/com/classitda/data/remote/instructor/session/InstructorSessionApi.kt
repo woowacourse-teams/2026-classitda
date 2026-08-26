@@ -19,7 +19,7 @@ internal class InstructorSessionApi(
         date: LocalDate,
     ): List<InstructorDailySessionResponseDto> =
         client
-            .get("api/studios/$studioId/class-sessions/instructor/daily") {
+            .get("api/studios/$studioId/instructor/class-sessions/daily") {
                 parameter("date", date.toString())
             }.body()
 
@@ -29,7 +29,7 @@ internal class InstructorSessionApi(
         to: LocalDate,
     ): List<InstructorCalendarResponseDto> =
         client
-            .get("api/studios/$studioId/class-sessions/instructor/calendar") {
+            .get("api/studios/$studioId/instructor/class-sessions/calendar") {
                 parameter("from", from.toString())
                 parameter("to", to.toString())
             }.body()
@@ -39,7 +39,7 @@ internal class InstructorSessionApi(
         sessionId: String,
     ): ClassSessionDetailResponseDto =
         client
-            .get("api/studios/$studioId/class-sessions/$sessionId")
+            .get("api/studios/$studioId/instructor/class-sessions/$sessionId")
             .body()
 
     suspend fun updateSession(
@@ -47,7 +47,7 @@ internal class InstructorSessionApi(
         sessionId: String,
         request: ClassSessionUpdateV1RequestDto,
     ) {
-        client.put("api/studios/$studioId/class-sessions/$sessionId") {
+        client.put("api/studios/$studioId/instructor/class-sessions/$sessionId") {
             contentType(ContentType.Application.Json)
             setBody(request)
         }
@@ -57,6 +57,6 @@ internal class InstructorSessionApi(
         studioId: String,
         sessionId: String,
     ) {
-        client.delete("api/studios/$studioId/class-sessions/$sessionId")
+        client.delete("api/studios/$studioId/instructor/class-sessions/$sessionId")
     }
 }
