@@ -13,6 +13,7 @@ import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.domain.repository.StudioMembershipRepository;
+import com.classitda.studio.domain.repository.StudioPolicyRepository;
 import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.domain.repository.StudioRoleRepository;
 import com.classitda.studio.exception.StudioErrorCode;
@@ -29,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
-@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class})
+@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
 @MySqlRepositoryTest
 class StudioServiceTest {
 
@@ -38,6 +39,7 @@ class StudioServiceTest {
     private final StudioRoleRepository studioRoleRepository;
     private final StudioMembershipRepository studioMembershipRepository;
     private final ClassTypeRepository classTypeRepository;
+    private final StudioPolicyRepository studioPolicyRepository;
     private final EntityManager entityManager;
 
     @Autowired
@@ -47,6 +49,7 @@ class StudioServiceTest {
             StudioRoleRepository studioRoleRepository,
             StudioMembershipRepository studioMembershipRepository,
             ClassTypeRepository classTypeRepository,
+            StudioPolicyRepository studioPolicyRepository,
             EntityManager entityManager
     ) {
         this.studioService = studioService;
@@ -54,6 +57,7 @@ class StudioServiceTest {
         this.studioRoleRepository = studioRoleRepository;
         this.studioMembershipRepository = studioMembershipRepository;
         this.classTypeRepository = classTypeRepository;
+        this.studioPolicyRepository = studioPolicyRepository;
         this.entityManager = entityManager;
     }
 
@@ -152,6 +156,18 @@ class StudioServiceTest {
         assertThat(ownerMembership).isTrue();
         assertThat(persistenceUnitUtil.isLoaded(studio, "owner")).isFalse();
         assertThat(persistenceUnitUtil.isLoaded(membership, "member")).isFalse();
+    }
+
+    @Test
+    void 시설을_생성하면_기본_운영_정책이_함께_저장된다() {
+        // given
+        Member owner = 소유자를_저장한다();
+
+        // when
+        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
+
+        // then
+        assertThat(studioPolicyRepository.findByStudioId(studioId)).isPresent();
     }
 
     @Test

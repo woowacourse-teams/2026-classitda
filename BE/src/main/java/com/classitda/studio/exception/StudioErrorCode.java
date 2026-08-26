@@ -22,7 +22,6 @@ public enum StudioErrorCode implements ErrorCode {
 
     // POLICY
     POLICY_NOT_FOUND("POLICY-001", "운영 정책을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    POLICY_ALREADY_EXISTS("POLICY-002", "이미 운영 정책이 등록된 시설입니다.", HttpStatus.CONFLICT),
 
     // MEMBERSHIP
     NOT_MEMBERSHIP("MEMBERSHIP-001", "해당 시설의 소속이 아닙니다.", HttpStatus.FORBIDDEN),

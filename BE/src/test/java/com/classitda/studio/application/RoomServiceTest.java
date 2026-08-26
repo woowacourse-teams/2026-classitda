@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
-@Import({ClassTypeService.class, RoomService.class, StudioService.class, StudioPermissionService.class})
+@Import({ClassTypeService.class, RoomService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
 @MySqlRepositoryTest
 class RoomServiceTest {
 

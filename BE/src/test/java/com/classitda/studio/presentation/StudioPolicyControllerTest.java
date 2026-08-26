@@ -12,7 +12,6 @@ import com.classitda.studio.application.StudioPolicyService;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioPolicyFixture;
-import com.classitda.studio.presentation.dto.StudioPolicyCreateRequest;
 import com.classitda.studio.presentation.dto.StudioPolicyResponse;
 import com.classitda.studio.presentation.dto.StudioPolicyUpdateRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,115 +50,10 @@ class StudioPolicyControllerTest {
     }
 
     @Test
-    void 운영_정책을_등록하면_201과_빈_본문을_반환하고_서비스에_위임한다() {
-        // given
-        when(studioPolicyService.save(anyLong(), anyLong(), any(StudioPolicyCreateRequest.class)))
-                .thenReturn(new StudioPolicyResponse(1L, 60, 1440, 30));
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/1/policy")
-                .header("X-API-Version", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(StudioPolicyFixture.기본_정책_생성_요청())
-                .exchange();
-
-        // then
-        result.expectStatus().isCreated()
-                .expectBody().isEmpty();
-        verify(studioPolicyService).save(anyLong(), anyLong(), any(StudioPolicyCreateRequest.class));
-    }
-
-    @Test
-    void 필수_값이_없으면_COMMON_001을_반환한다() {
-        // given
-        StudioPolicyCreateRequest request = new StudioPolicyCreateRequest(60, 1440, null);
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/1/policy")
-                .header("X-API-Version", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange();
-
-        // then
-        result.expectStatus().isBadRequest()
-                .expectBody()
-                .json("""
-                        {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
-                        """, JsonCompareMode.STRICT);
-    }
-
-    @Test
-    void 예약_대기_응답_시간이_0이면_COMMON_001을_반환한다() {
-        // given
-        StudioPolicyCreateRequest request = new StudioPolicyCreateRequest(60, 1440, 0);
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/1/policy")
-                .header("X-API-Version", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange();
-
-        // then
-        result.expectStatus().isBadRequest()
-                .expectBody()
-                .json("""
-                        {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
-                        """, JsonCompareMode.STRICT);
-    }
-
-    @Test
-    void 상한을_넘는_값이면_COMMON_001을_반환한다() {
-        // given
-        StudioPolicyCreateRequest request = new StudioPolicyCreateRequest(10081, 1440, 30);
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/1/policy")
-                .header("X-API-Version", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange();
-
-        // then
-        result.expectStatus().isBadRequest()
-                .expectBody()
-                .json("""
-                        {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
-                        """, JsonCompareMode.STRICT);
-    }
-
-    @Test
-    void 이미_정책이_있으면_POLICY_002를_반환한다() {
-        // given
-        when(studioPolicyService.save(anyLong(), anyLong(), any(StudioPolicyCreateRequest.class)))
-                .thenThrow(new StudioException(StudioErrorCode.POLICY_ALREADY_EXISTS));
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/1/policy")
-                .header("X-API-Version", "1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(StudioPolicyFixture.기본_정책_생성_요청())
-                .exchange();
-
-        // then
-        result.expectStatus().isEqualTo(409)
-                .expectBody()
-                .json("""
-                        {"code":"POLICY-002","message":"이미 운영 정책이 등록된 시설입니다."}
-                        """, JsonCompareMode.STRICT);
-    }
-
-    @Test
     void 운영_정책을_조회하면_200과_정책_정보를_반환한다() {
         // given
         when(studioPolicyService.findByStudioId(anyLong()))
-                .thenReturn(new StudioPolicyResponse(1L, 60, 1440, 30));
+                .thenReturn(new StudioPolicyResponse(1L, 60, 1440, 30, 0));
 
         // when
         RestTestClient.ResponseSpec result = client.get()
@@ -172,7 +66,8 @@ class StudioPolicyControllerTest {
                 .expectBody()
                 .json("""
                         {"id":1,"reservationCloseMinutesBefore":60,
-                         "freeCancelMinutesBefore":1440,"waitingOfferResponseMinutes":30}
+                         "freeCancelMinutesBefore":1440,"waitingOfferResponseMinutes":30,
+                         "maxHoldDays":0}
                         """, JsonCompareMode.STRICT);
     }
 
@@ -200,7 +95,7 @@ class StudioPolicyControllerTest {
     void 운영_정책을_수정하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
         // given
         when(studioPolicyService.update(anyLong(), anyLong(), any(StudioPolicyUpdateRequest.class)))
-                .thenReturn(new StudioPolicyResponse(1L, 60, 180, 30));
+                .thenReturn(new StudioPolicyResponse(1L, 60, 180, 30, 0));
 
         // when
         RestTestClient.ResponseSpec result = client.patch()

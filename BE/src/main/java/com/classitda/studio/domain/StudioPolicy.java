@@ -38,26 +38,33 @@ public class StudioPolicy extends BaseEntity {
     @Column(nullable = false)
     private int waitingOfferResponseMinutes;
 
+    @Column(nullable = false)
+    private int maxHoldDays;
+
     @Builder
     private StudioPolicy(
             Studio studio,
             int reservationCloseMinutesBefore,
             int freeCancelMinutesBefore,
-            int waitingOfferResponseMinutes
+            int waitingOfferResponseMinutes,
+            int maxHoldDays
     ) {
         this.studio = studio;
         this.reservationCloseMinutesBefore = reservationCloseMinutesBefore;
         this.freeCancelMinutesBefore = freeCancelMinutesBefore;
         this.waitingOfferResponseMinutes = waitingOfferResponseMinutes;
+        this.maxHoldDays = maxHoldDays;
     }
 
     public void update(
             int reservationCloseMinutesBefore,
             int freeCancelMinutesBefore,
-            int waitingOfferResponseMinutes
+            int waitingOfferResponseMinutes,
+            int maxHoldDays
     ) {
         this.reservationCloseMinutesBefore = reservationCloseMinutesBefore;
         this.freeCancelMinutesBefore = freeCancelMinutesBefore;
         this.waitingOfferResponseMinutes = waitingOfferResponseMinutes;
+        this.maxHoldDays = maxHoldDays;
     }
 }

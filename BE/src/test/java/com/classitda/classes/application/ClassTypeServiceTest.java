@@ -18,6 +18,7 @@ import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.classes.presentation.dto.ClassTypeUpdateRequest;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.application.StudioPermissionService;
+import com.classitda.studio.application.StudioPolicyService;
 import com.classitda.studio.application.StudioService;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
@@ -48,7 +49,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class})
+@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
 @MySqlRepositoryTest
 class ClassTypeServiceTest {
 
