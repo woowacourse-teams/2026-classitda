@@ -188,9 +188,9 @@ fun StudioRegistrationScreen(
             )
         },
         bottomBar = {
-            if (!isLoading) {
+            if (!isLoading && !isSubmitting) {
                 StudioRegistrationBottomBar(
-                    isSubmitting = isSubmitting,
+                    isSubmitting = false,
                     isFailed = uiState is StudioRegistrationUiState.Error,
                     enabled = canAttemptSubmit,
                     label =
