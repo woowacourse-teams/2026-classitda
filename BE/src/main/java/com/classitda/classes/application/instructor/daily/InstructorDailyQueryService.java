@@ -8,10 +8,6 @@ import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.pagination.CursorResponse;
-import com.classitda.studio.domain.StudioPolicy;
-import com.classitda.studio.domain.repository.StudioPolicyRepository;
-import com.classitda.studio.exception.StudioErrorCode;
-import com.classitda.studio.exception.StudioException;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,7 +27,6 @@ public class InstructorDailyQueryService {
 
     private final InstructorSessionAccessReader accessReader;
     private final InstructorScheduleReader scheduleReader;
-    private final StudioPolicyRepository studioPolicyRepository;
     private final Clock clock;
 
     public List<InstructorDailySessionView> findAll(Long memberId, Long studioId, LocalDate date) {
@@ -78,13 +73,12 @@ public class InstructorDailyQueryService {
             return CursorResponse.of(List.of(), false, null);
         }
 
-        StudioPolicy policy = studioPolicyRepository.findByStudioId(studioId)
-                .orElseThrow(() -> new StudioException(StudioErrorCode.POLICY_NOT_FOUND));
+        int reservationCloseMinutesBefore = scheduleReader.readReservationCloseMinutesBefore(studioId);
         LocalDateTime now = LocalDateTime.now(clock);
         List<InstructorDailySessionView> items = slice.getContent().stream()
                 .map(classSession -> assembleSession(
                         classSession,
-                        policy.getReservationCloseMinutesBefore(),
+                        reservationCloseMinutesBefore,
                         requesterMembershipId,
                         now
                 ))

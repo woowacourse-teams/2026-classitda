@@ -3,7 +3,6 @@ package com.classitda.classes.application.instructor.daily;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.projection.InstructorDailySessionProjection;
-import com.classitda.studio.domain.StudioPolicy;
 import com.classitda.studio.domain.repository.StudioPolicyRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
@@ -29,10 +28,7 @@ public class InstructorScheduleReader {
             return InstructorDailySchedule.empty();
         }
 
-        StudioPolicy studioPolicy = studioPolicyRepository.findByStudioId(studioId)
-                .orElseThrow(() -> new StudioException(StudioErrorCode.POLICY_NOT_FOUND));
-
-        return new InstructorDailySchedule(classSessions, studioPolicy.getReservationCloseMinutesBefore());
+        return new InstructorDailySchedule(classSessions, readReservationCloseMinutesBefore(studioId));
     }
 
     Slice<InstructorDailySessionProjection> readWithCursor(
@@ -50,5 +46,11 @@ public class InstructorScheduleReader {
                 classTypeId,
                 PageRequest.ofSize(size)
         );
+    }
+
+    int readReservationCloseMinutesBefore(Long studioId) {
+        return studioPolicyRepository.findByStudioId(studioId)
+                .orElseThrow(() -> new StudioException(StudioErrorCode.POLICY_NOT_FOUND))
+                .getReservationCloseMinutesBefore();
     }
 }
