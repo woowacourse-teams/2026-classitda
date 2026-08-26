@@ -81,6 +81,11 @@ import classitda.shared.generated.resources.instructor_studio_registration_descr
 import classitda.shared.generated.resources.instructor_studio_registration_description_placeholder
 import classitda.shared.generated.resources.instructor_studio_registration_detail_address
 import classitda.shared.generated.resources.instructor_studio_registration_detail_address_placeholder
+import classitda.shared.generated.resources.instructor_studio_registration_error_conflict
+import classitda.shared.generated.resources.instructor_studio_registration_error_forbidden
+import classitda.shared.generated.resources.instructor_studio_registration_error_invalid_request
+import classitda.shared.generated.resources.instructor_studio_registration_error_network
+import classitda.shared.generated.resources.instructor_studio_registration_error_unknown
 import classitda.shared.generated.resources.instructor_studio_registration_image_camera_unavailable
 import classitda.shared.generated.resources.instructor_studio_registration_image_file_too_large
 import classitda.shared.generated.resources.instructor_studio_registration_image_invalid_mime
@@ -124,6 +129,7 @@ import com.classitda.feature.instructor.mypage.contract.StudioImageUiError
 import com.classitda.feature.instructor.mypage.contract.StudioInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationField
+import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.studioRegistrationFieldErrors
 import kotlinx.datetime.LocalTime
@@ -166,6 +172,32 @@ fun StudioRegistrationScreen(
             is StudioRegistrationUiState.Editing -> uiState.fieldErrors
             is StudioRegistrationUiState.Error -> studioRegistrationFieldErrors(uiState.draft)
             else -> emptySet()
+        }
+    val formError =
+        (uiState as? StudioRegistrationUiState.Error)?.reason?.let { reason ->
+            stringResource(
+                when (reason) {
+                    StudioRegistrationUiError.NETWORK -> {
+                        Res.string.instructor_studio_registration_error_network
+                    }
+
+                    StudioRegistrationUiError.FORBIDDEN -> {
+                        Res.string.instructor_studio_registration_error_forbidden
+                    }
+
+                    StudioRegistrationUiError.CONFLICT -> {
+                        Res.string.instructor_studio_registration_error_conflict
+                    }
+
+                    StudioRegistrationUiError.INVALID_REQUEST -> {
+                        Res.string.instructor_studio_registration_error_invalid_request
+                    }
+
+                    StudioRegistrationUiError.UNKNOWN -> {
+                        Res.string.instructor_studio_registration_error_unknown
+                    }
+                },
+            )
         }
     val imageError =
         (uiState as? StudioRegistrationUiState.Editing)?.imageError
@@ -265,6 +297,7 @@ fun StudioRegistrationScreen(
                 StudioRegistrationForm(
                     draft = draft,
                     fieldErrors = fieldErrors,
+                    formError = formError,
                     imageError = imageError,
                     isSubmitting = false,
                     onAction = onAction,
@@ -393,6 +426,7 @@ private fun StudioRegistrationTopBar(
 private fun StudioRegistrationForm(
     draft: StudioInputUiModel,
     fieldErrors: Set<StudioRegistrationField>,
+    formError: String?,
     imageError: StudioImageUiError?,
     isSubmitting: Boolean,
     onAction: (StudioRegistrationAction) -> Unit,
@@ -427,6 +461,14 @@ private fun StudioRegistrationForm(
                 text = stringResource(Res.string.instructor_studio_registration_intro_description),
                 style = appTypography().bodyLarge,
                 color = InsColors.TextSecondary,
+            )
+        }
+        formError?.let { errorMessageText ->
+            Text(
+                text = errorMessageText,
+                modifier = Modifier.semantics { error(errorMessageText) },
+                style = appTypography().bodySmall,
+                color = InsColors.Red,
             )
         }
         StudioImageSection(

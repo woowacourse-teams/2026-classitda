@@ -38,13 +38,18 @@ internal actual fun StudioImagePicker(
                 return@rememberLauncherForActivityResult
             }
 
+            if (!captured) {
+                capture.file.delete()
+                currentOnResult(StudioImagePickerResult.Cancelled)
+                return@rememberLauncherForActivityResult
+            }
+
             val result =
                 runCatching {
                     copyContentUriToCache(context, capture.uri, fallbackMimeType = "image/jpeg").getOrThrow()
                 }
             capture.file.delete()
-            val pickerResult = result.toPickerResult()
-            currentOnResult(if (captured || result.isSuccess) pickerResult else StudioImagePickerResult.Cancelled)
+            currentOnResult(result.toPickerResult())
         }
 
     val permissionLauncher =
