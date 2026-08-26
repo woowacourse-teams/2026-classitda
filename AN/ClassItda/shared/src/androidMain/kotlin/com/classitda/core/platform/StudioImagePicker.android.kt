@@ -202,7 +202,7 @@ private fun copyContentUriToCache(
                     handle = file.absolutePath,
                     previewReference = file.absolutePath,
                     mimeType = mimeType,
-                    fileName = queryDisplayName(resolver, uri) ?: file.name,
+                    fileName = file.name,
                     sizeBytes = sizeBytes,
                 )
             validateStudioImagePickerSelection(selection)?.let(::throwPickerError)
@@ -225,19 +225,6 @@ private fun querySize(
     }
     return resolver.openAssetFileDescriptor(uri, "r")?.use { it.length }?.takeIf { it >= 0L } ?: 0L
 }
-
-private fun queryDisplayName(
-    resolver: android.content.ContentResolver,
-    uri: Uri,
-): String? =
-    resolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
-        if (cursor.moveToFirst()) {
-            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (index >= 0) cursor.getString(index) else null
-        } else {
-            null
-        }
-    }
 
 private fun Result<StudioImagePickerSelection>.toPickerResult(): StudioImagePickerResult =
     fold(
