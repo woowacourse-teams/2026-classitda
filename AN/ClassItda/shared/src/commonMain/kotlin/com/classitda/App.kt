@@ -13,11 +13,7 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.navigation.instructor.InstructorRootRoute
 import com.classitda.core.network.ClassItdaApiConfig
 import com.classitda.core.network.networkModule
-import com.classitda.di.home.homeModule
-import com.classitda.di.instructor.instructorModule
-import com.classitda.di.mypage.myPageModule
-import com.classitda.di.myschedule.myScheduleModule
-import com.classitda.di.reservation.reservationModule
+import com.classitda.di.instructorFeatureModules
 import com.classitda.di.signup.signupModule
 import com.classitda.feature.auth.signup.SignupRoute
 import org.koin.compose.KoinApplication
@@ -38,11 +34,7 @@ fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }
                         tokenStorage,
                     ),
                     signupModule(tokenStorage),
-                    homeModule,
-                    instructorModule,
-                    reservationModule,
-                    myScheduleModule,
-                    myPageModule,
+                    instructorFeatureModules,
                 )
             },
     ) {
