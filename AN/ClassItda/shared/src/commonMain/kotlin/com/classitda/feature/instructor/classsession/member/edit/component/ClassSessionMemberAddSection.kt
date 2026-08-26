@@ -1,6 +1,6 @@
 package com.classitda.feature.instructor.classsession.member.edit.component
 
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,7 +10,6 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
@@ -36,34 +35,33 @@ internal fun ClassSessionMemberAddSection(
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
             color = InsColors.TextPrimary,
         )
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            readOnly = true,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectTapGestures(onTap = { onExistingAddClick() })
-                    },
-            leadingIcon = {
-                androidx.compose.material3.Icon(
-                    painter = painterResource(Res.drawable.ic_search),
-                    contentDescription = null,
-                    tint = InsColors.TextSecondary,
-                )
-            },
-            placeholder = {
-                Text(
-                    text = "회원 이름 검색",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = InsColors.TextTertiary,
-                )
-            },
-            singleLine = true,
-            shape = AppShape.Card,
-            colors = memberEditTextFieldColors(),
-        )
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.fillMaxWidth().clickable(onClick = onExistingAddClick),
+        ) {
+            OutlinedTextField(
+                value = "",
+                onValueChange = {},
+                enabled = false,
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
+                    androidx.compose.material3.Icon(
+                        painter = painterResource(Res.drawable.ic_search),
+                        contentDescription = null,
+                        tint = InsColors.TextSecondary,
+                    )
+                },
+                placeholder = {
+                    Text(
+                        text = "회원 이름 검색",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = InsColors.TextTertiary,
+                    )
+                },
+                singleLine = true,
+                shape = AppShape.Card,
+                colors = memberEditTextFieldColors(),
+            )
+        }
     }
 }
 
