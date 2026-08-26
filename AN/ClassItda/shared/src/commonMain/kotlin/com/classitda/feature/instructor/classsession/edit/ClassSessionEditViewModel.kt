@@ -6,8 +6,8 @@ import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.session.InstructorClassForm
 import com.classitda.domain.model.instructor.session.InstructorSessionDetail
 import com.classitda.domain.model.instructor.session.InstructorSessionUpdate
-import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.domain.repository.instructor.management.ClassTemplateManagementRepository
+import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
 import com.classitda.feature.instructor.management.model.ClassType
 import kotlinx.coroutines.CancellationException

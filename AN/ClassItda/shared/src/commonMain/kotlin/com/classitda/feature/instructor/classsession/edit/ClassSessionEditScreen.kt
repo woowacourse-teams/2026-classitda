@@ -49,11 +49,11 @@ import com.classitda.feature.instructor.management.component.CreateTextField
 import com.classitda.feature.instructor.management.component.DatePickerField
 import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.model.ClassType
-import com.classitda.domain.model.instructor.management.ClassType as DomainClassType
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
 import org.koin.compose.viewmodel.koinViewModel
+import com.classitda.domain.model.instructor.management.ClassType as DomainClassType
 
 @Composable
 internal fun ClassSessionEditRoute(
@@ -146,8 +146,9 @@ private fun ClassSessionEditStateful(
             onSave(
                 initialForm.copy(
                     classType = classType,
-                    classTypeId = categories.firstOrNull { it.name == selectedCategories.firstOrNull() }?.id
-                        ?: initialForm.classTypeId,
+                    classTypeId =
+                        categories.firstOrNull { it.name == selectedCategories.firstOrNull() }?.id
+                            ?: initialForm.classTypeId,
                     categories = selectedCategories,
                     title = title,
                     capacity = capacity,

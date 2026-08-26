@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.member.MembershipStatus
+import com.classitda.domain.model.studio.StudioId
 import com.classitda.domain.repository.instructor.member.InstructorMemberRepository
 import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
-import com.classitda.domain.model.studio.StudioId
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionDetailUiModel
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionMemberUiModel
 import com.classitda.feature.instructor.classsession.member.edit.model.ClassSessionMemberEditUiModel

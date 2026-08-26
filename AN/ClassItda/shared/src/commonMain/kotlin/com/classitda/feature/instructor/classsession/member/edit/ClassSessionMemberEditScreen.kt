@@ -131,9 +131,9 @@ private fun ClassSessionMemberEditStateful(
             onConfirmClick = {
                 bookedMembers =
                     bookedMembers +
-                        content.availableMembers
-                            .filter { it.id in selectedMemberIds }
-                            .take(remainingCapacity)
+                    content.availableMembers
+                        .filter { it.id in selectedMemberIds }
+                        .take(remainingCapacity)
                 selectedMemberIds = emptySet()
                 memberQuery = ""
                 isExistingSheetVisible = false

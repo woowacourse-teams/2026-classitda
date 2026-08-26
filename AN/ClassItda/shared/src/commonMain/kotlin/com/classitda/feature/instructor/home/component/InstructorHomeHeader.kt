@@ -39,7 +39,11 @@ internal fun InstructorHomeHeader(
         verticalAlignment = Alignment.Top,
     ) {
         Column(Modifier.weight(1f)) {
-            Text("안녕하세요, ${instructorName}님", color = InsColors.TextSecondary, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = "안녕하세요, ${instructorName}님",
+                color = InsColors.TextSecondary,
+                style = MaterialTheme.typography.bodyMedium,
+            )
             Spacer(Modifier.height(AppSpacing.xs))
             Row(
                 modifier = Modifier.clickable(onClick = onStudioClick),
