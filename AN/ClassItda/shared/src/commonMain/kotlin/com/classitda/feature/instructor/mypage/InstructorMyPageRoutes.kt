@@ -67,9 +67,11 @@ internal fun InstructorMyPageRoute(
     onOpenPrivacyPolicy: () -> Unit,
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    refreshToken: Int = 0,
     viewModel: InstructorMyPageViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
     InstructorMyPageScreen(uiState, onAction = { action ->
         when (action) {
             InstructorMyPageAction.OpenProfile -> onOpenProfile()

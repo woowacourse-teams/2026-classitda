@@ -61,6 +61,7 @@ internal fun InstructorMyPageNavHost(
                     }
                 },
                 bottomBar = bottomBar,
+                refreshToken = profileRefreshToken,
             )
         }
 
