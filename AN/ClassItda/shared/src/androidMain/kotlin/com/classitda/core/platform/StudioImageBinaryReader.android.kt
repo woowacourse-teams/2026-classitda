@@ -2,6 +2,7 @@ package com.classitda.core.platform
 
 import io.ktor.utils.io.ByteWriteChannel
 import io.ktor.utils.io.writeFully
+import kotlinx.coroutines.CancellationException
 import java.io.File
 
 internal actual fun createStudioImageBinaryReader(): StudioImageBinaryReader = AndroidStudioImageBinaryReader
@@ -27,6 +28,8 @@ private object AndroidStudioImageBinaryReader : StudioImageBinaryReader {
                 }
             }
         } catch (exception: StudioImageBinaryReadException) {
+            throw exception
+        } catch (exception: CancellationException) {
             throw exception
         } catch (_: Throwable) {
             throw StudioImageBinaryReadException()
