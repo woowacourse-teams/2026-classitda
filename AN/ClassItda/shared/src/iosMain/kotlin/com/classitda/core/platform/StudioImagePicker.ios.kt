@@ -41,6 +41,8 @@ import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UINavigationControllerDelegateProtocol
 import platform.UIKit.UIViewController
 import platform.darwin.NSObject
+import platform.darwin.dispatch_async
+import platform.darwin.dispatch_get_main_queue
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -107,10 +109,12 @@ private fun presentCamera(
 
         AVAuthorizationStatusNotDetermined -> {
             AVCaptureDevice.requestAccessForMediaType(AVMediaTypeVideo) { granted: Boolean ->
-                if (granted) {
-                    showCamera(hostController, delegate, cameraType)
-                } else {
-                    delegate.report(StudioImagePickerResult.Error(StudioImagePickerError.PERMISSION_DENIED))
+                dispatch_async(dispatch_get_main_queue()) {
+                    if (granted) {
+                        showCamera(hostController, delegate, cameraType)
+                    } else {
+                        delegate.report(StudioImagePickerResult.Error(StudioImagePickerError.PERMISSION_DENIED))
+                    }
                 }
             }
         }
@@ -205,10 +209,14 @@ private class IosStudioImagePickerDelegate(
             return
         }
         result.itemProvider.loadFileRepresentationForTypeIdentifier("public.image") { url, _ ->
-            if (url == null) {
-                onResult(StudioImagePickerResult.Error(StudioImagePickerError.READ_FAILED))
-            } else {
-                onResult(copyGalleryImage(url))
+            val pickerResult =
+                if (url == null) {
+                    StudioImagePickerResult.Error(StudioImagePickerError.READ_FAILED)
+                } else {
+                    copyGalleryImage(url)
+                }
+            dispatch_async(dispatch_get_main_queue()) {
+                onResult(pickerResult)
             }
         }
     }
