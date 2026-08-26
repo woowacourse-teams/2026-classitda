@@ -2,10 +2,13 @@ package com.classitda.di.instructor.mypage
 
 import com.classitda.core.network.createClassItdaHttpClient
 import com.classitda.data.repository.instructor.mypage.DemoInstructorMyPageRepository
+import com.classitda.data.repository.instructor.mypage.RemoteInstructorProfileRepository
 import com.classitda.data.repository.instructor.mypage.RemoteInstructorStudioRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorProfileRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorStudioRepository
 import com.classitda.domain.repository.instructor.mypage.StudioImageUploader
+import com.classitda.di.instructor.instructorModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import org.koin.core.qualifier.named
@@ -16,7 +19,7 @@ import kotlin.test.assertIs
 
 class InstructorStudioRemoteModuleTest {
     @Test
-    fun `시설은 Remote binding이고 프로필 회원은 Demo binding이다`() {
+    fun `시설과 프로필은 Remote binding이고 회원 관리는 Demo binding이다`() {
         val application =
             koinApplication {
                 modules(
@@ -28,6 +31,7 @@ class InstructorStudioRemoteModuleTest {
                             )
                         }
                     },
+                    instructorModule,
                     instructorMyPageDemoModule,
                 )
             }
@@ -35,6 +39,7 @@ class InstructorStudioRemoteModuleTest {
         try {
             assertIs<RemoteInstructorStudioRepository>(application.koin.get<InstructorStudioRepository>())
             assertIs<StudioImageUploader>(application.koin.get<StudioImageUploader>())
+            assertIs<RemoteInstructorProfileRepository>(application.koin.get<InstructorProfileRepository>())
             assertIs<DemoInstructorMyPageRepository>(application.koin.get<InstructorMyPageRepository>())
         } finally {
             application.koin.get<HttpClient>().close()

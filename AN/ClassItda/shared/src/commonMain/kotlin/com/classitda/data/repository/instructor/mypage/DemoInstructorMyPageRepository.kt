@@ -27,7 +27,6 @@ internal class DemoInstructorMyPageRepository :
     InstructorStudioRepository {
     private var profile =
         InstructorAccountProfile(
-            id = "instructor-demo",
             name = "이지은 강사",
             phoneNumber = "01012345678",
             email = "instructor@classitda.com",

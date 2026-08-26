@@ -1,7 +1,9 @@
 package com.classitda.di.instructor
 
 import com.classitda.data.remote.member.MemberApi
+import com.classitda.data.repository.instructor.mypage.RemoteInstructorProfileRepository
 import com.classitda.data.repository.member.RemoteMemberRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorProfileRepository
 import com.classitda.domain.repository.member.MemberRepository
 import com.classitda.feature.instructor.home.InstructorHomeViewModel
 import com.classitda.feature.instructor.schedule.InstructorScheduleViewModel
@@ -13,6 +15,7 @@ internal val instructorModule =
         includes(classManagementModule, instructorMemberModule, studioModule, instructorSessionModule)
         single { MemberApi(get()) }
         single<MemberRepository> { RemoteMemberRepository(get()) }
+        single<InstructorProfileRepository> { RemoteInstructorProfileRepository(get()) }
         viewModel { InstructorHomeViewModel(get(), get(), get()) }
         viewModel { InstructorScheduleViewModel(get(), get()) }
     }

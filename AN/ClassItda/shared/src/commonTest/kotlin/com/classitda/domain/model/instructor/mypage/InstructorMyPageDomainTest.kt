@@ -18,16 +18,6 @@ class InstructorMyPageDomainTest {
         }
 
         assertFailsWith<IllegalArgumentException> {
-            InstructorAccountProfile(
-                id = "",
-                name = "강사",
-                phoneNumber = "01012345678",
-                email = "instructor@example.com",
-                profileImageUrl = null,
-            )
-        }
-
-        assertFailsWith<IllegalArgumentException> {
             StudioImageSelection.Local(
                 handle = "",
                 previewReference = "opaque-reference",
@@ -51,7 +41,6 @@ class InstructorMyPageDomainTest {
     fun `도메인 모델은 이름 전화번호 주소와 이미지 참조의 원문을 보존한다`() {
         val profile =
             InstructorAccountProfile(
-                id = "account-1",
                 name = "  강사 / Studio  ",
                 phoneNumber = "+821012345678",
                 email = "Instructor@Example.COM",
