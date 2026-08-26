@@ -46,8 +46,8 @@ class RemoteInstructorStudioRepositoryTest {
                 assertEquals("경기 성남시 분당구 백현동 532", address.jibunAddress)
                 assertEquals("카카오 판교 아지트", address.buildingName)
                 assertEquals("3층", address.detailAddress)
-                assertEquals("09:00:00", openingTime)
-                assertEquals("22:00:00", closingTime)
+                assertEquals("09:00", openingTime)
+                assertEquals("22:00", closingTime)
                 assertEquals("시설 설명 2", description)
                 assertIs<StudioImageSelection.Remote>(image)
             }

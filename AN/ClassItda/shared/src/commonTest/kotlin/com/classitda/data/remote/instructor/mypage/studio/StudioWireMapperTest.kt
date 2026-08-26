@@ -205,6 +205,8 @@ class StudioWireMapperTest {
         assertEquals("13494", studio.address.zoneCode)
         assertEquals("경기 성남시 분당구 판교역로 166", studio.address.roadAddress)
         assertEquals("https://cdn.classitda.com/studio.jpg", remote.imageUrl)
+        assertEquals("09:00", studio.openingTime)
+        assertEquals("22:00", studio.closingTime)
     }
 
     @Test

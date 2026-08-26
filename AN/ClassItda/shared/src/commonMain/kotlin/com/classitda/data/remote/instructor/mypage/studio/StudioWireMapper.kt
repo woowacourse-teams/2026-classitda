@@ -177,8 +177,8 @@ internal fun StudioResponseDto.toDomain(): InstructorMyPageResult<ManagedStudio>
             image = mappedImage,
             phoneNumber = requiredPhoneNumber,
             description = description.orEmpty(),
-            openingTime = requiredOpenTime,
-            closingTime = requiredCloseTime,
+            openingTime = requiredOpenTime.toStudioDisplayTime(),
+            closingTime = requiredCloseTime.toStudioDisplayTime(),
         ),
     )
 }
@@ -195,6 +195,13 @@ private fun String.isValidTime(): Boolean = HH_MM_PATTERN.matches(this)
 private fun String.isParsableTime(): Boolean = matches(Regex("(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?"))
 
 private fun String.toMinutes(): Int = substringBefore(':').toInt() * 60 + substringAfter(':').take(2).toInt()
+
+private fun String.toStudioDisplayTime(): String =
+    if (matches(Regex("(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d"))) {
+        take(5)
+    } else {
+        this
+    }
 
 private fun invalidRequest() = InstructorMyPageResult.Failure(InstructorMyPageFailureReason.INVALID_REQUEST)
 
