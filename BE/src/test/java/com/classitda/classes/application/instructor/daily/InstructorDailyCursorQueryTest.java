@@ -29,16 +29,20 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import org.hibernate.SessionFactory;
+import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.TestPropertySource;
 
 @Import({
         InstructorDailyQueryService.class,
@@ -46,6 +50,7 @@ import org.springframework.context.annotation.Primary;
         InstructorScheduleReader.class,
         InstructorDailyCursorQueryTest.FixedClockConfig.class
 })
+@TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @MySqlRepositoryTest
 class InstructorDailyCursorQueryTest {
 
@@ -57,6 +62,7 @@ class InstructorDailyCursorQueryTest {
     private final ClassSessionRepository classSessionRepository;
     private final ClassTypeRepository classTypeRepository;
     private final EntityManager entityManager;
+    private final Statistics statistics;
 
     @Autowired
     InstructorDailyCursorQueryTest(
@@ -64,13 +70,15 @@ class InstructorDailyCursorQueryTest {
             ClassSessionClassTypeRepository classSessionClassTypeRepository,
             ClassSessionRepository classSessionRepository,
             ClassTypeRepository classTypeRepository,
-            EntityManager entityManager
+            EntityManager entityManager,
+            EntityManagerFactory entityManagerFactory
     ) {
         this.queryService = queryService;
         this.classSessionClassTypeRepository = classSessionClassTypeRepository;
         this.classSessionRepository = classSessionRepository;
         this.classTypeRepository = classTypeRepository;
         this.entityManager = entityManager;
+        this.statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
     }
 
     @Test
@@ -143,7 +151,7 @@ class InstructorDailyCursorQueryTest {
     }
 
     @Test
-    void 수업_형태와_수업_종류를_각각_선택해_필터링한다() {
+    void 수업_형태와_수업_종류를_각각_또는_함께_선택해_필터링한다() {
         // given
         Member owner = 회원을_저장한다("session-list-filter-owner");
         Studio studio = 시설을_저장한다(owner, "전체 수업 필터 시설");
@@ -156,7 +164,7 @@ class InstructorDailyCursorQueryTest {
                 studio, ownerMembership, yoga, "그룹 요가", ClassForm.GROUP, NOW.plusDays(3));
         ClassSession individualPilates = 수업을_저장한다(
                 studio, ownerMembership, pilates, "개인 필라테스", ClassForm.INDIVIDUAL, NOW.plusDays(2));
-        수업을_저장한다(
+        ClassSession groupPilates = 수업을_저장한다(
                 studio, ownerMembership, pilates, "그룹 필라테스", ClassForm.GROUP, NOW.plusDays(1));
         entityManager.flush();
         entityManager.clear();
@@ -166,12 +174,60 @@ class InstructorDailyCursorQueryTest {
                 owner.getId(), studio.getId(), null, 20, ClassForm.INDIVIDUAL, null);
         CursorResponse<InstructorDailySessionView> yogaResponse = queryService.findWithCursor(
                 owner.getId(), studio.getId(), null, 20, null, yoga.getId());
+        CursorResponse<InstructorDailySessionView> combinedResponse = queryService.findWithCursor(
+                owner.getId(), studio.getId(), null, 20, ClassForm.GROUP, pilates.getId());
+        CursorResponse<InstructorDailySessionView> emptyCombinedResponse = queryService.findWithCursor(
+                owner.getId(), studio.getId(), null, 20, ClassForm.INDIVIDUAL, yoga.getId());
 
         // then
         assertThat(individualResponse.items()).extracting(InstructorDailySessionView::id)
                 .containsExactly(individualPilates.getId());
         assertThat(yogaResponse.items()).extracting(InstructorDailySessionView::id)
                 .containsExactly(groupYoga.getId());
+        assertThat(combinedResponse.items()).extracting(InstructorDailySessionView::id)
+                .containsExactly(groupPilates.getId());
+        assertThat(emptyCombinedResponse.items()).isEmpty();
+        assertThat(emptyCombinedResponse.hasNext()).isFalse();
+        assertThat(emptyCombinedResponse.nextCursor()).isNull();
+    }
+
+    @Test
+    void 조회하는_수업_수가_늘어나도_페이지_조회_쿼리_수는_증가하지_않는다() {
+        // given
+        Member owner = 회원을_저장한다("session-list-query-count-owner");
+        Studio studio = 시설을_저장한다(owner, "전체 수업 쿼리 수 시설");
+        StudioMembership ownerMembership = 소속을_저장한다(studio, owner, SystemRole.OWNER);
+        ClassType classType = 수업_종류를_저장한다(studio, "필라테스");
+        정책을_저장한다(studio, 30);
+        for (int index = 1; index <= 5; index++) {
+            수업을_저장한다(
+                    studio,
+                    ownerMembership,
+                    classType,
+                    "쿼리 수 확인 수업 " + index,
+                    ClassForm.GROUP,
+                    NOW.plusDays(index)
+            );
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        statistics.clear();
+        CursorResponse<InstructorDailySessionView> smallPage = queryService.findWithCursor(
+                owner.getId(), studio.getId(), null, 1, null, null);
+        long smallPageQueryCount = statistics.getPrepareStatementCount();
+
+        entityManager.clear();
+        statistics.clear();
+        CursorResponse<InstructorDailySessionView> largePage = queryService.findWithCursor(
+                owner.getId(), studio.getId(), null, 20, null, null);
+        long largePageQueryCount = statistics.getPrepareStatementCount();
+
+        // then
+        assertThat(smallPage.items()).hasSize(1);
+        assertThat(largePage.items()).hasSize(5);
+        assertThat(smallPageQueryCount).isEqualTo(largePageQueryCount);
     }
 
     @Test
