@@ -53,12 +53,12 @@ WHERE permission.code IN (
     'RESERVATION_MANAGE'
 );
 
-INSERT INTO studio_membership (id, studio_id, member_id, studio_role_id, name, status, joined_at, created_at, updated_at)
-VALUES (1, 1, 1, 3, '김회원', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL),
-       (2, 1, 2, 1, '박대표', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL),
-       (3, 1, 3, 2, '이강사', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL),
-       (4, 1, 4, 3, '최회원', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL),
-       (5, 1, 5, 3, '정회원', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL);
+INSERT INTO studio_membership (id, studio_id, member_id, studio_role_id, name, phone_number, status, joined_at, created_at, updated_at)
+VALUES (1, 1, 1, 3, '김회원', '+821000000001', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL),
+       (2, 1, 2, 1, '박대표', '+821000000002', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL),
+       (3, 1, 3, 2, '이강사', '+821000000003', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL),
+       (4, 1, 4, 3, '최회원', '+821000000004', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL),
+       (5, 1, 5, 3, '정회원', '+821000000005', 'ACTIVE', DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL 30 DAY), CURRENT_TIMESTAMP(6), NULL);
 
 INSERT INTO pass_product (id, studio_id, name, class_form, total_count, valid_period_amount, valid_period_unit, total_hold_days, is_active, created_at, updated_at)
 VALUES (1, 1, '리포머 그룹 10회권', 'GROUP', 10, 12, 'MONTH', 7, TRUE, CURRENT_TIMESTAMP(6), NULL);
