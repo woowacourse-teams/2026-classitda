@@ -156,6 +156,7 @@ fun StudioRegistrationScreen(
     }
     val isSubmitting = uiState is StudioRegistrationUiState.Submitting
     val isLoading = uiState is StudioRegistrationUiState.Loading
+    val isSuccess = uiState is StudioRegistrationUiState.Success
     val draft =
         when (uiState) {
             is StudioRegistrationUiState.Editing -> uiState.draft
@@ -173,28 +174,30 @@ fun StudioRegistrationScreen(
         modifier = modifier,
         containerColor = InsColors.Background,
         topBar = {
-            StudioRegistrationTopBar(
-                onBack = { if (!isSubmitting) onAction(StudioRegistrationAction.Back) },
-                title =
-                    stringResource(
-                        if (isEditing) {
-                            Res.string.instructor_studio_edit_title
-                        } else {
-                            Res.string.instructor_studio_registration_title
-                        },
-                    ),
-                backDescription =
-                    stringResource(
-                        if (isEditing) {
-                            Res.string.instructor_studio_edit_back
-                        } else {
-                            Res.string.instructor_studio_registration_back
-                        },
-                    ),
-            )
+            if (!isSuccess) {
+                StudioRegistrationTopBar(
+                    onBack = { if (!isSubmitting) onAction(StudioRegistrationAction.Back) },
+                    title =
+                        stringResource(
+                            if (isEditing) {
+                                Res.string.instructor_studio_edit_title
+                            } else {
+                                Res.string.instructor_studio_registration_title
+                            },
+                        ),
+                    backDescription =
+                        stringResource(
+                            if (isEditing) {
+                                Res.string.instructor_studio_edit_back
+                            } else {
+                                Res.string.instructor_studio_registration_back
+                            },
+                        ),
+                )
+            }
         },
         bottomBar = {
-            if (!isLoading && !isSubmitting) {
+            if (!isSuccess && !isLoading && !isSubmitting) {
                 StudioRegistrationBottomBar(
                     isSubmitting = false,
                     isFailed = uiState is StudioRegistrationUiState.Error,
@@ -251,16 +254,8 @@ fun StudioRegistrationScreen(
             }
 
             is StudioRegistrationUiState.Success -> {
-                StudioRegistrationStatus(
-                    message =
-                        stringResource(
-                            if (isEditing) {
-                                Res.string.instructor_studio_edit_success
-                            } else {
-                                Res.string.instructor_studio_registration_success
-                            },
-                        ),
-                    modifier = Modifier.padding(innerPadding),
+                Box(
+                    modifier = Modifier.padding(innerPadding).fillMaxSize(),
                 )
             }
 
