@@ -10,7 +10,6 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,12 +59,7 @@ public class StudioMembershipTerminationService {
             return;
         }
 
-        try {
-            studioMembershipRepository.delete(membership);
-            studioMembershipRepository.flush();
-        } catch (DataIntegrityViolationException exception) {
-            membership.withdraw();
-        }
+        studioMembershipRepository.delete(membership);
     }
 
     private boolean hasHistory(Long membershipId) {
