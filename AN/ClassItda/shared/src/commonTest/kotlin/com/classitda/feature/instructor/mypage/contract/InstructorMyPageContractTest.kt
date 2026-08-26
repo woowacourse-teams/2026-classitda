@@ -162,6 +162,8 @@ class InstructorMyPageContractTest {
                 StudioRegistrationField.NAME,
                 StudioRegistrationField.ADDRESS,
                 StudioRegistrationField.PHONE_NUMBER,
+                StudioRegistrationField.OPENING_TIME,
+                StudioRegistrationField.CLOSING_TIME,
             ),
             studioRegistrationFieldErrors(emptyDraft),
         )

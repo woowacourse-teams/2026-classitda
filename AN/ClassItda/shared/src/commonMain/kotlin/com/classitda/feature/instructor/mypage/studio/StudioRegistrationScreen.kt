@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -48,9 +47,13 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -61,7 +64,6 @@ import classitda.shared.generated.resources.ic_close
 import classitda.shared.generated.resources.ic_location_on
 import classitda.shared.generated.resources.instructor_member_registration_success_confirm
 import classitda.shared.generated.resources.instructor_studio_edit_back
-import classitda.shared.generated.resources.instructor_studio_edit_error
 import classitda.shared.generated.resources.instructor_studio_edit_submit
 import classitda.shared.generated.resources.instructor_studio_edit_submitting
 import classitda.shared.generated.resources.instructor_studio_edit_success
@@ -79,7 +81,11 @@ import classitda.shared.generated.resources.instructor_studio_registration_descr
 import classitda.shared.generated.resources.instructor_studio_registration_description_placeholder
 import classitda.shared.generated.resources.instructor_studio_registration_detail_address
 import classitda.shared.generated.resources.instructor_studio_registration_detail_address_placeholder
-import classitda.shared.generated.resources.instructor_studio_registration_error
+import classitda.shared.generated.resources.instructor_studio_registration_error_conflict
+import classitda.shared.generated.resources.instructor_studio_registration_error_forbidden
+import classitda.shared.generated.resources.instructor_studio_registration_error_invalid_request
+import classitda.shared.generated.resources.instructor_studio_registration_error_network
+import classitda.shared.generated.resources.instructor_studio_registration_error_unknown
 import classitda.shared.generated.resources.instructor_studio_registration_image_camera_unavailable
 import classitda.shared.generated.resources.instructor_studio_registration_image_file_too_large
 import classitda.shared.generated.resources.instructor_studio_registration_image_invalid_mime
@@ -102,12 +108,12 @@ import classitda.shared.generated.resources.instructor_studio_registration_phone
 import classitda.shared.generated.resources.instructor_studio_registration_phone_error
 import classitda.shared.generated.resources.instructor_studio_registration_phone_placeholder
 import classitda.shared.generated.resources.instructor_studio_registration_register
-import classitda.shared.generated.resources.instructor_studio_registration_retry
 import classitda.shared.generated.resources.instructor_studio_registration_step
 import classitda.shared.generated.resources.instructor_studio_registration_submitting
 import classitda.shared.generated.resources.instructor_studio_registration_success
 import classitda.shared.generated.resources.instructor_studio_registration_title
 import classitda.shared.generated.resources.phone_number_change_close
+import co.touchlab.kermit.Logger
 import coil3.compose.SubcomposeAsyncImage
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
@@ -117,12 +123,16 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.StudioAddress
 import com.classitda.domain.model.instructor.mypage.StudioImageSelection
+import com.classitda.feature.instructor.management.component.ClassTimePickerDialog
 import com.classitda.feature.instructor.mypage.contract.StudioImageInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioImageUiError
 import com.classitda.feature.instructor.mypage.contract.StudioInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationField
+import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.studioRegistrationFieldErrors
+import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -136,20 +146,21 @@ fun StudioRegistrationScreen(
 ) {
     var successDialogVisible by remember { mutableStateOf(false) }
     var successDialogPresented by remember { mutableStateOf(false) }
-    LaunchedEffect(uiState, isEditing) {
-        if (isEditing && uiState is StudioRegistrationUiState.Success) {
+    LaunchedEffect(uiState) {
+        if (uiState is StudioRegistrationUiState.Success) {
             successDialogPresented = true
             successDialogVisible = true
         }
     }
     LaunchedEffect(successDialogVisible) {
         val success = uiState as? StudioRegistrationUiState.Success
-        if (isEditing && successDialogPresented && !successDialogVisible && success != null) {
+        if (successDialogPresented && !successDialogVisible && success != null) {
             onSuccessAcknowledged()
         }
     }
     val isSubmitting = uiState is StudioRegistrationUiState.Submitting
     val isLoading = uiState is StudioRegistrationUiState.Loading
+    val isSuccess = uiState is StudioRegistrationUiState.Success
     val draft =
         when (uiState) {
             is StudioRegistrationUiState.Editing -> uiState.draft
@@ -157,7 +168,37 @@ fun StudioRegistrationScreen(
             else -> StudioInputUiModel()
         }
     val fieldErrors =
-        (uiState as? StudioRegistrationUiState.Editing)?.fieldErrors.orEmpty()
+        when (uiState) {
+            is StudioRegistrationUiState.Editing -> uiState.fieldErrors
+            is StudioRegistrationUiState.Error -> studioRegistrationFieldErrors(uiState.draft)
+            else -> emptySet()
+        }
+    val formError =
+        (uiState as? StudioRegistrationUiState.Error)?.reason?.let { reason ->
+            stringResource(
+                when (reason) {
+                    StudioRegistrationUiError.NETWORK -> {
+                        Res.string.instructor_studio_registration_error_network
+                    }
+
+                    StudioRegistrationUiError.FORBIDDEN -> {
+                        Res.string.instructor_studio_registration_error_forbidden
+                    }
+
+                    StudioRegistrationUiError.CONFLICT -> {
+                        Res.string.instructor_studio_registration_error_conflict
+                    }
+
+                    StudioRegistrationUiError.INVALID_REQUEST -> {
+                        Res.string.instructor_studio_registration_error_invalid_request
+                    }
+
+                    StudioRegistrationUiError.UNKNOWN -> {
+                        Res.string.instructor_studio_registration_error_unknown
+                    }
+                },
+            )
+        }
     val imageError =
         (uiState as? StudioRegistrationUiState.Editing)?.imageError
     val canAttemptSubmit =
@@ -167,30 +208,32 @@ fun StudioRegistrationScreen(
         modifier = modifier,
         containerColor = InsColors.Background,
         topBar = {
-            StudioRegistrationTopBar(
-                onBack = { if (!isSubmitting) onAction(StudioRegistrationAction.Back) },
-                title =
-                    stringResource(
-                        if (isEditing) {
-                            Res.string.instructor_studio_edit_title
-                        } else {
-                            Res.string.instructor_studio_registration_title
-                        },
-                    ),
-                backDescription =
-                    stringResource(
-                        if (isEditing) {
-                            Res.string.instructor_studio_edit_back
-                        } else {
-                            Res.string.instructor_studio_registration_back
-                        },
-                    ),
-            )
+            if (!isSuccess) {
+                StudioRegistrationTopBar(
+                    onBack = { if (!isSubmitting) onAction(StudioRegistrationAction.Back) },
+                    title =
+                        stringResource(
+                            if (isEditing) {
+                                Res.string.instructor_studio_edit_title
+                            } else {
+                                Res.string.instructor_studio_registration_title
+                            },
+                        ),
+                    backDescription =
+                        stringResource(
+                            if (isEditing) {
+                                Res.string.instructor_studio_edit_back
+                            } else {
+                                Res.string.instructor_studio_registration_back
+                            },
+                        ),
+                )
+            }
         },
         bottomBar = {
-            if (!isLoading) {
+            if (!isSuccess && !isLoading && !isSubmitting) {
                 StudioRegistrationBottomBar(
-                    isSubmitting = isSubmitting,
+                    isSubmitting = false,
                     isFailed = uiState is StudioRegistrationUiState.Error,
                     enabled = canAttemptSubmit,
                     label =
@@ -245,16 +288,8 @@ fun StudioRegistrationScreen(
             }
 
             is StudioRegistrationUiState.Success -> {
-                StudioRegistrationStatus(
-                    message =
-                        stringResource(
-                            if (isEditing) {
-                                Res.string.instructor_studio_edit_success
-                            } else {
-                                Res.string.instructor_studio_registration_success
-                            },
-                        ),
-                    modifier = Modifier.padding(innerPadding),
+                Box(
+                    modifier = Modifier.padding(innerPadding).fillMaxSize(),
                 )
             }
 
@@ -262,34 +297,42 @@ fun StudioRegistrationScreen(
                 StudioRegistrationForm(
                     draft = draft,
                     fieldErrors = fieldErrors,
+                    formError = formError,
                     imageError = imageError,
                     isSubmitting = false,
-                    errorMessage =
-                        if (uiState is StudioRegistrationUiState.Error) {
-                            stringResource(
-                                if (isEditing) {
-                                    Res.string.instructor_studio_edit_error
-                                } else {
-                                    Res.string.instructor_studio_registration_error
-                                },
-                            )
-                        } else {
-                            null
-                        },
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
                 )
             }
         }
     }
-    if (isEditing && uiState is StudioRegistrationUiState.Success && successDialogVisible) {
-        StudioEditSuccessDialog(onClose = { successDialogVisible = false })
+    if (uiState is StudioRegistrationUiState.Success && successDialogVisible) {
+        StudioSuccessDialog(
+            isEditing = isEditing,
+            onClose = { successDialogVisible = false },
+        )
     }
 }
 
 @Composable
-private fun StudioEditSuccessDialog(onClose: () -> Unit) {
-    val paneTitle = stringResource(Res.string.instructor_studio_edit_success_title)
+private fun StudioSuccessDialog(
+    isEditing: Boolean,
+    onClose: () -> Unit,
+) {
+    val successMessage =
+        stringResource(
+            if (isEditing) {
+                Res.string.instructor_studio_edit_success
+            } else {
+                Res.string.instructor_studio_registration_success
+            },
+        )
+    val paneTitle =
+        if (isEditing) {
+            stringResource(Res.string.instructor_studio_edit_success_title)
+        } else {
+            successMessage
+        }
     Dialog(
         onDismissRequest = {},
         properties =
@@ -328,7 +371,7 @@ private fun StudioEditSuccessDialog(onClose: () -> Unit) {
                     }
                 }
                 Text(
-                    text = stringResource(Res.string.instructor_studio_edit_success),
+                    text = successMessage,
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
                     style = appTypography().bodyLarge,
                     color = InsColors.TextSecondary,
@@ -383,13 +426,14 @@ private fun StudioRegistrationTopBar(
 private fun StudioRegistrationForm(
     draft: StudioInputUiModel,
     fieldErrors: Set<StudioRegistrationField>,
+    formError: String?,
     imageError: StudioImageUiError?,
     isSubmitting: Boolean,
-    errorMessage: String?,
     onAction: (StudioRegistrationAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val focusManager = LocalFocusManager.current
+    var selectedTimeField by remember { mutableStateOf<StudioTimeField?>(null) }
     val nameError = StudioRegistrationField.NAME in fieldErrors
     val addressError = StudioRegistrationField.ADDRESS in fieldErrors
     val detailAddressError = StudioRegistrationField.DETAIL_ADDRESS in fieldErrors
@@ -417,6 +461,14 @@ private fun StudioRegistrationForm(
                 text = stringResource(Res.string.instructor_studio_registration_intro_description),
                 style = appTypography().bodyLarge,
                 color = InsColors.TextSecondary,
+            )
+        }
+        formError?.let { errorMessageText ->
+            Text(
+                text = errorMessageText,
+                modifier = Modifier.semantics { error(errorMessageText) },
+                style = appTypography().bodySmall,
+                color = InsColors.Red,
             )
         }
         StudioImageSection(
@@ -489,11 +541,7 @@ private fun StudioRegistrationForm(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
-            verticalAlignment = Alignment.Top,
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             StudioTextField(
                 label = stringResource(Res.string.instructor_studio_registration_address),
                 value = draft.address.displayAddress,
@@ -508,26 +556,24 @@ private fun StudioRegistrationForm(
                         null
                     },
                 enabled = !isSubmitting,
-                onValueChange = { onAction(StudioRegistrationAction.AddressChanged(it)) },
-                modifier = Modifier.weight(1f),
+                readOnly = true,
+                onValueChange = {},
+                trailingIcon = {
+                    Icon(
+                        painter = painterResource(Res.drawable.ic_location_on),
+                        contentDescription = stringResource(Res.string.instructor_studio_registration_address_search),
+                        tint = InsColors.Purple,
+                        modifier = Modifier.size(AppSpacing.lg),
+                    )
+                },
             )
-            TextButton(
-                onClick = { onAction(StudioRegistrationAction.RequestAddressSearch) },
-                enabled = !isSubmitting,
-                modifier = Modifier.padding(top = AppSpacing.xxl + AppSpacing.sm),
-            ) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_location_on),
-                    contentDescription = null,
-                    tint = InsColors.Purple,
-                    modifier = Modifier.size(AppSpacing.lg),
-                )
-                Text(
-                    text = stringResource(Res.string.instructor_studio_registration_address_search),
-                    modifier = Modifier.padding(start = AppSpacing.xs),
-                    color = InsColors.Purple,
-                )
-            }
+            Box(
+                modifier =
+                    Modifier.matchParentSize().clickableIf(!isSubmitting) {
+                        Logger.d("StudioAddress: address field clicked")
+                        onAction(StudioRegistrationAction.RequestAddressSearch)
+                    },
+            )
         }
         StudioTextField(
             label = stringResource(Res.string.instructor_studio_registration_detail_address),
@@ -542,7 +588,7 @@ private fun StudioRegistrationForm(
         )
         StudioTextField(
             label = stringResource(Res.string.instructor_studio_registration_phone),
-            value = draft.phoneNumber,
+            value = draft.phoneNumber.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS),
             placeholder = stringResource(Res.string.instructor_studio_registration_phone_placeholder),
             isError = phoneError,
             errorMessage =
@@ -554,12 +600,19 @@ private fun StudioRegistrationForm(
                     null
                 },
             enabled = !isSubmitting,
-            onValueChange = { onAction(StudioRegistrationAction.PhoneNumberChanged(it)) },
+            onValueChange = {
+                onAction(
+                    StudioRegistrationAction.PhoneNumberChanged(
+                        it.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS),
+                    ),
+                )
+            },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+            visualTransformation = StudioPhoneVisualTransformation,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
-            StudioTextField(
+            StudioTimeField(
                 label = stringResource(Res.string.instructor_studio_registration_opening_time),
                 value = draft.openingTime,
                 placeholder = stringResource(Res.string.instructor_studio_registration_opening_time_placeholder),
@@ -571,16 +624,10 @@ private fun StudioRegistrationForm(
                         null
                     },
                 enabled = !isSubmitting,
-                onValueChange = { onAction(StudioRegistrationAction.OpeningTimeChanged(it)) },
                 modifier = Modifier.weight(1f),
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType = KeyboardType.Ascii,
-                        imeAction = ImeAction.Next,
-                    ),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Right) }),
+                onClick = { selectedTimeField = StudioTimeField.OPENING },
             )
-            StudioTextField(
+            StudioTimeField(
                 label = stringResource(Res.string.instructor_studio_registration_closing_time),
                 value = draft.closingTime,
                 placeholder = stringResource(Res.string.instructor_studio_registration_closing_time_placeholder),
@@ -592,14 +639,8 @@ private fun StudioRegistrationForm(
                         null
                     },
                 enabled = !isSubmitting,
-                onValueChange = { onAction(StudioRegistrationAction.ClosingTimeChanged(it)) },
                 modifier = Modifier.weight(1f),
-                keyboardOptions =
-                    KeyboardOptions(
-                        keyboardType = KeyboardType.Ascii,
-                        imeAction = ImeAction.Next,
-                    ),
-                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                onClick = { selectedTimeField = StudioTimeField.CLOSING },
             )
         }
         StudioTextField(
@@ -614,21 +655,52 @@ private fun StudioRegistrationForm(
             minLines = 4,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
         )
-        errorMessage?.let { message ->
-            Text(
-                text = message,
-                modifier =
-                    Modifier.semantics {
-                        error(message)
-                        liveRegion = LiveRegionMode.Assertive
-                    },
-                style = appTypography().bodySmall,
-                color = InsColors.Red,
-            )
-            TextButton(onClick = { onAction(StudioRegistrationAction.Retry) }) {
-                Text(stringResource(Res.string.instructor_studio_registration_retry))
-            }
-        }
+    }
+    selectedTimeField?.let { field ->
+        ClassTimePickerDialog(
+            initialTime =
+                when (field) {
+                    StudioTimeField.OPENING -> draft.openingTime.toPickerTime(LocalTime(9, 0))
+                    StudioTimeField.CLOSING -> draft.closingTime.toPickerTime(LocalTime(22, 0))
+                },
+            onDismissRequest = { selectedTimeField = null },
+            onConfirm = { selectedTime ->
+                val timeText = selectedTime.toStudioTimeText()
+                when (field) {
+                    StudioTimeField.OPENING -> onAction(StudioRegistrationAction.OpeningTimeChanged(timeText))
+                    StudioTimeField.CLOSING -> onAction(StudioRegistrationAction.ClosingTimeChanged(timeText))
+                }
+                selectedTimeField = null
+            },
+        )
+    }
+}
+
+@Composable
+private fun StudioTimeField(
+    label: String,
+    value: String,
+    placeholder: String,
+    isError: Boolean,
+    errorMessage: String?,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier) {
+        StudioTextField(
+            label = label,
+            value = value,
+            placeholder = placeholder,
+            isError = isError,
+            errorMessage = errorMessage,
+            enabled = enabled,
+            readOnly = true,
+            onValueChange = {},
+        )
+        Box(
+            modifier = Modifier.matchParentSize().clickableIf(enabled, onClick),
+        )
     }
 }
 
@@ -731,6 +803,9 @@ private fun StudioTextField(
     enabled: Boolean,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    readOnly: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     singleLine: Boolean = true,
     minLines: Int = 1,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -753,6 +828,7 @@ private fun StudioTextField(
                     if (isError && errorMessage != null) error(errorMessage)
                 },
             enabled = enabled,
+            readOnly = readOnly,
             placeholder = { Text(placeholder, color = InsColors.TextTertiary) },
             textStyle = appTypography().bodyLarge.copy(color = InsColors.TextPrimary),
             singleLine = singleLine,
@@ -761,9 +837,10 @@ private fun StudioTextField(
             shape = AppShape.Card,
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
+            trailingIcon = trailingIcon,
+            visualTransformation = visualTransformation,
             colors = studioFieldColors(),
         )
-        errorMessage?.let { StudioFieldError(it) }
     }
 }
 
@@ -780,15 +857,6 @@ private fun RegistrationStudioImageFallback(modifier: Modifier = Modifier) {
             modifier = Modifier.size(AppSpacing.xxxl),
         )
     }
-}
-
-@Composable
-private fun StudioFieldError(message: String) {
-    Text(
-        text = message,
-        style = appTypography().bodySmall,
-        color = InsColors.Red,
-    )
 }
 
 @Composable
@@ -880,6 +948,59 @@ private fun Modifier.clickableIf(
     } else {
         this
     }
+
+private enum class StudioTimeField {
+    OPENING,
+    CLOSING,
+}
+
+private fun String.toPickerTime(default: LocalTime): LocalTime =
+    runCatching {
+        val parts = split(':')
+        LocalTime(parts[0].toInt(), parts[1].toInt())
+    }.getOrDefault(default)
+
+private fun LocalTime.toStudioTimeText(): String =
+    "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
+
+private const val STUDIO_PHONE_MAX_DIGITS = 11
+
+private fun formatStudioPhoneNumber(phoneNumber: String): String {
+    val digits = phoneNumber.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS)
+    if (digits.length <= 3) return digits
+
+    return if (digits.startsWith("02")) {
+        when {
+            digits.length <= 6 -> "${digits.take(2)}-${digits.drop(2)}"
+            digits.length <= 9 -> "${digits.take(2)}-${digits.substring(2, 5)}-${digits.drop(5)}"
+            else -> "${digits.take(2)}-${digits.substring(2, 6)}-${digits.drop(6)}"
+        }
+    } else {
+        when {
+            digits.length <= 7 -> "${digits.take(3)}-${digits.drop(3)}"
+            else -> "${digits.take(3)}-${digits.substring(3, 7)}-${digits.drop(7)}"
+        }
+    }
+}
+
+private object StudioPhoneVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val digits = text.text.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS)
+        val formatted = formatStudioPhoneNumber(digits)
+
+        return TransformedText(
+            text = AnnotatedString(formatted),
+            offsetMapping =
+                object : OffsetMapping {
+                    override fun originalToTransformed(offset: Int): Int =
+                        formatStudioPhoneNumber(digits.take(offset.coerceIn(0, digits.length))).length
+
+                    override fun transformedToOriginal(offset: Int): Int =
+                        formatted.take(offset.coerceIn(0, formatted.length)).count(Char::isDigit)
+                },
+        )
+    }
+}
 
 private val emptyStudioRegistrationState =
     StudioRegistrationUiState.Editing(

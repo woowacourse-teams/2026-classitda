@@ -102,10 +102,10 @@ internal fun studioRegistrationFieldErrors(draft: StudioInputUiModel): Set<Studi
         if (draft.name.isBlank()) add(StudioRegistrationField.NAME)
         if (!draft.address.hasBaseAddress) add(StudioRegistrationField.ADDRESS)
         if (!isStudioPhoneNumberValid(draft.phoneNumber)) add(StudioRegistrationField.PHONE_NUMBER)
-        if (draft.openingTime.isNotBlank() && !isStudioTimeValid(draft.openingTime)) {
+        if (!isStudioTimeValid(draft.openingTime)) {
             add(StudioRegistrationField.OPENING_TIME)
         }
-        if (draft.closingTime.isNotBlank() && !isStudioTimeValid(draft.closingTime)) {
+        if (!isStudioTimeValid(draft.closingTime)) {
             add(StudioRegistrationField.CLOSING_TIME)
         }
     }

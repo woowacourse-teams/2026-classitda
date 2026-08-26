@@ -359,6 +359,11 @@
     <string name="instructor_studio_registration_submitting">등록 중입니다.</string>
     <string name="instructor_studio_registration_success">시설 등록이 완료되었습니다.</string>
     <string name="instructor_studio_registration_error">시설 등록에 실패했습니다. 입력 내용을 확인한 뒤 다시 시도해 주세요.</string>
+    <string name="instructor_studio_registration_error_network">네트워크 오류로 시설 정보를 저장하지 못했습니다. 네트워크를 확인해 주세요.</string>
+    <string name="instructor_studio_registration_error_forbidden">시설 정보를 저장할 권한이 없습니다.</string>
+    <string name="instructor_studio_registration_error_conflict">최신 시설 정보와 충돌했습니다. 내용을 확인한 뒤 다시 시도해 주세요.</string>
+    <string name="instructor_studio_registration_error_invalid_request">입력한 시설 정보가 올바르지 않습니다. 내용을 확인해 주세요.</string>
+    <string name="instructor_studio_registration_error_unknown">시설 정보를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.</string>
     <string name="instructor_studio_registration_retry">다시 시도</string>
     <string name="instructor_studio_registration_loading">시설 정보를 불러오는 중입니다.</string>
     <string name="instructor_studio_edit_title">시설 정보 수정</string>

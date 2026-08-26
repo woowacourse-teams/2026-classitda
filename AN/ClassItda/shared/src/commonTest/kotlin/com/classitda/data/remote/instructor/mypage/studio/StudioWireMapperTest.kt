@@ -234,20 +234,53 @@ class StudioWireMapperTest {
             validResponse().copy(
                 address =
                     AddressResponseDto(
-                        zoneCode = null,
-                        roadAddress = null,
-                        jibunAddress = "지번 주소",
+                        zoneCode = "13494",
+                        roadAddress = "도로 주소",
                     ),
             )
 
         val result = assertIs<InstructorMyPageResult.Success<*>>(response.toDomain())
         val studio = assertIs<com.classitda.domain.model.instructor.mypage.ManagedStudio>(result.value)
 
-        assertEquals("", studio.address.zoneCode)
-        assertEquals("", studio.address.roadAddress)
-        assertEquals("지번 주소", studio.address.jibunAddress)
+        assertEquals("13494", studio.address.zoneCode)
+        assertEquals("도로 주소", studio.address.roadAddress)
+        assertEquals("", studio.address.jibunAddress)
         assertEquals("", studio.address.buildingName)
         assertEquals("", studio.address.detailAddress)
+    }
+
+    @Test
+    fun `부분 주소 응답은 상세 주소 변경 전에 계약 오류로 거부하고 저장 요청도 만들지 않는다`() {
+        val response =
+            validResponse().copy(
+                address =
+                    AddressResponseDto(
+                        zoneCode = null,
+                        roadAddress = null,
+                        jibunAddress = "지번 주소",
+                        detailAddress = "기존 상세 주소",
+                    ),
+            )
+
+        val result = assertIs<InstructorMyPageResult.Failure>(response.toDomain())
+
+        assertEquals(InstructorMyPageFailureReason.CONTRACT, result.reason)
+
+        val partialAddress =
+            StudioAddress(
+                jibunAddress = "지번 주소",
+                detailAddress = "기존 상세 주소",
+            )
+        val updateResult =
+            validManagedStudio()
+                .copy(address = partialAddress)
+                .toStudioUpdateRequestDto(
+                    draft = validDraft().copy(address = partialAddress.copy(detailAddress = "변경 상세 주소")),
+                    imageMutation = StudioImageMutation.Unchanged,
+                )
+
+        val updateFailure = assertIs<InstructorMyPageResult.Failure>(updateResult)
+        assertEquals(InstructorMyPageFailureReason.INVALID_REQUEST, updateFailure.reason)
     }
 
     @Test
