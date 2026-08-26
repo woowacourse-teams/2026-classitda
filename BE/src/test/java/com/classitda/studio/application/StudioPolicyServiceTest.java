@@ -36,65 +36,19 @@ class StudioPolicyServiceTest {
     }
 
     @Test
-    void 운영_정책을_등록하면_정책_정보를_반환한다() {
+    void 시설을_만들면_기본_운영_정책이_함께_저장된다() {
         // given
         Member owner = 소유자를_저장한다();
-        Long studioId = 시설을_만든다(owner);
 
         // when
-        StudioPolicyResponse response = studioPolicyService.save(
-                owner.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청());
+        Long studioId = 시설을_만든다(owner);
 
         // then
-        assertThat(response.id()).isNotNull();
-        assertThat(response.reservationCloseMinutesBefore())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_RESERVATION_CLOSE_MINUTES);
-        assertThat(response.freeCancelMinutesBefore())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_FREE_CANCEL_MINUTES);
-        assertThat(response.waitingOfferResponseMinutes())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_WAITING_RESPONSE_MINUTES);
-    }
-
-    @Test
-    void 한_시설에_운영_정책을_두_번_등록할_수_없다() {
-        // given
-        Member owner = 소유자를_저장한다();
-        Long studioId = 시설을_만든다(owner);
-        studioPolicyService.save(owner.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청());
-        entityManager.flush();
-
-        // when / then
-        assertThatThrownBy(() -> studioPolicyService.save(
-                owner.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청()))
-                .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.POLICY_ALREADY_EXISTS.getMessage());
-    }
-
-    @Test
-    void 소속이_아니면_운영_정책을_등록할_수_없다() {
-        // given
-        Member owner = 소유자를_저장한다();
-        Member other = StudioFixture.아이디가_다른_소유자("other");
-        entityManager.persist(other);
-        Long studioId = 시설을_만든다(owner);
-
-        // when / then
-        assertThatThrownBy(() -> studioPolicyService.save(
-                other.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청()))
-                .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.NOT_MEMBERSHIP.getMessage());
-    }
-
-    @Test
-    void 없는_시설에는_운영_정책을_등록할_수_없다() {
-        // given
-        Member owner = 소유자를_저장한다();
-
-        // when / then
-        assertThatThrownBy(() -> studioPolicyService.save(
-                owner.getId(), 999L, StudioPolicyFixture.기본_정책_생성_요청()))
-                .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.NOT_FOUND.getMessage());
+        StudioPolicyResponse response = studioPolicyService.findByStudioId(studioId);
+        assertThat(response.reservationCloseMinutesBefore()).isEqualTo(30);
+        assertThat(response.freeCancelMinutesBefore()).isEqualTo(720);
+        assertThat(response.waitingOfferResponseMinutes()).isEqualTo(60);
+        assertThat(response.maxHoldDays()).isZero();
     }
 
     @Test
@@ -102,29 +56,13 @@ class StudioPolicyServiceTest {
         // given
         Member owner = 소유자를_저장한다();
         Long studioId = 시설을_만든다(owner);
-        StudioPolicyResponse created = studioPolicyService.save(
-                owner.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청());
-        entityManager.flush();
 
         // when
         StudioPolicyResponse response = studioPolicyService.findByStudioId(studioId);
 
         // then
-        assertThat(response.id()).isEqualTo(created.id());
-        assertThat(response.freeCancelMinutesBefore())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_FREE_CANCEL_MINUTES);
-    }
-
-    @Test
-    void 정책이_없는_시설을_조회하면_예외가_발생한다() {
-        // given
-        Member owner = 소유자를_저장한다();
-        Long studioId = 시설을_만든다(owner);
-
-        // when / then
-        assertThatThrownBy(() -> studioPolicyService.findByStudioId(studioId))
-                .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.POLICY_NOT_FOUND.getMessage());
+        assertThat(response.id()).isNotNull();
+        assertThat(response.freeCancelMinutesBefore()).isEqualTo(720);
     }
 
     @Test
@@ -140,8 +78,6 @@ class StudioPolicyServiceTest {
         // given
         Member owner = 소유자를_저장한다();
         Long studioId = 시설을_만든다(owner);
-        studioPolicyService.save(owner.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청());
-        entityManager.flush();
 
         // when
         StudioPolicyResponse response = studioPolicyService.update(
@@ -152,22 +88,33 @@ class StudioPolicyServiceTest {
     }
 
     @Test
+    void 최대_홀드_일수를_수정할_수_있다() {
+        // given
+        Member owner = 소유자를_저장한다();
+        Long studioId = 시설을_만든다(owner);
+
+        // when
+        StudioPolicyResponse response = studioPolicyService.update(
+                owner.getId(), studioId, StudioPolicyFixture.최대_홀드_일수만_바꾸는_수정_요청(7));
+
+        // then
+        assertThat(response.maxHoldDays()).isEqualTo(7);
+    }
+
+    @Test
     void 보내지_않은_필드는_기존_값을_유지한다() {
         // given
         Member owner = 소유자를_저장한다();
         Long studioId = 시설을_만든다(owner);
-        studioPolicyService.save(owner.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청());
-        entityManager.flush();
 
         // when
         StudioPolicyResponse response = studioPolicyService.update(
                 owner.getId(), studioId, StudioPolicyFixture.무료_취소_시간만_바꾸는_수정_요청(180));
 
         // then
-        assertThat(response.reservationCloseMinutesBefore())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_RESERVATION_CLOSE_MINUTES);
-        assertThat(response.waitingOfferResponseMinutes())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_WAITING_RESPONSE_MINUTES);
+        assertThat(response.reservationCloseMinutesBefore()).isEqualTo(30);
+        assertThat(response.waitingOfferResponseMinutes()).isEqualTo(60);
+        assertThat(response.maxHoldDays()).isZero();
     }
 
     @Test
@@ -175,20 +122,15 @@ class StudioPolicyServiceTest {
         // given
         Member owner = 소유자를_저장한다();
         Long studioId = 시설을_만든다(owner);
-        studioPolicyService.save(owner.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청());
-        entityManager.flush();
 
         // when
         StudioPolicyResponse response = studioPolicyService.update(
                 owner.getId(), studioId, StudioPolicyFixture.아무것도_바꾸지_않는_수정_요청());
 
         // then
-        assertThat(response.reservationCloseMinutesBefore())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_RESERVATION_CLOSE_MINUTES);
-        assertThat(response.freeCancelMinutesBefore())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_FREE_CANCEL_MINUTES);
-        assertThat(response.waitingOfferResponseMinutes())
-                .isEqualTo(StudioPolicyFixture.DEFAULT_WAITING_RESPONSE_MINUTES);
+        assertThat(response.reservationCloseMinutesBefore()).isEqualTo(30);
+        assertThat(response.freeCancelMinutesBefore()).isEqualTo(720);
+        assertThat(response.waitingOfferResponseMinutes()).isEqualTo(60);
     }
 
     @Test
@@ -197,9 +139,8 @@ class StudioPolicyServiceTest {
         Member owner = 소유자를_저장한다();
         Member other = StudioFixture.아이디가_다른_소유자("other");
         entityManager.persist(other);
-        Long studioId = 시설을_만든다(owner);
-        studioPolicyService.save(owner.getId(), studioId, StudioPolicyFixture.기본_정책_생성_요청());
         entityManager.flush();
+        Long studioId = 시설을_만든다(owner);
 
         // when / then
         assertThatThrownBy(() -> studioPolicyService.update(
@@ -209,16 +150,15 @@ class StudioPolicyServiceTest {
     }
 
     @Test
-    void 정책이_없으면_수정할_수_없다() {
+    void 없는_시설의_운영_정책은_수정할_수_없다() {
         // given
         Member owner = 소유자를_저장한다();
-        Long studioId = 시설을_만든다(owner);
 
         // when / then
         assertThatThrownBy(() -> studioPolicyService.update(
-                owner.getId(), studioId, StudioPolicyFixture.무료_취소_시간만_바꾸는_수정_요청(180)))
+                owner.getId(), 999L, StudioPolicyFixture.무료_취소_시간만_바꾸는_수정_요청(180)))
                 .isInstanceOf(StudioException.class)
-                .hasMessage(StudioErrorCode.POLICY_NOT_FOUND.getMessage());
+                .hasMessage(StudioErrorCode.NOT_FOUND.getMessage());
     }
 
     private Member 소유자를_저장한다() {

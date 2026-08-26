@@ -41,8 +41,7 @@ import org.springframework.context.annotation.Import;
         StudioMembershipService.class,
         ClassTypeService.class,
         StudioService.class,
-        StudioPermissionService.class
-})
+        StudioPermissionService.class, StudioPolicyService.class})
 @MySqlRepositoryTest
 class StudioMembershipServiceTest {
 

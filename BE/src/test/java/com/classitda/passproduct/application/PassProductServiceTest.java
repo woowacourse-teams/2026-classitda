@@ -21,6 +21,7 @@ import com.classitda.passproduct.exception.PassProductException;
 import com.classitda.passproduct.fixture.PassProductFixture;
 import com.classitda.passproduct.presentation.dto.PassProductResponse;
 import com.classitda.studio.application.StudioPermissionService;
+import com.classitda.studio.application.StudioPolicyService;
 import com.classitda.studio.application.StudioService;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Studio;
@@ -40,7 +41,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
-@Import({PassProductService.class, ClassTypeService.class, StudioService.class, StudioPermissionService.class})
+@Import({PassProductService.class, ClassTypeService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
 @MySqlRepositoryTest
 class PassProductServiceTest {
 

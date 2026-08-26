@@ -7,11 +7,9 @@ import com.classitda.studio.domain.repository.StudioPolicyRepository;
 import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
-import com.classitda.studio.presentation.dto.StudioPolicyCreateRequest;
 import com.classitda.studio.presentation.dto.StudioPolicyResponse;
 import com.classitda.studio.presentation.dto.StudioPolicyUpdateRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,22 +18,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class StudioPolicyService {
 
+    public static final int DEFAULT_MAX_HOLD_DAYS = 0;
+
+    private static final int DEFAULT_RESERVATION_CLOSE_MINUTES_BEFORE = 30;
+    private static final int DEFAULT_FREE_CANCEL_MINUTES_BEFORE = 720;
+    private static final int DEFAULT_WAITING_OFFER_RESPONSE_MINUTES = 60;
+
     private final StudioPolicyRepository studioPolicyRepository;
     private final StudioPermissionService studioPermissionService;
     private final StudioRepository studioRepository;
 
     @Transactional
-    public StudioPolicyResponse save(Long memberId, Long studioId, StudioPolicyCreateRequest request) {
-        Studio studio = getStudio(studioId);
-        studioPermissionService.validate(studio, memberId, PermissionCode.POLICY_MANAGE);
-        if (studioPolicyRepository.existsByStudioId(studioId)) {
-            throw new StudioException(StudioErrorCode.POLICY_ALREADY_EXISTS);
-        }
-        try {
-            return StudioPolicyResponse.from(studioPolicyRepository.saveAndFlush(request.toEntity(studio)));
-        } catch (DataIntegrityViolationException exception) {
-            throw new StudioException(StudioErrorCode.POLICY_ALREADY_EXISTS);
-        }
+    public void saveDefaultPolicy(Studio studio) {
+        studioPolicyRepository.save(StudioPolicy.builder()
+                .studio(studio)
+                .reservationCloseMinutesBefore(DEFAULT_RESERVATION_CLOSE_MINUTES_BEFORE)
+                .freeCancelMinutesBefore(DEFAULT_FREE_CANCEL_MINUTES_BEFORE)
+                .waitingOfferResponseMinutes(DEFAULT_WAITING_OFFER_RESPONSE_MINUTES)
+                .maxHoldDays(DEFAULT_MAX_HOLD_DAYS)
+                .build());
     }
 
     public StudioPolicyResponse findByStudioId(Long studioId) {
@@ -51,7 +52,8 @@ public class StudioPolicyService {
         policy.update(
                 resolve(request.reservationCloseMinutesBefore(), policy.getReservationCloseMinutesBefore()),
                 resolve(request.freeCancelMinutesBefore(), policy.getFreeCancelMinutesBefore()),
-                resolve(request.waitingOfferResponseMinutes(), policy.getWaitingOfferResponseMinutes())
+                resolve(request.waitingOfferResponseMinutes(), policy.getWaitingOfferResponseMinutes()),
+                resolve(request.maxHoldDays(), policy.getMaxHoldDays())
         );
         return StudioPolicyResponse.from(policy);
     }

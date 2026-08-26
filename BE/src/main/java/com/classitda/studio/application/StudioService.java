@@ -44,6 +44,7 @@ public class StudioService {
     private final PermissionRepository permissionRepository;
     private final ClassTypeService classTypeService;
     private final StudioPermissionService studioPermissionService;
+    private final StudioPolicyService studioPolicyService;
     private final ImageProperties imageProperties;
     private final MemberRepository memberRepository;
 
@@ -54,6 +55,7 @@ public class StudioService {
         StudioRole ownerRole = saveSystemRoles(studio);
         saveOwnerMembership(studio, owner, ownerRole);
         classTypeService.saveDefaultClassTypes(studio);
+        studioPolicyService.saveDefaultPolicy(studio);
         return toResponse(studio);
     }
 

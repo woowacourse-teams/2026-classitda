@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
-@Import({ClassTypeService.class, StudioPermissionService.class, StudioService.class})
+@Import({ClassTypeService.class, StudioPermissionService.class, StudioService.class, StudioPolicyService.class})
 @MySqlRepositoryTest
 class StudioPermissionServiceTest {
 
