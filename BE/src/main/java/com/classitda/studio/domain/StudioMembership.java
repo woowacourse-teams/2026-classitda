@@ -125,9 +125,10 @@ public class StudioMembership extends BaseEntity {
         status = MembershipStatus.WITHDRAWN;
     }
 
-    public void revive(String name, String phoneNumber) {
+    public void revive(StudioRole studioRole, String name, String phoneNumber) {
         validateName(name);
         validatePhoneNumber(phoneNumber);
+        this.studioRole = studioRole;
         this.name = name;
         this.phoneNumber = phoneNumber;
         this.status = MembershipStatus.ACTIVE;

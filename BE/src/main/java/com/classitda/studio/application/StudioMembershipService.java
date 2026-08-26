@@ -202,7 +202,7 @@ public class StudioMembershipService {
             Optional<StudioMembership> byMember = studioMembershipRepository
                     .findByStudioIdAndMemberId(studio.getId(), member.getId());
             if (byMember.isPresent()) {
-                reviveOrReject(byMember.get(), request);
+                reviveOrReject(byMember.get(), studioRole, request);
                 return;
             }
         }
@@ -210,7 +210,7 @@ public class StudioMembershipService {
         Optional<StudioMembership> byPhone = studioMembershipRepository
                 .findByStudioIdAndPhoneNumber(studio.getId(), request.phoneNumber());
         if (byPhone.isPresent()) {
-            reviveOrReject(byPhone.get(), request);
+            reviveOrReject(byPhone.get(), studioRole, request);
             return;
         }
 
@@ -223,11 +223,15 @@ public class StudioMembershipService {
         }
     }
 
-    private void reviveOrReject(StudioMembership membership, StudioMembershipCreateRequest request) {
+    private void reviveOrReject(
+            StudioMembership membership,
+            StudioRole studioRole,
+            StudioMembershipCreateRequest request
+    ) {
         if (!membership.isWithdrawn()) {
             throw new StudioException(StudioErrorCode.MEMBERSHIP_ALREADY_EXISTS);
         }
-        membership.revive(request.name(), request.phoneNumber());
+        membership.revive(studioRole, request.name(), request.phoneNumber());
         flushMembership();
     }
 

@@ -8,9 +8,15 @@ import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
 import com.classitda.classes.application.ClassTypeService;
+import com.classitda.classes.domain.ClassForm;
+import com.classitda.classes.domain.ClassType;
 import com.classitda.common.config.TimeConfig;
 import com.classitda.common.pagination.CursorResponse;
 import com.classitda.member.domain.Member;
+import com.classitda.passproduct.domain.MemberPassProduct;
+import com.classitda.passproduct.domain.MemberPassProductStatus;
+import com.classitda.passproduct.domain.PassProduct;
+import com.classitda.passproduct.domain.PassProductPeriodUnit;
 import com.classitda.member.domain.repository.MemberRepository;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
@@ -33,6 +39,7 @@ import com.classitda.studio.presentation.dto.StudioMembershipUpdateRequest;
 import com.classitda.studio.presentation.dto.StudioMembershipResponse;
 import com.classitda.support.MySqlRepositoryTest;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -552,6 +559,56 @@ class StudioMembershipServiceTest {
     }
 
     @Test
+    void 삭제한_강사를_회원으로_다시_등록하면_회원_역할로_되살아난다() {
+        // given
+        Member owner = 회원을_저장한다("role-owner", "01011140001");
+        Studio studio = 시설을_만든다(owner);
+        studioMembershipService.saveInstructor(owner.getId(), studio.getId(),
+                StudioMembershipFixture.소속_등록_요청("강사였던사람", "01011140002"));
+        entityManager.flush();
+        Long membershipId = 소속_아이디를_찾는다(studio, "01011140002");
+        이력을_남긴다(studio, membershipId);
+        studioMembershipService.delete(owner.getId(), studio.getId(), membershipId);
+        entityManager.flush();
+
+        // when
+        studioMembershipService.saveStudent(owner.getId(), studio.getId(),
+                StudioMembershipFixture.소속_등록_요청("이제회원", "01011140002"));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        StudioMembership revived = studioMembershipRepository.findById(membershipId).orElseThrow();
+        assertThat(revived.getStatus()).isEqualTo(MembershipStatus.ACTIVE);
+        assertThat(revived.isInstructor()).isFalse();
+        assertThat(revived.getStudioRole().getSystemRole()).isEqualTo(SystemRole.STUDENT);
+    }
+
+    @Test
+    void 삭제한_회원을_강사로_다시_등록하면_강사_역할로_되살아난다() {
+        // given
+        Member owner = 회원을_저장한다("role-owner2", "01011140003");
+        Studio studio = 시설을_만든다(owner);
+        studioMembershipService.saveStudent(owner.getId(), studio.getId(),
+                StudioMembershipFixture.소속_등록_요청("회원이던사람", "01011140004"));
+        entityManager.flush();
+        Long membershipId = 소속_아이디를_찾는다(studio, "01011140004");
+        이력을_남긴다(studio, membershipId);
+        studioMembershipService.delete(owner.getId(), studio.getId(), membershipId);
+        entityManager.flush();
+
+        // when
+        studioMembershipService.saveInstructor(owner.getId(), studio.getId(),
+                StudioMembershipFixture.소속_등록_요청("이제강사", "01011140004"));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        StudioMembership revived = studioMembershipRepository.findById(membershipId).orElseThrow();
+        assertThat(revived.getStudioRole().getSystemRole()).isEqualTo(SystemRole.INSTRUCTOR);
+    }
+
+    @Test
     void 대표_강사는_삭제할_수_없다() {
         // given
         Member owner = 회원을_저장한다("owner-delete", "01011120006");
@@ -653,5 +710,33 @@ class StudioMembershipServiceTest {
                 .build());
         entityManager.flush();
         return member;
+    }
+    private void 이력을_남긴다(Studio studio, Long membershipId) {
+        ClassType classType = ClassType.builder()
+                .studio(studio)
+                .name("이력용 수업 종류")
+                .build();
+        entityManager.persist(classType);
+        PassProduct passProduct = PassProduct.builder()
+                .studio(studio)
+                .name("10회권")
+                .classForm(ClassForm.GROUP)
+                .classTypes(List.of(classType))
+                .totalCount(10)
+                .validPeriodAmount(3)
+                .validPeriodUnit(PassProductPeriodUnit.MONTH)
+                .totalHoldDays(7)
+                .build();
+        entityManager.persist(passProduct);
+        entityManager.persist(MemberPassProduct.builder()
+                .membership(studioMembershipRepository.findById(membershipId).orElseThrow())
+                .passProduct(passProduct)
+                .remainingCount(10)
+                .remainingHoldDays(7)
+                .status(MemberPassProductStatus.ACTIVE)
+                .startedAt(LocalDate.now())
+                .expiresAt(LocalDate.now().plusMonths(3))
+                .build());
+        entityManager.flush();
     }
 }
