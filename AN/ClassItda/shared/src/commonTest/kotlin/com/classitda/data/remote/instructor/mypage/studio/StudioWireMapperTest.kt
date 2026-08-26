@@ -214,8 +214,6 @@ class StudioWireMapperTest {
                 validResponse().copy(id = null),
                 validResponse().copy(name = null),
                 validResponse().copy(address = null),
-                validResponse().copy(address = validResponse().address?.copy(zoneCode = null)),
-                validResponse().copy(address = validResponse().address?.copy(roadAddress = "")),
                 validResponse().copy(phoneNumber = null),
                 validResponse().copy(openTime = null),
                 validResponse().copy(closeTime = null),
@@ -226,6 +224,28 @@ class StudioWireMapperTest {
             val failure = assertIs<InstructorMyPageResult.Failure>(response.toDomain())
             assertEquals(InstructorMyPageFailureReason.CONTRACT, failure.reason)
         }
+    }
+
+    @Test
+    fun `응답 주소의 선택 필드가 누락되어도 스튜디오를 매핑한다`() {
+        val response =
+            validResponse().copy(
+                address =
+                    AddressResponseDto(
+                        zoneCode = null,
+                        roadAddress = null,
+                        jibunAddress = "지번 주소",
+                    ),
+            )
+
+        val result = assertIs<InstructorMyPageResult.Success<*>>(response.toDomain())
+        val studio = assertIs<com.classitda.domain.model.instructor.mypage.ManagedStudio>(result.value)
+
+        assertEquals("", studio.address.zoneCode)
+        assertEquals("", studio.address.roadAddress)
+        assertEquals("지번 주소", studio.address.jibunAddress)
+        assertEquals("", studio.address.buildingName)
+        assertEquals("", studio.address.detailAddress)
     }
 
     @Test
