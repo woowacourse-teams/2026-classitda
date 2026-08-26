@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
+import com.classitda.domain.repository.member.MemberRepository
 import com.classitda.feature.instructor.session.toClassSession
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -24,6 +25,7 @@ import kotlin.time.Clock
 internal class InstructorHomeViewModel(
     private val repository: InstructorSessionRepository,
     private val studioContext: InstructorStudioContext,
+    private val memberRepository: MemberRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<InstructorHomeUiState>(InstructorHomeUiState.Loading)
     val uiState: StateFlow<InstructorHomeUiState> = _uiState.asStateFlow()
@@ -44,6 +46,10 @@ internal class InstructorHomeViewModel(
             viewModelScope.launch {
                 try {
                     val studio = studioContext.getSelectedStudio()
+                    val instructorName =
+                        runCatching { memberRepository.getMe().name.takeIf(String::isNotBlank) }
+                            .getOrDefault("강사")
+                            ?: "강사"
                     val today = Clock.System.todayIn(TimeZone.of("Asia/Seoul"))
                     val sessions =
                         coroutineScope {
@@ -57,7 +63,11 @@ internal class InstructorHomeViewModel(
                                 }.awaitAll()
                                 .flatten()
                         }
-                    _uiState.value = InstructorHomeUiState.Success(sessions.sortedBy { it.startAt })
+                    _uiState.value =
+                        InstructorHomeUiState.Success(
+                            sessions = sessions.sortedBy { it.startAt },
+                            instructorName = instructorName,
+                        )
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
@@ -72,6 +82,7 @@ internal sealed interface InstructorHomeUiState {
 
     data class Success(
         val sessions: List<ClassSession>,
+        val instructorName: String,
     ) : InstructorHomeUiState
 
     data class Error(

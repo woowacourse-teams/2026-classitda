@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.member.MembershipStatus
+import com.classitda.domain.model.studio.StudioId
 import com.classitda.domain.repository.instructor.member.InstructorMemberRepository
 import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionDetailUiModel
@@ -40,9 +41,7 @@ internal class ClassSessionMemberEditViewModel(
                     val session =
                         repository.getSession(studio.id, sessionId)
                     val availableMembers =
-                        memberRepository
-                            .getStudents(studio.id)
-                            .items
+                        getAllStudents(studio.id)
                             .filter { it.status == MembershipStatus.ACTIVE }
                             .map { member ->
                                 ClassSessionMemberUiModel(
@@ -70,6 +69,18 @@ internal class ClassSessionMemberEditViewModel(
                 }
             }
     }
+
+    private suspend fun getAllStudents(studioId: StudioId) =
+        buildList {
+            var cursor: String? = null
+            var hasNext: Boolean
+            do {
+                val page = memberRepository.getStudents(studioId, cursor = cursor, size = 100)
+                addAll(page.items)
+                cursor = page.nextCursor
+                hasNext = page.hasNext
+            } while (hasNext && cursor != null)
+        }
 
     fun saveMembers(
         sessionId: String,
@@ -117,7 +128,6 @@ private fun com.classitda.domain.model.instructor.session.InstructorSessionDetai
             reservedCount = bookedMembers.size,
             capacity = capacity,
             description = description.orEmpty(),
-            location = "장소 정보 없음",
             status = sessionPhase.toUiStatus(),
             members = bookedMembers,
         )

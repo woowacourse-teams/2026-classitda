@@ -11,7 +11,6 @@ internal data class ClassSessionDetailUiModel(
     val reservedCount: Int,
     val capacity: Int,
     val description: String,
-    val location: String,
     val status: ClassSessionStatus,
     val members: List<ClassSessionMemberUiModel>,
 )

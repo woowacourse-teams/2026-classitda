@@ -55,7 +55,6 @@ private fun InstructorSessionDetail.toDetailUiModel(): ClassSessionDetailUiModel
         reservedCount = reservedMembers.size,
         capacity = capacity,
         description = description.orEmpty(),
-        location = "장소 정보 없음",
         status = sessionPhase.toUiStatus(),
         members =
             reservedMembers.map { member ->

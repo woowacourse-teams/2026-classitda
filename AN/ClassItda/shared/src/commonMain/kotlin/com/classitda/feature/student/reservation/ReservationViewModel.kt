@@ -186,7 +186,7 @@ internal class ReservationViewModel(
             classTime = classTime,
             className = className,
             instructorName = instructorName,
-            memo = roomName,
+            memo = description.orEmpty(),
             leftStudentCount = leftStudentCount,
             cardType =
                 when {

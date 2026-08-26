@@ -292,7 +292,6 @@ private fun ClassSessionMemberEditStatelessPreview() {
                     reservedCount = 3,
                     capacity = 8,
                     description = "체어룸에서 할 예정",
-                    location = "체어룸",
                     status = ClassSessionStatus.SCHEDULED,
                     members =
                         listOf(

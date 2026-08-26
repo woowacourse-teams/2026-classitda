@@ -20,7 +20,7 @@ internal val classManagementModule =
     module {
         single<ClassManagementRepository> { FakeClassManagementRepository() }
         viewModel { ClassSessionDetailViewModel(get(), get()) }
-        viewModel { ClassSessionEditViewModel(get(), get()) }
+        viewModel { ClassSessionEditViewModel(get(), get(), get()) }
         viewModel { ClassSessionMemberEditViewModel(get(), get(), get()) }
         single { ClassTemplatesApi(get()) }
         single { ClassTypesApi(get()) }

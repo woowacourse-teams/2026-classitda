@@ -79,7 +79,6 @@ internal fun ClassSessionDetailInfoCard(
                 DetailStat(label = "정원", value = "${detail.capacity}명")
             }
             DetailDescription(label = "설명", value = detail.description)
-            DetailDescription(label = "장소", value = detail.location)
         }
     }
 }
@@ -137,7 +136,6 @@ private fun ClassSessionDetailInfoCardPreview() {
                     reservedCount = 3,
                     capacity = 8,
                     description = "체어룸에서 할 예정",
-                    location = "체어룸",
                     status = ClassSessionStatus.SCHEDULED,
                     members = emptyList(),
                 ),

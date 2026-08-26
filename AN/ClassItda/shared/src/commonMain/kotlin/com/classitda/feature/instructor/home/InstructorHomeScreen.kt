@@ -101,6 +101,7 @@ internal fun InstructorHomeStateful(
             is InstructorHomeUiState.Success -> {
                 InstructorHomeStateless(
                     sessions = state.sessions,
+                    instructorName = state.instructorName,
                     studioName = selectedStudio?.name ?: "시설 선택",
                     onStudioClick = {
                         scope.launch {
@@ -160,6 +161,7 @@ internal fun InstructorHomeStateful(
 internal fun InstructorHomeStateless(
     sessions: List<ClassSession>,
     onSessionClick: (String) -> Unit,
+    instructorName: String = "강사",
     studioName: String = "클래스잇다 요가&필라테스",
     onStudioClick: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -172,6 +174,7 @@ internal fun InstructorHomeStateless(
     ) {
         item {
             InstructorHomeHeader(
+                instructorName = instructorName,
                 studioName = studioName,
                 onStudioClick = onStudioClick,
             )

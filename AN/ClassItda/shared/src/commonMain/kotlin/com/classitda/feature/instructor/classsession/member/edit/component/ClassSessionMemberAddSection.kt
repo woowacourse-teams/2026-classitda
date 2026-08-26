@@ -35,29 +35,33 @@ internal fun ClassSessionMemberAddSection(
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
             color = InsColors.TextPrimary,
         )
-        OutlinedTextField(
-            value = "",
-            onValueChange = {},
-            readOnly = true,
+        androidx.compose.foundation.layout.Box(
             modifier = Modifier.fillMaxWidth().clickable(onClick = onExistingAddClick),
-            leadingIcon = {
-                androidx.compose.material3.Icon(
-                    painter = painterResource(Res.drawable.ic_search),
-                    contentDescription = null,
-                    tint = InsColors.TextSecondary,
-                )
-            },
-            placeholder = {
-                Text(
-                    text = "회원 이름 검색",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = InsColors.TextTertiary,
-                )
-            },
-            singleLine = true,
-            shape = AppShape.Card,
-            colors = memberEditTextFieldColors(),
-        )
+        ) {
+            OutlinedTextField(
+                value = "",
+                onValueChange = {},
+                enabled = false,
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
+                    androidx.compose.material3.Icon(
+                        painter = painterResource(Res.drawable.ic_search),
+                        contentDescription = null,
+                        tint = InsColors.TextSecondary,
+                    )
+                },
+                placeholder = {
+                    Text(
+                        text = "회원 이름 검색",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = InsColors.TextTertiary,
+                    )
+                },
+                singleLine = true,
+                shape = AppShape.Card,
+                colors = memberEditTextFieldColors(),
+            )
+        }
     }
 }
 
