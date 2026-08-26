@@ -1,11 +1,13 @@
 package com.classitda.core.network
 
+import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
 import com.classitda.domain.model.auth.signup.LoginTokens
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.HttpResponseValidator
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
@@ -14,6 +16,7 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.takeFrom
@@ -28,6 +31,7 @@ internal fun createClassItdaHttpClient(
 ): HttpClient =
     HttpClient(engine) {
         expectSuccess = true
+        installClassItdaErrorLogging()
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
@@ -45,6 +49,7 @@ internal fun createConfiguredHttpClient(
 ): HttpClient =
     HttpClient {
         expectSuccess = true
+        installClassItdaErrorLogging()
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
@@ -102,3 +107,19 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
         }
     }
 }
+
+private fun io.ktor.client.HttpClientConfig<*>.installClassItdaErrorLogging() {
+    HttpResponseValidator {
+        validateResponse { response ->
+            if (response.status.value >= 400) {
+                val responseBody = response.bodyAsText()
+                val request = response.call.request
+                networkLogger.e {
+                    "HTTP ${response.status.value} ${request.method.value} ${request.url} body=$responseBody"
+                }
+            }
+        }
+    }
+}
+
+private val networkLogger = Logger.withTag("ClassItdaNetwork")
