@@ -21,8 +21,7 @@ internal class FakeClassReservationRepository(
             dateText = selectedClass.date.toReservationDateText(),
             timeText = selectedClass.classTime,
             instructorName = selectedClass.instructorName,
-            roomName = selectedClass.roomName.orEmpty(),
-            memoText = selectedClass.roomName.orEmpty(),
+            memoText = selectedClass.description.orEmpty(),
             cancellationNotice = "예약 취소 및 변경은 수업 시작 4시간 전까지 가능합니다.",
             classPasses =
                 listOf(

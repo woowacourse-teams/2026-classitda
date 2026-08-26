@@ -8,7 +8,7 @@ internal data class ReservationClass(
     val classTime: String,
     val className: String,
     val instructorName: String,
-    val roomName: String?,
+    val description: String?,
     val leftStudentCount: Int,
     val isReserved: Boolean = false,
     val isWaitlisted: Boolean = false,

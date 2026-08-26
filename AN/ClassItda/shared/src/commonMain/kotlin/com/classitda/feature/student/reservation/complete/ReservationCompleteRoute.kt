@@ -27,7 +27,7 @@ internal fun ReservationCompleteRoute(
                 dateText = reservation.dateText,
                 timeText = reservation.timeText,
                 instructorName = reservation.instructorName,
-                roomName = reservation.roomName,
+                roomName = reservation.memoText,
                 classPassName =
                     reservation.classPasses.firstOrNull { it.id == passId }?.name
                         ?: reservation.classPasses.first().name,
