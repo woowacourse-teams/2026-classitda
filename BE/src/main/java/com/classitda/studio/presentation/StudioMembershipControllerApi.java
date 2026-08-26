@@ -465,7 +465,7 @@ public interface StudioMembershipControllerApi {
                                     @ExampleObject(name = "번호 수정 불가", value = """
                                             {"code":"MEMBERSHIP-007","message":"가입한 회원의 휴대전화 번호는 수정할 수 없습니다."}"""),
                                     @ExampleObject(name = "번호 중복", value = """
-                                            {"code":"MEMBERSHIP-004","message":"이미 시설에 등록된 회원입니다."}""")
+                                            {"code":"MEMBERSHIP-004","message":"이미 시설에 등록된 전화번호입니다."}""")
                             }
                     )
             )
