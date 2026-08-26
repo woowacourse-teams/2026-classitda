@@ -1,8 +1,9 @@
 package com.classitda.domain.repository.instructor.mypage
 
-import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
+import com.classitda.domain.model.instructor.mypage.InstructorStudioId
+import com.classitda.domain.model.instructor.mypage.ManagedStudio
+import com.classitda.domain.model.instructor.mypage.StudioAddress
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -25,16 +26,16 @@ class InstructorMyPageRepositoryTest {
     }
 
     @Test
-    fun facilityListKeepsRepositoryTotalCountSeparatelyFromItems() {
-        val facility =
-            ManagedFacility(
-                id = InstructorFacilityId("facility-1"),
+    fun studioListKeepsRepositoryTotalCountSeparatelyFromItems() {
+        val studio =
+            ManagedStudio(
+                id = InstructorStudioId("studio-1"),
                 name = "Studio",
-                address = "Seoul",
+                address = StudioAddress(roadAddress = "Seoul"),
             )
-        val page = FacilityList(totalCount = 12, facilities = listOf(facility))
+        val page = StudioList(totalCount = 12, studios = listOf(studio))
 
         assertEquals(12, page.totalCount)
-        assertEquals(listOf(facility), page.facilities)
+        assertEquals(listOf(studio), page.studios)
     }
 }

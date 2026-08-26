@@ -10,8 +10,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
-import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.feature.common.privacypolicy.PrivacyPolicyRoute
 import kotlinx.serialization.Serializable
 
@@ -21,13 +21,13 @@ private data class InstructorMemberEditDestination(
 )
 
 @Serializable
-private data class InstructorFacilityDetailDestination(
-    val facilityId: String,
+private data class InstructorStudioDetailDestination(
+    val studioId: String,
 )
 
 @Serializable
-private data class InstructorFacilityEditDestination(
-    val facilityId: String,
+private data class InstructorStudioEditDestination(
+    val studioId: String,
 )
 
 @Serializable
@@ -39,7 +39,7 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     var profileRefreshToken by remember { mutableStateOf(0) }
     var memberRefreshToken by remember { mutableStateOf(0) }
-    var facilityRefreshToken by remember { mutableStateOf(0) }
+    var studioRefreshToken by remember { mutableStateOf(0) }
     var currentPhoneNumber by remember { mutableStateOf("") }
 
     NavHost(
@@ -52,7 +52,7 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
                 onBack = { navController.popBackStack() },
                 onOpenProfile = { navController.navigate(InstructorMyPageDestination.F02) },
                 onOpenMemberManagement = { navController.navigate(InstructorMyPageDestination.F05) },
-                onOpenFacilityManagement = { navController.navigate(InstructorMyPageDestination.F08) },
+                onOpenStudioManagement = { navController.navigate(InstructorMyPageDestination.F08) },
                 onOpenPrivacyPolicy = {
                     navController.navigate(InstructorPrivacyPolicyDestination) {
                         launchSingleTop = true
@@ -128,53 +128,53 @@ internal fun InstructorMyPageNavHost(modifier: Modifier = Modifier) {
         }
 
         composable(InstructorMyPageDestination.F08) {
-            InstructorFacilityManagementRoute(
+            InstructorStudioManagementRoute(
                 onBack = { navController.popBackStack() },
-                onEditFacility = { facilityId ->
-                    navController.navigate(InstructorFacilityEditDestination(facilityId.value))
+                onEditStudio = { studioId ->
+                    navController.navigate(InstructorStudioEditDestination(studioId.value))
                 },
-                onOpenFacilityDetail = { facilityId ->
-                    navController.navigate(InstructorFacilityDetailDestination(facilityId.value))
+                onOpenStudioDetail = { studioId ->
+                    navController.navigate(InstructorStudioDetailDestination(studioId.value))
                 },
-                onOpenFacilityRegistration = { navController.navigate(InstructorMyPageDestination.F09) },
-                refreshToken = facilityRefreshToken,
+                onOpenStudioRegistration = { navController.navigate(InstructorMyPageDestination.F09) },
+                refreshToken = studioRefreshToken,
             )
         }
 
-        composable<InstructorFacilityDetailDestination> { backStackEntry ->
-            val destination = backStackEntry.toRoute<InstructorFacilityDetailDestination>()
-            val facilityId = InstructorFacilityId(destination.facilityId)
-            InstructorFacilityDetailRoute(
-                facilityId = facilityId,
+        composable<InstructorStudioDetailDestination> { backStackEntry ->
+            val destination = backStackEntry.toRoute<InstructorStudioDetailDestination>()
+            val studioId = InstructorStudioId(destination.studioId)
+            InstructorStudioDetailRoute(
+                studioId = studioId,
                 onBack = { navController.popBackStack() },
                 onOpenEdit = { id ->
-                    navController.navigate(InstructorFacilityEditDestination(id.value))
+                    navController.navigate(InstructorStudioEditDestination(id.value))
                 },
                 onDeleted = {
-                    facilityRefreshToken++
+                    studioRefreshToken++
                     navController.popBackStack(InstructorMyPageDestination.F08, false)
                 },
             )
         }
 
-        composable<InstructorFacilityEditDestination> { backStackEntry ->
-            val destination = backStackEntry.toRoute<InstructorFacilityEditDestination>()
-            val facilityId = InstructorFacilityId(destination.facilityId)
-            InstructorFacilityEditRoute(
-                facilityId = facilityId,
+        composable<InstructorStudioEditDestination> { backStackEntry ->
+            val destination = backStackEntry.toRoute<InstructorStudioEditDestination>()
+            val studioId = InstructorStudioId(destination.studioId)
+            InstructorStudioEditRoute(
+                studioId = studioId,
                 onBack = { navController.popBackStack() },
                 onSaved = {
-                    facilityRefreshToken++
+                    studioRefreshToken++
                     navController.popBackStack(InstructorMyPageDestination.F08, false)
                 },
             )
         }
 
         composable(InstructorMyPageDestination.F09) {
-            InstructorFacilityRegistrationRoute(
+            InstructorStudioRegistrationRoute(
                 onBack = { navController.popBackStack() },
                 onSuccess = {
-                    facilityRefreshToken++
+                    studioRefreshToken++
                     navController.popBackStack(InstructorMyPageDestination.F08, false)
                 },
             )
@@ -194,8 +194,8 @@ private object InstructorMyPageDestination {
     const val F05 = "instructor_member_management"
     const val F06 = "instructor_member_registration"
     const val F13 = "instructor_member_edit"
-    const val F08 = "instructor_facility_management"
-    const val F09 = "instructor_facility_registration"
-    const val F10 = "instructor_facility_detail"
-    const val F11 = "instructor_facility_edit"
+    const val F08 = "instructor_studio_management"
+    const val F09 = "instructor_studio_registration"
+    const val F10 = "instructor_studio_detail"
+    const val F11 = "instructor_studio_edit"
 }

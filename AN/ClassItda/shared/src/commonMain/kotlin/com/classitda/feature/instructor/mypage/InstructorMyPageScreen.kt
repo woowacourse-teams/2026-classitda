@@ -37,10 +37,10 @@ import classitda.shared.generated.resources.ic_arrow_forward
 import classitda.shared.generated.resources.instructor_my_page_edit_profile
 import classitda.shared.generated.resources.instructor_my_page_error_description
 import classitda.shared.generated.resources.instructor_my_page_error_title
-import classitda.shared.generated.resources.instructor_my_page_facility_management
 import classitda.shared.generated.resources.instructor_my_page_loading
 import classitda.shared.generated.resources.instructor_my_page_member_management
 import classitda.shared.generated.resources.instructor_my_page_retry
+import classitda.shared.generated.resources.instructor_my_page_studio_management
 import classitda.shared.generated.resources.instructor_my_page_title
 import classitda.shared.generated.resources.my_page_privacy_policy
 import coil3.compose.SubcomposeAsyncImage
@@ -132,8 +132,8 @@ private fun InstructorMyPageContent(
             onClick = { onAction(InstructorMyPageAction.OpenMemberManagement) },
         )
         InstructorMyPageMenuRow(
-            title = stringResource(Res.string.instructor_my_page_facility_management),
-            onClick = { onAction(InstructorMyPageAction.OpenFacilityManagement) },
+            title = stringResource(Res.string.instructor_my_page_studio_management),
+            onClick = { onAction(InstructorMyPageAction.OpenStudioManagement) },
         )
         InstructorMyPageMenuRow(
             title = stringResource(Res.string.my_page_privacy_policy),

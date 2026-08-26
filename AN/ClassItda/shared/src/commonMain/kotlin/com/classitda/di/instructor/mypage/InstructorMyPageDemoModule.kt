@@ -4,8 +4,10 @@ import com.classitda.data.repository.instructor.mypage.DemoInstructorMyPageRepos
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
 import org.koin.dsl.module
 
-/** App-only smoke fixture. Replace this binding when the production data layer is ready. */
+/** Keeps profile/member smoke data while the studio feature uses its remote repository. */
 internal val instructorMyPageDemoModule =
     module {
-        single<InstructorMyPageRepository> { DemoInstructorMyPageRepository() }
+        includes(instructorStudioRemoteModule)
+        single { DemoInstructorMyPageRepository() }
+        single<InstructorMyPageRepository> { get<DemoInstructorMyPageRepository>() }
     }

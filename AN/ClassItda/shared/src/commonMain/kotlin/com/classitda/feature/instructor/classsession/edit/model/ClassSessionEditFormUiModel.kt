@@ -1,6 +1,6 @@
 package com.classitda.feature.instructor.classsession.edit.model
 
-import com.classitda.feature.instructor.management.lesson.create.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassType
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 

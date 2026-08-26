@@ -33,7 +33,12 @@ internal fun createClassItdaHttpClient(
         expectSuccess = true
         installClassItdaErrorLogging()
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    explicitNulls = false
+                },
+            )
         }
 
         defaultRequest {
@@ -51,13 +56,35 @@ internal fun createConfiguredHttpClient(
         expectSuccess = true
         installClassItdaErrorLogging()
         install(ContentNegotiation) {
-            json(Json { ignoreUnknownKeys = true })
+            json(
+                Json {
+                    ignoreUnknownKeys = true
+                    explicitNulls = false
+                },
+            )
+        }
+        HttpResponseValidator {
+            handleResponseExceptionWithRequest { cause, request ->
+                if (cause is ResponseException) {
+                    Logger.e("${request.method.value} ${request.url}: ${cause.response.status}", cause)
+                }
+            }
         }
         defaultRequest {
             url.takeFrom(config.baseUrl)
             header("X-API-Version", "1")
         }
         installBearerAuth(tokenStorage)
+    }
+
+internal fun createObjectStorageHttpClient(engine: HttpClientEngine): HttpClient =
+    HttpClient(engine) {
+        expectSuccess = false
+    }
+
+internal fun createObjectStorageHttpClient(): HttpClient =
+    HttpClient {
+        expectSuccess = false
     }
 
 private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: AuthTokenStorage?) {

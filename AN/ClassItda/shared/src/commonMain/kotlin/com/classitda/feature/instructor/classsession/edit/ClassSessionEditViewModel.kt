@@ -8,7 +8,7 @@ import com.classitda.domain.model.instructor.session.InstructorSessionDetail
 import com.classitda.domain.model.instructor.session.InstructorSessionUpdate
 import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
-import com.classitda.feature.instructor.management.lesson.create.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow

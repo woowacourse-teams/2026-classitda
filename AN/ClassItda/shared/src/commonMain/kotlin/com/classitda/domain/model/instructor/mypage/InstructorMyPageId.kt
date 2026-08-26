@@ -21,7 +21,7 @@ value class InstructorMemberId(
 }
 
 @JvmInline
-value class InstructorFacilityId(
+value class InstructorStudioId(
     val value: String,
 ) {
     init {

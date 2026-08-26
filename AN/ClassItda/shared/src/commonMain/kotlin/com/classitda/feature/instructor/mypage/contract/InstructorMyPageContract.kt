@@ -30,7 +30,7 @@ sealed interface InstructorMyPageAction {
 
     data object OpenMemberManagement : InstructorMyPageAction
 
-    data object OpenFacilityManagement : InstructorMyPageAction
+    data object OpenStudioManagement : InstructorMyPageAction
 
     data object OpenPrivacyPolicy : InstructorMyPageAction
 

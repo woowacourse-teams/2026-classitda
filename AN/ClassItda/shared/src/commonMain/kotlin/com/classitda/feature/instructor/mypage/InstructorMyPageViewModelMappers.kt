@@ -2,10 +2,8 @@ package com.classitda.feature.instructor.mypage
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.classitda.domain.model.instructor.mypage.FacilityRegistrationDraft
-import com.classitda.domain.model.instructor.mypage.InstructorFacilityId
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.ManagedFacility
+import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
@@ -20,20 +18,6 @@ import com.classitda.feature.common.profile.contract.ProfileEditUiState
 import com.classitda.feature.common.profile.contract.ProfileUiError
 import com.classitda.feature.common.profile.contract.ProfileViewAction
 import com.classitda.feature.common.profile.contract.ProfileViewUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityDeleteError
-import com.classitda.feature.instructor.mypage.contract.FacilityDeleteState
-import com.classitda.feature.instructor.mypage.contract.FacilityDetailAction
-import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiError
-import com.classitda.feature.instructor.mypage.contract.FacilityDetailUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityEditAction
-import com.classitda.feature.instructor.mypage.contract.FacilityEditUiError
-import com.classitda.feature.instructor.mypage.contract.FacilityEditUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityManagementAction
-import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiError
-import com.classitda.feature.instructor.mypage.contract.FacilityManagementUiState
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationAction
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiError
-import com.classitda.feature.instructor.mypage.contract.FacilityRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiError
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiModel
@@ -47,10 +31,22 @@ import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
-import com.classitda.feature.instructor.mypage.contract.facilityRegistrationFieldErrors
-import com.classitda.feature.instructor.mypage.contract.isFacilityRegistrationValid
+import com.classitda.feature.instructor.mypage.contract.StudioDeleteError
+import com.classitda.feature.instructor.mypage.contract.StudioDeleteState
+import com.classitda.feature.instructor.mypage.contract.StudioDetailAction
+import com.classitda.feature.instructor.mypage.contract.StudioDetailUiError
+import com.classitda.feature.instructor.mypage.contract.StudioDetailUiState
+import com.classitda.feature.instructor.mypage.contract.StudioEditUiError
+import com.classitda.feature.instructor.mypage.contract.StudioEditUiState
+import com.classitda.feature.instructor.mypage.contract.StudioManagementAction
+import com.classitda.feature.instructor.mypage.contract.StudioManagementUiError
+import com.classitda.feature.instructor.mypage.contract.StudioManagementUiState
+import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiError
+import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
+import com.classitda.feature.instructor.mypage.contract.isStudioRegistrationValid
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.contract.studioRegistrationFieldErrors
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -69,18 +65,6 @@ internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfi
 
 internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfile.toEditingState() =
     ProfileEditUiState.Editing(toProfileUiModel(), phoneNumber, name, false)
-
-internal fun ManagedFacility.toDraft() =
-    FacilityRegistrationDraft(
-        images = images,
-        name = name,
-        address = address,
-        detailAddress = detailAddress,
-        phoneNumber = phoneNumber,
-        description = description,
-        openingTime = openingTime,
-        closingTime = closingTime,
-    )
 
 private fun maskProfilePhoneNumber(value: String): String {
     val digits = value.filter(Char::isDigit)
@@ -148,38 +132,40 @@ internal fun InstructorMyPageFailureReason.toMemberEditError() =
         else -> MemberEditUiError.UNKNOWN
     }
 
-internal fun InstructorMyPageFailureReason.toFacilityError() =
+internal fun InstructorMyPageFailureReason.toStudioError() =
     when (this) {
-        InstructorMyPageFailureReason.NETWORK -> FacilityManagementUiError.NETWORK
-        else -> FacilityManagementUiError.UNKNOWN
+        InstructorMyPageFailureReason.NETWORK -> StudioManagementUiError.NETWORK
+        else -> StudioManagementUiError.UNKNOWN
     }
 
-internal fun InstructorMyPageFailureReason.toFacilityRegistrationError() =
+internal fun InstructorMyPageFailureReason.toStudioRegistrationError() =
     when (this) {
-        InstructorMyPageFailureReason.NETWORK -> FacilityRegistrationUiError.NETWORK
-        InstructorMyPageFailureReason.CONFLICT -> FacilityRegistrationUiError.CONFLICT
-        InstructorMyPageFailureReason.INVALID_REQUEST -> FacilityRegistrationUiError.INVALID_REQUEST
-        else -> FacilityRegistrationUiError.UNKNOWN
+        InstructorMyPageFailureReason.NETWORK -> StudioRegistrationUiError.NETWORK
+        InstructorMyPageFailureReason.CONFLICT -> StudioRegistrationUiError.CONFLICT
+        InstructorMyPageFailureReason.INVALID_REQUEST -> StudioRegistrationUiError.INVALID_REQUEST
+        else -> StudioRegistrationUiError.UNKNOWN
     }
 
-internal fun InstructorMyPageFailureReason.toFacilityDetailError() =
+internal fun InstructorMyPageFailureReason.toStudioDetailError() =
     when (this) {
-        InstructorMyPageFailureReason.NETWORK -> FacilityDetailUiError.NETWORK
-        InstructorMyPageFailureReason.NOT_FOUND -> FacilityDetailUiError.NOT_FOUND
-        else -> FacilityDetailUiError.UNKNOWN
+        InstructorMyPageFailureReason.NETWORK -> StudioDetailUiError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> StudioDetailUiError.NOT_FOUND
+        else -> StudioDetailUiError.UNKNOWN
     }
 
-internal fun InstructorMyPageFailureReason.toFacilityDeleteError() =
+internal fun InstructorMyPageFailureReason.toStudioDeleteError() =
     when (this) {
-        InstructorMyPageFailureReason.NETWORK -> FacilityDeleteError.NETWORK
-        InstructorMyPageFailureReason.NOT_FOUND -> FacilityDeleteError.NOT_FOUND
-        else -> FacilityDeleteError.UNKNOWN
+        InstructorMyPageFailureReason.NETWORK -> StudioDeleteError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> StudioDeleteError.NOT_FOUND
+        else -> StudioDeleteError.UNKNOWN
     }
 
-internal fun InstructorMyPageFailureReason.toFacilityEditError() =
+internal fun InstructorMyPageFailureReason.toStudioEditError() =
     when (this) {
-        InstructorMyPageFailureReason.NETWORK -> FacilityEditUiError.NETWORK
-        InstructorMyPageFailureReason.NOT_FOUND -> FacilityEditUiError.NOT_FOUND
-        InstructorMyPageFailureReason.INVALID_REQUEST -> FacilityEditUiError.INVALID_REQUEST
-        else -> FacilityEditUiError.UNKNOWN
+        InstructorMyPageFailureReason.NETWORK -> StudioEditUiError.NETWORK
+        InstructorMyPageFailureReason.NOT_FOUND -> StudioEditUiError.NOT_FOUND
+        InstructorMyPageFailureReason.FORBIDDEN -> StudioEditUiError.FORBIDDEN
+        InstructorMyPageFailureReason.CONFLICT -> StudioEditUiError.CONFLICT
+        InstructorMyPageFailureReason.INVALID_REQUEST -> StudioEditUiError.INVALID_REQUEST
+        else -> StudioEditUiError.UNKNOWN
     }
