@@ -2,7 +2,6 @@ package com.classitda.data.repository.instructor.mypage
 
 import com.classitda.domain.model.instructor.mypage.InstructorAccountProfile
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.model.instructor.mypage.InstructorMyPageSummary
 import com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId
 import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.domain.model.instructor.mypage.ManagedMember
@@ -53,13 +52,6 @@ internal class DemoInstructorMyPageRepository :
                 closingTime = "22:00",
             ),
         )
-
-    override suspend fun getSummary() = InstructorMyPageResult.Success(InstructorMyPageSummary(profile))
-
-    override suspend fun getProfile() = InstructorMyPageResult.Success(profile)
-
-    override suspend fun updateProfileName(name: String) =
-        InstructorMyPageResult.Success(profile.copy(name = name).also { profile = it })
 
     override suspend fun requestPhoneVerification(phoneNumber: String) =
         InstructorMyPageResult.Success(

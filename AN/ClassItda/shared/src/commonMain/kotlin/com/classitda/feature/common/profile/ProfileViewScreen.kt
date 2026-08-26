@@ -43,6 +43,7 @@ import classitda.shared.generated.resources.ic_edit
 import classitda.shared.generated.resources.profile_view_back
 import classitda.shared.generated.resources.profile_view_edit
 import classitda.shared.generated.resources.profile_view_email
+import classitda.shared.generated.resources.profile_email_unavailable
 import classitda.shared.generated.resources.profile_view_error_description
 import classitda.shared.generated.resources.profile_view_error_title
 import classitda.shared.generated.resources.profile_view_loading
@@ -183,7 +184,7 @@ private fun ProfileViewContent(
         Spacer(modifier = Modifier.height(AppSpacing.xl))
         ReadOnlyProfileField(
             label = stringResource(Res.string.profile_view_email),
-            value = profile.email,
+            value = profile.email ?: stringResource(Res.string.profile_email_unavailable),
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
         TextButton(onClick = onLogout) {

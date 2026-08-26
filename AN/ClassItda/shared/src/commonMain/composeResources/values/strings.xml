@@ -410,6 +410,7 @@
     <string name="profile_view_name">이름</string>
     <string name="profile_view_phone_number">연락처</string>
     <string name="profile_view_email">이메일</string>
+    <string name="profile_email_unavailable">이메일 정보 없음</string>
     <string name="profile_view_logout">로그아웃</string>
     <string name="profile_view_withdrawal">회원 탈퇴</string>
     <string name="profile_view_loading">내 정보를 불러오는 중입니다.</string>
