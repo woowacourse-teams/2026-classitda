@@ -19,7 +19,7 @@ public final class SharedTestContainers {
     private SharedTestContainers() {
     }
 
-    public static MySqlDatabase createMySqlDatabase() {
+    public static MySqlDatabase createRawMySqlDatabase() {
         MySQLContainer mysql = MySqlHolder.INSTANCE;
         String databaseName = "classitda_test_%d".formatted(DATABASE_SEQUENCE.incrementAndGet());
 
@@ -39,7 +39,11 @@ public final class SharedTestContainers {
                 "/" + mysql.getDatabaseName(),
                 "/" + databaseName
         );
-        MySqlDatabase database = new MySqlDatabase(jdbcUrl, mysql.getUsername(), mysql.getPassword());
+        return new MySqlDatabase(jdbcUrl, mysql.getUsername(), mysql.getPassword());
+    }
+
+    public static MySqlDatabase createMySqlDatabase() {
+        MySqlDatabase database = createRawMySqlDatabase();
         migrate(database);
 
         return database;

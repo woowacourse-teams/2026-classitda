@@ -11,6 +11,7 @@ public class SharedMySqlTestConfiguration {
     DynamicPropertyRegistrar mysqlProperties() {
         SharedTestContainers.MySqlDatabase database = SharedTestContainers.createMySqlDatabase();
         return registry -> {
+            registry.add("spring.flyway.locations", () -> "classpath:db/migration");
             registry.add("spring.datasource.url", database::jdbcUrl);
             registry.add("spring.datasource.username", database::username);
             registry.add("spring.datasource.password", database::password);
