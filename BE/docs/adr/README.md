@@ -127,6 +127,7 @@ Accepted (YYYY-MM-DD)
 | [0018](0018-separate-studio-member-profile-from-account.md) | 시설 회원 정보와 계정 분리 | 소속이 이름과 전화번호를 직접 갖고 가입 시점에 계정과 연결해요 |
 | [0019](0019-delete-membership-by-history.md) | 소속 삭제 방식 | 참조 이력이 없으면 하드 삭제하고 있으면 WITHDRAWN 으로 바꿔요 |
 | [0020](0020-propagate-account-withdrawal-to-membership.md) | 계정 탈퇴의 소속 전파 | 탈퇴 요청 시점에 모든 소속을 종료하고 정리 시점에 개인정보를 지워요 |
+| [0021](0021-share-testcontainers-per-jvm.md) | 테스트 컨테이너와 DB 상태의 공유 범위 | 컨테이너는 JVM 단위로 공유하고 DB 상태는 Context 단위로 격리해요 |
 
 ## 다른 문서와의 관계
 
