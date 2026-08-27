@@ -174,6 +174,7 @@ public interface InstructorSessionControllerApi {
                     - 변경된 시작 일시와 진행 시간을 기준으로 종료 일시를 다시 계산합니다.
                     - 본인 수업 관리 권한자는 본인이 담당하는 회차만 수정할 수 있습니다.
                     - 대표 또는 전체 수업 관리 권한자는 시설의 모든 회차를 수정할 수 있습니다.
+                    - 활성 신청자가 있으면 수업 정보를 수정할 수 없습니다.
                     - 취소된 회차와 담당 강사의 다른 활성 수업에 시간 충돌이 생기는 변경은 거부합니다.
                     """
     )
@@ -240,14 +241,16 @@ public interface InstructorSessionControllerApi {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "취소된 회차이거나 담당 강사의 다른 활성 수업과 시간이 겹칩니다.",
+                    description = "취소된 회차이거나 활성 신청자가 있거나 담당 강사의 다른 활성 수업과 시간이 겹칩니다.",
                     content = @Content(
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(name = "수업 시간 충돌", value = """
                                             {"code":"CLASS_SESSION-015","message":"담당 강사의 기존 수업과 시간이 겹칩니다."}"""),
                                     @ExampleObject(name = "취소된 수업", value = """
-                                            {"code":"CLASS_SESSION-016","message":"취소된 수업은 수정할 수 없습니다."}""")
+                                            {"code":"CLASS_SESSION-016","message":"취소된 수업은 수정할 수 없습니다."}"""),
+                                    @ExampleObject(name = "활성 신청자가 있는 수업", value = """
+                                            {"code":"CLASS_SESSION-022","message":"신청자가 있는 수업은 수정할 수 없습니다."}""")
                             }
                     )
             )
@@ -271,6 +274,7 @@ public interface InstructorSessionControllerApi {
                     - 본인 수업 관리 권한자는 담당 강사를 변경할 수 없습니다.
                     - 대표 또는 전체 수업 관리 권한자는 담당 강사를 변경할 수 있습니다.
                     - 변경할 강사의 다른 활성 수업과 시간이 겹치면 요청을 거부합니다.
+                    - 활성 신청자가 있으면 수업 정보를 수정할 수 없습니다.
                     - 그 외 수정 규칙은 v1과 같습니다.
                     """
     )
@@ -280,7 +284,7 @@ public interface InstructorSessionControllerApi {
             @ApiResponse(responseCode = "401", description = "인증 정보가 없거나 유효하지 않습니다."),
             @ApiResponse(responseCode = "403", description = "시설의 활성 소속이 아니거나 담당 강사를 변경할 권한이 없습니다."),
             @ApiResponse(responseCode = "404", description = "시설, 수업 회차, 수업 종류 또는 활성 담당 강사를 찾을 수 없습니다."),
-            @ApiResponse(responseCode = "409", description = "취소된 회차이거나 변경할 강사의 다른 활성 수업과 시간이 겹칩니다.")
+            @ApiResponse(responseCode = "409", description = "취소된 회차이거나 활성 신청자가 있거나 변경할 강사의 다른 활성 수업과 시간이 겹칩니다.")
     })
     ResponseEntity<Void> updateV2(
             @Parameter(hidden = true)

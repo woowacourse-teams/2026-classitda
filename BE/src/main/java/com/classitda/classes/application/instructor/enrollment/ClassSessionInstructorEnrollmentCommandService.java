@@ -37,7 +37,7 @@ public class ClassSessionInstructorEnrollmentCommandService {
                 studioId,
                 PermissionCode.RESERVATION_MANAGE
         );
-        ClassSession classSession = getClassSession(studioId, classSessionId);
+        ClassSession classSession = getClassSessionForUpdate(studioId, classSessionId);
         access.validateAccessTo(classSession.getInstructorMembership().getId());
         validateScheduled(classSession);
 
@@ -63,6 +63,11 @@ public class ClassSessionInstructorEnrollmentCommandService {
 
     private ClassSession getClassSession(Long studioId, Long classSessionId) {
         return classSessionRepository.findByIdAndStudioId(classSessionId, studioId)
+                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
+    }
+
+    private ClassSession getClassSessionForUpdate(Long studioId, Long classSessionId) {
+        return classSessionRepository.findForUpdateByIdAndStudioId(classSessionId, studioId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
     }
 

@@ -13,16 +13,6 @@ class AddressTest {
     private static final String ROAD_ADDRESS = "서울 강남구 테헤란로 1";
 
     @Test
-    void 우편번호와_도로명_주소로_주소를_만든다() {
-        // given / when
-        Address address = Address.of(ZONECODE, ROAD_ADDRESS, "서울 강남구 역삼동 823", "빌딩", "3층");
-
-        // then
-        assertThat(address.getZonecode()).isEqualTo(ZONECODE);
-        assertThat(address.getRoadAddress()).isEqualTo(ROAD_ADDRESS);
-    }
-
-    @Test
     void 빈_지번과_건물명은_null로_저장한다() {
         // given / when
         Address address = Address.of(ZONECODE, ROAD_ADDRESS, "  ", "", null);

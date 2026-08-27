@@ -3,7 +3,6 @@ package com.classitda.classes.application.instructor.enrollment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
 import com.classitda.classes.domain.enrollment.EnrollmentStatus;
@@ -26,32 +25,24 @@ import com.classitda.studio.domain.repository.StudioRolePermissionRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
+import com.classitda.support.TestClockConfiguration;
 import jakarta.persistence.EntityManager;
-import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
-@Import({
-        ClassSessionInstructorEnrollmentCommandService.class,
-        InstructorSessionAccessReader.class,
-        ClassSessionInstructorEnrollmentCommandServiceTest.FixedClockConfig.class
-})
-@MySqlRepositoryTest
+@Import(TestClockConfiguration.August17AtNoon.class)
+@MySqlDataJpaTest
 class ClassSessionInstructorEnrollmentCommandServiceTest {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 12, 0);
     private static final LocalDateTime 시작_예정 = LocalDateTime.of(2026, 8, 17, 20, 0);
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     private final Map<String, Long> 역할_캐시 = new HashMap<>();
     private final Map<String, Long> 소속_캐시 = new HashMap<>();
@@ -574,12 +565,4 @@ class ClassSessionInstructorEnrollmentCommandServiceTest {
                 .orElseThrow();
     }
 
-    @TestConfiguration
-    static class FixedClockConfig {
-
-        @Bean
-        Clock clock() {
-            return Clock.fixed(NOW.atZone(SERVICE_ZONE_ID).toInstant(), SERVICE_ZONE_ID);
-        }
-    }
 }

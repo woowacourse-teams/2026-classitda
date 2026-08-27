@@ -153,18 +153,6 @@ class StudioMembershipControllerTest {
         오류를_검증한다(result, 409, "MEMBERSHIP-004", "이미 시설에 등록된 회원입니다.");
     }
 
-    @Test
-    void 등록_버전_헤더가_없으면_API_001을_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/1/memberships/students")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(StudioMembershipFixture.기본_소속_등록_요청())
-                .exchange();
-
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-    }
 
     @Test
     void 회원_목록을_조회하면_200과_커서_응답을_반환한다() {

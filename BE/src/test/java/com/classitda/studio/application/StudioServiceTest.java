@@ -3,7 +3,6 @@ package com.classitda.studio.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classitda.classes.application.ClassTypeService;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.member.domain.Member;
@@ -22,16 +21,13 @@ import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
 import com.classitda.support.ImageTestConfiguration;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
-@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class StudioServiceTest {
 
     private final StudioService studioService;
@@ -62,13 +58,14 @@ class StudioServiceTest {
     }
 
     @Test
-    void 시설을_생성하면_시설_정보를_반환한다() {
+    void 시설을_생성하면_응답과_기본_운영_구성이_함께_저장된다() {
         // given
         Member owner = 소유자를_저장한다();
         StudioCreateRequest request = StudioFixture.기본_시설_생성_요청();
 
         // when
         StudioResponse response = studioService.save(owner.getId(), request);
+        entityManager.flush();
 
         // then
         assertThat(response.id()).isNotNull();
@@ -77,31 +74,7 @@ class StudioServiceTest {
         assertThat(response.address().roadAddress()).isEqualTo(request.address().roadAddress());
         assertThat(response.address().detailAddress()).isEqualTo(request.address().detailAddress());
         assertThat(response.openTime()).isEqualTo(request.openTime());
-    }
-
-    @Test
-    void 시설을_생성하면_시설이_저장된다() {
-        // given
-        Member owner = 소유자를_저장한다();
-
-        // when
-        StudioResponse response = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청());
-        entityManager.flush();
-
-        // then
         assertThat(studioRepository.findById(response.id())).isPresent();
-    }
-
-    @Test
-    void 시설을_생성하면_시스템_기본_역할_세_개가_함께_저장된다() {
-        // given
-        Member owner = 소유자를_저장한다();
-
-        // when
-        StudioResponse response = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청());
-        entityManager.flush();
-
-        // then
         List<String> roleNames = studioRoleRepository.findAllByStudioId(response.id()).stream()
                 .map(StudioRole::getName)
                 .toList();
@@ -110,24 +83,16 @@ class StudioServiceTest {
                 SystemRole.INSTRUCTOR.getRoleName(),
                 SystemRole.STUDENT.getRoleName()
         );
-    }
-
-    @Test
-    void 시설을_생성하면_생성자가_대표_강사_멤버십으로_저장된다() {
-        // given
-        Member owner = 소유자를_저장한다();
-
-        // when
-        StudioResponse response = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청());
-        entityManager.flush();
-
-        // then
-        Optional<StudioMembership> membership =
-                studioMembershipRepository.findByStudioIdAndMemberId(response.id(), owner.getId());
-        assertThat(membership).isPresent();
-        assertThat(membership.get().getStudioRole().getName()).isEqualTo(SystemRole.OWNER.getRoleName());
-        assertThat(membership.get().isInstructor()).isTrue();
-        assertThat(membership.get().getStatus()).isEqualTo(MembershipStatus.ACTIVE);
+        StudioMembership membership = studioMembershipRepository
+                .findByStudioIdAndMemberId(response.id(), owner.getId())
+                .orElseThrow();
+        assertThat(membership.getStudioRole().getName()).isEqualTo(SystemRole.OWNER.getRoleName());
+        assertThat(membership.isInstructor()).isTrue();
+        assertThat(membership.getStatus()).isEqualTo(MembershipStatus.ACTIVE);
+        assertThat(studioPolicyRepository.findByStudioId(response.id())).isPresent();
+        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(response.id()))
+                .extracting(ClassType::getName)
+                .containsExactlyInAnyOrder("요가", "필라테스");
     }
 
     @Test
@@ -156,33 +121,6 @@ class StudioServiceTest {
         assertThat(ownerMembership).isTrue();
         assertThat(persistenceUnitUtil.isLoaded(studio, "owner")).isFalse();
         assertThat(persistenceUnitUtil.isLoaded(membership, "member")).isFalse();
-    }
-
-    @Test
-    void 시설을_생성하면_기본_운영_정책이_함께_저장된다() {
-        // given
-        Member owner = 소유자를_저장한다();
-
-        // when
-        Long studioId = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청()).id();
-
-        // then
-        assertThat(studioPolicyRepository.findByStudioId(studioId)).isPresent();
-    }
-
-    @Test
-    void 시설을_생성하면_기본_수업_종류_두_개가_저장된다() {
-        // given
-        Member owner = 소유자를_저장한다();
-
-        // when
-        StudioResponse response = studioService.save(owner.getId(), StudioFixture.기본_시설_생성_요청());
-        entityManager.flush();
-
-        // then
-        assertThat(classTypeRepository.findAllByStudioIdOrderByIdAsc(response.id()))
-                .extracting(ClassType::getName)
-                .containsExactlyInAnyOrder("요가", "필라테스");
     }
 
     @Test

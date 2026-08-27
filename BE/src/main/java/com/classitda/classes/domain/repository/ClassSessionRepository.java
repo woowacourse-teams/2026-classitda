@@ -7,12 +7,14 @@ import com.classitda.classes.domain.repository.projection.InstructorSessionDetai
 import com.classitda.classes.domain.repository.projection.StudentDailySessionProjection;
 import com.classitda.classes.domain.repository.projection.StudentSessionDetailProjection;
 import com.classitda.classes.domain.session.ClassSession;
+import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -21,6 +23,9 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
     boolean existsByInstructorMembershipId(Long membershipId);
 
     Optional<ClassSession> findByIdAndStudioId(Long classSessionId, Long studioId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<ClassSession> findForUpdateByIdAndStudioId(Long classSessionId, Long studioId);
 
     @Query("""
             SELECT classSession AS session,

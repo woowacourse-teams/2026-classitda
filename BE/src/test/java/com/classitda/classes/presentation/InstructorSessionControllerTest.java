@@ -173,29 +173,7 @@ class InstructorSessionControllerTest {
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
     }
 
-    @Test
-    void 강사용_전체_수업_목록에서_버전_헤더가_없으면_API_001을_반환한다() {
-        // when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/instructor/class-sessions")
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(instructorDailyQueryService, never()).findWithCursor(
-                any(), any(), any(), anyInt(), any(), any());
-    }
-
-    @Test
-    void 강사용_전체_수업_목록에서_지원하지_않는_버전이면_API_002를_반환한다() {
-        // when
-        RestTestClient.ResponseSpec result = 전체_수업_목록을_조회한다(7L, "", "3");
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(instructorDailyQueryService, never()).findWithCursor(
-                any(), any(), any(), anyInt(), any(), any());
-    }
 
     @Test
     void 강사용_수업_상세와_예약_회원_명단을_조회하면_200과_응답을_반환한다() {

@@ -4,14 +4,12 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.util.Base64;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistrar;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
 
-@Import(MySqlTestContainerConfiguration.class)
+@Import(SharedMySqlTestConfiguration.class)
 @TestConfiguration(proxyBeanMethods = false)
 public class AuthenticationIntegrationTestConfiguration {
 
@@ -21,15 +19,11 @@ public class AuthenticationIntegrationTestConfiguration {
     private static final KeyPair JWT_KEY_PAIR = createKeyPair();
 
     @Bean
-    @ServiceConnection(name = "redis")
-    GenericContainer<?> redisContainer() {
-        return new GenericContainer<>(DockerImageName.parse("redis:7.4-alpine"))
-                .withExposedPorts(6379);
-    }
-
-    @Bean
     DynamicPropertyRegistrar authenticationProperties() {
+        GenericContainer<?> redis = SharedTestContainers.redis();
         return registry -> {
+            registry.add("spring.data.redis.host", redis::getHost);
+            registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
             registry.add("auth.sms.local.fixed-otp", () -> FIXED_OTP);
             registry.add("auth.phone.key-hmac-secret-base64", () -> KEY_MATERIAL);
             registry.add("auth.google.web-client-id", () -> "test-client");

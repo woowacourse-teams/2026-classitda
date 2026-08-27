@@ -24,7 +24,7 @@ import com.classitda.authentication.presentation.dto.login.RegisteredLoginRespon
 import com.classitda.authentication.presentation.dto.login.RegistrationRequiredLoginResponse;
 import com.classitda.member.domain.Member;
 import com.classitda.member.fixture.MemberFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @Import(SocialLoginService.class)
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class SocialLoginServiceTest {
 
     private static final String ID_TOKEN = "google-id-token";

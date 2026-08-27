@@ -7,10 +7,8 @@ import static org.assertj.core.groups.Tuple.tuple;
 import com.classitda.authentication.domain.AuthAccount;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
-import com.classitda.classes.application.ClassTypeService;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
-import com.classitda.common.config.TimeConfig;
 import com.classitda.common.pagination.CursorResponse;
 import com.classitda.member.domain.Member;
 import com.classitda.passproduct.domain.MemberPassProduct;
@@ -37,24 +35,15 @@ import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.fixture.StudioMembershipFixture;
 import com.classitda.studio.presentation.dto.StudioMembershipUpdateRequest;
 import com.classitda.studio.presentation.dto.StudioMembershipResponse;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
-@Import({
-        StudioMembershipService.class,
-        ClassTypeService.class,
-        StudioService.class,
-        StudioPermissionService.class,
-        StudioPolicyService.class,
-        StudioMembershipTerminationService.class,
-        TimeConfig.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class StudioMembershipServiceTest {
 
     private final StudioMembershipService studioMembershipService;

@@ -5,14 +5,12 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.classitda.member.domain.TermCode;
 import com.classitda.member.presentation.dto.TermResponse;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
-@Import(TermService.class)
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class TermServiceTest {
 
     private final TermService termService;
