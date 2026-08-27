@@ -29,18 +29,28 @@ internal class ClassSessionCreateViewModel(
     val uiState: StateFlow<ClassSessionCreateUiState> = _uiState.asStateFlow()
 
     init {
+        loadForm()
+    }
+
+    fun onRetry() {
+        loadForm()
+    }
+
+    private fun loadForm() {
+        _formLoadState.update { ClassSessionCreateFormLoadState.Loading }
         viewModelScope.launch {
-            coroutineScope {
-                val studioId = studioContext.getSelectedStudio().id.value
-                val templatesDeferred = async { templateRepository.getTemplates(studioId) }
-                val classTypesDeferred = async { templateRepository.getClassTypes(studioId) }
-                _formLoadState.update {
+            runCatching {
+                coroutineScope {
+                    val studioId = studioContext.getSelectedStudio().id.value
+                    val templatesDeferred = async { templateRepository.getTemplates(studioId) }
+                    val classTypesDeferred = async { templateRepository.getClassTypes(studioId) }
                     ClassSessionCreateFormLoadState.Ready(
                         templates = templatesDeferred.await().map { it.toUiModel() },
                         classTypes = classTypesDeferred.await(),
                     )
                 }
-            }
+            }.onSuccess { state -> _formLoadState.update { state } }
+                .onFailure { error -> _formLoadState.update { ClassSessionCreateFormLoadState.Error(error.message) } }
         }
     }
 

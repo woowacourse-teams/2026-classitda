@@ -10,6 +10,10 @@ internal sealed interface ClassSessionCreateFormLoadState {
         val templates: List<ClassTemplateUiModel>,
         val classTypes: List<ClassType>,
     ) : ClassSessionCreateFormLoadState
+
+    data class Error(
+        val message: String?,
+    ) : ClassSessionCreateFormLoadState
 }
 
 internal sealed interface ClassSessionCreateUiState {
