@@ -286,6 +286,7 @@ private fun InstructorMyPageMenuRow(
             ) {
                 Text(
                     text = title,
+                    modifier = Modifier.weight(1f),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = InsColors.TextPrimary,
                 )
