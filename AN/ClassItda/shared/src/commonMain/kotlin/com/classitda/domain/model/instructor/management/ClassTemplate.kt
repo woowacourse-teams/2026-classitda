@@ -12,7 +12,7 @@ data class ClassTemplate(
     val capacity: Int,
     val schedule: ClassTemplateSchedule? = null,
     val description: String = "",
-    val classTypeIds: List<String> = emptyList(),
+    val classTypeId: String? = null,
 )
 
 enum class ClassForm {

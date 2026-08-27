@@ -1,6 +1,6 @@
 package com.classitda.feature.instructor.management.model
 
-internal enum class ClassType(
+internal enum class ClassFormOption(
     val label: String,
 ) {
     GROUP("그룹 수업"),

@@ -278,6 +278,7 @@ private fun InstructorScheduleStatelessPreview() {
                 listOf(
                     ClassSession(
                         id = "1",
+                        classTypeId = "1",
                         tags = listOf("그룹 수업"),
                         title = "체어 밸런스",
                         startAt = LocalDateTime(2026, 8, 5, 14, 0),
@@ -288,6 +289,7 @@ private fun InstructorScheduleStatelessPreview() {
                     ),
                     ClassSession(
                         id = "2",
+                        classTypeId = "2",
                         tags = listOf("개인 수업"),
                         title = "리포머 밸런스",
                         startAt = LocalDateTime(2026, 8, 5, 19, 30),

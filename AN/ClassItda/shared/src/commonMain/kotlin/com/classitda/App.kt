@@ -14,7 +14,7 @@ import com.classitda.core.auth.InMemoryAuthTokenStorage
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.navigation.instructor.InstructorRootRoute
-import com.classitda.core.network.ClassItdaApiConfig
+import com.classitda.core.network.NetworkConfig
 import com.classitda.core.network.networkModule
 import com.classitda.di.instructorFeatureModules
 import com.classitda.di.signup.signupModule
@@ -28,7 +28,10 @@ import org.koin.dsl.koinConfiguration
 
 @Composable
 @Preview
-fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }) {
+fun App(
+    baseUrl: String,
+    tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() },
+) {
     var appRoute by remember {
         mutableStateOf(
             when {
@@ -47,8 +50,7 @@ fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }
             koinConfiguration {
                 modules(
                     networkModule(
-                        com.classitda.core.network
-                            .NetworkConfig(ClassItdaApiConfig.BASE_URL),
+                        NetworkConfig(baseUrl),
                         tokenStorage,
                     ),
                     signupModule(tokenStorage),

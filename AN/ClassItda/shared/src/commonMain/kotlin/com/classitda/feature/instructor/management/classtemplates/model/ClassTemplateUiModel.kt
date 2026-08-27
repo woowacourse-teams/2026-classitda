@@ -5,7 +5,7 @@ import com.classitda.domain.model.instructor.management.ClassForm
 internal data class ClassTemplateUiModel(
     val id: String,
     val classForm: ClassForm,
-    val classTypeIds: List<String>,
+    val classTypeId: String?,
     val categoryNames: List<String>,
     val title: String,
     val durationText: String,

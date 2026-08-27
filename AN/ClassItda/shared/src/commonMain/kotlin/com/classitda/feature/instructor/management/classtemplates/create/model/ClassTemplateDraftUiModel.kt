@@ -1,13 +1,13 @@
 package com.classitda.feature.instructor.management.classtemplates.create.model
 
-import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.domain.model.instructor.management.ClassType
+import com.classitda.feature.instructor.management.model.ClassFormOption
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalTime
 
 internal data class ClassTemplateDraftUiModel(
-    val classType: ClassType,
-    val categories: List<String>,
-    val classTypeIds: List<String>,
+    val classType: ClassFormOption,
+    val category: ClassType?,
     val title: String,
     val capacity: Int,
     val durationMinutes: Int,

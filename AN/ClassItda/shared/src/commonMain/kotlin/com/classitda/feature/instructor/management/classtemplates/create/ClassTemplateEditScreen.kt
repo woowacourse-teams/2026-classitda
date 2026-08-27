@@ -10,16 +10,16 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.component.NavigateBackTopBar
+import com.classitda.domain.model.instructor.management.ClassType
 import com.classitda.feature.instructor.management.classtemplates.create.model.ClassTemplateDraftUiModel
 import com.classitda.feature.instructor.management.classtemplates.create.model.ClassTemplateFormValues
-import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassFormOption
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalTime
-import com.classitda.domain.model.instructor.management.ClassType as DomainClassType
 
 @Composable
 internal fun ClassTemplateEditScreen(
-    classTypes: List<DomainClassType>,
+    classTypes: List<ClassType>,
     initialValues: ClassTemplateFormValues?,
     onBackClick: () -> Unit,
     onSubmit: (ClassTemplateDraftUiModel) -> Unit,
@@ -53,19 +53,18 @@ private fun ClassTemplateEditScreenPreview() {
         ClassTemplateEditScreen(
             classTypes =
                 listOf(
-                    DomainClassType(id = "1", name = "필라테스"),
-                    DomainClassType(id = "2", name = "요가"),
-                    DomainClassType(id = "3", name = "그룹 PT"),
+                    ClassType(id = "1", name = "필라테스"),
+                    ClassType(id = "2", name = "요가"),
+                    ClassType(id = "3", name = "그룹 PT"),
                 ),
             initialValues =
                 ClassTemplateFormValues(
-                    classType = ClassType.GROUP,
-                    categories = listOf("필라테스"),
-                    classTypeIds = listOf("1"),
+                    classType = ClassFormOption.GROUP,
+                    category = ClassType(id = "1", name = "필라테스"),
                     title = "리포머 밸런스",
                     capacity = 8,
                     durationMinutes = 50,
-                    isRepeating = true,
+                    isRepeating = false,
                     repeatDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
                     startTime = LocalTime(10, 0),
                     description = "",

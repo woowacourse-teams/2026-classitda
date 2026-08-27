@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -22,10 +24,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.ic_check
 import classitda.shared.generated.resources.ic_expand_more
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
@@ -44,6 +50,8 @@ internal fun DropdownField(
     modifier: Modifier = Modifier,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    var fieldWidth by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
 
     Column(
         modifier = modifier,
@@ -60,11 +68,13 @@ internal fun DropdownField(
                     Modifier
                         .fillMaxWidth()
                         .height(48.dp)
+                        .onSizeChanged { size -> fieldWidth = with(density) { size.width.toDp() } }
                         .clip(AppShape.Card)
                         .border(1.dp, InsColors.Divider, AppShape.Card)
                         .clickable { isExpanded = true }
                         .padding(horizontal = AppSpacing.md),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
             ) {
                 Text(
                     text = selectedOption ?: placeholder,
@@ -82,10 +92,32 @@ internal fun DropdownField(
             DropdownMenu(
                 expanded = isExpanded,
                 onDismissRequest = { isExpanded = false },
+                modifier = Modifier.width(fieldWidth),
+                offset = DpOffset(x = 0.dp, y = AppSpacing.xs),
+                shape = AppShape.Card,
             ) {
                 options.forEach { option ->
+                    val isSelected = option == selectedOption
                     DropdownMenuItem(
-                        text = { Text(text = option) },
+                        text = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                            ) {
+                                Text(
+                                    text = option,
+                                    color = if (isSelected) InsColors.Primary else InsColors.TextPrimary,
+                                )
+                                if (isSelected) {
+                                    Icon(
+                                        painter = painterResource(Res.drawable.ic_check),
+                                        contentDescription = null,
+                                        tint = InsColors.Primary,
+                                        modifier = Modifier.size(16.dp),
+                                    )
+                                }
+                            }
+                        },
                         onClick = {
                             onOptionSelected(option)
                             isExpanded = false

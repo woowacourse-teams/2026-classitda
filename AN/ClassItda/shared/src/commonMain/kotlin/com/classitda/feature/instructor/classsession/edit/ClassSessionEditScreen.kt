@@ -38,6 +38,7 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.component.NavigateBackTopBar
+import com.classitda.domain.model.instructor.management.ClassType
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionCapacityChangeDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDatePickerDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDeleteConfirmDialog
@@ -48,12 +49,11 @@ import com.classitda.feature.instructor.management.component.ClassTimePickerDial
 import com.classitda.feature.instructor.management.component.CreateTextField
 import com.classitda.feature.instructor.management.component.DatePickerField
 import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
-import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassFormOption
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
 import org.koin.compose.viewmodel.koinViewModel
-import com.classitda.domain.model.instructor.management.ClassType as DomainClassType
 
 @Composable
 internal fun ClassSessionEditRoute(
@@ -98,7 +98,7 @@ internal fun ClassSessionEditRoute(
 @Composable
 private fun ClassSessionEditStateful(
     initialForm: ClassSessionEditFormUiModel,
-    categories: List<DomainClassType>,
+    categories: List<ClassType>,
     onBackClick: () -> Unit,
     onSave: (ClassSessionEditFormUiModel) -> Unit,
     onDelete: () -> Unit,
@@ -233,9 +233,9 @@ private fun ClassSessionEditStateful(
 
 @Composable
 internal fun ClassSessionEditStateless(
-    classType: ClassType,
+    classType: ClassFormOption,
     selectedCategories: List<String>,
-    categories: List<DomainClassType>,
+    categories: List<ClassType>,
     title: String,
     capacityText: String,
     durationText: String,
@@ -244,7 +244,7 @@ internal fun ClassSessionEditStateless(
     sessionDate: LocalDate,
     description: String,
     onBackClick: () -> Unit,
-    onClassTypeChange: (ClassType) -> Unit,
+    onClassTypeChange: (ClassFormOption) -> Unit,
     onCategoriesChange: (List<String>) -> Unit,
     onTitleChange: (String) -> Unit,
     onCapacityChange: (String) -> Unit,
@@ -278,9 +278,9 @@ internal fun ClassSessionEditStateless(
         ) {
             EditSectionLabel(text = "수업 유형 *")
             OutlinedSegmentedToggle(
-                options = ClassType.entries.map { it.label },
-                selectedIndex = ClassType.entries.indexOf(classType),
-                onOptionSelected = { onClassTypeChange(ClassType.entries[it]) },
+                options = ClassFormOption.entries.map { it.label },
+                selectedIndex = ClassFormOption.entries.indexOf(classType),
+                onOptionSelected = { onClassTypeChange(ClassFormOption.entries[it]) },
             )
             SingleCategorySelector(
                 label = "카테고리 *",
@@ -365,7 +365,7 @@ internal fun ClassSessionEditStateless(
 @Composable
 private fun SingleCategorySelector(
     label: String,
-    categories: List<DomainClassType>,
+    categories: List<ClassType>,
     selectedCategories: List<String>,
     onSelectedCategoriesChanged: (List<String>) -> Unit,
 ) {
@@ -441,13 +441,13 @@ private fun ClassSessionEditError(
 private fun ClassSessionEditStatelessPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         ClassSessionEditStateless(
-            classType = ClassType.GROUP,
+            classType = ClassFormOption.GROUP,
             selectedCategories = listOf("필라테스"),
             categories =
                 listOf(
-                    DomainClassType(id = "1", name = "필라테스"),
-                    DomainClassType(id = "2", name = "요가"),
-                    DomainClassType(id = "3", name = "그룹 PT"),
+                    ClassType(id = "1", name = "필라테스"),
+                    ClassType(id = "2", name = "요가"),
+                    ClassType(id = "3", name = "그룹 PT"),
                 ),
             title = "리포머 밸런스",
             capacityText = "8",
