@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_edit
+import classitda.shared.generated.resources.profile_email_unavailable
 import classitda.shared.generated.resources.profile_view_back
 import classitda.shared.generated.resources.profile_view_edit
 import classitda.shared.generated.resources.profile_view_email
@@ -52,6 +53,7 @@ import classitda.shared.generated.resources.profile_view_phone_number
 import classitda.shared.generated.resources.profile_view_retry
 import classitda.shared.generated.resources.profile_view_title
 import classitda.shared.generated.resources.profile_view_withdrawal
+import co.touchlab.kermit.Logger
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -91,7 +93,10 @@ fun ProfileViewScreen(
             is ProfileViewUiState.Content -> {
                 ProfileViewContent(
                     profile = uiState.profile,
-                    onLogout = { onAction(ProfileViewAction.RequestLogout) },
+                    onLogout = {
+                        Logger.d("ProfileLogout: logout button clicked")
+                        onAction(ProfileViewAction.RequestLogout)
+                    },
                     onWithdrawal = { onAction(ProfileViewAction.RequestWithdrawal) },
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -183,7 +188,7 @@ private fun ProfileViewContent(
         Spacer(modifier = Modifier.height(AppSpacing.xl))
         ReadOnlyProfileField(
             label = stringResource(Res.string.profile_view_email),
-            value = profile.email,
+            value = profile.email ?: stringResource(Res.string.profile_email_unavailable),
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
         TextButton(onClick = onLogout) {

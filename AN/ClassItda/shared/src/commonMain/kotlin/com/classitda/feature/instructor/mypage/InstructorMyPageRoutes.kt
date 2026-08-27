@@ -7,10 +7,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import classitda.shared.generated.resources.Res
+import classitda.shared.generated.resources.withdrawal_conflict
+import classitda.shared.generated.resources.withdrawal_failed
 import co.touchlab.kermit.Logger
 import com.classitda.core.platform.KakaoPostcodeResult
 import com.classitda.core.platform.KakaoPostcodeSearchState
@@ -19,9 +23,13 @@ import com.classitda.core.platform.StudioImagePickerSelection
 import com.classitda.core.platform.releaseStudioImage
 import com.classitda.domain.model.instructor.mypage.StudioAddress
 import com.classitda.domain.model.instructor.mypage.StudioImageSelection
+import com.classitda.domain.repository.auth.AccountLifecycleFailureReason
+import com.classitda.domain.repository.auth.AccountLifecycleResult
+import com.classitda.domain.repository.auth.InstructorAccountLifecycleRepository
 import com.classitda.feature.common.profile.PhoneNumberChangeScreen
 import com.classitda.feature.common.profile.ProfileEditScreen
 import com.classitda.feature.common.profile.ProfileViewScreen
+import com.classitda.feature.common.profile.WithdrawalConfirmationDialog
 import com.classitda.feature.common.profile.contract.PhoneNumberChangeAction
 import com.classitda.feature.common.profile.contract.ProfileEditAction
 import com.classitda.feature.common.profile.contract.ProfileViewAction
@@ -55,6 +63,9 @@ import com.classitda.feature.instructor.mypage.studio.StudioRegistrationScreen
 import com.classitda.feature.instructor.mypage.studio.StudioRegistrationViewModel
 import com.classitda.feature.instructor.mypage.studio.address.KakaoPostcodeSearchDialog
 import com.classitda.feature.instructor.mypage.studio.image.StudioImagePickerOverlay
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
@@ -67,9 +78,11 @@ internal fun InstructorMyPageRoute(
     onOpenPrivacyPolicy: () -> Unit,
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    refreshToken: Int = 0,
     viewModel: InstructorMyPageViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
     InstructorMyPageScreen(uiState, onAction = { action ->
         when (action) {
             InstructorMyPageAction.OpenProfile -> onOpenProfile()
@@ -86,22 +99,77 @@ internal fun InstructorProfileViewRoute(
     onBack: () -> Unit,
     onOpenEdit: () -> Unit,
     onRequestLogout: () -> Unit,
-    onRequestWithdrawal: () -> Unit,
+    onWithdrawalCompleted: () -> Unit,
     refreshToken: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: InstructorProfileViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycleRepository = koinInject<InstructorAccountLifecycleRepository>()
+    val coroutineScope = rememberCoroutineScope()
+    var isWithdrawalDialogVisible by remember { mutableStateOf(false) }
+    var isWithdrawalSubmitting by remember { mutableStateOf(false) }
+    var withdrawalFailureReason by remember { mutableStateOf<AccountLifecycleFailureReason?>(null) }
+
+    val withdrawalErrorMessage =
+        withdrawalFailureReason?.let { reason ->
+            when (reason) {
+                AccountLifecycleFailureReason.CONFLICT -> stringResource(Res.string.withdrawal_conflict)
+                else -> stringResource(Res.string.withdrawal_failed)
+            }
+        }
+
     LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
     ProfileViewScreen(uiState, onAction = { action ->
         when (action) {
-            ProfileViewAction.Back -> onBack()
-            ProfileViewAction.OpenEdit -> onOpenEdit()
-            ProfileViewAction.RequestLogout -> onRequestLogout()
-            ProfileViewAction.RequestWithdrawal -> onRequestWithdrawal()
-            ProfileViewAction.Retry -> viewModel.onAction(action)
+            ProfileViewAction.Back -> {
+                onBack()
+            }
+
+            ProfileViewAction.OpenEdit -> {
+                onOpenEdit()
+            }
+
+            ProfileViewAction.RequestLogout -> {
+                Logger.d("ProfileLogout: instructor F02 logout action received")
+                onRequestLogout()
+            }
+
+            ProfileViewAction.RequestWithdrawal -> {
+                withdrawalFailureReason = null
+                isWithdrawalDialogVisible = true
+            }
+
+            ProfileViewAction.Retry -> {
+                viewModel.onAction(action)
+            }
         }
     }, modifier = modifier)
+
+    if (isWithdrawalDialogVisible) {
+        WithdrawalConfirmationDialog(
+            isSubmitting = isWithdrawalSubmitting,
+            errorMessage = withdrawalErrorMessage,
+            onDismiss = { isWithdrawalDialogVisible = false },
+            onConfirm = {
+                coroutineScope.launch {
+                    isWithdrawalSubmitting = true
+                    when (val result = lifecycleRepository.withdraw()) {
+                        AccountLifecycleResult.Success -> {
+                            isWithdrawalSubmitting = false
+                            isWithdrawalDialogVisible = false
+                            onWithdrawalCompleted()
+                        }
+
+                        is AccountLifecycleResult.Failure -> {
+                            isWithdrawalSubmitting = false
+                            withdrawalFailureReason = result.reason
+                        }
+                    }
+                }
+            },
+        )
+    }
 }
 
 @Composable

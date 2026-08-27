@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import co.touchlab.kermit.Logger
 import com.classitda.feature.instructor.InstructorBottomBar
 import com.classitda.feature.instructor.InstructorBottomTab
 import com.classitda.feature.instructor.classsession.detail.ClassSessionDetailRoute
@@ -17,7 +18,11 @@ import com.classitda.feature.instructor.mypage.InstructorMyPageNavHost
 import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
 
 @Composable
-fun InstructorRootRoute(modifier: Modifier = Modifier) {
+fun InstructorRootRoute(
+    modifier: Modifier = Modifier,
+    onLogout: () -> Unit = {},
+    onWithdrawalCompleted: () -> Unit = {},
+) {
     var selectedTab by remember { mutableStateOf(InstructorBottomTab.HOME) }
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
     var isSessionEditing by remember { mutableStateOf(false) }
@@ -95,7 +100,15 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             }
 
             InstructorBottomTab.MY -> {
-                InstructorMyPageNavHost(bottomBar = topLevelBottomBar, modifier = modifier)
+                InstructorMyPageNavHost(
+                    bottomBar = topLevelBottomBar,
+                    modifier = modifier,
+                    onLogout = {
+                        Logger.d("ProfileLogout: instructor root received logout callback")
+                        onLogout()
+                    },
+                    onWithdrawalCompleted = onWithdrawalCompleted,
+                )
             }
         }
     }
