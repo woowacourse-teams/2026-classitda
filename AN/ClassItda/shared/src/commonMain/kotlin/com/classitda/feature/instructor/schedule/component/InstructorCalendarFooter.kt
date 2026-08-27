@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,15 +34,15 @@ internal fun InstructorCalendarFooter(
         }
         Spacer(Modifier.weight(1f))
         Box(
-            modifier =
-                Modifier
-                    .width(44.dp)
-                    .height(28.dp)
-                    .border(1.dp, InsColors.Divider, AppShape.Pill)
-                    .clickable(onClick = onTodayClick),
+            modifier = Modifier.size(48.dp).clickable(onClick = onTodayClick),
             contentAlignment = Alignment.Center,
         ) {
-            Text("오늘", color = InsColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
+            Box(
+                modifier = Modifier.width(44.dp).height(28.dp).border(1.dp, InsColors.Divider, AppShape.Pill),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("오늘", color = InsColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }

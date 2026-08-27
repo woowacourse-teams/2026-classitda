@@ -36,10 +36,10 @@ import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
-import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
+import com.classitda.feature.instructor.component.instructorTimeText
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.compose.resources.painterResource
 
@@ -176,7 +176,7 @@ private fun InstructorNextTimelineItem(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
-                HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.md), color = StuColors.Divider)
+                HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.md), color = InsColors.Divider)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "예약 ${session.reservedCount}명",
@@ -261,32 +261,6 @@ private fun InstructorTimelineIndicator(
             )
         }
     }
-}
-
-internal fun ClassSession.instructorTimeText(): String {
-    val startPeriod = startAt.periodText()
-    val endPeriod = endAt.periodText()
-    val startTime = startAt.clockText()
-    val endTime = endAt.clockText()
-
-    return if (startPeriod == endPeriod) {
-        "$startPeriod $startTime ~ $endTime"
-    } else {
-        "$startPeriod $startTime ~ $endPeriod $endTime"
-    }
-}
-
-private fun LocalDateTime.periodText(): String =
-    if (hour < 12) {
-        "오전"
-    } else {
-        "오후"
-    }
-
-private fun LocalDateTime.clockText(): String {
-    val hourIn12HourFormat = hour % 12
-    val displayHour = if (hourIn12HourFormat == 0) 12 else hourIn12HourFormat
-    return "$displayHour:${minute.toString().padStart(2, '0')}"
 }
 
 private fun previewClassSession() =

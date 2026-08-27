@@ -110,7 +110,8 @@ private fun InstructorCalendarDay(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(40.dp),
+                .height(48.dp)
+                .clickable(enabled = date != null) { date?.let(onDateSelected) },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
@@ -120,8 +121,7 @@ private fun InstructorCalendarDay(
                     Modifier
                         .size(28.dp)
                         .clip(AppShape.Pill)
-                        .background(if (isSelected) InsColors.Black else Color.Transparent)
-                        .clickable { onDateSelected(date) },
+                        .background(if (isSelected) InsColors.Black else Color.Transparent),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

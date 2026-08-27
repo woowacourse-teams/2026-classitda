@@ -23,6 +23,7 @@ import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.feature.instructor.component.ClassSessionStatusBadge
 import com.classitda.feature.instructor.component.InstructorClassTagChip
+import com.classitda.feature.instructor.component.instructorTimeText
 import kotlinx.datetime.LocalDateTime
 
 @Composable
@@ -65,26 +66,6 @@ internal fun InstructorScheduleCard(
             }
         }
     }
-}
-
-internal fun ClassSession.instructorTimeText(): String {
-    val startPeriod = startAt.periodText()
-    val endPeriod = endAt.periodText()
-    val endText = endAt.clockText()
-
-    return if (startPeriod == endPeriod) {
-        "$startPeriod ${startAt.clockText()} ~ $endText"
-    } else {
-        "$startPeriod ${startAt.clockText()} ~ $endPeriod $endText"
-    }
-}
-
-private fun LocalDateTime.periodText(): String = if (hour < 12) "오전" else "오후"
-
-private fun LocalDateTime.clockText(): String {
-    val displayHour = hour % 12
-    val normalizedHour = if (displayHour == 0) 12 else displayHour
-    return "$normalizedHour:${minute.toString().padStart(2, '0')}"
 }
 
 @Preview(name = "강사 일정 수업 카드", showBackground = true, widthDp = 390)

@@ -63,8 +63,8 @@ private fun InstructorCalendarMoveButton(
     Box(
         modifier =
             Modifier
-                .width(32.dp)
-                .height(32.dp)
+                .width(48.dp)
+                .height(48.dp)
                 .selectable(
                     selected = false,
                     role = Role.Button,
@@ -85,23 +85,32 @@ private fun InstructorCalendarModeItem(
     Box(
         modifier =
             Modifier
-                .width(32.dp)
-                .height(24.dp)
-                .background(
-                    color = if (selected) InsColors.White else Color.Transparent,
-                    shape = RoundedCornerShape(8.dp),
-                ).selectable(
+                .width(48.dp)
+                .height(48.dp)
+                .selectable(
                     selected = selected,
                     role = Role.RadioButton,
                     onClick = onClick,
                 ),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = text,
-            color = if (selected) InsColors.TextPrimary else InsColors.TextSecondary,
-            style = MaterialTheme.typography.labelSmall,
-        )
+        Box(
+            modifier =
+                Modifier
+                    .width(32.dp)
+                    .height(24.dp)
+                    .background(
+                        color = if (selected) InsColors.White else Color.Transparent,
+                        shape = RoundedCornerShape(8.dp),
+                    ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = text,
+                color = if (selected) InsColors.TextPrimary else InsColors.TextSecondary,
+                style = MaterialTheme.typography.labelSmall,
+            )
+        }
     }
 }
 

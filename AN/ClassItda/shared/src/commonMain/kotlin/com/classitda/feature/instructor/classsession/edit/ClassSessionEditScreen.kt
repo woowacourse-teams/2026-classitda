@@ -275,7 +275,7 @@ internal fun ClassSessionEditStateless(
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.md),
-            verticalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(EditFieldDefaults.labelFieldGap)) {
                 EditSectionLabel(text = "수업 유형 *")
