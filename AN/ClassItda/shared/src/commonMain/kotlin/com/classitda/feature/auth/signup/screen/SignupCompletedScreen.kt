@@ -1,7 +1,6 @@
 package com.classitda.feature.auth.signup.screen
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,12 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -30,8 +24,9 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.core.designsystem.component.PrimaryButton
 import com.classitda.feature.auth.signup.SignupAction
+import com.classitda.feature.auth.signup.component.ClassitdaCharacter
 import com.classitda.feature.auth.signup.component.ClassitdaLogo
-import org.jetbrains.compose.resources.painterResource
+import com.classitda.feature.auth.signup.component.ClassitdaWordmark
 
 @Composable
 internal fun SignupCompletedScreen(
@@ -46,38 +41,27 @@ internal fun SignupCompletedScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        ClassitdaLogo(modifier = Modifier.width(150.dp).height(126.dp))
+        ClassitdaCharacter(modifier = Modifier.size(width = 130.dp, height = 80.dp).align(Alignment.CenterHorizontally))
+        ClassitdaWordmark(modifier = Modifier.size(width = 130.dp, height = 50.dp))
         Text(
             text = "회원가입이\n완료되었습니다",
-            style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
+            style = appTypography().headlineMedium.copy(fontWeight = FontWeight.Bold),
             color = StuColors.TextPrimary,
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.md))
         Text(
-            text = "이제 더욱 편리하게\n수업을 예약하고 이용해 보세요.",
-            style = appTypography().bodySmall,
+            text = "이제 언제 어디서나 편리하게\n수업을 관리하고 이용해 보세요.",
+            style = appTypography().bodyMedium,
             color = StuColors.TextTertiary,
             textAlign = TextAlign.Center,
         )
-        Spacer(modifier = Modifier.height(AppSpacing.sectionGap))
+        Spacer(modifier = Modifier.height(70.dp))
         PrimaryButton(
             text = "시작하기",
             onClick = { onAction(SignupAction.Close) },
-        )
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        TextButton(
-            enabled = false,
-            onClick = { onAction(SignupAction.OpenProfile) },
             modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(
-                text = "프로필 설정하러 가기",
-                style = appTypography().labelMedium,
-                color = StuColors.Gray300,
-            )
-        }
-        Spacer(modifier = Modifier.height(AppSpacing.xl))
+        )
     }
 }
 
@@ -85,20 +69,6 @@ internal fun SignupCompletedScreen(
 @Composable
 private fun SignupCompletedScreenPreview() {
     AppTheme(theme = ThemeType.STUDENT) {
-        var isButtonClicked by remember { mutableStateOf(false) }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-            SignupCompletedScreen(onAction = { isButtonClicked = true })
-            if (isButtonClicked) {
-                Text(
-                    text = "버튼 클릭됨",
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = AppSpacing.lg),
-                    color = StuColors.Green,
-                )
-            }
-        }
+        SignupCompletedScreen(onAction = {}, modifier = Modifier.fillMaxSize())
     }
 }

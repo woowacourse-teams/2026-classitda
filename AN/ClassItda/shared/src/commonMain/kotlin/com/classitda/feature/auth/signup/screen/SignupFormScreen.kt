@@ -142,7 +142,7 @@ internal fun SignupFormScreen(
         PrimaryButton(
             text = "확인",
             onClick = { onAction(SignupAction.ConfirmForm) },
-            modifier = Modifier.padding(horizontal = AppSpacing.xl, vertical = AppSpacing.md),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = AppSpacing.xl, vertical = AppSpacing.md),
         )
     }
 }

@@ -115,6 +115,7 @@ internal fun SignupTermsSheet(
                 PrimaryButton(
                     text = "가입 완료",
                     onClick = onComplete,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }
