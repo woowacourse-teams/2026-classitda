@@ -1,5 +1,7 @@
 package com.classitda.data.repository.auth
 
+import co.touchlab.kermit.Logger
+import com.classitda.core.auth.SessionCacheCleaner
 import com.classitda.data.remote.member.MemberApi
 import com.classitda.domain.repository.auth.AccountLifecycleFailureReason
 import com.classitda.domain.repository.auth.AccountLifecycleResult
@@ -12,10 +14,13 @@ import kotlinx.serialization.SerializationException
 
 internal class RemoteInstructorAccountLifecycleRepository(
     private val api: MemberApi,
+    private val sessionCacheCleaner: SessionCacheCleaner = SessionCacheCleaner { },
 ) : InstructorAccountLifecycleRepository {
     override suspend fun withdraw(): AccountLifecycleResult =
         try {
             api.deleteMe()
+            runCatching { sessionCacheCleaner.clear() }
+                .onFailure { error -> Logger.e("AccountLifecycle: local cache clear failed: ${error.message}") }
             AccountLifecycleResult.Success
         } catch (exception: CancellationException) {
             throw exception

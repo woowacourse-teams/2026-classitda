@@ -3,6 +3,7 @@ package com.classitda.data.repository.auth.signup
 import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
 import com.classitda.core.auth.InMemoryAuthTokenStorage
+import com.classitda.core.auth.SessionCacheCleaner
 import com.classitda.data.remote.auth.signup.GoogleLoginRequestDto
 import com.classitda.data.remote.auth.signup.LoginResponseDto
 import com.classitda.data.remote.auth.signup.LoginStatusDto
@@ -33,6 +34,7 @@ import io.ktor.client.plugins.ResponseException
 internal class RemoteSignupRepository(
     private val api: SignupApi,
     private val tokenStorage: AuthTokenStorage = InMemoryAuthTokenStorage(),
+    private val sessionCacheCleaner: SessionCacheCleaner = SessionCacheCleaner { },
 ) : SignupRepository {
     override suspend fun loginWithGoogle(idToken: GoogleIdToken): GoogleLoginResult =
         try {
@@ -40,6 +42,7 @@ internal class RemoteSignupRepository(
             Logger.d("SignupFlow: Google login API response status=${response.status}")
             response.toDomain().also { result ->
                 if (result is GoogleLoginResult.Registered) {
+                    clearSessionCacheBestEffort()
                     tokenStorage.write(result.tokens)
                 }
             }
@@ -85,6 +88,7 @@ internal class RemoteSignupRepository(
                     signupToken.value,
                     SignupRequestDto(name.value, agreedTermIds.map(TermId::value)),
                 ).toDomain()
+        clearSessionCacheBestEffort()
         tokenStorage.write(tokens)
         return tokens
     }
@@ -94,6 +98,7 @@ internal class RemoteSignupRepository(
             tokenStorage.read()
                 ?: run {
                     Logger.d("AuthSession: logout skipped because no local token exists")
+                    clearSessionCacheBestEffort()
                     return
                 }
         Logger.d("AuthSession: logout API call with local tokens")
@@ -104,9 +109,16 @@ internal class RemoteSignupRepository(
         }.onFailure { error ->
             Logger.e("AuthSession: logout API failed: ${error.message}")
         }.also {
+            runCatching { sessionCacheCleaner.clear() }
+                .onFailure { error -> Logger.e("AuthSession: local cache clear failed: ${error.message}") }
             tokenStorage.clear()
             Logger.d("AuthSession: local tokens cleared")
         }
+    }
+
+    private suspend fun clearSessionCacheBestEffort() {
+        runCatching { sessionCacheCleaner.clear() }
+            .onFailure { error -> Logger.e("AuthSession: local cache clear failed: ${error.message}") }
     }
 }
 
