@@ -2,7 +2,6 @@ package com.classitda.feature.instructor.classsession.edit
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -18,7 +17,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,12 +40,15 @@ import com.classitda.feature.instructor.classsession.edit.component.ClassSession
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDatePickerDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDeleteConfirmDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionEditExitDialog
+import com.classitda.feature.instructor.classsession.edit.component.EditCategoryChip
+import com.classitda.feature.instructor.classsession.edit.component.EditClassStartTimeField
+import com.classitda.feature.instructor.classsession.edit.component.EditClassTimePickerDialog
+import com.classitda.feature.instructor.classsession.edit.component.EditDatePickerField
+import com.classitda.feature.instructor.classsession.edit.component.EditFieldDefaults
+import com.classitda.feature.instructor.classsession.edit.component.EditOutlinedSegmentedToggle
+import com.classitda.feature.instructor.classsession.edit.component.EditTextField
+import com.classitda.feature.instructor.classsession.edit.component.EditUnitTextField
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
-import com.classitda.feature.instructor.management.component.ClassStartTimeField
-import com.classitda.feature.instructor.management.component.ClassTimePickerDialog
-import com.classitda.feature.instructor.management.component.CreateTextField
-import com.classitda.feature.instructor.management.component.DatePickerField
-import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.model.ClassType
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -187,7 +188,7 @@ private fun ClassSessionEditStateful(
     )
 
     if (isTimePickerVisible) {
-        ClassTimePickerDialog(
+        EditClassTimePickerDialog(
             initialTime = startTime,
             onDismissRequest = { isTimePickerVisible = false },
             onConfirm = {
@@ -262,7 +263,7 @@ internal fun ClassSessionEditStateless(
         topBar = {
             NavigateBackTopBar(
                 onNavigateBack = onBackClick,
-                modifier = Modifier.background(InsColors.Surface),
+                modifier = Modifier.background(InsColors.Background),
                 title = "수업 수정",
             )
         },
@@ -273,22 +274,24 @@ internal fun ClassSessionEditStateless(
                     .fillMaxSize()
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
+                    .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.md),
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            EditSectionLabel(text = "수업 유형 *")
-            OutlinedSegmentedToggle(
-                options = ClassType.entries.map { it.label },
-                selectedIndex = ClassType.entries.indexOf(classType),
-                onOptionSelected = { onClassTypeChange(ClassType.entries[it]) },
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(EditFieldDefaults.labelFieldGap)) {
+                EditSectionLabel(text = "수업 유형 *")
+                EditOutlinedSegmentedToggle(
+                    options = ClassType.entries.map { it.label },
+                    selectedIndex = ClassType.entries.indexOf(classType),
+                    onOptionSelected = { onClassTypeChange(ClassType.entries[it]) },
+                )
+            }
             SingleCategorySelector(
                 label = "카테고리 *",
                 categories = categories,
                 selectedCategories = selectedCategories,
                 onSelectedCategoriesChanged = onCategoriesChange,
             )
-            CreateTextField(
+            EditTextField(
                 label = "수업명 *",
                 value = title,
                 placeholder = "수업명을 입력해 주세요",
@@ -298,39 +301,39 @@ internal fun ClassSessionEditStateless(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg),
             ) {
-                CreateTextField(
+                EditUnitTextField(
                     label = "기본 정원 *",
                     value = capacityText,
                     placeholder = "0",
                     onValueChange = onCapacityChange,
                     keyboardType = KeyboardType.Number,
-                    trailingText = "명",
+                    unit = "명",
                     modifier = Modifier.weight(1f),
                 )
-                CreateTextField(
+                EditUnitTextField(
                     label = "진행 시간 *",
                     value = durationText,
                     placeholder = "0",
                     onValueChange = onDurationChange,
                     keyboardType = KeyboardType.Number,
-                    trailingText = "분",
+                    unit = "분",
                     modifier = Modifier.weight(1f),
                 )
             }
-            ClassStartTimeField(
+            EditClassStartTimeField(
                 label = "수업 시간 *",
                 startTimeText = startTime.toAmPmText(),
                 endTimeText = endTime.toAmPmText(),
                 onStartTimeClick = onStartTimeClick,
             )
-            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+            Column(verticalArrangement = Arrangement.spacedBy(EditFieldDefaults.labelFieldGap)) {
                 EditSectionLabel(text = "수업일 *")
-                DatePickerField(
+                EditDatePickerField(
                     dateText = sessionDate.toDateText(),
                     onClick = onDateClick,
                 )
             }
-            CreateTextField(
+            EditTextField(
                 label = "상세 설명",
                 value = description,
                 placeholder = "수업에 대한 설명을 입력해 주세요",
@@ -369,26 +372,20 @@ private fun SingleCategorySelector(
     selectedCategories: List<String>,
     onSelectedCategoriesChanged: (List<String>) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+    Column(verticalArrangement = Arrangement.spacedBy(EditFieldDefaults.labelFieldGap)) {
         EditSectionLabel(text = label)
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
             categories.forEach { category ->
-                val isSelected = category.name in selectedCategories
-                Surface(
-                    modifier = Modifier.clickable { onSelectedCategoriesChanged(listOf(category.name)) },
-                    shape = com.classitda.core.designsystem.AppShape.Pill,
-                    color = if (isSelected) InsColors.PurpleLight else InsColors.Gray100,
-                    contentColor = if (isSelected) InsColors.Purple else InsColors.TextSecondary,
-                ) {
-                    Text(
-                        text = category.name,
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
-                    )
-                }
+                EditCategoryChip(
+                    text = category.name,
+                    isSelected = category.name in selectedCategories,
+                    onClick = {
+                        onSelectedCategoriesChanged(listOf(category.name))
+                    },
+                )
             }
         }
     }

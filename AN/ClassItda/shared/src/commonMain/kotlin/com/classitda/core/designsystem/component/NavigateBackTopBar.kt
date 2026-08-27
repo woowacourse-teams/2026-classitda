@@ -53,7 +53,7 @@ fun NavigateBackTopBar(
 }
 
 @Composable
-@Preview
+@Preview(showBackground = true)
 private fun NavigateBackTopBarPreview() {
     AppTheme {
         NavigateBackTopBar(
