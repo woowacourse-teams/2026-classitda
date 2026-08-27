@@ -105,6 +105,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          APPLE_OAUTH_IOS_CLIENT_ID: ${{ secrets.APPLE_OAUTH_IOS_CLIENT_ID }}
           GOOGLE_OAUTH_WEB_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_WEB_CLIENT_ID }}
           GOOGLE_OAUTH_IOS_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_IOS_CLIENT_ID }}
           AUTH_JWT_PRIVATE_KEY_BASE64: ${{ secrets.AUTH_JWT_PRIVATE_KEY_BASE64 }}
@@ -128,6 +129,7 @@ jobs:
             echo "DB_PASSWORD=$DB_PASSWORD"
             echo "REDIS_HOST=$REDIS_HOST"
             echo "REDIS_PASSWORD=$(printf '%s' "$REDIS_PASSWORD" | tr -d '[:space:]')"
+            echo "APPLE_OAUTH_IOS_CLIENT_ID=$APPLE_OAUTH_IOS_CLIENT_ID"
             echo "GOOGLE_OAUTH_WEB_CLIENT_ID=$GOOGLE_OAUTH_WEB_CLIENT_ID"
             echo "GOOGLE_OAUTH_IOS_CLIENT_ID=$GOOGLE_OAUTH_IOS_CLIENT_ID"
             echo "AUTH_JWT_PRIVATE_KEY_BASE64=$AUTH_JWT_PRIVATE_KEY_BASE64"
