@@ -10,14 +10,14 @@ import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.fixture.StudioPolicyFixture;
 import com.classitda.studio.presentation.dto.StudioPolicyResponse;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
 @Import({ClassTypeService.class, StudioPolicyService.class, StudioService.class, StudioPermissionService.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class StudioPolicyServiceTest {
 
     private final StudioPolicyService studioPolicyService;

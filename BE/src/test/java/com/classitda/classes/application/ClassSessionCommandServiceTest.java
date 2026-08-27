@@ -39,7 +39,7 @@ import com.classitda.studio.domain.repository.StudioRoleRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -67,7 +67,7 @@ import org.springframework.transaction.support.TransactionTemplate;
         ClassSessionCommandService.class,
         ClassSessionCommandServiceTest.FixedClockConfig.class
 })
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class ClassSessionCommandServiceTest {
 
     private static final String LINK_FAILURE_CONSTRAINT = "ck_test_reject_class_session_class_type";

@@ -30,7 +30,7 @@ import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.domain.repository.StudioMembershipRepository;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -45,7 +45,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Import(SignupAccountCreator.class)
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class SignupAccountCreatorTest {
 
     private static final String PHONE_NUMBER = "01012345678";

@@ -19,6 +19,6 @@ import org.springframework.context.annotation.Import;
         "spring.sql.init.data-locations=optional:classpath:/test-data.sql"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({MySqlTestContainerConfiguration.class, JpaAuditingConfig.class, ImageTestConfiguration.class})
-public @interface MySqlRepositoryTest {
+@Import({SharedMySqlTestConfiguration.class, JpaAuditingConfig.class, ImageTestConfiguration.class})
+public @interface MySqlDataJpaTest {
 }

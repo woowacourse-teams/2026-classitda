@@ -37,7 +37,7 @@ import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.fixture.StudioMembershipFixture;
 import com.classitda.studio.presentation.dto.StudioMembershipUpdateRequest;
 import com.classitda.studio.presentation.dto.StudioMembershipResponse;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -54,7 +54,7 @@ import org.springframework.context.annotation.Import;
         StudioPolicyService.class,
         StudioMembershipTerminationService.class,
         TimeConfig.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class StudioMembershipServiceTest {
 
     private final StudioMembershipService studioMembershipService;

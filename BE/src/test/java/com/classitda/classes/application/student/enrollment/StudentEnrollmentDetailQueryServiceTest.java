@@ -24,7 +24,7 @@ import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.LocalDate;
@@ -44,7 +44,7 @@ import org.springframework.test.context.TestPropertySource;
         StudentEnrollmentDetailQueryService.class,
         StudentSessionAccessReader.class
 })
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class StudentEnrollmentDetailQueryServiceTest {
 
     private static final AtomicLong PHONE_SEQUENCE = new AtomicLong(30_000_000L);

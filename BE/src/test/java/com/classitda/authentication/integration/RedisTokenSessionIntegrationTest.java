@@ -32,6 +32,7 @@ import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
 import com.classitda.authentication.presentation.dto.token.LoginTokenResponse;
 import com.classitda.authentication.support.JwtTestSupport;
 import com.classitda.member.domain.repository.MemberRepository;
+import com.classitda.support.SharedTestContainers;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -54,13 +55,9 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
-@Testcontainers
 class RedisTokenSessionIntegrationTest {
 
     private static final Duration SIGNUP_TTL = Duration.ofMinutes(30);
@@ -69,10 +66,7 @@ class RedisTokenSessionIntegrationTest {
     private static final long REFRESH_TTL_SECONDS = 2_592_000L;
     private static final String REFRESH_KEY_PREFIX = "auth:refresh:";
 
-    @Container
-    private static final GenericContainer<?> REDIS = new GenericContainer<>(
-            DockerImageName.parse("redis:7.4-alpine"))
-            .withExposedPorts(6379);
+    private static final GenericContainer<?> REDIS = SharedTestContainers.redis();
 
     private LettuceConnectionFactory connectionFactory;
     private StringRedisTemplate redisTemplate;

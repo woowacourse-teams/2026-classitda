@@ -22,7 +22,7 @@ import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.presentation.dto.StudioCreateRequest;
 import com.classitda.studio.presentation.dto.StudioResponse;
 import com.classitda.support.ImageTestConfiguration;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
 @Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class StudioServiceTest {
 
     private final StudioService studioService;

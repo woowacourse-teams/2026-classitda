@@ -26,7 +26,7 @@ import com.classitda.studio.domain.repository.StudioRolePermissionRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -46,7 +46,7 @@ import org.springframework.context.annotation.Import;
         InstructorSessionAccessReader.class,
         ClassSessionInstructorEnrollmentCommandServiceTest.FixedClockConfig.class
 })
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class ClassSessionInstructorEnrollmentCommandServiceTest {
 
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 12, 0);

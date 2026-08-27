@@ -34,7 +34,7 @@ import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -50,7 +50,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Import({ClassTemplateCommandService.class, StudioPermissionService.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class ClassTemplateCommandServiceTest {
 
     private final ClassTemplateCommandService commandService;

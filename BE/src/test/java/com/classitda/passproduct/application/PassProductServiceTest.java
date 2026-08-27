@@ -33,7 +33,7 @@ import com.classitda.studio.domain.repository.StudioRoleRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
 @Import({PassProductService.class, ClassTypeService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class PassProductServiceTest {
 
     private final PassProductService passProductService;

@@ -24,7 +24,7 @@ import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.application.StudioMembershipTerminationService;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -42,7 +42,7 @@ import org.springframework.context.annotation.Import;
         MemberService.class,
         StudioMembershipTerminationService.class,
         MemberCleanupServiceTest.FixedClockConfig.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class MemberCleanupServiceTest {
 
     private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");

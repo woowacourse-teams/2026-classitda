@@ -2,14 +2,14 @@ package com.classitda;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class SeedScriptValidationTest {
 
     private final DataSource dataSource;

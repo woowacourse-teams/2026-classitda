@@ -2,13 +2,13 @@ package com.classitda;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class EntitySchemaValidationTest {
 
     private final JdbcTemplate jdbcTemplate;

@@ -18,7 +18,7 @@ import com.classitda.studio.domain.Studio;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.DayOfWeek;
@@ -34,7 +34,7 @@ import org.springframework.test.context.TestPropertySource;
 
 @TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @Import({ClassTemplateQueryService.class, StudioPermissionService.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class ClassTemplateQueryServiceTest {
 
     private final ClassTemplateQueryService queryService;

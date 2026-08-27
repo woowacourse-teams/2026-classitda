@@ -33,7 +33,7 @@ import com.classitda.studio.domain.StudioPolicy;
 import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.Clock;
 import java.time.LocalDateTime;
@@ -57,7 +57,7 @@ import org.springframework.context.annotation.Primary;
         StudentEnrollmentDetailQueryService.class,
         StudentSessionDetailQueryServiceTest.FixedClockConfig.class
 })
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class StudentSessionDetailQueryServiceTest {
 
     private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");

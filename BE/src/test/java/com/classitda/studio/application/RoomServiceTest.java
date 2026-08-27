@@ -14,14 +14,14 @@ import com.classitda.studio.fixture.RoomFixture;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.studio.presentation.dto.RoomResponse;
 import com.classitda.studio.presentation.dto.StudioResponse;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 
 @Import({ClassTypeService.class, RoomService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class RoomServiceTest {
 
     private final RoomService roomService;
