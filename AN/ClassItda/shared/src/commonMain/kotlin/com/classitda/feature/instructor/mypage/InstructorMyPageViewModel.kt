@@ -3,7 +3,7 @@ package com.classitda.feature.instructor.mypage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
-import com.classitda.domain.repository.instructor.mypage.InstructorProfileRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorMyPageSummaryRepository
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageAction
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiError
 import com.classitda.feature.instructor.mypage.contract.InstructorMyPageUiModel
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class InstructorMyPageViewModel(
-    private val repository: InstructorProfileRepository,
+    private val repository: InstructorMyPageSummaryRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<InstructorMyPageUiState>(InstructorMyPageUiState.Loading)
     val uiState: StateFlow<InstructorMyPageUiState> = _uiState.asStateFlow()
@@ -30,7 +30,7 @@ internal class InstructorMyPageViewModel(
     fun refresh() {
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.getProfile()) {
+                when (val result = repository.getSummary()) {
                     is InstructorMyPageResult.Success -> {
                         InstructorMyPageUiState.Content(
                             result.value.toUiModel(),

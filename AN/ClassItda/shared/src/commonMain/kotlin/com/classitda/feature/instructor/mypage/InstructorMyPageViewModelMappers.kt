@@ -3,6 +3,7 @@ package com.classitda.feature.instructor.mypage
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.domain.model.instructor.mypage.InstructorMyPageSummary
 import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
@@ -56,6 +57,14 @@ internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfi
         maskProfilePhoneNumber(phoneNumber),
         profileImageUrl,
         name.firstOrNull()?.toString() ?: "?",
+    )
+
+internal fun InstructorMyPageSummary.toUiModel() =
+    InstructorMyPageUiModel(
+        displayProfileName(name),
+        maskProfilePhoneNumber(phoneNumber),
+        null,
+        name.trim().firstOrNull()?.toString() ?: "?",
     )
 
 internal fun com.classitda.domain.model.instructor.mypage.InstructorAccountProfile.toProfileUiModel() =
