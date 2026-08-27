@@ -3,8 +3,7 @@ name: BE DEV CD
 on:
   push:
     branches:
-      - be/dev
-      - be/cicd/153-프로덕션-개발-분리
+      - develop
     paths:
       - 'BE/**'
       - '.github/workflows/be-dev-deploy.yml'
