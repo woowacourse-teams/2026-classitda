@@ -28,6 +28,7 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.component.NavigateBackTopBar
 import com.classitda.core.designsystem.component.PrimaryButton
 import com.classitda.domain.model.instructor.management.ClassForm
+import com.classitda.domain.model.instructor.management.ClassType
 import com.classitda.feature.instructor.management.classes.create.model.ClassSessionDraftUiModel
 import com.classitda.feature.instructor.management.classtemplates.model.ClassTemplateUiModel
 import com.classitda.feature.instructor.management.component.CategoryChipSelector
@@ -39,9 +40,9 @@ import com.classitda.feature.instructor.management.component.DropdownField
 import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.component.TemplateOverwriteConfirmDialog
 import com.classitda.feature.instructor.management.component.WeekdaySelector
-import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassFormOption
 import com.classitda.feature.instructor.management.util.digitsOnly
-import com.classitda.feature.instructor.management.util.toClassType
+import com.classitda.feature.instructor.management.util.toClassFormOption
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -50,7 +51,7 @@ import kotlinx.datetime.number
 @Composable
 internal fun ClassSessionCreateScreen(
     templates: List<ClassTemplateUiModel>,
-    categories: List<String>,
+    classTypes: List<ClassType>,
     onBackClick: () -> Unit,
     onSubmit: (ClassSessionDraftUiModel) -> Unit,
     modifier: Modifier = Modifier,
@@ -60,8 +61,8 @@ internal fun ClassSessionCreateScreen(
     var isOverwriteConfirmVisible by remember { mutableStateOf(false) }
     var isTimePickerVisible by remember { mutableStateOf(false) }
 
-    var classType by remember { mutableStateOf(ClassType.GROUP) }
-    var selectedCategories by remember { mutableStateOf(emptyList<String>()) }
+    var classType by remember { mutableStateOf(ClassFormOption.GROUP) }
+    var selectedCategory by remember { mutableStateOf<ClassType?>(null) }
     var title by remember { mutableStateOf("") }
     var capacityText by remember { mutableStateOf("8") }
     var durationMinutesText by remember { mutableStateOf("50") }
@@ -78,14 +79,14 @@ internal fun ClassSessionCreateScreen(
     val isFormDirty =
         title.isNotBlank() ||
             description.isNotBlank() ||
-            selectedCategories.isNotEmpty() ||
+            selectedCategory != null ||
             capacityText != "8" ||
             durationMinutesText != "50"
 
     fun applyTemplate(template: ClassTemplateUiModel) {
         selectedTemplate = template
-        classType = template.classForm.toClassType()
-        selectedCategories = template.categoryNames
+        classType = template.classForm.toClassFormOption()
+        selectedCategory = classTypes.firstOrNull { it.id in template.classTypeIds }
         title = template.title
         template.capacityText
             .digitsOnly()
@@ -138,17 +139,17 @@ internal fun ClassSessionCreateScreen(
             Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                 SectionLabel(text = "수업 유형 *")
                 OutlinedSegmentedToggle(
-                    options = ClassType.entries.map { it.label },
-                    selectedIndex = ClassType.entries.indexOf(classType),
-                    onOptionSelected = { classType = ClassType.entries[it] },
+                    options = ClassFormOption.entries.map { it.label },
+                    selectedIndex = ClassFormOption.entries.indexOf(classType),
+                    onOptionSelected = { classType = ClassFormOption.entries[it] },
                 )
             }
 
             CategoryChipSelector(
                 label = "카테고리 *",
-                allCategories = categories,
-                selectedCategories = selectedCategories,
-                onSelectedCategoriesChanged = { selectedCategories = it },
+                allCategories = classTypes,
+                selectedCategory = selectedCategory,
+                onCategorySelected = { selectedCategory = it },
             )
 
             CreateTextField(
@@ -255,7 +256,7 @@ internal fun ClassSessionCreateScreen(
                         ClassSessionDraftUiModel(
                             templateId = selectedTemplate?.id,
                             classType = classType,
-                            categories = selectedCategories,
+                            category = selectedCategory,
                             title = title,
                             capacity = capacityText.toIntOrNull() ?: 0,
                             durationMinutes = durationMinutes,
@@ -369,7 +370,12 @@ private fun ClassSessionCreateScreenPreview() {
                         schedule = null,
                     ),
                 ),
-            categories = listOf("필라테스", "요가", "그룹 PT"),
+            classTypes =
+                listOf(
+                    ClassType(id = "1", name = "필라테스"),
+                    ClassType(id = "2", name = "요가"),
+                    ClassType(id = "3", name = "그룹 PT"),
+                ),
             onBackClick = {},
             onSubmit = {},
         )

@@ -2,6 +2,7 @@ package com.classitda.feature.instructor.management.classtemplates.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.management.ClassType
 import com.classitda.domain.repository.instructor.management.ClassTemplateManagementRepository
 import com.classitda.feature.instructor.management.classtemplates.create.model.ClassTemplateDraftUiModel
@@ -26,10 +27,8 @@ internal sealed interface ClassTemplateFormLoadState {
 internal class ClassTemplateCreateViewModel(
     private val templateId: String?,
     private val repository: ClassTemplateManagementRepository,
+    private val studioContext: InstructorStudioContext,
 ) : ViewModel() {
-    // TODO: 로그인한 강사의 실제 시설로 교체. 아직 현재 시설을 알려주는 세션/설정이 없어 임시 고정값 사용.
-    private val studioId = "3"
-
     val isEditMode: Boolean = templateId != null
 
     private val _formLoadState = MutableStateFlow<ClassTemplateFormLoadState>(ClassTemplateFormLoadState.Loading)
@@ -40,8 +39,9 @@ internal class ClassTemplateCreateViewModel(
 
     init {
         viewModelScope.launch {
+            val studioId = studioContext.getSelectedStudio().id.value
             val classTypes = repository.getClassTypes(studioId)
-            val initialValues = templateId?.let { repository.getTemplate(studioId, it)?.toFormValues() }
+            val initialValues = templateId?.let { repository.getTemplate(studioId, it)?.toFormValues(classTypes) }
             _formLoadState.update { ClassTemplateFormLoadState.Ready(classTypes, initialValues) }
         }
     }
@@ -50,6 +50,7 @@ internal class ClassTemplateCreateViewModel(
         _uiState.update { ClassTemplateCreateUiState.Submitting }
         viewModelScope.launch {
             runCatching {
+                val studioId = studioContext.getSelectedStudio().id.value
                 if (templateId != null) {
                     repository.updateTemplate(studioId, draft.toClassTemplate(id = templateId))
                 } else {

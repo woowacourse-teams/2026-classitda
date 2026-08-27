@@ -75,33 +75,33 @@ private fun List<String>.toRequestIds(): List<Long> {
     return map { it.toClassTypeId() }
 }
 
-private fun ClassFormDto.toDomain(): ClassForm =
+internal fun ClassFormDto.toDomain(): ClassForm =
     when (this) {
         ClassFormDto.INDIVIDUAL -> ClassForm.INDIVIDUAL
         ClassFormDto.GROUP -> ClassForm.GROUP
     }
 
-private fun ClassForm.toDto(): ClassFormDto =
+internal fun ClassForm.toDto(): ClassFormDto =
     when (this) {
         ClassForm.INDIVIDUAL -> ClassFormDto.INDIVIDUAL
         ClassForm.GROUP -> ClassFormDto.GROUP
     }
 
-private fun RecurringDayDto.toDomain(): DayOfWeek = DayOfWeek.valueOf(name)
+internal fun RecurringDayDto.toDomain(): DayOfWeek = DayOfWeek.valueOf(name)
 
-private fun DayOfWeek.toDto(): RecurringDayDto = RecurringDayDto.valueOf(name)
+internal fun DayOfWeek.toDto(): RecurringDayDto = RecurringDayDto.valueOf(name)
 
 internal fun String.toStudioId(): Long = toLongOrNull() ?: error("올바르지 않은 studioId입니다: $this")
 
 internal fun String.toClassTemplateId(): Long = toLongOrNull() ?: error("올바르지 않은 템플릿 ID입니다: $this")
 
-private fun String.toClassTypeId(): Long = toLongOrNull() ?: error("올바르지 않은 수업 종류 ID입니다: $this")
+internal fun String.toClassTypeId(): Long = toLongOrNull() ?: error("올바르지 않은 수업 종류 ID입니다: $this")
 
-private fun LocalTime.toApiTimeString(): String = "${hour.pad2()}:${minute.pad2()}:${second.pad2()}"
+internal fun LocalTime.toApiTimeString(): String = "${hour.pad2()}:${minute.pad2()}:${second.pad2()}"
 
 private fun Int.pad2(): String = toString().padStart(2, '0')
 
-private fun LocalTime.plusMinutesClamped(minutes: Int): LocalTime {
+internal fun LocalTime.plusMinutesClamped(minutes: Int): LocalTime {
     val totalMinutes = ((hour * 60 + minute + minutes) % (24 * 60) + 24 * 60) % (24 * 60)
     return LocalTime(totalMinutes / 60, totalMinutes % 60)
 }

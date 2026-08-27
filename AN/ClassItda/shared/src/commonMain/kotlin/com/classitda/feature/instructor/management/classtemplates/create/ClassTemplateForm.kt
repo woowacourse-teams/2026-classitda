@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.component.PrimaryButton
+import com.classitda.domain.model.instructor.management.ClassType
 import com.classitda.feature.instructor.management.classtemplates.create.model.ClassTemplateDraftUiModel
 import com.classitda.feature.instructor.management.classtemplates.create.model.ClassTemplateFormValues
 import com.classitda.feature.instructor.management.component.CategoryChipSelector
@@ -29,21 +30,20 @@ import com.classitda.feature.instructor.management.component.ClassTimePickerDial
 import com.classitda.feature.instructor.management.component.CreateTextField
 import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.component.WeekdaySelector
-import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassFormOption
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalTime
-import com.classitda.domain.model.instructor.management.ClassType as DomainClassType
 
 @Composable
 internal fun ClassTemplateForm(
-    classTypes: List<DomainClassType>,
+    classTypes: List<ClassType>,
     initialValues: ClassTemplateFormValues?,
     submitButtonText: String,
     onSubmit: (ClassTemplateDraftUiModel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var classType by remember { mutableStateOf(initialValues?.classType ?: ClassType.GROUP) }
-    var selectedCategories by remember { mutableStateOf(initialValues?.categories ?: emptyList()) }
+    var classType by remember { mutableStateOf(initialValues?.classType ?: ClassFormOption.GROUP) }
+    var selectedCategory by remember { mutableStateOf(initialValues?.category) }
     var title by remember { mutableStateOf(initialValues?.title.orEmpty()) }
     var capacityText by remember { mutableStateOf(initialValues?.capacity?.toString() ?: "8") }
     var durationMinutesText by remember { mutableStateOf(initialValues?.durationMinutes?.toString() ?: "50") }
@@ -58,7 +58,7 @@ internal fun ClassTemplateForm(
     val endTime = remember(startTime, durationMinutes) { startTime.plusMinutesClamped(durationMinutes) }
 
     val isFormValid =
-        selectedCategories.isNotEmpty() &&
+        selectedCategory != null &&
             title.isNotBlank() &&
             capacity > 0 &&
             durationMinutes > 0 &&
@@ -75,17 +75,17 @@ internal fun ClassTemplateForm(
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             SectionLabel(text = "수업 유형 *")
             OutlinedSegmentedToggle(
-                options = ClassType.entries.map { it.label },
-                selectedIndex = ClassType.entries.indexOf(classType),
-                onOptionSelected = { classType = ClassType.entries[it] },
+                options = ClassFormOption.entries.map { it.label },
+                selectedIndex = ClassFormOption.entries.indexOf(classType),
+                onOptionSelected = { classType = ClassFormOption.entries[it] },
             )
         }
 
         CategoryChipSelector(
             label = "카테고리 *",
-            allCategories = classTypes.map { it.name },
-            selectedCategories = selectedCategories,
-            onSelectedCategoriesChanged = { selectedCategories = it },
+            allCategories = classTypes,
+            selectedCategory = selectedCategory,
+            onCategorySelected = { selectedCategory = it },
         )
 
         CreateTextField(
@@ -164,11 +164,7 @@ internal fun ClassTemplateForm(
                 onSubmit(
                     ClassTemplateDraftUiModel(
                         classType = classType,
-                        categories = selectedCategories,
-                        classTypeIds =
-                            selectedCategories.mapNotNull { name ->
-                                classTypes.find { it.name == name }?.id
-                            },
+                        category = selectedCategory,
                         title = title,
                         capacity = capacity,
                         durationMinutes = durationMinutes,

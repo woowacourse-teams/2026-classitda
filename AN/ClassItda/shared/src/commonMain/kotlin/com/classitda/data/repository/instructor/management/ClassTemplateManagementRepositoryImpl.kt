@@ -73,14 +73,14 @@ internal class ClassTemplateManagementRepositoryImpl(
         }
 }
 
-private suspend fun <T> handlingApiErrors(block: suspend () -> T): T =
+internal suspend fun <T> handlingApiErrors(block: suspend () -> T): T =
     try {
         block()
     } catch (e: ResponseException) {
         throw e.toClassTemplateManagementException()
     }
 
-private suspend fun ResponseException.toClassTemplateManagementException(): ClassTemplateManagementException {
+internal suspend fun ResponseException.toClassTemplateManagementException(): ClassTemplateManagementException {
     val error = toErrorResponse()
     return when (response.status) {
         HttpStatusCode.BadRequest -> ClassTemplateManagementException.InvalidRequest(error.code, error.message)
