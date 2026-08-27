@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,47 +67,14 @@ internal fun ClassTemplateForm(
             durationMinutes > 0 &&
             (!isRepeating || selectedDays.isNotEmpty())
 
-    Scaffold(
-        modifier = modifier,
-        containerColor = InsColors.Background,
-        bottomBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding(),
-                color = InsColors.Background,
-            ) {
-                PrimaryButton(
-                    text = submitButtonText,
-                    enabled = isFormValid,
-                    onClick = {
-                        onSubmit(
-                            ClassTemplateDraftUiModel(
-                                classType = classType,
-                                category = selectedCategory,
-                                title = title,
-                                capacity = capacity,
-                                durationMinutes = durationMinutes,
-                                isRepeating = isRepeating,
-                                repeatDays = if (isRepeating) selectedDays else emptySet(),
-                                startTime = startTime,
-                                description = description,
-                            ),
-                        )
-                    },
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
-                )
-            }
-        },
-    ) { contentPadding ->
+    Column(modifier = modifier.fillMaxSize()) {
         Column(
             modifier =
                 Modifier
-                    .fillMaxSize()
-                    .padding(contentPadding)
+                    .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+                    .padding(horizontal = AppSpacing.screenPadding)
+                    .padding(top = AppSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
@@ -194,6 +160,35 @@ internal fun ClassTemplateForm(
                 onValueChange = { description = it },
                 singleLine = false,
                 minLines = 3,
+            )
+        }
+
+        Surface(
+            modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding(),
+            color = InsColors.Background,
+        ) {
+            PrimaryButton(
+                text = submitButtonText,
+                enabled = isFormValid,
+                onClick = {
+                    onSubmit(
+                        ClassTemplateDraftUiModel(
+                            classType = classType,
+                            category = selectedCategory,
+                            title = title,
+                            capacity = capacity,
+                            durationMinutes = durationMinutes,
+                            isRepeating = isRepeating,
+                            repeatDays = if (isRepeating) selectedDays else emptySet(),
+                            startTime = startTime,
+                            description = description,
+                        ),
+                    )
+                },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
             )
         }
     }

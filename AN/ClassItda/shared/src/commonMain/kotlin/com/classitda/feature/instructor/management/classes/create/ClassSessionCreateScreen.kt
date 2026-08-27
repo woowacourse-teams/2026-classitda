@@ -169,7 +169,8 @@ internal fun ClassSessionCreateScreen(
                     .fillMaxSize()
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+                    .padding(horizontal = AppSpacing.screenPadding)
+                    .padding(top = AppSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
         ) {
             DropdownField(

@@ -64,7 +64,7 @@ private fun ClassTemplateEditScreenPreview() {
                     title = "리포머 밸런스",
                     capacity = 8,
                     durationMinutes = 50,
-                    isRepeating = true,
+                    isRepeating = false,
                     repeatDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
                     startTime = LocalTime(10, 0),
                     description = "",
