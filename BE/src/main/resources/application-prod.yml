@@ -11,9 +11,6 @@ spring:
       password: ${REDIS_PASSWORD:}
       ssl:
         enabled: ${REDIS_SSL:false}
-  sql:
-    init:
-      mode: never
 
 springdoc:
   api-docs:

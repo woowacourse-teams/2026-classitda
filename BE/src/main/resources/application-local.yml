@@ -7,13 +7,8 @@ spring:
     url: "jdbc:mysql://localhost:3306/classitda?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=Asia%2FSeoul"
     username: classitda
     password: classitda
-  sql:
-    init:
-      mode: always
-      schema-locations:
-        - classpath:reset-schema.sql
-        - classpath:schema.sql
-      data-locations: classpath:local-data.sql
+  flyway:
+    locations: classpath:db/migration,classpath:db/local
 
 auth:
   sms:
