@@ -55,6 +55,8 @@ images:
   upload-url-ttl: PT5M
 
 auth:
+  apple:
+    ios-client-id: ${APPLE_OAUTH_IOS_CLIENT_ID}
   google:
     web-client-id: ${GOOGLE_OAUTH_WEB_CLIENT_ID}
     ios-client-id: ${GOOGLE_OAUTH_IOS_CLIENT_ID}

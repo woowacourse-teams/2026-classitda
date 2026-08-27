@@ -29,7 +29,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationErrorHandler)
                         .accessDeniedHandler(authenticationErrorHandler))
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/auth/google", "/api/auth/tokens/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/google", "/api/auth/apple", "/api/auth/tokens/refresh").permitAll()
                         // TODO: 실제 운영 전환 전에 개발용 토큰 발급 Controller와 이 permitAll 규칙을 함께 제거한다.
                         .requestMatchers(HttpMethod.POST, "/api/auth/local/members/*/tokens").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/terms").hasAuthority(TokenUse.SIGNUP.authority())

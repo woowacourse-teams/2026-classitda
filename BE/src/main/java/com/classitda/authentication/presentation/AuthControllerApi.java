@@ -1,10 +1,10 @@
 package com.classitda.authentication.presentation;
 
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
-import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.login.LoginResponse;
 import com.classitda.authentication.presentation.dto.login.RegisteredLoginResponse;
 import com.classitda.authentication.presentation.dto.login.RegistrationRequiredLoginResponse;
+import com.classitda.authentication.presentation.dto.login.SocialLoginRequest;
 import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
@@ -33,23 +33,33 @@ import org.springframework.security.oauth2.jwt.Jwt;
 public interface AuthControllerApi {
 
     @Operation(
-            summary = "Google 로그인",
-            description = "Google ID 토큰을 검증합니다. 가입된 회원에게는 Access Token과 Refresh Token을, "
+            summary = "소셜 로그인",
+            description = "경로로 지정한 Google 또는 Apple의 ID 토큰을 검증합니다. "
+                    + "가입된 회원에게는 Access Token과 Refresh Token을, "
                     + "가입하지 않은 사용자에게는 회원가입에 사용할 Signup Token을 발급합니다.",
             requestBody = @RequestBody(
                     required = true,
-                    description = "Google에서 발급받은 ID 토큰",
+                    description = "선택한 소셜 로그인 제공자에서 발급받은 ID 토큰",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = GoogleLoginRequest.class),
-                            examples = @ExampleObject(value = "{\"idToken\":\"google-id-token\"}")
+                            schema = @Schema(implementation = SocialLoginRequest.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "GOOGLE",
+                                            value = "{\"idToken\":\"google-id-token\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "APPLE",
+                                            value = "{\"idToken\":\"apple-id-token\"}"
+                                    )
+                            }
                     )
             )
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Google 로그인 처리 성공",
+                    description = "소셜 로그인 처리 성공",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(oneOf = {
@@ -98,13 +108,22 @@ public interface AuthControllerApi {
             ),
             @ApiResponse(
                     responseCode = "401",
-                    description = "Google ID 토큰이 유효하지 않음",
+                    description = "Google 또는 Apple ID 토큰이 유효하지 않음",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    value = "{\"code\":\"AUTH-006\",\"message\":\"Google ID 토큰이 유효하지 않습니다.\"}"
-                            )
+                            examples = {
+                                    @ExampleObject(
+                                            name = "GOOGLE_ID_TOKEN_INVALID",
+                                            value = "{\"code\":\"AUTH-006\","
+                                                    + "\"message\":\"Google ID 토큰이 유효하지 않습니다.\"}"
+                                    ),
+                                    @ExampleObject(
+                                            name = "APPLE_ID_TOKEN_INVALID",
+                                            value = "{\"code\":\"AUTH-010\","
+                                                    + "\"message\":\"Apple ID 토큰이 유효하지 않습니다.\"}"
+                                    )
+                            }
                     )
             ),
             @ApiResponse(
@@ -117,10 +136,28 @@ public interface AuthControllerApi {
                                     value = "{\"code\":\"AUTH-009\",\"message\":\"탈퇴 처리 중인 계정입니다.\"}"
                             )
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "소셜 로그인 제공자의 공개키 조회 등 서버 내부 처리 실패",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    value = "{\"code\":\"COMMON-002\",\"message\":\"서버 내부 오류가 발생했습니다.\"}"
+                            )
+                    )
             )
     })
-    LoginResponse loginWithGoogle(
-            @Valid GoogleLoginRequest request
+    LoginResponse loginWithSocial(
+            @Parameter(
+                    description = "소셜 로그인 제공자",
+                    example = "google",
+                    required = true,
+                    schema = @Schema(allowableValues = {"google", "apple"})
+            )
+            String provider,
+            @Valid SocialLoginRequest request
     );
 
     @Operation(
