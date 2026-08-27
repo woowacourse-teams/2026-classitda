@@ -3,7 +3,7 @@ package com.classitda.authentication.presentation;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
-import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
+import com.classitda.authentication.presentation.dto.login.SocialLoginRequest;
 import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.signup.SignupRequest;
 import com.classitda.authentication.presentation.dto.token.RefreshTokenRequest;
@@ -20,20 +20,36 @@ import org.springframework.security.oauth2.jwt.Jwt;
 class AuthControllerApiTest {
 
     @Test
-    void 구글_로그인_OpenAPI는_탈퇴_처리_중_오류를_문서화한다() throws NoSuchMethodException {
+    void 소셜_로그인_OpenAPI는_제공자와_Google_Apple_오류를_문서화한다() throws NoSuchMethodException {
         // given
-        ApiResponses responses = AuthControllerApi.class
-                .getMethod("loginWithGoogle", GoogleLoginRequest.class)
-                .getAnnotation(ApiResponses.class);
+        java.lang.reflect.Method method = AuthControllerApi.class
+                .getMethod("loginWithSocial", String.class, SocialLoginRequest.class);
+        Operation operation = method.getAnnotation(Operation.class);
+        java.lang.reflect.Parameter providerParameter = method.getParameters()[0];
+        ApiResponses responses = method.getAnnotation(ApiResponses.class);
 
         // when
+        ApiResponse unauthenticated = response(responses, "401");
         ApiResponse forbidden = response(responses, "403");
+        Parameter provider = providerParameter.getAnnotation(Parameter.class);
 
         // then
+        assertThat(operation.summary()).isEqualTo("소셜 로그인");
+        assertThat(operation.requestBody().content()).singleElement().satisfies(content -> {
+            assertThat(content.schema().implementation()).isEqualTo(SocialLoginRequest.class);
+            assertThat(content.examples())
+                    .extracting(ExampleObject::name)
+                    .containsExactlyInAnyOrder("GOOGLE", "APPLE");
+        });
+        assertThat(provider.required()).isTrue();
+        assertThat(provider.schema().allowableValues()).containsExactly("google", "apple");
+        assertThat(exampleValues(unauthenticated))
+                .anyMatch(value -> value.contains("\"code\":\"AUTH-006\""))
+                .anyMatch(value -> value.contains("\"code\":\"AUTH-010\""));
         assertThat(exampleValues(forbidden))
                 .containsExactly("{\"code\":\"AUTH-009\",\"message\":\"탈퇴 처리 중인 계정입니다.\"}");
         assertThat(Arrays.stream(responses.value()).map(ApiResponse::responseCode))
-                .containsExactlyInAnyOrder("200", "400", "401", "403");
+                .containsExactlyInAnyOrder("200", "400", "401", "403", "500");
     }
 
     @Test

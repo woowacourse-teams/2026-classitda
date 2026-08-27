@@ -11,7 +11,6 @@ import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.repository.AuthAccountRepository;
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
-import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.login.LoginResponse;
 import com.classitda.member.domain.repository.MemberRepository;
 import java.util.List;
@@ -30,8 +29,8 @@ public class SocialLoginService {
     private final LoginTokenIssuer loginTokenIssuer;
     private final MemberRepository memberRepository;
 
-    public LoginResponse loginWithGoogle(GoogleLoginRequest request) {
-        SocialIdentity identity = verifyIdentity(OauthProvider.GOOGLE, request.idToken());
+    public LoginResponse loginWithSocial(OauthProvider provider, String idToken) {
+        SocialIdentity identity = verifyIdentity(provider, idToken);
         return login(identity);
     }
 

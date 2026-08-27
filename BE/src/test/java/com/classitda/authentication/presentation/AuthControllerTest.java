@@ -15,6 +15,7 @@ import com.classitda.authentication.application.token.result.IssuedAccessToken;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
 import com.classitda.authentication.application.token.result.IssuedRefreshToken;
 import com.classitda.authentication.application.token.result.IssuedSignupToken;
+import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.TokenUse;
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
@@ -22,8 +23,8 @@ import com.classitda.authentication.infra.security.AuthenticationErrorHandler;
 import com.classitda.authentication.infra.security.SecurityConfig;
 import com.classitda.authentication.infra.security.jwt.JwtAuthenticationConverter;
 import com.classitda.authentication.presentation.config.AuthenticationWebMvcConfig;
-import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.login.LoginResponse;
+import com.classitda.authentication.presentation.dto.login.SocialLoginRequest;
 import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
@@ -105,9 +106,9 @@ class AuthControllerTest {
     @Test
     void 미가입_구글_계정은_가입_토큰_필드만_반환한다() {
         // given
-        GoogleLoginRequest request = GoogleLoginRequest.from(ID_TOKEN);
+        SocialLoginRequest request = SocialLoginRequest.from(ID_TOKEN);
         LoginResponse response = LoginResponse.registrationRequired(IssuedSignupToken.of("signup-token", 1800L));
-        given(socialLoginService.loginWithGoogle(request)).willReturn(response);
+        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN)).willReturn(response);
 
         // when
         RestTestClient.ResponseSpec result = client.post()
@@ -126,16 +127,16 @@ class AuthControllerTest {
                           "signupTokenExpiresIn": 1800
                         }
                         """, JsonCompareMode.STRICT);
-        verify(socialLoginService).loginWithGoogle(request);
+        verify(socialLoginService).loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN);
     }
 
     @Test
     void 기존_구글_계정은_로그인_토큰_필드만_반환한다() {
         // given
-        GoogleLoginRequest request = GoogleLoginRequest.from(ID_TOKEN);
+        SocialLoginRequest request = SocialLoginRequest.from(ID_TOKEN);
         LoginResponse response = LoginResponse.registered(
                 IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L));
-        given(socialLoginService.loginWithGoogle(request)).willReturn(response);
+        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN)).willReturn(response);
 
         // when
         RestTestClient.ResponseSpec result = client.post()
@@ -156,14 +157,42 @@ class AuthControllerTest {
                           "refreshTokenExpiresIn": 2592000
                         }
                         """, JsonCompareMode.STRICT);
-        verify(socialLoginService).loginWithGoogle(request);
+        verify(socialLoginService).loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN);
+    }
+
+    @Test
+    void 애플_로그인은_공통_엔드포인트에서_APPLE_제공자로_처리한다() {
+        // given
+        String appleIdToken = "apple-id-token";
+        SocialLoginRequest request = SocialLoginRequest.from(appleIdToken);
+        LoginResponse response = LoginResponse.registrationRequired(IssuedSignupToken.of("signup-token", 1800L));
+        given(socialLoginService.loginWithSocial(OauthProvider.APPLE, appleIdToken)).willReturn(response);
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/auth/apple")
+                .header("X-API-Version", "1")
+                .body(request)
+                .exchange();
+
+        // then
+        result.expectStatus().isOk()
+                .expectBody()
+                .json("""
+                        {
+                          "status": "REGISTRATION_REQUIRED",
+                          "signupToken": "signup-token",
+                          "signupTokenExpiresIn": 1800
+                        }
+                        """, JsonCompareMode.STRICT);
+        verify(socialLoginService).loginWithSocial(OauthProvider.APPLE, appleIdToken);
     }
 
     @Test
     void 탈퇴_처리_중인_구글_계정은_AUTH_009를_반환한다() {
         // given
-        GoogleLoginRequest request = GoogleLoginRequest.from(ID_TOKEN);
-        given(socialLoginService.loginWithGoogle(request))
+        SocialLoginRequest request = SocialLoginRequest.from(ID_TOKEN);
+        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN))
                 .willThrow(new AuthException(AuthErrorCode.MEMBER_WITHDRAWAL_PENDING));
 
         // when
@@ -183,7 +212,7 @@ class AuthControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/auth/google")
                 .header("X-API-Version", "1")
-                .body(GoogleLoginRequest.from(" "))
+                .body(SocialLoginRequest.from(" "))
                 .exchange();
 
         // then

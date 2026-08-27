@@ -7,9 +7,10 @@ import com.classitda.authentication.application.RefreshTokenService;
 import com.classitda.authentication.application.SignupService;
 import com.classitda.authentication.application.SocialLoginService;
 import com.classitda.authentication.application.phone.PhoneVerificationService;
+import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.presentation.annotation.CurrentMemberId;
-import com.classitda.authentication.presentation.dto.login.GoogleLoginRequest;
 import com.classitda.authentication.presentation.dto.login.LoginResponse;
+import com.classitda.authentication.presentation.dto.login.SocialLoginRequest;
 import com.classitda.authentication.presentation.dto.logout.LogoutRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationConfirmRequest;
 import com.classitda.authentication.presentation.dto.phone.PhoneVerificationResponse;
@@ -41,11 +42,20 @@ public class AuthController implements AuthControllerApi {
     private final LogoutService logoutService;
 
     @Override
-    @PostMapping(value = "/google", version = "1")
-    public LoginResponse loginWithGoogle(
-            @RequestBody GoogleLoginRequest request
+    @PostMapping(value = "/{provider:google|apple}", version = "1")
+    public LoginResponse loginWithSocial(
+            @PathVariable String provider,
+            @Valid @RequestBody SocialLoginRequest request
     ) {
-        return socialLoginService.loginWithGoogle(request);
+        return socialLoginService.loginWithSocial(resolveProvider(provider), request.idToken());
+    }
+
+    private OauthProvider resolveProvider(String provider) {
+        return switch (provider) {
+            case "google" -> OauthProvider.GOOGLE;
+            case "apple" -> OauthProvider.APPLE;
+            default -> throw new IllegalArgumentException("지원하지 않는 OAuth 제공자입니다: " + provider);
+        };
     }
 
     @Override
