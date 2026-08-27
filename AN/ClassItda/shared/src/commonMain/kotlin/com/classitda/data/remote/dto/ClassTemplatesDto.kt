@@ -12,7 +12,7 @@ internal data class ClassTemplateResponseDto(
     val startTime: String,
     val recurringDays: List<RecurringDayDto> = emptyList(),
     val capacity: Int,
-    val classTypes: List<ClassTypeResponseDto> = emptyList(),
+    val classType: ClassTypeResponseDto,
 )
 
 @Serializable
@@ -24,7 +24,7 @@ internal data class ClassTemplateCreateRequestDto(
     val startTime: String,
     val recurringDays: List<RecurringDayDto> = emptyList(),
     val capacity: Int,
-    val classTypeIds: List<Long>,
+    val classTypeId: Long,
 )
 
 @Serializable
@@ -36,7 +36,7 @@ internal data class ClassTemplateUpdateRequestDto(
     val startTime: String,
     val recurringDays: List<RecurringDayDto> = emptyList(),
     val capacity: Int,
-    val classTypeIds: List<Long>,
+    val classTypeId: Long,
 )
 
 @Serializable

@@ -8,6 +8,7 @@ import com.classitda.domain.model.instructor.session.InstructorSessionStatus
 internal fun InstructorDailySession.toClassSession() =
     ClassSession(
         id = id,
+        classTypeId = classType.id,
         tags = listOf(classType.name),
         title = className,
         startAt = startAt,
