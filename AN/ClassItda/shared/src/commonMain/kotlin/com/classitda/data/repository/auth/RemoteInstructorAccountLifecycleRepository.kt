@@ -6,8 +6,8 @@ import com.classitda.domain.repository.auth.AccountLifecycleResult
 import com.classitda.domain.repository.auth.InstructorAccountLifecycleRepository
 import io.ktor.client.plugins.ResponseException
 import io.ktor.serialization.JsonConvertException
-import io.ktor.utils.io.errors.IOException
 import kotlinx.coroutines.CancellationException
+import kotlinx.io.IOException
 import kotlinx.serialization.SerializationException
 
 internal class RemoteInstructorAccountLifecycleRepository(
