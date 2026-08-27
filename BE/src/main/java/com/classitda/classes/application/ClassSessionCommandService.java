@@ -96,7 +96,7 @@ public class ClassSessionCommandService {
     public void updateV1(Long memberId, Long studioId, Long classSessionId, ClassSessionUpdateV1Request request) {
         Studio studio = getStudio(studioId);
         StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
-        ClassSession classSession = getClassSession(studioId, classSessionId);
+        ClassSession classSession = getClassSessionForUpdate(studioId, classSessionId);
 
         validateManagePermission(
                 studio,
@@ -110,7 +110,7 @@ public class ClassSessionCommandService {
     public void updateV2(Long memberId, Long studioId, Long classSessionId, ClassSessionUpdateV2Request request) {
         Studio studio = getStudio(studioId);
         StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
-        ClassSession classSession = getClassSession(studioId, classSessionId);
+        ClassSession classSession = getClassSessionForUpdate(studioId, classSessionId);
 
         Long currentInstructorMembershipId = classSession.getInstructorMembership().getId();
         Long targetInstructorMembershipId = request.instructorMembershipId();
@@ -189,8 +189,8 @@ public class ClassSessionCommandService {
         return membership;
     }
 
-    private ClassSession getClassSession(Long studioId, Long classSessionId) {
-        return classSessionRepository.findByIdAndStudioId(classSessionId, studioId)
+    private ClassSession getClassSessionForUpdate(Long studioId, Long classSessionId) {
+        return classSessionRepository.findForUpdateByIdAndStudioId(classSessionId, studioId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
     }
 
