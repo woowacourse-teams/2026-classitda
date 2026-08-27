@@ -3,7 +3,6 @@ package com.classitda.classes.application.instructor.enrollment;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classitda.classes.application.instructor.InstructorSessionAccessReader;
 import com.classitda.classes.application.instructor.InstructorSessionStatus;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.ClassType;
@@ -32,33 +31,22 @@ import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlDataJpaTest;
+import com.classitda.support.TestClockConfiguration;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.List;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
-import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
-@Import({
-        InstructorSessionQueryService.class,
-        InstructorSessionAccessReader.class,
-        InstructorSessionQueryServiceTest.FixedClockConfig.class
-})
+@Import(TestClockConfiguration.August17AtTen.class)
 @MySqlDataJpaTest
 class InstructorSessionQueryServiceTest {
 
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 10, 0);
     private static final LocalDateTime SESSION_START = LocalDateTime.of(2026, 8, 17, 12, 0);
 
@@ -644,13 +632,4 @@ class InstructorSessionQueryServiceTest {
     ) {
     }
 
-    @TestConfiguration
-    static class FixedClockConfig {
-
-        @Primary
-        @Bean
-        Clock clock() {
-            return Clock.fixed(NOW.atZone(SERVICE_ZONE_ID).toInstant(), SERVICE_ZONE_ID);
-        }
-    }
 }

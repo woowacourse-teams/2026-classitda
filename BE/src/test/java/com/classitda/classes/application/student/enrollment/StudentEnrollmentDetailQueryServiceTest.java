@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
-import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.session.ClassSession;
 import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
@@ -36,14 +35,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
-@Import({
-        StudentEnrollmentDetailQueryService.class,
-        StudentSessionAccessReader.class
-})
 @MySqlDataJpaTest
 class StudentEnrollmentDetailQueryServiceTest {
 

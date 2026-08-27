@@ -3,7 +3,6 @@ package com.classitda.studio.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classitda.classes.application.ClassTypeService;
 import com.classitda.classes.domain.ClassType;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.member.domain.Member;
@@ -27,9 +26,7 @@ import jakarta.persistence.EntityManager;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
-@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
 @MySqlDataJpaTest
 class StudioServiceTest {
 

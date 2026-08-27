@@ -9,9 +9,7 @@ import com.classitda.support.MySqlDataJpaTest;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 
-@Import(TermService.class)
 @MySqlDataJpaTest
 class TermServiceTest {
 

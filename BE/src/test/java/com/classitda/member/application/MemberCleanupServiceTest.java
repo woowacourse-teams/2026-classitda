@@ -25,27 +25,19 @@ import com.classitda.studio.application.StudioMembershipTerminationService;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlDataJpaTest;
+import com.classitda.support.TestClockConfiguration;
 import jakarta.persistence.EntityManager;
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
-@Import({
-        MemberCleanupService.class,
-        MemberService.class,
-        StudioMembershipTerminationService.class,
-        MemberCleanupServiceTest.FixedClockConfig.class})
+@Import(TestClockConfiguration.August31AtFifteenThirty.class)
 @MySqlDataJpaTest
 class MemberCleanupServiceTest {
 
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 31, 15, 30);
 
     private final MemberCleanupService memberCleanupService;
@@ -447,12 +439,4 @@ class MemberCleanupServiceTest {
     private record OperationalHistoryIds(Long memberPassProductId, Long enrollmentId) {
     }
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class FixedClockConfig {
-
-        @Bean
-        Clock clock() {
-            return Clock.fixed(NOW.atZone(SERVICE_ZONE_ID).toInstant(), SERVICE_ZONE_ID);
-        }
-    }
 }

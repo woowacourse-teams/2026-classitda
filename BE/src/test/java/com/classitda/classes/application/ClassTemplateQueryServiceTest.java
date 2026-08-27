@@ -13,7 +13,6 @@ import com.classitda.classes.fixture.ClassTemplateFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassTemplateResponse;
 import com.classitda.member.domain.Member;
-import com.classitda.studio.application.StudioPermissionService;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
@@ -29,11 +28,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
-@Import({ClassTemplateQueryService.class, StudioPermissionService.class})
 @MySqlDataJpaTest
 class ClassTemplateQueryServiceTest {
 

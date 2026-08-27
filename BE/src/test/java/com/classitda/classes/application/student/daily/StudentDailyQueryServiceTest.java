@@ -6,10 +6,7 @@ import static org.assertj.core.api.Assertions.tuple;
 
 import com.classitda.classes.application.student.BookingAvailability;
 import com.classitda.classes.application.student.StudentBookingDecision;
-import com.classitda.classes.application.student.StudentBookingDecisionPolicy;
 import com.classitda.classes.application.student.StudentBookingRelation;
-import com.classitda.classes.application.student.StudentSessionAccessReader;
-import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.classes.domain.enrollment.AttendanceResult;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.session.ClassSession;
@@ -38,12 +35,11 @@ import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlDataJpaTest;
+import com.classitda.support.TestClockConfiguration;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -55,26 +51,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
-import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
-@Import({
-        StudentDailyQueryService.class,
-        StudentSessionAccessReader.class,
-        StudentOwnedPassesReader.class,
-        StudentDailyScheduleReader.class,
-        StudentDailySessionAssembler.class,
-        StudentBookingDecisionPolicy.class,
-        StudentDailyQueryServiceTest.FixedClockConfig.class
-})
+@Import(TestClockConfiguration.August17AtTen.class)
 @MySqlDataJpaTest
 class StudentDailyQueryServiceTest {
 
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 10, 0);
     private static final LocalDate QUERY_DATE = LocalDate.of(2026, 8, 17);
 
@@ -1084,13 +1066,4 @@ class StudentDailyQueryServiceTest {
         );
     }
 
-    @TestConfiguration
-    static class FixedClockConfig {
-
-        @Primary
-        @Bean
-        Clock clock() {
-            return Clock.fixed(NOW.atZone(SERVICE_ZONE_ID).toInstant(), SERVICE_ZONE_ID);
-        }
-    }
 }

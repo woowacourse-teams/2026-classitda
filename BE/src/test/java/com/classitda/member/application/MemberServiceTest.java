@@ -13,25 +13,20 @@ import com.classitda.member.exception.MemberException;
 import com.classitda.member.fixture.MemberFixture;
 import com.classitda.member.presentation.dto.MyNameUpdateRequest;
 import com.classitda.member.presentation.dto.MyProfileResponse;
-import com.classitda.studio.application.StudioMembershipTerminationService;
 import com.classitda.studio.domain.repository.StudioRepository;
 import com.classitda.studio.fixture.StudioFixture;
 import com.classitda.support.MySqlDataJpaTest;
+import com.classitda.support.TestClockConfiguration;
 import jakarta.persistence.EntityManager;
-import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 
-@Import({MemberService.class, MemberServiceTest.FixedClockConfig.class, StudioMembershipTerminationService.class})
+@Import(TestClockConfiguration.August24AtFifteenThirty.class)
 @MySqlDataJpaTest
 class MemberServiceTest {
 
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 24, 15, 30);
 
     private final MemberService memberService;
@@ -241,14 +236,6 @@ class MemberServiceTest {
                 .isEqualTo(expected);
     }
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class FixedClockConfig {
-
-        @Bean
-        Clock clock() {
-            return Clock.fixed(NOW.atZone(SERVICE_ZONE_ID).toInstant(), SERVICE_ZONE_ID);
-        }
-    }
     private void 소셜_계정을_저장한다(Long memberId, OauthProvider provider, String providerEmail) {
         authAccountRepository.saveAndFlush(AuthAccount.builder()
                 .memberId(memberId)

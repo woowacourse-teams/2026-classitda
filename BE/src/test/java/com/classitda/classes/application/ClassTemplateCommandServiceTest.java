@@ -24,7 +24,6 @@ import com.classitda.common.exception.ClassitdaException;
 import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.member.domain.Member;
 import com.classitda.member.domain.repository.MemberRepository;
-import com.classitda.studio.application.StudioPermissionService;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Studio;
 import com.classitda.studio.domain.StudioMembership;
@@ -43,13 +42,11 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-@Import({ClassTemplateCommandService.class, StudioPermissionService.class})
 @MySqlDataJpaTest
 class ClassTemplateCommandServiceTest {
 
