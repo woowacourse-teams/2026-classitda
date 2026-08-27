@@ -11,6 +11,7 @@ import com.classitda.domain.repository.instructor.membership.InstructorMembershi
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.domain.repository.studio.StudioRepository
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
+import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -113,6 +114,33 @@ class MemberManagementViewModelTest {
 
             viewModel.uiState.awaitState<MemberManagementUiState.NoStudio>()
             assertEquals(0, repository.requests.size)
+        }
+
+    @Test
+    fun `페이지 커서가 순환하면 계약 오류로 조회를 중단한다`() =
+        runBlocking {
+            val repository =
+                RecordingMembershipRepository { _, cursor, _ ->
+                    val nextCursor =
+                        when (cursor) {
+                            null -> "A"
+                            "A" -> "B"
+                            "B" -> "A"
+                            else -> error("예상하지 못한 커서입니다: $cursor")
+                        }
+                    InstructorMyPageResult.Success(
+                        MemberListPage(
+                            totalCount = 0,
+                            members = emptyList(),
+                            nextPageCursor = nextCursor,
+                        ),
+                    )
+                }
+            val viewModel = MemberManagementViewModel(repository, studioContext())
+
+            val error = viewModel.uiState.awaitState<MemberManagementUiState.Error>()
+            assertEquals(MemberManagementUiError.UNKNOWN, error.reason)
+            assertEquals(listOf(null, "A", "B"), repository.requests.map { it.second })
         }
 
     private fun studioContext(studios: List<Studio> = listOf(studio("42"))): InstructorStudioContext =

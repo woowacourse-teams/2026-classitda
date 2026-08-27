@@ -181,8 +181,12 @@ internal class MemberManagementViewModel(
 
     private suspend fun loadAllMembers(studioId: StudioId): InstructorMyPageResult<MemberListPage> {
         val members = mutableListOf<ManagedMember>()
+        val requestedCursors = mutableSetOf<String?>()
         var cursor: String? = null
         while (true) {
+            if (!requestedCursors.add(cursor)) {
+                return InstructorMyPageResult.Failure(InstructorMyPageFailureReason.CONTRACT)
+            }
             when (val result = repository.getStudents(studioId, cursor, PAGE_SIZE)) {
                 is InstructorMyPageResult.Failure -> {
                     return result
@@ -192,9 +196,6 @@ internal class MemberManagementViewModel(
                     members += result.value.members
                     val nextCursor = result.value.nextPageCursor
                     if (nextCursor == null) break
-                    if (nextCursor == cursor) {
-                        return InstructorMyPageResult.Failure(InstructorMyPageFailureReason.CONTRACT)
-                    }
                     cursor = nextCursor
                 }
             }
