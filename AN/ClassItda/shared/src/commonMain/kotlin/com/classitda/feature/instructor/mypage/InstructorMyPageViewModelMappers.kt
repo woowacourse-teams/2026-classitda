@@ -103,6 +103,8 @@ internal fun InstructorMyPageFailureReason.toPhoneError() =
 internal fun InstructorMyPageFailureReason.toListError() =
     when (this) {
         InstructorMyPageFailureReason.NETWORK -> MemberManagementUiError.NETWORK
+        InstructorMyPageFailureReason.UNAUTHORIZED -> MemberManagementUiError.UNAUTHORIZED
+        InstructorMyPageFailureReason.FORBIDDEN -> MemberManagementUiError.FORBIDDEN
         else -> MemberManagementUiError.UNKNOWN
     }
 

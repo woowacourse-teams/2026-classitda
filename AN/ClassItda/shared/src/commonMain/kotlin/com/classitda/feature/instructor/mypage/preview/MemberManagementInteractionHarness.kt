@@ -155,6 +155,10 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
                     stringResource(Res.string.instructor_member_management_harness_open_registration)
                 }
 
+                MemberManagementAction.OpenStudioRegistration -> {
+                    "OpenStudioRegistration"
+                }
+
                 MemberManagementAction.Retry -> {
                     stringResource(Res.string.instructor_member_management_harness_retry)
                 }

@@ -50,6 +50,7 @@ internal fun ManagementFlowNavHost(
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
+    onOpenStudioRegistration: () -> Unit = {},
 ) {
     var templateRefreshKey by remember { mutableStateOf(0) }
     var memberRefreshKey by remember { mutableStateOf(0) }
@@ -95,6 +96,7 @@ internal fun ManagementFlowNavHost(
                     navController.navigate(MemberEditDestination(memberId.value))
                 },
                 onOpenMemberRegistration = { navController.navigate(MemberRegistrationDestination) },
+                onOpenStudioRegistration = onOpenStudioRegistration,
                 refreshToken = memberRefreshKey,
             )
         }

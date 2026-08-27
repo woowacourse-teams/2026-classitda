@@ -29,6 +29,7 @@ fun InstructorRootRoute(
     var isMemberEditing by remember { mutableStateOf(false) }
     var scheduleRefreshKey by remember { mutableStateOf(0) }
     var detailRefreshKey by remember { mutableStateOf(0) }
+    var studioRegistrationRequest by remember { mutableStateOf(0) }
 
     val topLevelBottomBar: @Composable () -> Unit = {
         InstructorBottomBar(
@@ -96,7 +97,14 @@ fun InstructorRootRoute(
             }
 
             InstructorBottomTab.MANAGEMENT -> {
-                ManagementFlowNavHost(bottomBar = topLevelBottomBar, modifier = modifier)
+                ManagementFlowNavHost(
+                    bottomBar = topLevelBottomBar,
+                    modifier = modifier,
+                    onOpenStudioRegistration = {
+                        selectedTab = InstructorBottomTab.MY
+                        studioRegistrationRequest++
+                    },
+                )
             }
 
             InstructorBottomTab.MY -> {
@@ -108,6 +116,7 @@ fun InstructorRootRoute(
                         onLogout()
                     },
                     onWithdrawalCompleted = onWithdrawalCompleted,
+                    openStudioRegistrationRequest = studioRegistrationRequest,
                 )
             }
         }

@@ -270,6 +270,10 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                                 "OpenMemberRegistration"
                         }
 
+                        MemberManagementAction.OpenStudioRegistration -> {
+                            lastEvent = "OpenStudioRegistration"
+                        }
+
                         is MemberManagementAction.QueryChanged -> {
                             lastEvent = "QueryChanged:${action.query}"
                         }

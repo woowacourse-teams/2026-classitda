@@ -1,9 +1,11 @@
 package com.classitda.feature.instructor.mypage
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -11,9 +13,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import co.touchlab.kermit.Logger
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.feature.common.privacypolicy.PrivacyPolicyRoute
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import org.koin.compose.koinInject
 
 @Serializable
 private data class InstructorStudioDetailDestination(
@@ -34,11 +39,22 @@ internal fun InstructorMyPageNavHost(
     modifier: Modifier = Modifier,
     onLogout: () -> Unit = {},
     onWithdrawalCompleted: () -> Unit = {},
+    openStudioRegistrationRequest: Int = 0,
 ) {
     val navController = rememberNavController()
+    val studioContext = koinInject<InstructorStudioContext>()
+    val scope = rememberCoroutineScope()
     var profileRefreshToken by remember { mutableStateOf(0) }
     var studioRefreshToken by remember { mutableStateOf(0) }
     var currentPhoneNumber by remember { mutableStateOf("") }
+
+    LaunchedEffect(openStudioRegistrationRequest) {
+        if (openStudioRegistrationRequest > 0) {
+            navController.navigate(InstructorMyPageDestination.F09) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -143,8 +159,16 @@ internal fun InstructorMyPageNavHost(
             InstructorStudioRegistrationRoute(
                 onBack = { navController.popBackStack() },
                 onSuccess = {
-                    studioRefreshToken++
-                    navController.popBackStack(InstructorMyPageDestination.F08, false)
+                    scope.launch {
+                        runCatching { studioContext.refreshStudios() }
+                        studioRefreshToken++
+                        if (!navController.popBackStack(InstructorMyPageDestination.F08, false)) {
+                            navController.navigate(InstructorMyPageDestination.F08) {
+                                popUpTo(InstructorMyPageDestination.F09) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                 },
             )
         }

@@ -5,6 +5,8 @@ import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 sealed interface MemberManagementUiState {
     data object Loading : MemberManagementUiState
 
+    data object NoStudio : MemberManagementUiState
+
     data class Content(
         val page: MemberListUiModel,
         val query: String = "",
@@ -15,6 +17,7 @@ sealed interface MemberManagementUiState {
 
     data class SearchEmpty(
         val query: String,
+        val totalCount: Int = 0,
     ) : MemberManagementUiState
 
     data class Error(
@@ -24,6 +27,8 @@ sealed interface MemberManagementUiState {
 
 enum class MemberManagementUiError {
     NETWORK,
+    UNAUTHORIZED,
+    FORBIDDEN,
     UNKNOWN,
 }
 
@@ -53,6 +58,8 @@ sealed interface MemberManagementAction {
     data object DeleteAcknowledged : MemberManagementAction
 
     data object OpenMemberRegistration : MemberManagementAction
+
+    data object OpenStudioRegistration : MemberManagementAction
 
     data object Retry : MemberManagementAction
 }

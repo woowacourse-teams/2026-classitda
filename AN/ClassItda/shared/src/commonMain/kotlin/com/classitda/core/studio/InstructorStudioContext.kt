@@ -17,6 +17,17 @@ internal class InstructorStudioContext(
             studios ?: repository.getMyStudios().also { studios = it }
         }
 
+    suspend fun refreshStudios() {
+        mutex.withLock {
+            val refreshedStudios = repository.getMyStudios()
+            studios = refreshedStudios
+            selectedStudio =
+                selectedStudio?.let { selected ->
+                    refreshedStudios.firstOrNull { it.id == selected.id }
+                }
+        }
+    }
+
     suspend fun selectStudio(studioId: String) {
         mutex.withLock {
             val studio =

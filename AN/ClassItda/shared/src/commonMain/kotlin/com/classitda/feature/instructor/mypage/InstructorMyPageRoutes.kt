@@ -267,6 +267,7 @@ internal fun InstructorMemberManagementRoute(
     onBack: () -> Unit,
     onEditMember: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
     onOpenMemberRegistration: () -> Unit,
+    onOpenStudioRegistration: () -> Unit,
     refreshToken: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: MemberManagementViewModel = koinViewModel(),
@@ -279,6 +280,7 @@ internal fun InstructorMemberManagementRoute(
             is MemberManagementAction.EditMember -> onEditMember(action.memberId)
             MemberManagementAction.DeleteAcknowledged -> viewModel.refresh()
             MemberManagementAction.OpenMemberRegistration -> onOpenMemberRegistration()
+            MemberManagementAction.OpenStudioRegistration -> onOpenStudioRegistration()
             else -> viewModel.onAction(action)
         }
     }, modifier = modifier)

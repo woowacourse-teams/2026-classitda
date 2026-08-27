@@ -70,8 +70,13 @@ import classitda.shared.generated.resources.instructor_member_management_empty_d
 import classitda.shared.generated.resources.instructor_member_management_empty_title
 import classitda.shared.generated.resources.instructor_member_management_error_description
 import classitda.shared.generated.resources.instructor_member_management_error_title
+import classitda.shared.generated.resources.instructor_member_management_forbidden_description
+import classitda.shared.generated.resources.instructor_member_management_forbidden_title
 import classitda.shared.generated.resources.instructor_member_management_list_title
 import classitda.shared.generated.resources.instructor_member_management_loading
+import classitda.shared.generated.resources.instructor_member_management_no_studio_description
+import classitda.shared.generated.resources.instructor_member_management_no_studio_register
+import classitda.shared.generated.resources.instructor_member_management_no_studio_title
 import classitda.shared.generated.resources.instructor_member_management_retry
 import classitda.shared.generated.resources.instructor_member_management_search_empty_description
 import classitda.shared.generated.resources.instructor_member_management_search_empty_title
@@ -80,6 +85,8 @@ import classitda.shared.generated.resources.instructor_member_management_search_
 import classitda.shared.generated.resources.instructor_member_management_title
 import classitda.shared.generated.resources.instructor_member_management_total_count
 import classitda.shared.generated.resources.instructor_member_management_total_label
+import classitda.shared.generated.resources.instructor_member_management_unauthorized_description
+import classitda.shared.generated.resources.instructor_member_management_unauthorized_title
 import classitda.shared.generated.resources.instructor_member_registration_success_confirm
 import classitda.shared.generated.resources.phone_number_change_close
 import com.classitda.core.designsystem.AppShape
@@ -128,13 +135,28 @@ fun MemberManagementScreen(
         topBar = {
             MemberManagementTopBar(
                 onBack = { onAction(MemberManagementAction.Back) },
-                onAdd = { onAction(MemberManagementAction.OpenMemberRegistration) },
+                onAdd =
+                    if (uiState is MemberManagementUiState.Content ||
+                        uiState is MemberManagementUiState.Empty ||
+                        uiState is MemberManagementUiState.SearchEmpty
+                    ) {
+                        { onAction(MemberManagementAction.OpenMemberRegistration) }
+                    } else {
+                        null
+                    },
             )
         },
     ) { innerPadding ->
         when (uiState) {
             MemberManagementUiState.Loading -> {
                 MemberManagementLoading(
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+
+            MemberManagementUiState.NoStudio -> {
+                MemberManagementNoStudio(
+                    onRegister = { onAction(MemberManagementAction.OpenStudioRegistration) },
                     modifier = Modifier.padding(innerPadding),
                 )
             }
@@ -175,6 +197,7 @@ fun MemberManagementScreen(
 
             is MemberManagementUiState.Error -> {
                 MemberManagementError(
+                    reason = uiState.reason,
                     onRetry = { onAction(MemberManagementAction.Retry) },
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -217,7 +240,7 @@ fun MemberManagementScreen(
 @Composable
 private fun MemberManagementTopBar(
     onBack: () -> Unit,
-    onAdd: () -> Unit,
+    onAdd: (() -> Unit)?,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth().statusBarsPadding(),
@@ -239,15 +262,17 @@ private fun MemberManagementTopBar(
             style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
             color = InsColors.TextPrimary,
         )
-        IconButton(
-            onClick = onAdd,
-            modifier = Modifier.align(Alignment.CenterEnd),
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_person_add),
-                contentDescription = stringResource(Res.string.instructor_member_management_add),
-                tint = InsColors.TextPrimary,
-            )
+        if (onAdd != null) {
+            IconButton(
+                onClick = onAdd,
+                modifier = Modifier.align(Alignment.CenterEnd),
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_person_add),
+                    contentDescription = stringResource(Res.string.instructor_member_management_add),
+                    tint = InsColors.TextPrimary,
+                )
+            }
         }
     }
 }
@@ -769,9 +794,38 @@ private fun MemberListEmpty(
 
 @Composable
 private fun MemberManagementError(
+    reason: MemberManagementUiError,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val title =
+        when (reason) {
+            MemberManagementUiError.UNAUTHORIZED -> {
+                stringResource(Res.string.instructor_member_management_unauthorized_title)
+            }
+
+            MemberManagementUiError.FORBIDDEN -> {
+                stringResource(Res.string.instructor_member_management_forbidden_title)
+            }
+
+            else -> {
+                stringResource(Res.string.instructor_member_management_error_title)
+            }
+        }
+    val description =
+        when (reason) {
+            MemberManagementUiError.UNAUTHORIZED -> {
+                stringResource(Res.string.instructor_member_management_unauthorized_description)
+            }
+
+            MemberManagementUiError.FORBIDDEN -> {
+                stringResource(Res.string.instructor_member_management_forbidden_description)
+            }
+
+            else -> {
+                stringResource(Res.string.instructor_member_management_error_description)
+            }
+        }
     Box(
         modifier =
             modifier
@@ -785,12 +839,12 @@ private fun MemberManagementError(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
             Text(
-                text = stringResource(Res.string.instructor_member_management_error_title),
+                text = title,
                 style = appTypography().titleLarge,
                 color = InsColors.TextPrimary,
             )
             Text(
-                text = stringResource(Res.string.instructor_member_management_error_description),
+                text = description,
                 style = appTypography().bodyMedium,
                 color = InsColors.TextSecondary,
             )
@@ -799,6 +853,44 @@ private fun MemberManagementError(
                     text = stringResource(Res.string.instructor_member_management_retry),
                     color = InsColors.Purple,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MemberManagementNoStudio(
+    onRegister: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = AppSpacing.screenPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+        ) {
+            Text(
+                text = stringResource(Res.string.instructor_member_management_no_studio_title),
+                style = appTypography().titleLarge,
+                color = InsColors.TextPrimary,
+            )
+            Text(
+                text = stringResource(Res.string.instructor_member_management_no_studio_description),
+                style = appTypography().bodyMedium,
+                color = InsColors.TextSecondary,
+            )
+            Button(
+                onClick = onRegister,
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = InsColors.Primary,
+                        contentColor = InsColors.White,
+                    ),
+            ) {
+                Text(stringResource(Res.string.instructor_member_management_no_studio_register))
             }
         }
     }
