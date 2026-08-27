@@ -47,7 +47,7 @@ public class AuthController implements AuthControllerApi {
             @PathVariable String provider,
             @Valid @RequestBody SocialLoginRequest request
     ) {
-        return socialLoginService.loginWithSocial(resolveProvider(provider), request.idToken());
+        return socialLoginService.loginWithSocial(resolveProvider(provider), request.idToken(), request.rawNonce());
     }
 
     private OauthProvider resolveProvider(String provider) {

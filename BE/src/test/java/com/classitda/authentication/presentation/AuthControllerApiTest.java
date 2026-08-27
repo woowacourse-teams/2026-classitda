@@ -40,6 +40,9 @@ class AuthControllerApiTest {
             assertThat(content.examples())
                     .extracting(ExampleObject::name)
                     .containsExactlyInAnyOrder("GOOGLE", "APPLE");
+            assertThat(content.examples())
+                    .extracting(ExampleObject::value)
+                    .allMatch(value -> value.contains("\"rawNonce\""));
         });
         assertThat(provider.required()).isTrue();
         assertThat(provider.schema().allowableValues()).containsExactly("google", "apple");

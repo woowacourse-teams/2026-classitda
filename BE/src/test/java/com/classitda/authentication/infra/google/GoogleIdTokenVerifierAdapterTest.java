@@ -3,6 +3,7 @@ package com.classitda.authentication.infra.google;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classitda.authentication.application.identity.SocialIdentityVerificationResult;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
@@ -17,6 +18,7 @@ class GoogleIdTokenVerifierAdapterTest {
 
     private static final String WEB_CLIENT_ID = "test-web-client-id";
     private static final String IOS_CLIENT_ID = "test-ios-client-id";
+    private static final String NONCE_CLAIM = "a".repeat(64);
 
     private final GoogleIdTokenVerifierAdapter verifier =
             new GoogleIdTokenVerifierAdapter(WEB_CLIENT_ID, IOS_CLIENT_ID);
@@ -76,11 +78,41 @@ class GoogleIdTokenVerifierAdapterTest {
     }
 
     @Test
+    void Google_ID_토큰_payload에서_사용자_정보와_nonce_Claim을_반환한다() {
+        // given
+        GoogleIdToken.Payload payload = new GoogleIdToken.Payload()
+                .setSubject("provider-subject")
+                .setEmail("member@example.com")
+                .setNonce(NONCE_CLAIM);
+
+        // when
+        SocialIdentityVerificationResult result = verifier.toVerificationResult(payload);
+
+        // then
+        assertThat(result.identity().provider()).isEqualTo(OauthProvider.GOOGLE);
+        assertThat(result.identity().providerSubject()).isEqualTo("provider-subject");
+        assertThat(result.identity().providerEmail()).isEqualTo("member@example.com");
+        assertThat(result.nonceClaim()).isEqualTo(NONCE_CLAIM);
+    }
+
+    @Test
+    void nonce_Claim이_없는_Google_ID_토큰은_AUTH_006으로_거부한다() {
+        // given
+        GoogleIdToken.Payload payload = new GoogleIdToken.Payload()
+                .setSubject("provider-subject")
+                .setEmail("member@example.com");
+
+        // when / then
+        assertInvalidIdentity(payload);
+    }
+
+    @Test
     void provider_subject가_255자를_초과하면_AUTH_006과_401로_거부한다() {
         // given
         GoogleIdToken.Payload payload = new GoogleIdToken.Payload()
                 .setSubject("a".repeat(256))
-                .setEmail("member@example.com");
+                .setEmail("member@example.com")
+                .setNonce(NONCE_CLAIM);
 
         // when / then
         assertInvalidIdentity(payload);
@@ -90,7 +122,8 @@ class GoogleIdTokenVerifierAdapterTest {
     void 이메일이_없으면_AUTH_006과_401로_거부한다() {
         // given
         GoogleIdToken.Payload payload = new GoogleIdToken.Payload()
-                .setSubject("provider-subject");
+                .setSubject("provider-subject")
+                .setNonce(NONCE_CLAIM);
 
         // when / then
         assertInvalidIdentity(payload);
@@ -103,8 +136,8 @@ class GoogleIdTokenVerifierAdapterTest {
                 """;
         String payload = """
                 {"iss":"accounts.google.com","aud":"%s","sub":"test-subject",\
-                "email":"test@example.com","email_verified":true,"iat":%d,"exp":%d}
-                """.formatted(audience, issuedAt, issuedAt + 3_600L);
+                "email":"test@example.com","email_verified":true,"nonce":"%s","iat":%d,"exp":%d}
+                """.formatted(audience, NONCE_CLAIM, issuedAt, issuedAt + 3_600L);
 
         return encode(header) + "." + encode(payload) + "." + encode("invalid-signature");
     }
@@ -116,7 +149,7 @@ class GoogleIdTokenVerifierAdapterTest {
     }
 
     private void assertInvalidIdentity(GoogleIdToken.Payload payload) {
-        assertThatThrownBy(() -> verifier.toIdentity(payload))
+        assertThatThrownBy(() -> verifier.toVerificationResult(payload))
                 .isInstanceOf(AuthException.class)
                 .satisfies(exception -> {
                     AuthErrorCode errorCode = (AuthErrorCode) ((AuthException) exception).getErrorCode();

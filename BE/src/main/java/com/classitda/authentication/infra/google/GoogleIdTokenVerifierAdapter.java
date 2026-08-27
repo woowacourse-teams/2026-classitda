@@ -1,7 +1,8 @@
 package com.classitda.authentication.infra.google;
 
-import com.classitda.authentication.application.identity.SocialIdentityVerifier;
 import com.classitda.authentication.application.identity.SocialIdentity;
+import com.classitda.authentication.application.identity.SocialIdentityVerificationResult;
+import com.classitda.authentication.application.identity.SocialIdentityVerifier;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
@@ -48,7 +49,7 @@ public class GoogleIdTokenVerifierAdapter implements SocialIdentityVerifier {
     }
 
     @Override
-    public SocialIdentity verify(String idToken) {
+    public SocialIdentityVerificationResult verify(String idToken) {
         if (idToken == null || idToken.isBlank()) {
             throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
         }
@@ -61,16 +62,17 @@ public class GoogleIdTokenVerifierAdapter implements SocialIdentityVerifier {
             throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
         }
 
-        return toIdentity(payload);
+        return toVerificationResult(payload);
     }
 
-    SocialIdentity toIdentity(GoogleIdToken.Payload payload) {
-        if (payload.getEmail() == null) {
+    SocialIdentityVerificationResult toVerificationResult(GoogleIdToken.Payload payload) {
+        if (payload.getEmail() == null || payload.getNonce() == null || payload.getNonce().isBlank()) {
             throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
         }
 
         try {
-            return SocialIdentity.of(provider(), payload.getSubject(), payload.getEmail());
+            SocialIdentity identity = SocialIdentity.of(provider(), payload.getSubject(), payload.getEmail());
+            return SocialIdentityVerificationResult.of(identity, payload.getNonce());
         } catch (IllegalArgumentException exception) {
             throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
         }

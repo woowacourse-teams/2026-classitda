@@ -9,6 +9,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.classitda.authentication.application.identity.SocialIdentity;
+import com.classitda.authentication.application.identity.SocialIdentityVerificationResult;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
@@ -42,6 +43,7 @@ class AppleIdTokenVerifierAdapterTest {
     private static final String IOS_CLIENT_ID = "com.classitda.ios";
     private static final String SUBJECT = "apple-provider-subject";
     private static final String EMAIL = "member@example.com";
+    private static final String NONCE_CLAIM = "a".repeat(64);
     private static final String FIRST_KEY_ID = "first-key";
     private static final String SECOND_KEY_ID = "second-key";
 
@@ -66,10 +68,12 @@ class AppleIdTokenVerifierAdapterTest {
         String idToken = sign(validClaims().build(), FIRST_KEY_PAIR, FIRST_KEY_ID);
 
         // when
-        SocialIdentity identity = verifier.verify(idToken);
+        SocialIdentityVerificationResult result = verifier.verify(idToken);
 
         // then
         assertThat(verifier.provider()).isEqualTo(OauthProvider.APPLE);
+        assertThat(result.nonceClaim()).isEqualTo(NONCE_CLAIM);
+        SocialIdentity identity = result.identity();
         assertThat(identity.provider()).isEqualTo(OauthProvider.APPLE);
         assertThat(identity.providerSubject()).isEqualTo(SUBJECT);
         assertThat(identity.providerEmail()).isEqualTo(EMAIL);
@@ -82,15 +86,31 @@ class AppleIdTokenVerifierAdapterTest {
         expectJwks(publicJwk(FIRST_KEY_PAIR, FIRST_KEY_ID));
         JWTClaimsSet claims = requiredClaims()
                 .expirationTime(Date.from(Instant.now().plusSeconds(300)))
+                .claim("nonce", NONCE_CLAIM)
                 .build();
         String idToken = sign(claims, FIRST_KEY_PAIR, FIRST_KEY_ID);
 
         // when
-        SocialIdentity identity = verifier.verify(idToken);
+        SocialIdentityVerificationResult result = verifier.verify(idToken);
 
         // then
-        assertThat(identity.providerEmail()).isNull();
+        assertThat(result.identity().providerEmail()).isNull();
+        assertThat(result.nonceClaim()).isEqualTo(NONCE_CLAIM);
         server.verify();
+    }
+
+    @Test
+    void nonce_Claim이_없는_Apple_ID_토큰은_AUTH_010으로_거부한다() {
+        // given
+        expectJwks(publicJwk(FIRST_KEY_PAIR, FIRST_KEY_ID));
+        JWTClaimsSet claims = requiredClaims()
+                .expirationTime(Date.from(Instant.now().plusSeconds(300)))
+                .claim("email", EMAIL)
+                .build();
+        String idToken = sign(claims, FIRST_KEY_PAIR, FIRST_KEY_ID);
+
+        // when / then
+        assertInvalidToken(idToken);
     }
 
     @Test
@@ -167,6 +187,7 @@ class AppleIdTokenVerifierAdapterTest {
         expectJwks(publicJwk(FIRST_KEY_PAIR, FIRST_KEY_ID));
         JWTClaimsSet claims = requiredClaims()
                 .claim("email", EMAIL)
+                .claim("nonce", NONCE_CLAIM)
                 .build();
         String idToken = sign(claims, FIRST_KEY_PAIR, FIRST_KEY_ID);
 
@@ -184,6 +205,7 @@ class AppleIdTokenVerifierAdapterTest {
                 .issueTime(Date.from(Instant.now().minusSeconds(30)))
                 .expirationTime(Date.from(Instant.now().plusSeconds(300)))
                 .claim("email", EMAIL)
+                .claim("nonce", NONCE_CLAIM)
                 .build();
         String idToken = sign(claims, FIRST_KEY_PAIR, FIRST_KEY_ID);
 
@@ -202,12 +224,12 @@ class AppleIdTokenVerifierAdapterTest {
         String secondToken = sign(validClaims().subject("second-subject").build(), SECOND_KEY_PAIR, SECOND_KEY_ID);
 
         // when
-        SocialIdentity firstIdentity = verifier.verify(firstToken);
-        SocialIdentity secondIdentity = verifier.verify(secondToken);
+        SocialIdentityVerificationResult firstResult = verifier.verify(firstToken);
+        SocialIdentityVerificationResult secondResult = verifier.verify(secondToken);
 
         // then
-        assertThat(firstIdentity.providerSubject()).isEqualTo("first-subject");
-        assertThat(secondIdentity.providerSubject()).isEqualTo("second-subject");
+        assertThat(firstResult.identity().providerSubject()).isEqualTo("first-subject");
+        assertThat(secondResult.identity().providerSubject()).isEqualTo("second-subject");
         server.verify();
     }
 
@@ -262,7 +284,8 @@ class AppleIdTokenVerifierAdapterTest {
     private JWTClaimsSet.Builder validClaims() {
         return requiredClaims()
                 .expirationTime(Date.from(Instant.now().plusSeconds(300)))
-                .claim("email", EMAIL);
+                .claim("email", EMAIL)
+                .claim("nonce", NONCE_CLAIM);
     }
 
     private void expectJwks(RSAKey... keys) {

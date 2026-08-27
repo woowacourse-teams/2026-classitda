@@ -1,7 +1,9 @@
 package com.classitda.authentication.application;
 
-import com.classitda.authentication.application.identity.SocialIdentityVerifier;
 import com.classitda.authentication.application.identity.SocialIdentity;
+import com.classitda.authentication.application.identity.SocialIdentityVerificationResult;
+import com.classitda.authentication.application.identity.SocialIdentityVerifier;
+import com.classitda.authentication.application.identity.SocialLoginNonceVerifier;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.SignupTokenIssuer;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
@@ -28,18 +30,33 @@ public class SocialLoginService {
     private final SignupTokenIssuer signupTokenIssuer;
     private final LoginTokenIssuer loginTokenIssuer;
     private final MemberRepository memberRepository;
+    private final SocialLoginNonceVerifier socialLoginNonceVerifier;
 
-    public LoginResponse loginWithSocial(OauthProvider provider, String idToken) {
-        SocialIdentity identity = verifyIdentity(provider, idToken);
-        return login(identity);
+    public LoginResponse loginWithSocial(
+            OauthProvider provider,
+            String idToken,
+            String rawNonce
+    ) {
+        SocialIdentityVerificationResult verificationResult = verifyIdentity(provider, idToken);
+        verifyNonce(provider, rawNonce, verificationResult.nonceClaim());
+        return login(verificationResult.identity());
     }
 
-    private SocialIdentity verifyIdentity(OauthProvider provider, String idToken) {
+    private SocialIdentityVerificationResult verifyIdentity(OauthProvider provider, String idToken) {
         return socialIdentityVerifiers.stream()
                 .filter(verifier -> verifier.provider() == provider)
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("OAuth 제공자 검증기를 찾을 수 없습니다: " + provider))
                 .verify(idToken);
+    }
+
+    private void verifyNonce(OauthProvider provider, String rawNonce, String nonceClaim) {
+        if (!socialLoginNonceVerifier.matches(rawNonce, nonceClaim)) {
+            throw new AuthException(switch (provider) {
+                case GOOGLE -> AuthErrorCode.GOOGLE_ID_TOKEN_INVALID;
+                case APPLE -> AuthErrorCode.APPLE_ID_TOKEN_INVALID;
+            });
+        }
     }
 
     private LoginResponse login(SocialIdentity identity) {

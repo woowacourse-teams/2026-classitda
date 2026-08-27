@@ -1,6 +1,7 @@
 package com.classitda.authentication.infra.apple;
 
 import com.classitda.authentication.application.identity.SocialIdentity;
+import com.classitda.authentication.application.identity.SocialIdentityVerificationResult;
 import com.classitda.authentication.application.identity.SocialIdentityVerifier;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.exception.AuthErrorCode;
@@ -28,6 +29,7 @@ public class AppleIdTokenVerifierAdapter implements SocialIdentityVerifier {
     static final String JWKS_URI = "https://appleid.apple.com/auth/keys";
 
     private static final String EMAIL_CLAIM = "email";
+    private static final String NONCE_CLAIM = "nonce";
 
     private final JwtDecoder jwtDecoder;
 
@@ -45,14 +47,19 @@ public class AppleIdTokenVerifierAdapter implements SocialIdentityVerifier {
     }
 
     @Override
-    public SocialIdentity verify(String idToken) {
+    public SocialIdentityVerificationResult verify(String idToken) {
         if (idToken == null || idToken.isBlank()) {
             throw invalidIdToken();
         }
 
         try {
             Jwt jwt = jwtDecoder.decode(idToken);
-            return SocialIdentity.of(provider(), jwt.getSubject(), jwt.getClaimAsString(EMAIL_CLAIM));
+            SocialIdentity identity = SocialIdentity.of(
+                    provider(),
+                    jwt.getSubject(),
+                    jwt.getClaimAsString(EMAIL_CLAIM)
+            );
+            return SocialIdentityVerificationResult.of(identity, jwt.getClaimAsString(NONCE_CLAIM));
         } catch (BadJwtException | IllegalArgumentException exception) {
             throw invalidIdToken();
         } catch (JwtException exception) {

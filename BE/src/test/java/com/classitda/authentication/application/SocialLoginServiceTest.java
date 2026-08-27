@@ -6,8 +6,10 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.classitda.authentication.application.identity.SocialIdentityVerifier;
 import com.classitda.authentication.application.identity.SocialIdentity;
+import com.classitda.authentication.application.identity.SocialIdentityVerificationResult;
+import com.classitda.authentication.application.identity.SocialIdentityVerifier;
+import com.classitda.authentication.application.identity.SocialLoginNonceVerifier;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.SignupTokenIssuer;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
@@ -32,11 +34,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-@Import(SocialLoginService.class)
+@Import({SocialLoginService.class, SocialLoginNonceVerifier.class})
 @MySqlDataJpaTest
 class SocialLoginServiceTest {
 
     private static final String ID_TOKEN = "google-id-token";
+    private static final String RAW_NONCE = "A".repeat(43);
+    private static final String NONCE_CLAIM = "0f007385b6f9d4b7eeb2748605afe1a984a0a3bfa3f014d09e2a784ce9e5cd1a";
     private static final String PROVIDER_SUBJECT = "google-subject";
     private static final String PROVIDER_EMAIL = "member@example.com";
     private static final String APPLE_ID_TOKEN = "apple-id-token";
@@ -80,12 +84,12 @@ class SocialLoginServiceTest {
         // given
         SocialIdentity identity = googleIdentity(PROVIDER_EMAIL);
         IssuedSignupToken issuedSignupToken = IssuedSignupToken.of("signup-token", 1800L);
-        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(verificationResult(identity));
         given(signupTokenIssuer.issueSignupToken(OauthProvider.GOOGLE, PROVIDER_SUBJECT, PROVIDER_EMAIL))
                 .willReturn(issuedSignupToken);
 
         // when
-        LoginResponse response = socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN);
+        LoginResponse response = socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE);
 
         // then
         assertThat(response).isInstanceOfSatisfying(RegistrationRequiredLoginResponse.class, registrationRequired -> {
@@ -105,11 +109,11 @@ class SocialLoginServiceTest {
         AuthAccount authAccount = saveAuthAccount(PROVIDER_EMAIL);
         SocialIdentity identity = googleIdentity(PROVIDER_EMAIL);
         IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L);
-        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(verificationResult(identity));
         given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
 
         // when
-        LoginResponse response = socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN);
+        LoginResponse response = socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE);
         entityManager.flush();
         entityManager.clear();
 
@@ -135,11 +139,11 @@ class SocialLoginServiceTest {
         AuthAccount authAccount = saveAuthAccount(PROVIDER_EMAIL);
         SocialIdentity identity = googleIdentity("changed@example.com");
         IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L);
-        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(verificationResult(identity));
         given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
 
         // when
-        socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN);
+        socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE);
         entityManager.flush();
         entityManager.clear();
 
@@ -158,11 +162,11 @@ class SocialLoginServiceTest {
                 3_600L,
                 "refresh-token",
                 2592000L);
-        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(verificationResult(identity));
         given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
 
         // when
-        socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN);
+        socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE);
         entityManager.flush();
         entityManager.clear();
 
@@ -179,7 +183,7 @@ class SocialLoginServiceTest {
                 null
         );
         IssuedSignupToken issuedSignupToken = IssuedSignupToken.of("signup-token", 1800L);
-        given(appleSocialIdentityVerifier.verify(APPLE_ID_TOKEN)).willReturn(identity);
+        given(appleSocialIdentityVerifier.verify(APPLE_ID_TOKEN)).willReturn(verificationResult(identity));
         given(signupTokenIssuer.issueSignupToken(
                 OauthProvider.APPLE,
                 APPLE_PROVIDER_SUBJECT,
@@ -187,7 +191,7 @@ class SocialLoginServiceTest {
         )).willReturn(issuedSignupToken);
 
         // when
-        LoginResponse response = socialLoginService.loginWithSocial(OauthProvider.APPLE, APPLE_ID_TOKEN);
+        LoginResponse response = socialLoginService.loginWithSocial(OauthProvider.APPLE, APPLE_ID_TOKEN, RAW_NONCE);
 
         // then
         assertThat(response).isInstanceOfSatisfying(RegistrationRequiredLoginResponse.class, registrationRequired -> {
@@ -219,11 +223,11 @@ class SocialLoginServiceTest {
                 "refresh-token",
                 2592000L
         );
-        given(appleSocialIdentityVerifier.verify(APPLE_ID_TOKEN)).willReturn(identity);
+        given(appleSocialIdentityVerifier.verify(APPLE_ID_TOKEN)).willReturn(verificationResult(identity));
         given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
 
         // when
-        LoginResponse response = socialLoginService.loginWithSocial(OauthProvider.APPLE, APPLE_ID_TOKEN);
+        LoginResponse response = socialLoginService.loginWithSocial(OauthProvider.APPLE, APPLE_ID_TOKEN, RAW_NONCE);
         entityManager.flush();
         entityManager.clear();
 
@@ -233,6 +237,62 @@ class SocialLoginServiceTest {
                 .isEqualTo(PROVIDER_EMAIL);
         verify(appleSocialIdentityVerifier).verify(APPLE_ID_TOKEN);
         verify(googleSocialIdentityVerifier, never()).verify(APPLE_ID_TOKEN);
+    }
+
+    @Test
+    void Google_nonce가_다르면_미가입_계정의_토큰을_발급하지_않는다() {
+        // given
+        SocialIdentity identity = googleIdentity(PROVIDER_EMAIL);
+        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(verificationResult(identity));
+
+        // when / then
+        assertThatThrownBy(() -> socialLoginService.loginWithSocial(
+                OauthProvider.GOOGLE,
+                ID_TOKEN,
+                "B".repeat(43)
+        ))
+                .isInstanceOf(AuthException.class)
+                .extracting(exception -> ((AuthException) exception).getErrorCode())
+                .isEqualTo(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
+        verify(signupTokenIssuer, never()).issueSignupToken(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.any());
+        verify(loginTokenIssuer, never()).issueLoginTokens(org.mockito.ArgumentMatchers.anyLong());
+    }
+
+    @Test
+    void Apple_nonce가_다르면_기존_계정의_토큰을_발급하거나_이메일을_갱신하지_않는다() {
+        // given
+        AuthAccount authAccount = saveAuthAccount(
+                OauthProvider.APPLE,
+                APPLE_PROVIDER_SUBJECT,
+                PROVIDER_EMAIL
+        );
+        SocialIdentity identity = SocialIdentity.of(
+                OauthProvider.APPLE,
+                APPLE_PROVIDER_SUBJECT,
+                "changed@example.com"
+        );
+        given(appleSocialIdentityVerifier.verify(APPLE_ID_TOKEN)).willReturn(verificationResult(identity));
+
+        // when / then
+        assertThatThrownBy(() -> socialLoginService.loginWithSocial(
+                OauthProvider.APPLE,
+                APPLE_ID_TOKEN,
+                "B".repeat(43)
+        ))
+                .isInstanceOf(AuthException.class)
+                .extracting(exception -> ((AuthException) exception).getErrorCode())
+                .isEqualTo(AuthErrorCode.APPLE_ID_TOKEN_INVALID);
+        entityManager.clear();
+        assertThat(findAuthAccount(OauthProvider.APPLE, APPLE_PROVIDER_SUBJECT).getProviderEmail())
+                .isEqualTo(PROVIDER_EMAIL);
+        verify(loginTokenIssuer, never()).issueLoginTokens(authAccount.getMemberId());
+        verify(signupTokenIssuer, never()).issueSignupToken(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -247,10 +307,10 @@ class SocialLoginServiceTest {
                 PROVIDER_SUBJECT,
                 PROVIDER_EMAIL));
         SocialIdentity identity = googleIdentity("changed@example.com");
-        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(googleSocialIdentityVerifier.verify(ID_TOKEN)).willReturn(verificationResult(identity));
 
         // when / then
-        assertThatThrownBy(() -> socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN))
+        assertThatThrownBy(() -> socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE))
                 .isInstanceOf(AuthException.class)
                 .extracting(exception -> ((AuthException) exception).getErrorCode())
                 .isEqualTo(AuthErrorCode.MEMBER_WITHDRAWAL_PENDING);
@@ -296,5 +356,9 @@ class SocialLoginServiceTest {
 
     private SocialIdentity googleIdentity(String providerEmail) {
         return SocialIdentity.of(OauthProvider.GOOGLE, PROVIDER_SUBJECT, providerEmail);
+    }
+
+    private SocialIdentityVerificationResult verificationResult(SocialIdentity identity) {
+        return SocialIdentityVerificationResult.of(identity, NONCE_CLAIM);
     }
 }

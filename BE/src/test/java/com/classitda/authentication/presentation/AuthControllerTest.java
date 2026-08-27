@@ -71,6 +71,7 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 class AuthControllerTest {
 
     private static final String ID_TOKEN = "google-id-token";
+    private static final String RAW_NONCE = "A".repeat(43);
     private static final String VERIFICATION_ID = "550e8400-e29b-41d4-a716-446655440000";
     private static final String OTP = "123456";
     private static final String REFRESH_TOKEN =
@@ -106,9 +107,9 @@ class AuthControllerTest {
     @Test
     void 미가입_구글_계정은_가입_토큰_필드만_반환한다() {
         // given
-        SocialLoginRequest request = SocialLoginRequest.from(ID_TOKEN);
+        SocialLoginRequest request = SocialLoginRequest.of(ID_TOKEN, RAW_NONCE);
         LoginResponse response = LoginResponse.registrationRequired(IssuedSignupToken.of("signup-token", 1800L));
-        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN)).willReturn(response);
+        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE)).willReturn(response);
 
         // when
         RestTestClient.ResponseSpec result = client.post()
@@ -127,16 +128,16 @@ class AuthControllerTest {
                           "signupTokenExpiresIn": 1800
                         }
                         """, JsonCompareMode.STRICT);
-        verify(socialLoginService).loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN);
+        verify(socialLoginService).loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE);
     }
 
     @Test
     void 기존_구글_계정은_로그인_토큰_필드만_반환한다() {
         // given
-        SocialLoginRequest request = SocialLoginRequest.from(ID_TOKEN);
+        SocialLoginRequest request = SocialLoginRequest.of(ID_TOKEN, RAW_NONCE);
         LoginResponse response = LoginResponse.registered(
                 IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L));
-        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN)).willReturn(response);
+        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE)).willReturn(response);
 
         // when
         RestTestClient.ResponseSpec result = client.post()
@@ -157,16 +158,16 @@ class AuthControllerTest {
                           "refreshTokenExpiresIn": 2592000
                         }
                         """, JsonCompareMode.STRICT);
-        verify(socialLoginService).loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN);
+        verify(socialLoginService).loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE);
     }
 
     @Test
     void 애플_로그인은_공통_엔드포인트에서_APPLE_제공자로_처리한다() {
         // given
         String appleIdToken = "apple-id-token";
-        SocialLoginRequest request = SocialLoginRequest.from(appleIdToken);
+        SocialLoginRequest request = SocialLoginRequest.of(appleIdToken, RAW_NONCE);
         LoginResponse response = LoginResponse.registrationRequired(IssuedSignupToken.of("signup-token", 1800L));
-        given(socialLoginService.loginWithSocial(OauthProvider.APPLE, appleIdToken)).willReturn(response);
+        given(socialLoginService.loginWithSocial(OauthProvider.APPLE, appleIdToken, RAW_NONCE)).willReturn(response);
 
         // when
         RestTestClient.ResponseSpec result = client.post()
@@ -185,14 +186,14 @@ class AuthControllerTest {
                           "signupTokenExpiresIn": 1800
                         }
                         """, JsonCompareMode.STRICT);
-        verify(socialLoginService).loginWithSocial(OauthProvider.APPLE, appleIdToken);
+        verify(socialLoginService).loginWithSocial(OauthProvider.APPLE, appleIdToken, RAW_NONCE);
     }
 
     @Test
     void 탈퇴_처리_중인_구글_계정은_AUTH_009를_반환한다() {
         // given
-        SocialLoginRequest request = SocialLoginRequest.from(ID_TOKEN);
-        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN))
+        SocialLoginRequest request = SocialLoginRequest.of(ID_TOKEN, RAW_NONCE);
+        given(socialLoginService.loginWithSocial(OauthProvider.GOOGLE, ID_TOKEN, RAW_NONCE))
                 .willThrow(new AuthException(AuthErrorCode.MEMBER_WITHDRAWAL_PENDING));
 
         // when
@@ -212,11 +213,38 @@ class AuthControllerTest {
         RestTestClient.ResponseSpec result = client.post()
                 .uri("/api/auth/google")
                 .header("X-API-Version", "1")
-                .body(SocialLoginRequest.from(" "))
+                .body(SocialLoginRequest.of(" ", RAW_NONCE))
                 .exchange();
 
         // then
         assertError(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        verifyNoInteractions(socialLoginService);
+    }
+
+    @Test
+    void rawNonce가_누락되거나_공백이거나_형식이_잘못되면_COMMON_001을_반환한다() {
+        // given
+        String[] invalidBodies = {
+                "{\"idToken\":\"google-id-token\"}",
+                "{\"idToken\":\"google-id-token\",\"rawNonce\":null}",
+                "{\"idToken\":\"google-id-token\",\"rawNonce\":\"\"}",
+                "{\"idToken\":\"google-id-token\",\"rawNonce\":\" \"}",
+                "{\"idToken\":\"google-id-token\",\"rawNonce\":\"%s\"}".formatted("A".repeat(42)),
+                "{\"idToken\":\"google-id-token\",\"rawNonce\":\"%s\"}".formatted("A".repeat(44)),
+                "{\"idToken\":\"google-id-token\",\"rawNonce\":\"%s+\"}".formatted("A".repeat(42))
+        };
+
+        // when / then
+        for (String invalidBody : invalidBodies) {
+            RestTestClient.ResponseSpec result = client.post()
+                    .uri("/api/auth/google")
+                    .header("X-API-Version", "1")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(invalidBody)
+                    .exchange();
+
+            assertError(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+        }
         verifyNoInteractions(socialLoginService);
     }
 

@@ -6,5 +6,5 @@ public interface SocialIdentityVerifier {
 
     OauthProvider provider();
 
-    SocialIdentity verify(String idToken);
+    SocialIdentityVerificationResult verify(String idToken);
 }

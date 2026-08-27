@@ -34,23 +34,25 @@ public interface AuthControllerApi {
 
     @Operation(
             summary = "소셜 로그인",
-            description = "경로로 지정한 Google 또는 Apple의 ID 토큰을 검증합니다. "
+            description = "경로로 지정한 Google 또는 Apple의 ID 토큰과 로그인 시도 nonce를 검증합니다. "
                     + "가입된 회원에게는 Access Token과 Refresh Token을, "
                     + "가입하지 않은 사용자에게는 회원가입에 사용할 Signup Token을 발급합니다.",
             requestBody = @RequestBody(
                     required = true,
-                    description = "선택한 소셜 로그인 제공자에서 발급받은 ID 토큰",
+                    description = "선택한 소셜 로그인 제공자에서 발급받은 ID 토큰과 원본 nonce",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(implementation = SocialLoginRequest.class),
                             examples = {
                                     @ExampleObject(
                                             name = "GOOGLE",
-                                            value = "{\"idToken\":\"google-id-token\"}"
+                                            value = "{\"idToken\":\"google-id-token\","
+                                                    + "\"rawNonce\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}"
                                     ),
                                     @ExampleObject(
                                             name = "APPLE",
-                                            value = "{\"idToken\":\"apple-id-token\"}"
+                                            value = "{\"idToken\":\"apple-id-token\","
+                                                    + "\"rawNonce\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"}"
                                     )
                             }
                     )
