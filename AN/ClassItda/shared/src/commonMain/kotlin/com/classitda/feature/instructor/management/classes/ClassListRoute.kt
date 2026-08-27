@@ -1,5 +1,6 @@
 package com.classitda.feature.instructor.management.classes
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.InsColors
+import com.classitda.core.designsystem.component.NavigateBackTopBar
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -43,7 +45,7 @@ internal fun ClassListRoute(
 
     when (val state = uiState) {
         is ClassListUiState.InitialLoading -> {
-            ClassListLoadingRoute(bottomBar = bottomBar, modifier = modifier)
+            ClassListLoadingRoute(onBackClick = onBackClick, bottomBar = bottomBar, modifier = modifier)
         }
 
         is ClassListUiState.Success -> {
@@ -66,6 +68,7 @@ internal fun ClassListRoute(
             ClassListErrorRoute(
                 message = state.message,
                 onRetry = viewModel::onRetry,
+                onBackClick = onBackClick,
                 bottomBar = bottomBar,
                 modifier = modifier,
             )
@@ -75,12 +78,20 @@ internal fun ClassListRoute(
 
 @Composable
 private fun ClassListLoadingRoute(
+    onBackClick: () -> Unit,
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         containerColor = InsColors.Background,
+        topBar = {
+            NavigateBackTopBar(
+                onNavigateBack = onBackClick,
+                modifier = Modifier.background(InsColors.Surface),
+                title = "수업 목록",
+            )
+        },
         bottomBar = bottomBar,
     ) { contentPadding ->
         Box(
@@ -96,12 +107,20 @@ private fun ClassListLoadingRoute(
 private fun ClassListErrorRoute(
     message: String?,
     onRetry: () -> Unit,
+    onBackClick: () -> Unit,
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier,
         containerColor = InsColors.Background,
+        topBar = {
+            NavigateBackTopBar(
+                onNavigateBack = onBackClick,
+                modifier = Modifier.background(InsColors.Surface),
+                title = "수업 목록",
+            )
+        },
         bottomBar = bottomBar,
     ) { contentPadding ->
         Column(
