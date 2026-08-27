@@ -11,6 +11,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
 import com.classitda.core.auth.InMemoryAuthTokenStorage
+import com.classitda.core.auth.InMemoryWithdrawalStateStorage
+import com.classitda.core.auth.WithdrawalStateStorage
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.navigation.instructor.InstructorRootRoute
@@ -20,6 +22,7 @@ import com.classitda.di.instructorFeatureModules
 import com.classitda.di.signup.signupModule
 import com.classitda.domain.repository.auth.signup.SignupRepository
 import com.classitda.feature.auth.signup.SignupRoute
+import com.classitda.feature.common.profile.WithdrawalPendingScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
@@ -27,11 +30,22 @@ import org.koin.dsl.koinConfiguration
 
 @Composable
 @Preview
-fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }) {
-    var showSignup by remember { mutableStateOf(tokenStorage.read() == null) }
+fun App(
+    tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() },
+    withdrawalStateStorage: WithdrawalStateStorage = remember { InMemoryWithdrawalStateStorage() },
+) {
+    var appRoute by remember {
+        mutableStateOf(
+            when {
+                withdrawalStateStorage.isPending() -> AppRoute.WithdrawalPending
+                tokenStorage.read() == null -> AppRoute.Signup
+                else -> AppRoute.Home
+            },
+        )
+    }
 
-    LaunchedEffect(showSignup) {
-        Logger.d("AuthSession: showSignup=$showSignup, hasStoredToken=${tokenStorage.read() != null}")
+    LaunchedEffect(appRoute) {
+        Logger.d("AuthSession: appRoute=$appRoute, hasStoredToken=${tokenStorage.read() != null}")
     }
 
     KoinApplication(
@@ -52,28 +66,46 @@ fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }
             val signupRepository = koinInject<SignupRepository>()
             val coroutineScope = rememberCoroutineScope()
 
-            if (showSignup) {
-                SignupRoute(
-                    onSignupCompleted = { showSignup = false },
-                    onLoginCompleted = { showSignup = false },
-                )
-            } else {
-                InstructorRootRoute(
-                    onLogout = {
-                        Logger.d("AuthSession: logout callback started")
-                        coroutineScope.launch {
-                            try {
-                                Logger.d("AuthSession: logout repository call started")
-                                signupRepository.logout()
-                                Logger.d("AuthSession: logout repository call completed")
-                            } finally {
-                                Logger.d("AuthSession: switching to Google login screen")
-                                showSignup = true
+            when (appRoute) {
+                AppRoute.WithdrawalPending -> WithdrawalPendingScreen()
+
+                AppRoute.Signup -> {
+                    SignupRoute(
+                        onSignupCompleted = { appRoute = AppRoute.Home },
+                        onLoginCompleted = { appRoute = AppRoute.Home },
+                    )
+                }
+
+                AppRoute.Home -> {
+                    InstructorRootRoute(
+                        onLogout = {
+                            Logger.d("AuthSession: logout callback started")
+                            coroutineScope.launch {
+                                try {
+                                    Logger.d("AuthSession: logout repository call started")
+                                    signupRepository.logout()
+                                    Logger.d("AuthSession: logout repository call completed")
+                                } finally {
+                                    Logger.d("AuthSession: switching to Google login screen")
+                                    appRoute = AppRoute.Signup
+                                }
                             }
-                        }
-                    },
-                )
+                        },
+                        onWithdrawalCompleted = {
+                            Logger.d("AuthSession: withdrawal succeeded, saving pending state")
+                            withdrawalStateStorage.markPending()
+                            tokenStorage.clear()
+                            appRoute = AppRoute.WithdrawalPending
+                        },
+                    )
+                }
             }
         }
     }
+}
+
+private enum class AppRoute {
+    Home,
+    Signup,
+    WithdrawalPending,
 }

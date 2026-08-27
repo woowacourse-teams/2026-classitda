@@ -39,6 +39,7 @@ internal fun InstructorMyPageNavHost(
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     onLogout: () -> Unit = {},
+    onWithdrawalCompleted: () -> Unit = {},
 ) {
     val navController = rememberNavController()
     var profileRefreshToken by remember { mutableStateOf(0) }
@@ -75,7 +76,7 @@ internal fun InstructorMyPageNavHost(
                     Logger.d("ProfileLogout: instructor my page nav host forwarded logout")
                     onLogout()
                 },
-                onRequestWithdrawal = {},
+                onWithdrawalCompleted = onWithdrawalCompleted,
                 refreshToken = profileRefreshToken,
             )
         }

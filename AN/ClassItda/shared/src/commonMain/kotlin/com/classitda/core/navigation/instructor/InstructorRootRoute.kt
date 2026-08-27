@@ -21,6 +21,7 @@ import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
 fun InstructorRootRoute(
     modifier: Modifier = Modifier,
     onLogout: () -> Unit = {},
+    onWithdrawalCompleted: () -> Unit = {},
 ) {
     var selectedTab by remember { mutableStateOf(InstructorBottomTab.HOME) }
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
@@ -106,6 +107,7 @@ fun InstructorRootRoute(
                         Logger.d("ProfileLogout: instructor root received logout callback")
                         onLogout()
                     },
+                    onWithdrawalCompleted = onWithdrawalCompleted,
                 )
             }
         }

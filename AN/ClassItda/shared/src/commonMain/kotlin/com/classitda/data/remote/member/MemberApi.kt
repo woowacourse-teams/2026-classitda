@@ -2,6 +2,7 @@ package com.classitda.data.remote.member
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
 import io.ktor.client.request.setBody
@@ -21,5 +22,9 @@ internal class MemberApi(
             contentType(ContentType.Application.Json)
             setBody(MyNameUpdateRequestDto(name))
         }
+    }
+
+    suspend fun deleteMe() {
+        client.delete("api/members/me")
     }
 }

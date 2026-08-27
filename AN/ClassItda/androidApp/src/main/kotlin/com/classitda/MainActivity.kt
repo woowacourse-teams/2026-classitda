@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.auth.AndroidKeystoreAuthTokenStorage
+import com.classitda.core.auth.AndroidWithdrawalStateStorage
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
             App(
                 tokenStorage =
                     AndroidKeystoreAuthTokenStorage(applicationContext),
+                withdrawalStateStorage = AndroidWithdrawalStateStorage(applicationContext),
             )
         }
     }

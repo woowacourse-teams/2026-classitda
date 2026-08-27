@@ -417,6 +417,15 @@
     <string name="profile_view_error_title">내 정보를 불러올 수 없습니다</string>
     <string name="profile_view_error_description">잠시 후 다시 시도해 주세요.</string>
     <string name="profile_view_retry">다시 시도</string>
+    <string name="withdrawal_pending_title">탈퇴가 진행 중입니다</string>
+    <string name="withdrawal_pending_contact">문의하기: classitda012@gmail.com</string>
+    <string name="withdrawal_confirm_title">회원 탈퇴</string>
+    <string name="withdrawal_confirm_message">회원 탈퇴를 요청하시겠습니까?\n탈퇴 요청 후 7일 뒤 개인정보가 정리됩니다.</string>
+    <string name="withdrawal_cancel">취소</string>
+    <string name="withdrawal_confirm">탈퇴하기</string>
+    <string name="withdrawal_submitting">탈퇴 요청 중...</string>
+    <string name="withdrawal_conflict">시설 대표는 탈퇴할 수 없습니다.</string>
+    <string name="withdrawal_failed">회원 탈퇴를 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.</string>
     <string name="profile_edit_back">뒤로 가기</string>
     <string name="profile_edit_complete">완료</string>
     <string name="profile_edit_saving">저장 중</string>
