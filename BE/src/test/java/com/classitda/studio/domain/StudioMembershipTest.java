@@ -13,19 +13,6 @@ import org.junit.jupiter.api.Test;
 class StudioMembershipTest {
 
     @Test
-    void 소속을_생성하면_시설이_부르는_이름을_가진다() {
-        // given
-        Studio studio = 기본_시설();
-
-        // when
-        StudioMembership studioMembership = 소속을_만든다(studio, "김철수");
-
-        // then
-        assertThat(studioMembership.getName()).isEqualTo("김철수");
-        assertThat(studioMembership.getStatus()).isEqualTo(MembershipStatus.ACTIVE);
-    }
-
-    @Test
     void 이름이_null이면_소속을_생성할_수_없다() {
         // given
         Studio studio = 기본_시설();

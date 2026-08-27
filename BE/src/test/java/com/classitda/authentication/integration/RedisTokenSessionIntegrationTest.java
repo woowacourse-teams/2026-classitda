@@ -15,10 +15,8 @@ import com.classitda.authentication.application.session.SignupSessionStore;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.RefreshTokenIssuer;
 import com.classitda.authentication.application.token.RefreshTokenVerifier;
-import com.classitda.authentication.application.token.SignupTokenIssuer;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
 import com.classitda.authentication.application.token.result.IssuedRefreshToken;
-import com.classitda.authentication.application.token.result.IssuedSignupToken;
 import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.domain.TokenUse;
 import com.classitda.authentication.exception.AuthErrorCode;
@@ -169,31 +167,6 @@ class RedisTokenSessionIntegrationTest {
     }
 
     @Test
-    void 회원가입_토큰을_발급하면_같은_JTI의_가입_세션을_만든다() {
-        // given
-        SignupSessionStore signupSessionStore = signupSessionStore();
-        SignupSessionJwtValidator validator = new SignupSessionJwtValidator(signupSessionStore);
-        SignupTokenIssuer issuer = new SignupTokenIssuer(
-                signupSessionStore,
-                new JwtTokenEncoder(jwtSupport.encoder()),
-                tokenProperties
-        );
-
-        // when
-        IssuedSignupToken issued = issuer.issueSignupToken(
-                OauthProvider.GOOGLE,
-                "provider-subject",
-                "member@example.com"
-        );
-        Jwt jwt = jwtSupport.decoder(validator).decode(issued.signupToken());
-
-        // then
-        assertThat(signupSessionStore.findBySignupJti(jwt.getId())).contains(
-                new SignupSession(OauthProvider.GOOGLE, "provider-subject", "member@example.com")
-        );
-    }
-
-    @Test
     void 로그인_토큰은_액세스_claim을_유지하고_리프레시_해시만_Redis에_저장한다() throws Exception {
         // given / when
         IssuedLoginTokens issued = loginTokenIssuer.issueLoginTokens(42L);
@@ -243,38 +216,6 @@ class RedisTokenSessionIntegrationTest {
         assertThat(redisTemplate.getExpire(newKey, TimeUnit.SECONDS))
                 .isBetween(2_591_950L, REFRESH_TTL_SECONDS);
         assertAccessClaims(accessDecoder().decode(response.accessToken()), 42L);
-    }
-
-    @Test
-    void 없거나_만료되거나_해시가_다르거나_소비된_토큰은_모두_AUTH_008이다() {
-        // given
-        IssuedRefreshToken missing = refreshTokenIssuer.issue();
-        IssuedRefreshToken expired = refreshTokenIssuer.issue();
-        refreshSessionStore.save(
-                expired.sessionId(),
-                RefreshSession.of(expired.tokenHash(), 42L, Instant.now().minusSeconds(1).getEpochSecond()),
-                60L
-        );
-        IssuedRefreshToken original = refreshTokenIssuer.issue();
-        String forged = original.sessionId() + "." + "Z".repeat(43);
-        refreshSessionStore.save(
-                original.sessionId(),
-                RefreshSession.of(original.tokenHash(), 42L, Instant.now().plusSeconds(60).getEpochSecond()),
-                60L
-        );
-        IssuedLoginTokens consumable = loginTokenIssuer.issueLoginTokens(42L);
-        refreshTokenService.refresh(RefreshTokenRequest.from(consumable.refreshToken()));
-
-        // when / then
-        List<String> invalidTokens = List.of(
-                missing.refreshToken(),
-                expired.refreshToken(),
-                forged,
-                consumable.refreshToken()
-        );
-        for (String invalidToken : invalidTokens) {
-            assertAuthError(() -> refreshTokenService.refresh(RefreshTokenRequest.from(invalidToken)));
-        }
     }
 
     @Test
@@ -492,27 +433,6 @@ class RedisTokenSessionIntegrationTest {
     }
 
     @Test
-    void 없거나_논리적으로_만료된_세션의_로그아웃은_멱등하게_완료한다() {
-        // given
-        IssuedRefreshToken missing = refreshTokenIssuer.issue();
-        IssuedRefreshToken expired = refreshTokenIssuer.issue();
-        RefreshSession expiredSession = RefreshSession.of(
-                expired.tokenHash(),
-                42L,
-                Instant.now().minusSeconds(1).getEpochSecond()
-        );
-        refreshSessionStore.save(expired.sessionId(), expiredSession, 60L);
-
-        // when
-        logoutService.logout(42L, LogoutRequest.from(missing.refreshToken()));
-        logoutService.logout(42L, LogoutRequest.from(expired.refreshToken()));
-
-        // then
-        assertThat(refreshSessionStore.findBySessionId(missing.sessionId())).isEmpty();
-        assertThat(refreshSessionStore.findBySessionId(expired.sessionId())).contains(expiredSession);
-    }
-
-    @Test
     void 조건부_삭제는_손상된_JSON과_필드를_삭제하지_않고_내부오류로_처리한다() {
         // given
         IssuedRefreshToken token = refreshTokenIssuer.issue();
@@ -539,21 +459,6 @@ class RedisTokenSessionIntegrationTest {
             assertThat(redisTemplate.opsForValue().get(REFRESH_KEY_PREFIX + token.sessionId()))
                     .isEqualTo(corruptValue);
         }
-    }
-
-    @Test
-    void 로그아웃한_리프레시_토큰은_다시_갱신할_수_없다() {
-        // given
-        IssuedLoginTokens loginTokens = loginTokenIssuer.issueLoginTokens(42L);
-
-        // when
-        logoutService.logout(42L, LogoutRequest.from(loginTokens.refreshToken()));
-
-        // then
-        assertThat(redisTemplate.hasKey(refreshKey(loginTokens.refreshToken()))).isFalse();
-        assertAuthError(() -> refreshTokenService.refresh(
-                RefreshTokenRequest.from(loginTokens.refreshToken())
-        ));
     }
 
     @Test

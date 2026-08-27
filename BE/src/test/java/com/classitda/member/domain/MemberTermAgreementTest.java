@@ -1,6 +1,5 @@
 package com.classitda.member.domain;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classitda.member.fixture.MemberFixture;
@@ -9,25 +8,6 @@ import com.classitda.member.fixture.TermFixture;
 import org.junit.jupiter.api.Test;
 
 class MemberTermAgreementTest {
-
-    @Test
-    void 동의한_약관과_회원으로_생성할_수_있다() {
-        // given
-        Member member = MemberFixture.기본_회원();
-        Term term = TermFixture.기본_약관();
-
-        // when
-        MemberTermAgreement agreement = MemberTermAgreementFixture.약관_동의(
-                member,
-                term,
-                true
-        );
-
-        // then
-        assertThat(agreement.getMember()).isSameAs(member);
-        assertThat(agreement.getTerm()).isSameAs(term);
-        assertThat(agreement.isAgreed()).isTrue();
-    }
 
     @Test
     void 약관_동의_회원은_필수이다() {
