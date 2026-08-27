@@ -8,17 +8,13 @@ sealed interface MemberManagementUiState {
     data class Content(
         val page: MemberListUiModel,
         val query: String = "",
-        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
         val actionState: MemberManagementActionState = MemberManagementActionState.Hidden,
     ) : MemberManagementUiState
 
-    data class Empty(
-        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
-    ) : MemberManagementUiState
+    data object Empty : MemberManagementUiState
 
     data class SearchEmpty(
         val query: String,
-        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
     ) : MemberManagementUiState
 
     data class Error(
@@ -36,10 +32,6 @@ sealed interface MemberManagementAction {
 
     data class QueryChanged(
         val query: String,
-    ) : MemberManagementAction
-
-    data class SortOrderChanged(
-        val sortOrder: MemberSortOption,
     ) : MemberManagementAction
 
     data class EditMember(

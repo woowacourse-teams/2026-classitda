@@ -287,7 +287,7 @@ internal fun InstructorMemberManagementRoute(
 @Composable
 internal fun InstructorMemberRegistrationRoute(
     onBack: () -> Unit,
-    onSuccess: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit = {},
+    onSuccess: () -> Unit = {},
     onOpenConfirmation: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: MemberRegistrationViewModel = koinViewModel(),
@@ -304,8 +304,8 @@ internal fun InstructorMemberRegistrationRoute(
                 onOpenConfirmation()
             }
 
-            is MemberRegistrationAction.SuccessAcknowledged -> {
-                onSuccess(action.memberId)
+            MemberRegistrationAction.SuccessAcknowledged -> {
+                onSuccess()
             }
 
             else -> {

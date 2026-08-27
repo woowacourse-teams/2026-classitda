@@ -1,14 +1,9 @@
 package com.classitda.data.repository.instructor.mypage
 
 import com.classitda.domain.model.instructor.mypage.InstructorAccountProfile
-import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.domain.model.instructor.mypage.InstructorPhoneVerificationId
 import com.classitda.domain.model.instructor.mypage.InstructorStudioId
-import com.classitda.domain.model.instructor.mypage.ManagedMember
 import com.classitda.domain.model.instructor.mypage.ManagedStudio
-import com.classitda.domain.model.instructor.mypage.MemberListPage
-import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
-import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.domain.model.instructor.mypage.StudioAddress
 import com.classitda.domain.model.instructor.mypage.StudioImageMutation
 import com.classitda.domain.model.instructor.mypage.StudioRegistrationDraft
@@ -17,8 +12,6 @@ import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.domain.repository.instructor.mypage.InstructorPhoneVerificationChallenge
 import com.classitda.domain.repository.instructor.mypage.InstructorStudioRepository
 import com.classitda.domain.repository.instructor.mypage.StudioList
-
-private typealias MemberRegistrationResult = InstructorMyPageResult<InstructorMemberId>
 
 /** Deterministic app-smoke fixture; it is not an operational repository. */
 internal class DemoInstructorMyPageRepository :
@@ -30,11 +23,6 @@ internal class DemoInstructorMyPageRepository :
             phoneNumber = "01012345678",
             email = "instructor@classitda.com",
             profileImageUrl = null,
-        )
-    private val members =
-        mutableListOf(
-            ManagedMember(InstructorMemberId("member-1"), "김민지", "01012345678"),
-            ManagedMember(InstructorMemberId("member-2"), "박서준", "01098765432"),
         )
     private val studios =
         mutableListOf(
@@ -63,57 +51,6 @@ internal class DemoInstructorMyPageRepository :
         phoneNumber: String,
         verificationCode: String,
     ) = InstructorMyPageResult.Success(profile.copy(phoneNumber = phoneNumber).also { profile = it })
-
-    override suspend fun getMembers(
-        query: String,
-        sortOrder: MemberSortOrder,
-    ): InstructorMyPageResult<MemberListPage> {
-        val filtered = members.filter { query.isBlank() || it.name.contains(query, ignoreCase = true) }
-        val sorted =
-            when (sortOrder) {
-                MemberSortOrder.RECENTLY_REGISTERED -> filtered
-                MemberSortOrder.NAME_ASC -> filtered.sortedBy { it.name }
-            }
-        return InstructorMyPageResult.Success(MemberListPage(sorted.size, sorted))
-    }
-
-    override suspend fun registerMember(draft: MemberRegistrationDraft): MemberRegistrationResult {
-        val id = InstructorMemberId("member-${members.size + 1}")
-        members += ManagedMember(id, draft.name, draft.phoneNumber)
-        return InstructorMyPageResult.Success(id)
-    }
-
-    override suspend fun getMember(memberId: InstructorMemberId) =
-        members
-            .firstOrNull { it.id == memberId }
-            ?.let { InstructorMyPageResult.Success(it) }
-            ?: InstructorMyPageResult.Failure(
-                com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
-            )
-
-    override suspend fun updateMember(
-        memberId: InstructorMemberId,
-        draft: MemberRegistrationDraft,
-    ) = members
-        .indexOfFirst { it.id == memberId }
-        .takeIf { it >= 0 }
-        ?.let { index ->
-            val updated = members[index].copy(name = draft.name, phoneNumber = draft.phoneNumber)
-            members[index] = updated
-            InstructorMyPageResult.Success(updated)
-        }
-        ?: InstructorMyPageResult.Failure(
-            com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
-        )
-
-    override suspend fun deleteMember(memberId: InstructorMemberId) =
-        if (members.removeAll { it.id == memberId }) {
-            InstructorMyPageResult.Success(memberId)
-        } else {
-            InstructorMyPageResult.Failure(
-                com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason.NOT_FOUND,
-            )
-        }
 
     override suspend fun getStudios() = InstructorMyPageResult.Success(StudioList(studios.size, studios.toList()))
 

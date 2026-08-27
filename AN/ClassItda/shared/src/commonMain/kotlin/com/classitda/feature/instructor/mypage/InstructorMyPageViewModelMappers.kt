@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
-import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.common.profile.contract.MemberProfileUiModel

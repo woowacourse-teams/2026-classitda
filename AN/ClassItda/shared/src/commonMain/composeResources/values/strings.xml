@@ -192,8 +192,6 @@
     <string name="instructor_member_management_search_placeholder">회원 이름 또는 전화번호 검색</string>
     <string name="instructor_member_management_search_label">회원 검색</string>
     <string name="instructor_member_management_list_title">회원 목록</string>
-    <string name="instructor_member_management_sort_recent">최근 등록순</string>
-    <string name="instructor_member_management_sort_name">가나다순</string>
     <string name="instructor_member_management_loading">회원 목록을 불러오는 중입니다.</string>
     <string name="instructor_member_management_empty_title">등록된 회원이 없습니다</string>
     <string name="instructor_member_management_empty_description">회원을 추가하면 목록에 표시됩니다.</string>

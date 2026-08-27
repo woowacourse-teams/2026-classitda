@@ -2,7 +2,9 @@ package com.classitda.feature.instructor.mypage.member
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
+import com.classitda.core.studio.InstructorStudioContext
+import com.classitda.domain.repository.instructor.membership.InstructorMembershipRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
@@ -11,13 +13,15 @@ import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationVali
 import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
 import com.classitda.feature.instructor.mypage.toMemberRegistrationDraft
 import com.classitda.feature.instructor.mypage.toMemberRegistrationError
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class MemberRegistrationViewModel(
-    private val repository: InstructorMyPageRepository,
+    private val repository: InstructorMembershipRepository,
+    private val studioContext: InstructorStudioContext,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MemberRegistrationUiState>(editing(MemberInputUiModel()))
     val uiState: StateFlow<MemberRegistrationUiState> = _uiState.asStateFlow()
@@ -85,10 +89,18 @@ internal class MemberRegistrationViewModel(
         val domainDraft = draft.toMemberRegistrationDraft()
         _uiState.value = MemberRegistrationUiState.Submitting(draft)
         viewModelScope.launch {
+            val result =
+                try {
+                    repository.registerStudent(studioContext.getSelectedStudio().id, domainDraft)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (_: Throwable) {
+                    InstructorMyPageResult.Failure(InstructorMyPageFailureReason.UNKNOWN)
+                }
             _uiState.value =
-                when (val result = repository.registerMember(domainDraft)) {
+                when (result) {
                     is InstructorMyPageResult.Success -> {
-                        MemberRegistrationUiState.Success(result.value)
+                        MemberRegistrationUiState.Success
                     }
 
                     is InstructorMyPageResult.Failure -> {

@@ -28,13 +28,6 @@ class InstructorMyPageContractTest {
     }
 
     @Test
-    fun memberSortActionCarriesSelectedOrder() {
-        val action = MemberManagementAction.SortOrderChanged(MemberSortOption.NAME_ASC)
-
-        assertEquals(MemberSortOption.NAME_ASC, action.sortOrder)
-    }
-
-    @Test
     fun studioActionsKeepStableStudioIdAndRemainDistinct() {
         val id = InstructorStudioId("studio-1")
 
@@ -49,7 +42,7 @@ class InstructorMyPageContractTest {
 
     @Test
     fun listStatesKeepEmptyAndSearchEmptyMutuallyExclusive() {
-        val empty: MemberManagementUiState = MemberManagementUiState.Empty()
+        val empty: MemberManagementUiState = MemberManagementUiState.Empty
         val searchEmpty: MemberManagementUiState = MemberManagementUiState.SearchEmpty("missing")
 
         assertIs<MemberManagementUiState.Empty>(empty)
@@ -89,18 +82,8 @@ class InstructorMyPageContractTest {
 
     @Test
     fun successStatesExposeStableRegistrationIds() {
-        val memberId = InstructorMemberId("member-1")
-        assertEquals(
-            memberId,
-            assertIs<MemberRegistrationAction.SuccessAcknowledged>(
-                MemberRegistrationAction.SuccessAcknowledged(memberId),
-            ).memberId,
-        )
-
-        assertEquals(
-            memberId,
-            assertIs<MemberRegistrationUiState.Success>(MemberRegistrationUiState.Success(memberId)).memberId,
-        )
+        assertIs<MemberRegistrationAction.SuccessAcknowledged>(MemberRegistrationAction.SuccessAcknowledged)
+        assertIs<MemberRegistrationUiState.Success>(MemberRegistrationUiState.Success)
         assertIs<StudioRegistrationUiState.Success>(StudioRegistrationUiState.Success)
     }
 

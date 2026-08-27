@@ -2,29 +2,21 @@ package com.classitda.feature.instructor.mypage.member
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.domain.model.instructor.mypage.ManagedMember
 import com.classitda.domain.model.instructor.mypage.MemberListPage
-import com.classitda.domain.model.instructor.mypage.MemberSortOrder
-import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
+import com.classitda.domain.repository.instructor.membership.InstructorMembershipRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.MemberManagementAction
 import com.classitda.feature.instructor.mypage.contract.MemberManagementActionState
 import com.classitda.feature.instructor.mypage.contract.MemberManagementDeleteError
-import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
-import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
-import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
-import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiError
-import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
-import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
-import com.classitda.feature.instructor.mypage.contract.isStudioRegistrationValid
-import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
-import com.classitda.feature.instructor.mypage.contract.studioRegistrationFieldErrors
-import com.classitda.feature.instructor.mypage.toDomain
 import com.classitda.feature.instructor.mypage.toListError
 import com.classitda.feature.instructor.mypage.toMemberListUiModel
 import com.classitda.feature.instructor.mypage.toMemberManagementDeleteError
-import com.classitda.feature.instructor.mypage.toUiModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,12 +25,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class MemberManagementViewModel(
-    private val repository: InstructorMyPageRepository,
+    private val repository: InstructorMembershipRepository,
+    private val studioContext: InstructorStudioContext,
 ) : ViewModel() {
+    private companion object {
+        const val PAGE_SIZE = 10
+    }
+
     private val _uiState = MutableStateFlow<MemberManagementUiState>(MemberManagementUiState.Loading)
     val uiState: StateFlow<MemberManagementUiState> = _uiState.asStateFlow()
     private var query = ""
-    private var sort = MemberSortOrder.RECENTLY_REGISTERED
     private var queryJob: Job? = null
 
     init {
@@ -55,11 +51,6 @@ internal class MemberManagementViewModel(
                         delay(300)
                         load(showLoading = false)
                     }
-            }
-
-            is MemberManagementAction.SortOrderChanged -> {
-                sort = action.sortOrder.toDomain()
-                load(showLoading = false)
             }
 
             MemberManagementAction.Retry -> {
@@ -102,29 +93,77 @@ internal class MemberManagementViewModel(
         load(showLoading = false)
     }
 
-    private fun load(showLoading: Boolean) {
-        if (showLoading) {
-            _uiState.value = MemberManagementUiState.Loading
-        }
+    private fun load(
+        showLoading: Boolean,
+        actionState: MemberManagementActionState = MemberManagementActionState.Hidden,
+    ) {
+        if (showLoading) _uiState.value = MemberManagementUiState.Loading
         viewModelScope.launch {
-            _uiState.value = toUiState(repository.getMembers(query, sort))
+            _uiState.value = toUiState(loadAllMembers(), actionState)
         }
     }
 
-    private fun toUiState(result: InstructorMyPageResult<MemberListPage>): MemberManagementUiState =
+    private suspend fun loadAllMembers(): InstructorMyPageResult<MemberListPage> {
+        val studioId =
+            try {
+                studioContext.getSelectedStudio().id
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Throwable) {
+                return InstructorMyPageResult.Failure(InstructorMyPageFailureReason.UNKNOWN)
+            }
+        val members = mutableListOf<ManagedMember>()
+        var cursor: String? = null
+        while (true) {
+            when (val result = repository.getStudents(studioId, cursor, PAGE_SIZE)) {
+                is InstructorMyPageResult.Failure -> {
+                    return result
+                }
+
+                is InstructorMyPageResult.Success -> {
+                    members += result.value.members
+                    val nextCursor = result.value.nextPageCursor
+                    if (nextCursor == null) break
+                    if (nextCursor == cursor) {
+                        return InstructorMyPageResult.Failure(InstructorMyPageFailureReason.CONTRACT)
+                    }
+                    cursor = nextCursor
+                }
+            }
+        }
+        return InstructorMyPageResult.Success(MemberListPage(members.size, members))
+    }
+
+    private fun toUiState(
+        result: InstructorMyPageResult<MemberListPage>,
+        actionState: MemberManagementActionState,
+    ): MemberManagementUiState =
         when (result) {
             is InstructorMyPageResult.Success -> {
+                val filteredMembers =
+                    result.value.members.filter { member ->
+                        query.isBlank() ||
+                            member.name.contains(query, ignoreCase = true) ||
+                            member.phoneNumber.contains(query, ignoreCase = true)
+                    }
+                val filteredPage = MemberListPage(filteredMembers.size, filteredMembers)
                 when {
-                    result.value.totalCount == 0 && query.isBlank() -> {
-                        MemberManagementUiState.Empty(sort.toUiModel())
+                    filteredMembers.isEmpty() && actionState is MemberManagementActionState.Deleted -> {
+                        MemberManagementUiState.Content(filteredPage.toMemberListUiModel(), query, actionState)
                     }
 
-                    result.value.members.isEmpty() -> {
-                        MemberManagementUiState.SearchEmpty(query, sort.toUiModel())
+                    filteredMembers.isEmpty() &&
+                        query.isBlank() &&
+                        actionState == MemberManagementActionState.Hidden -> {
+                        MemberManagementUiState.Empty
+                    }
+
+                    filteredMembers.isEmpty() -> {
+                        MemberManagementUiState.SearchEmpty(query)
                     }
 
                     else -> {
-                        MemberManagementUiState.Content(result.value.toMemberListUiModel(), query, sort.toUiModel())
+                        MemberManagementUiState.Content(filteredPage.toMemberListUiModel(), query, actionState)
                     }
                 }
             }
@@ -167,33 +206,11 @@ internal class MemberManagementViewModel(
             }
             return
         }
-        updateContent {
-            copy(
-                actionState =
-                    MemberManagementActionState.Submitting(
-                        memberId = memberId,
-                        typedName = typedName,
-                    ),
-            )
-        }
+        updateContent { copy(actionState = MemberManagementActionState.Submitting(memberId, typedName)) }
         viewModelScope.launch {
-            when (val result = repository.deleteMember(memberId)) {
+            when (val result = deleteMember(memberId)) {
                 is InstructorMyPageResult.Success -> {
-                    when (val refreshed = repository.getMembers(query, sort)) {
-                        is InstructorMyPageResult.Success -> {
-                            _uiState.value =
-                                MemberManagementUiState.Content(
-                                    page = refreshed.value.toMemberListUiModel(),
-                                    query = query,
-                                    sortOrder = sort.toUiModel(),
-                                    actionState = MemberManagementActionState.Deleted(memberId),
-                                )
-                        }
-
-                        is InstructorMyPageResult.Failure -> {
-                            _uiState.value = MemberManagementUiState.Error(refreshed.reason.toListError())
-                        }
-                    }
+                    load(showLoading = false, actionState = MemberManagementActionState.Deleted(memberId))
                 }
 
                 is InstructorMyPageResult.Failure -> {
@@ -211,6 +228,15 @@ internal class MemberManagementViewModel(
             }
         }
     }
+
+    private suspend fun deleteMember(memberId: InstructorMemberId): InstructorMyPageResult<Unit> =
+        try {
+            repository.deleteMembership(studioContext.getSelectedStudio().id, memberId)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Throwable) {
+            InstructorMyPageResult.Failure(InstructorMyPageFailureReason.UNKNOWN)
+        }
 
     private fun updateContent(transform: MemberManagementUiState.Content.() -> MemberManagementUiState.Content) {
         val content = _uiState.value as? MemberManagementUiState.Content ?: return

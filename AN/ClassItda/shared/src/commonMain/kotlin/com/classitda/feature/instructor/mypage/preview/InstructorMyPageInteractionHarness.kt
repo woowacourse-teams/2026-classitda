@@ -274,10 +274,6 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             lastEvent = "QueryChanged:${action.query}"
                         }
 
-                        is MemberManagementAction.SortOrderChanged -> {
-                            lastEvent = "SortOrderChanged"
-                        }
-
                         MemberManagementAction.Retry -> {
                             lastEvent = "Retry:F05"
                         }
@@ -321,9 +317,9 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             lastEvent = "Retry:F07"
                         }
 
-                        is MemberRegistrationAction.SuccessAcknowledged -> {
+                        MemberRegistrationAction.SuccessAcknowledged -> {
                             destination = HarnessDestination.F05
-                            lastEvent = "SuccessAcknowledged:${action.memberId.value}"
+                            lastEvent = "SuccessAcknowledged"
                         }
 
                         is MemberRegistrationAction.NameChanged -> {
