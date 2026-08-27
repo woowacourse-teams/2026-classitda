@@ -6,11 +6,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +31,8 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.component.NavigateBackTopBar
 import com.classitda.core.designsystem.component.PrimaryButton
 import com.classitda.domain.model.instructor.management.ClassForm
+import com.classitda.domain.model.instructor.management.ClassType
+import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDatePickerDialog
 import com.classitda.feature.instructor.management.classes.create.model.ClassSessionDraftUiModel
 import com.classitda.feature.instructor.management.classtemplates.model.ClassTemplateUiModel
 import com.classitda.feature.instructor.management.component.CategoryChipSelector
@@ -39,18 +44,23 @@ import com.classitda.feature.instructor.management.component.DropdownField
 import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.component.TemplateOverwriteConfirmDialog
 import com.classitda.feature.instructor.management.component.WeekdaySelector
-import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassFormOption
 import com.classitda.feature.instructor.management.util.digitsOnly
-import com.classitda.feature.instructor.management.util.toClassType
+import com.classitda.feature.instructor.management.util.toClassFormOption
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.number
+import kotlinx.datetime.todayIn
+import kotlin.time.Clock
+
+private const val NO_TEMPLATE_OPTION = "템플릿을 먼저 생성해주세요"
 
 @Composable
 internal fun ClassSessionCreateScreen(
     templates: List<ClassTemplateUiModel>,
-    categories: List<String>,
+    classTypes: List<ClassType>,
     onBackClick: () -> Unit,
     onSubmit: (ClassSessionDraftUiModel) -> Unit,
     modifier: Modifier = Modifier,
@@ -59,33 +69,44 @@ internal fun ClassSessionCreateScreen(
     var pendingTemplate by remember { mutableStateOf<ClassTemplateUiModel?>(null) }
     var isOverwriteConfirmVisible by remember { mutableStateOf(false) }
     var isTimePickerVisible by remember { mutableStateOf(false) }
+    var isSessionDatePickerVisible by remember { mutableStateOf(false) }
+    var isRepeatStartDatePickerVisible by remember { mutableStateOf(false) }
+    var isRepeatEndDatePickerVisible by remember { mutableStateOf(false) }
+    val today = remember { Clock.System.todayIn(TimeZone.currentSystemDefault()) }
 
-    var classType by remember { mutableStateOf(ClassType.GROUP) }
-    var selectedCategories by remember { mutableStateOf(emptyList<String>()) }
+    var classType by remember { mutableStateOf(ClassFormOption.GROUP) }
+    var selectedCategory by remember { mutableStateOf<ClassType?>(null) }
     var title by remember { mutableStateOf("") }
     var capacityText by remember { mutableStateOf("8") }
     var durationMinutesText by remember { mutableStateOf("50") }
     var isRepeating by remember { mutableStateOf(false) }
     var selectedDays by remember { mutableStateOf(emptySet<DayOfWeek>()) }
     var startTime by remember { mutableStateOf(LocalTime(10, 0)) }
-    var repeatStartDate by remember { mutableStateOf(LocalDate(2026, 8, 13)) }
-    var repeatEndDate by remember { mutableStateOf(LocalDate(2026, 9, 7)) }
-    var sessionDate by remember { mutableStateOf(LocalDate(2026, 8, 8)) }
+    var repeatStartDate by remember { mutableStateOf(today) }
+    var repeatEndDate by remember { mutableStateOf(today) }
+    var sessionDate by remember { mutableStateOf(today) }
     var description by remember { mutableStateOf("") }
 
+    val capacity = capacityText.toIntOrNull() ?: 0
     val durationMinutes = durationMinutesText.toIntOrNull() ?: 0
     val endTime = remember(startTime, durationMinutes) { startTime.plusMinutesClamped(durationMinutes) }
     val isFormDirty =
         title.isNotBlank() ||
             description.isNotBlank() ||
-            selectedCategories.isNotEmpty() ||
+            selectedCategory != null ||
             capacityText != "8" ||
             durationMinutesText != "50"
+    val isFormValid =
+        selectedCategory != null &&
+            title.isNotBlank() &&
+            capacity > 0 &&
+            durationMinutes > 0 &&
+            (!isRepeating || selectedDays.isNotEmpty())
 
     fun applyTemplate(template: ClassTemplateUiModel) {
         selectedTemplate = template
-        classType = template.classForm.toClassType()
-        selectedCategories = template.categoryNames
+        classType = template.classForm.toClassFormOption()
+        selectedCategory = classTypes.firstOrNull { it.id == template.classTypeId }
         title = template.title
         template.capacityText
             .digitsOnly()
@@ -107,6 +128,40 @@ internal fun ClassSessionCreateScreen(
                 title = "수업 등록",
             )
         },
+        bottomBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding(),
+                color = InsColors.Background,
+            ) {
+                PrimaryButton(
+                    text = "등록 완료",
+                    enabled = isFormValid,
+                    onClick = {
+                        onSubmit(
+                            ClassSessionDraftUiModel(
+                                templateId = selectedTemplate?.id,
+                                classType = classType,
+                                category = selectedCategory,
+                                title = title,
+                                capacity = capacity,
+                                durationMinutes = durationMinutes,
+                                startTime = startTime,
+                                isRepeating = isRepeating,
+                                repeatDays = if (isRepeating) selectedDays else emptySet(),
+                                repeatStartDate = if (isRepeating) repeatStartDate else null,
+                                repeatEndDate = if (isRepeating) repeatEndDate else null,
+                                sessionDate = if (isRepeating) null else sessionDate,
+                                description = description,
+                            ),
+                        )
+                    },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+                )
+            }
+        },
     ) { contentPadding ->
         Column(
             modifier =
@@ -114,13 +169,14 @@ internal fun ClassSessionCreateScreen(
                     .fillMaxSize()
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+                    .padding(horizontal = AppSpacing.screenPadding)
+                    .padding(top = AppSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
         ) {
             DropdownField(
                 label = "수업 템플릿",
                 placeholder = "수업 템플릿 선택",
-                options = templates.map { it.title },
+                options = if (templates.isEmpty()) listOf(NO_TEMPLATE_OPTION) else templates.map { it.title },
                 selectedOption = selectedTemplate?.title,
                 onOptionSelected = { selectedTitle ->
                     val template = templates.firstOrNull { it.title == selectedTitle }
@@ -138,17 +194,17 @@ internal fun ClassSessionCreateScreen(
             Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                 SectionLabel(text = "수업 유형 *")
                 OutlinedSegmentedToggle(
-                    options = ClassType.entries.map { it.label },
-                    selectedIndex = ClassType.entries.indexOf(classType),
-                    onOptionSelected = { classType = ClassType.entries[it] },
+                    options = ClassFormOption.entries.map { it.label },
+                    selectedIndex = ClassFormOption.entries.indexOf(classType),
+                    onOptionSelected = { classType = ClassFormOption.entries[it] },
                 )
             }
 
             CategoryChipSelector(
                 label = "카테고리 *",
-                allCategories = categories,
-                selectedCategories = selectedCategories,
-                onSelectedCategoriesChanged = { selectedCategories = it },
+                allCategories = classTypes,
+                selectedCategory = selectedCategory,
+                onCategorySelected = { selectedCategory = it },
             )
 
             CreateTextField(
@@ -221,21 +277,30 @@ internal fun ClassSessionCreateScreen(
                             verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
                         ) {
                             SubFieldLabel(text = "시작일")
-                            DatePickerField(dateText = formatDateDot(repeatStartDate), onClick = {})
+                            DatePickerField(
+                                dateText = formatDateDot(repeatStartDate),
+                                onClick = { isRepeatStartDatePickerVisible = true },
+                            )
                         }
                         Column(
                             modifier = Modifier.weight(1f),
                             verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
                         ) {
                             SubFieldLabel(text = "종료일")
-                            DatePickerField(dateText = formatDateDot(repeatEndDate), onClick = {})
+                            DatePickerField(
+                                dateText = formatDateDot(repeatEndDate),
+                                onClick = { isRepeatEndDatePickerVisible = true },
+                            )
                         }
                     }
                 }
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
                     SectionLabel(text = "수업일 *")
-                    DatePickerField(dateText = formatDateWithDayOfWeek(sessionDate), onClick = {})
+                    DatePickerField(
+                        dateText = formatDateWithDayOfWeek(sessionDate),
+                        onClick = { isSessionDatePickerVisible = true },
+                    )
                 }
             }
 
@@ -246,30 +311,6 @@ internal fun ClassSessionCreateScreen(
                 onValueChange = { description = it },
                 singleLine = false,
                 minLines = 3,
-            )
-
-            PrimaryButton(
-                text = "등록 완료",
-                onClick = {
-                    onSubmit(
-                        ClassSessionDraftUiModel(
-                            templateId = selectedTemplate?.id,
-                            classType = classType,
-                            categories = selectedCategories,
-                            title = title,
-                            capacity = capacityText.toIntOrNull() ?: 0,
-                            durationMinutes = durationMinutes,
-                            startTime = startTime,
-                            isRepeating = isRepeating,
-                            repeatDays = if (isRepeating) selectedDays else emptySet(),
-                            repeatStartDate = if (isRepeating) repeatStartDate else null,
-                            repeatEndDate = if (isRepeating) repeatEndDate else null,
-                            sessionDate = if (isRepeating) null else sessionDate,
-                            description = description,
-                        ),
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -296,6 +337,43 @@ internal fun ClassSessionCreateScreen(
                 startTime = newTime
                 isTimePickerVisible = false
             },
+        )
+    }
+
+    if (isSessionDatePickerVisible) {
+        ClassSessionDatePickerDialog(
+            initialDate = sessionDate,
+            onDismissRequest = { isSessionDatePickerVisible = false },
+            onConfirm = { newDate ->
+                sessionDate = newDate
+                isSessionDatePickerVisible = false
+            },
+            minDate = today,
+        )
+    }
+
+    if (isRepeatStartDatePickerVisible) {
+        ClassSessionDatePickerDialog(
+            initialDate = repeatStartDate,
+            onDismissRequest = { isRepeatStartDatePickerVisible = false },
+            onConfirm = { newDate ->
+                repeatStartDate = newDate
+                if (repeatEndDate < newDate) repeatEndDate = newDate
+                isRepeatStartDatePickerVisible = false
+            },
+            minDate = today,
+        )
+    }
+
+    if (isRepeatEndDatePickerVisible) {
+        ClassSessionDatePickerDialog(
+            initialDate = repeatEndDate,
+            onDismissRequest = { isRepeatEndDatePickerVisible = false },
+            onConfirm = { newDate ->
+                repeatEndDate = newDate
+                isRepeatEndDatePickerVisible = false
+            },
+            minDate = repeatStartDate,
         )
     }
 }
@@ -361,7 +439,7 @@ private fun ClassSessionCreateScreenPreview() {
                     ClassTemplateUiModel(
                         id = "1",
                         classForm = ClassForm.GROUP,
-                        classTypeIds = listOf("1"),
+                        classTypeId = "1",
                         categoryNames = listOf("필라테스"),
                         title = "리포머 밸런스",
                         durationText = "50분",
@@ -369,7 +447,12 @@ private fun ClassSessionCreateScreenPreview() {
                         schedule = null,
                     ),
                 ),
-            categories = listOf("필라테스", "요가", "그룹 PT"),
+            classTypes =
+                listOf(
+                    ClassType(id = "1", name = "필라테스"),
+                    ClassType(id = "2", name = "요가"),
+                    ClassType(id = "3", name = "그룹 PT"),
+                ),
             onBackClick = {},
             onSubmit = {},
         )

@@ -10,6 +10,7 @@ import com.classitda.domain.repository.instructor.management.ClassTemplateManage
 import com.classitda.domain.repository.instructor.management.ClassTemplateManagementRepository
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpStatusCode
+import kotlinx.io.IOException
 
 internal class ClassTemplateManagementRepositoryImpl(
     private val classTemplatesApi: ClassTemplatesApi,
@@ -73,14 +74,16 @@ internal class ClassTemplateManagementRepositoryImpl(
         }
 }
 
-private suspend fun <T> handlingApiErrors(block: suspend () -> T): T =
+internal suspend fun <T> handlingApiErrors(block: suspend () -> T): T =
     try {
         block()
     } catch (e: ResponseException) {
         throw e.toClassTemplateManagementException()
+    } catch (e: IOException) {
+        throw ClassTemplateManagementException.Network("NETWORK-001", "네트워크 연결을 확인한 후 다시 시도해 주세요")
     }
 
-private suspend fun ResponseException.toClassTemplateManagementException(): ClassTemplateManagementException {
+internal suspend fun ResponseException.toClassTemplateManagementException(): ClassTemplateManagementException {
     val error = toErrorResponse()
     return when (response.status) {
         HttpStatusCode.BadRequest -> ClassTemplateManagementException.InvalidRequest(error.code, error.message)

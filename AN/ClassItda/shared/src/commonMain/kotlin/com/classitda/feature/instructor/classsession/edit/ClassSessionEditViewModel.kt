@@ -9,7 +9,7 @@ import com.classitda.domain.model.instructor.session.InstructorSessionUpdate
 import com.classitda.domain.repository.instructor.management.ClassTemplateManagementRepository
 import com.classitda.domain.repository.instructor.session.InstructorSessionRepository
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
-import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassFormOption
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -91,11 +91,11 @@ internal class ClassSessionEditViewModel(
 private fun InstructorSessionDetail.toEditForm(): ClassSessionEditFormUiModel {
     val formClassType =
         when (classForm) {
-            InstructorClassForm.INDIVIDUAL -> ClassType.PERSONAL
+            InstructorClassForm.INDIVIDUAL -> ClassFormOption.PERSONAL
 
             InstructorClassForm.GROUP,
             InstructorClassForm.UNKNOWN,
-            -> ClassType.GROUP
+            -> ClassFormOption.GROUP
         }
     val durationMinutes = durationBetween(startAt.time, endAt.time)
 
@@ -118,8 +118,8 @@ private fun ClassSessionEditFormUiModel.toUpdate() =
     InstructorSessionUpdate(
         classForm =
             when (classType) {
-                ClassType.GROUP -> InstructorClassForm.GROUP
-                ClassType.PERSONAL -> InstructorClassForm.INDIVIDUAL
+                ClassFormOption.GROUP -> InstructorClassForm.GROUP
+                ClassFormOption.PERSONAL -> InstructorClassForm.INDIVIDUAL
             },
         classTypeId = classTypeId,
         className = title,

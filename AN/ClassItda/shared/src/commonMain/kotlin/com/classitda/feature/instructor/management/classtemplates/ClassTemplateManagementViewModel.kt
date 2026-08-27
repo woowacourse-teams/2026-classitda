@@ -2,6 +2,7 @@ package com.classitda.feature.instructor.management.classtemplates
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.management.ClassTemplate
 import com.classitda.domain.model.instructor.management.ClassType
 import com.classitda.domain.repository.instructor.management.ClassTemplateManagementRepository
@@ -20,10 +21,8 @@ import kotlinx.coroutines.launch
 
 internal class ClassTemplateManagementViewModel(
     private val repository: ClassTemplateManagementRepository,
+    private val studioContext: InstructorStudioContext,
 ) : ViewModel() {
-    // TODO: 로그인한 강사의 실제 시설로 교체. 아직 현재 시설을 알려주는 세션/설정이 없어 임시 고정값 사용.
-    private val studioId = "3"
-
     private val _uiState =
         MutableStateFlow<ClassTemplateManagementUiState>(ClassTemplateManagementUiState.InitialLoading)
     val uiState: StateFlow<ClassTemplateManagementUiState> = _uiState.asStateFlow()
@@ -41,8 +40,10 @@ internal class ClassTemplateManagementViewModel(
 
     fun deleteTemplate(id: String) {
         viewModelScope.launch {
-            runCatching { repository.deleteTemplate(studioId, id) }
-                .onSuccess { loadTemplates() }
+            runCatching {
+                val studioId = studioContext.getSelectedStudio().id.value
+                repository.deleteTemplate(studioId, id)
+            }.onSuccess { loadTemplates() }
         }
     }
 
@@ -92,6 +93,7 @@ internal class ClassTemplateManagementViewModel(
 
     private suspend fun fetchTemplateManagementSnapshot(): TemplateManagementSnapshot =
         coroutineScope {
+            val studioId = studioContext.getSelectedStudio().id.value
             val templatesDeferred = async { repository.getTemplates(studioId) }
             val classTypesDeferred = async { repository.getClassTypes(studioId) }
             TemplateManagementSnapshot(

@@ -33,4 +33,9 @@ sealed class ClassTemplateManagementException(
         code: String,
         message: String,
     ) : ClassTemplateManagementException(code, message)
+
+    class Network(
+        code: String,
+        message: String,
+    ) : ClassTemplateManagementException(code, message)
 }

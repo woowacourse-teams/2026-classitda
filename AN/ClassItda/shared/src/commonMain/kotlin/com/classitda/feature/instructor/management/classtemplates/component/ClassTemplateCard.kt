@@ -179,7 +179,7 @@ private fun ClassTemplateCardPreview_WithSchedule() {
                 ClassTemplateUiModel(
                     id = "1",
                     classForm = ClassForm.GROUP,
-                    classTypeIds = listOf("1"),
+                    classTypeId = "1",
                     categoryNames = listOf("필라테스"),
                     title = "리포머 밸런스",
                     durationText = "50분",
@@ -202,7 +202,7 @@ private fun ClassTemplateCardPreview_WithoutSchedule() {
                 ClassTemplateUiModel(
                     id = "2",
                     classForm = ClassForm.INDIVIDUAL,
-                    classTypeIds = listOf("2"),
+                    classTypeId = "2",
                     categoryNames = listOf("요가"),
                     title = "1:1 개인 수업",
                     durationText = "50분",

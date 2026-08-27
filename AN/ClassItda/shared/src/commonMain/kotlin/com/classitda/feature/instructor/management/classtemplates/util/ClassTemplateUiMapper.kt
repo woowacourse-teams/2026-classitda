@@ -11,7 +11,7 @@ internal fun ClassTemplate.toUiModel(): ClassTemplateUiModel =
     ClassTemplateUiModel(
         id = id,
         classForm = classForm,
-        classTypeIds = classTypeIds,
+        classTypeId = classTypeId,
         categoryNames = tags,
         title = title,
         durationText = "${durationMinutes}분",

@@ -32,15 +32,15 @@ internal fun ClassTemplateManagementRoute(
     onTemplateCardClick: (String) -> Unit,
     onTemplateEditClick: (String) -> Unit,
     bottomBar: @Composable () -> Unit,
-    refreshKey: Int = 0,
+    shouldRefresh: Boolean = false,
     modifier: Modifier = Modifier,
     viewModel: ClassTemplateManagementViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(refreshKey) {
-        if (refreshKey != 0) viewModel.onRetry()
+    LaunchedEffect(shouldRefresh) {
+        if (shouldRefresh) viewModel.onRetry()
     }
 
     LaunchedEffect(viewModel) {
