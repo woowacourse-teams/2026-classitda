@@ -89,6 +89,8 @@ services:
       - --collation-server=utf8mb4_0900_ai_ci
       - --innodb-buffer-pool-size=192M
       - --performance-schema=OFF
+    ports:
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
