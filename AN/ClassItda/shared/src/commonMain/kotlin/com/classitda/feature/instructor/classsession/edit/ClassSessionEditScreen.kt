@@ -49,7 +49,7 @@ import com.classitda.feature.instructor.classsession.edit.component.EditOutlined
 import com.classitda.feature.instructor.classsession.edit.component.EditTextField
 import com.classitda.feature.instructor.classsession.edit.component.EditUnitTextField
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
-import com.classitda.feature.instructor.management.model.ClassType
+import com.classitda.feature.instructor.management.model.ClassFormOption
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
@@ -234,7 +234,7 @@ private fun ClassSessionEditStateful(
 
 @Composable
 internal fun ClassSessionEditStateless(
-    classType: ClassType,
+    classType: ClassFormOption,
     selectedCategories: List<String>,
     categories: List<DomainClassType>,
     title: String,
@@ -245,7 +245,7 @@ internal fun ClassSessionEditStateless(
     sessionDate: LocalDate,
     description: String,
     onBackClick: () -> Unit,
-    onClassTypeChange: (ClassType) -> Unit,
+    onClassTypeChange: (ClassFormOption) -> Unit,
     onCategoriesChange: (List<String>) -> Unit,
     onTitleChange: (String) -> Unit,
     onCapacityChange: (String) -> Unit,
@@ -280,9 +280,9 @@ internal fun ClassSessionEditStateless(
             Column(verticalArrangement = Arrangement.spacedBy(EditFieldDefaults.labelFieldGap)) {
                 EditSectionLabel(text = "수업 유형 *")
                 EditOutlinedSegmentedToggle(
-                    options = ClassType.entries.map { it.label },
-                    selectedIndex = ClassType.entries.indexOf(classType),
-                    onOptionSelected = { onClassTypeChange(ClassType.entries[it]) },
+                    options = ClassFormOption.entries.map { it.label },
+                    selectedIndex = ClassFormOption.entries.indexOf(classType),
+                    onOptionSelected = { onClassTypeChange(ClassFormOption.entries[it]) },
                 )
             }
             SingleCategorySelector(
@@ -438,7 +438,7 @@ private fun ClassSessionEditError(
 private fun ClassSessionEditStatelessPreview() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         ClassSessionEditStateless(
-            classType = ClassType.GROUP,
+            classType = ClassFormOption.GROUP,
             selectedCategories = listOf("필라테스"),
             categories =
                 listOf(

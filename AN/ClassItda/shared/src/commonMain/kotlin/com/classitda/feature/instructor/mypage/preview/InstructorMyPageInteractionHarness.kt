@@ -101,12 +101,6 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                                 "OpenProfile"
                         }
 
-                        InstructorMyPageAction.OpenMemberManagement -> {
-                            destination = HarnessDestination.F05
-                            lastEvent =
-                                "OpenMemberManagement"
-                        }
-
                         InstructorMyPageAction.OpenStudioManagement -> {
                             destination = HarnessDestination.F08
                             lastEvent =
@@ -276,12 +270,12 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                                 "OpenMemberRegistration"
                         }
 
-                        is MemberManagementAction.QueryChanged -> {
-                            lastEvent = "QueryChanged:${action.query}"
+                        MemberManagementAction.OpenStudioRegistration -> {
+                            lastEvent = "OpenStudioRegistration"
                         }
 
-                        is MemberManagementAction.SortOrderChanged -> {
-                            lastEvent = "SortOrderChanged"
+                        is MemberManagementAction.QueryChanged -> {
+                            lastEvent = "QueryChanged:${action.query}"
                         }
 
                         MemberManagementAction.Retry -> {
@@ -327,9 +321,9 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                             lastEvent = "Retry:F07"
                         }
 
-                        is MemberRegistrationAction.SuccessAcknowledged -> {
+                        MemberRegistrationAction.SuccessAcknowledged -> {
                             destination = HarnessDestination.F05
-                            lastEvent = "SuccessAcknowledged:${action.memberId.value}"
+                            lastEvent = "SuccessAcknowledged"
                         }
 
                         is MemberRegistrationAction.NameChanged -> {

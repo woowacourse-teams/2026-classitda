@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.auth.AndroidKeystoreAuthTokenStorage
+import com.classitda.core.network.ClassItdaApiConfig
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -15,6 +16,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             App(
+                baseUrl = if (BuildConfig.DEBUG) ClassItdaApiConfig.DEV_BASE_URL else ClassItdaApiConfig.PROD_BASE_URL,
                 tokenStorage =
                     AndroidKeystoreAuthTokenStorage(applicationContext),
             )
@@ -25,5 +27,5 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun AppAndroidPreview() {
-    App()
+    App(baseUrl = ClassItdaApiConfig.DEV_BASE_URL)
 }

@@ -78,10 +78,12 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.feature.instructor.mypage.InstructorPhoneNumberVisualTransformation
 import com.classitda.feature.instructor.mypage.contract.MemberEditAction
 import com.classitda.feature.instructor.mypage.contract.MemberEditField
 import com.classitda.feature.instructor.mypage.contract.MemberEditUiState
 import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
+import com.classitda.feature.instructor.mypage.instructorPhoneNumberDigits
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -333,15 +335,19 @@ private fun MemberEditForm(
                     Text(nameErrorText, style = appTypography().bodySmall, color = InsColors.Red)
                 }
                 OutlinedTextField(
-                    value = draft.phoneNumber,
-                    onValueChange = { onAction(MemberEditAction.PhoneNumberChanged(it)) },
+                    value = instructorPhoneNumberDigits(draft.phoneNumber),
+                    onValueChange = {
+                        onAction(MemberEditAction.PhoneNumberChanged(instructorPhoneNumberDigits(it)))
+                    },
                     modifier = Modifier.fillMaxWidth().semantics { if (phoneError) error(phoneErrorText) },
+                    enabled = draft.phoneNumberEditable,
                     label = { Text(stringResource(Res.string.instructor_member_registration_phone)) },
                     placeholder = { Text(stringResource(Res.string.instructor_member_registration_phone_placeholder)) },
                     isError = phoneError,
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                    visualTransformation = InstructorPhoneNumberVisualTransformation,
                     colors = memberEditFieldColors(),
                 )
                 if (phoneError) {

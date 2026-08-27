@@ -3,10 +3,12 @@ package com.classitda.feature.instructor.classsession.edit.component
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.DialogProperties
@@ -28,10 +30,19 @@ internal fun ClassSessionDatePickerDialog(
     initialDate: LocalDate,
     onDismissRequest: () -> Unit,
     onConfirm: (LocalDate) -> Unit,
+    minDate: LocalDate? = null,
 ) {
+    val selectableDates =
+        remember(minDate) {
+            object : SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                    minDate == null || utcTimeMillis.toPickerLocalDate() >= minDate
+            }
+        }
     val datePickerState =
         rememberDatePickerState(
             initialSelectedDateMillis = initialDate.toPickerEpochMillis(),
+            selectableDates = selectableDates,
         )
 
     DatePickerDialog(
@@ -66,6 +77,8 @@ private fun ClassSessionDatePickerContent(
     DatePicker(
         state = state,
         modifier = modifier,
+        title = null,
+        headline = null,
         showModeToggle = false,
     )
 }

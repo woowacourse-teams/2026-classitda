@@ -8,6 +8,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpResponseValidator
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
@@ -32,6 +33,7 @@ internal fun createClassItdaHttpClient(
     HttpClient(engine) {
         expectSuccess = true
         installClassItdaErrorLogging()
+        installRequestTimeout()
         install(ContentNegotiation) {
             json(
                 Json {
@@ -55,6 +57,7 @@ internal fun createConfiguredHttpClient(
     HttpClient {
         expectSuccess = true
         installClassItdaErrorLogging()
+        installRequestTimeout()
         install(ContentNegotiation) {
             json(
                 Json {
@@ -125,6 +128,14 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
                 }
             }
         }
+    }
+}
+
+private fun io.ktor.client.HttpClientConfig<*>.installRequestTimeout() {
+    install(HttpTimeout) {
+        requestTimeoutMillis = 15_000
+        connectTimeoutMillis = 10_000
+        socketTimeoutMillis = 15_000
     }
 }
 

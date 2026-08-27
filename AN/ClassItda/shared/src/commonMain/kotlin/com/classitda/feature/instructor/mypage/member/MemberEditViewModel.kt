@@ -2,8 +2,12 @@ package com.classitda.feature.instructor.mypage.member
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
+import com.classitda.domain.model.instructor.mypage.ManagedMember
+import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
+import com.classitda.domain.repository.instructor.membership.InstructorMembershipRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorMyPageFailureReason
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
 import com.classitda.feature.instructor.mypage.contract.MemberEditAction
 import com.classitda.feature.instructor.mypage.contract.MemberEditUiState
@@ -13,13 +17,15 @@ import com.classitda.feature.instructor.mypage.contract.memberEditFieldErrors
 import com.classitda.feature.instructor.mypage.toMemberEditError
 import com.classitda.feature.instructor.mypage.toMemberInputUiModel
 import com.classitda.feature.instructor.mypage.toMemberRegistrationDraft
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 internal class MemberEditViewModel(
-    private val repository: InstructorMyPageRepository,
+    private val repository: InstructorMembershipRepository,
+    private val studioContext: InstructorStudioContext,
     private val memberId: InstructorMemberId,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<MemberEditUiState>(MemberEditUiState.Loading)
@@ -36,7 +42,10 @@ internal class MemberEditViewModel(
             }
 
             is MemberEditAction.PhoneNumberChanged -> {
-                update { copy(phoneNumber = action.phoneNumber) }
+                val state = _uiState.value as? MemberEditUiState.Editing ?: return
+                if (state.draft.phoneNumberEditable) {
+                    update { copy(phoneNumber = action.phoneNumber) }
+                }
             }
 
             MemberEditAction.Submit -> {
@@ -74,7 +83,7 @@ internal class MemberEditViewModel(
         _uiState.value = MemberEditUiState.Loading
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.getMember(memberId)) {
+                when (val result = getMembership()) {
                     is InstructorMyPageResult.Success -> {
                         editing(
                             result.value.toMemberInputUiModel(),
@@ -115,9 +124,9 @@ internal class MemberEditViewModel(
         _uiState.value = MemberEditUiState.Submitting(memberId, state.draft)
         viewModelScope.launch {
             _uiState.value =
-                when (val result = repository.updateMember(memberId, domainDraft)) {
+                when (val result = updateMembership(domainDraft)) {
                     is InstructorMyPageResult.Success -> {
-                        MemberEditUiState.Success(result.value.id)
+                        MemberEditUiState.Success(memberId)
                     }
 
                     is InstructorMyPageResult.Failure -> {
@@ -131,4 +140,22 @@ internal class MemberEditViewModel(
                 }
         }
     }
+
+    private suspend fun getMembership(): InstructorMyPageResult<ManagedMember> =
+        try {
+            repository.getMembership(studioContext.getSelectedStudio().id, memberId)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Throwable) {
+            InstructorMyPageResult.Failure(InstructorMyPageFailureReason.UNKNOWN)
+        }
+
+    private suspend fun updateMembership(draft: MemberRegistrationDraft): InstructorMyPageResult<Unit> =
+        try {
+            repository.updateStudent(studioContext.getSelectedStudio().id, memberId, draft)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Throwable) {
+            InstructorMyPageResult.Failure(InstructorMyPageFailureReason.UNKNOWN)
+        }
 }

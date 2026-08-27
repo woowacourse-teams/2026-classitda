@@ -51,6 +51,7 @@ private fun InstructorHomeSummaryPreview() {
                 listOf(
                     ClassSession(
                         id = "session-1",
+                        classTypeId = "session-1",
                         tags = listOf("그룹 수업"),
                         title = "체어 밸런스",
                         startAt = LocalDateTime(2026, 8, 5, 14, 0),
@@ -61,6 +62,7 @@ private fun InstructorHomeSummaryPreview() {
                     ),
                     ClassSession(
                         id = "session-2",
+                        classTypeId = "session-2",
                         tags = listOf("필라테스"),
                         title = "리포머 밸런스",
                         startAt = LocalDateTime(2026, 8, 5, 19, 30),

@@ -235,6 +235,7 @@ private fun InstructorHomeStatelessPreview() {
                 listOf(
                     ClassSession(
                         id = "1",
+                        classTypeId = "1",
                         tags = listOf("그룹 수업"),
                         title = "체어 밸런스",
                         startAt = LocalDateTime(2026, 8, 5, 14, 0),
@@ -245,6 +246,7 @@ private fun InstructorHomeStatelessPreview() {
                     ),
                     ClassSession(
                         id = "2",
+                        classTypeId = "2",
                         tags = listOf("그룹 수업"),
                         title = "리포머 밸런스",
                         startAt = LocalDateTime(2026, 8, 5, 19, 30),
@@ -255,6 +257,7 @@ private fun InstructorHomeStatelessPreview() {
                     ),
                     ClassSession(
                         id = "3",
+                        classTypeId = "3",
                         tags = listOf("그룹 수업"),
                         title = "바렐 코어 테라피",
                         startAt = LocalDateTime(2026, 8, 5, 20, 30),
@@ -265,6 +268,7 @@ private fun InstructorHomeStatelessPreview() {
                     ),
                     ClassSession(
                         id = "4",
+                        classTypeId = "4",
                         tags = listOf("그룹 수업"),
                         title = "릴렉스 스트레칭",
                         startAt = LocalDateTime(2026, 8, 5, 21, 30),

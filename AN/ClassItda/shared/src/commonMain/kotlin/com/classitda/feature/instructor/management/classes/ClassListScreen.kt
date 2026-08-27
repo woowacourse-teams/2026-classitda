@@ -9,17 +9,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -84,36 +90,69 @@ internal fun ClassListScreen(
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
-            ClassCategoryFilterRow(
-                customCategories = customCategories,
-                selectedLabel = selectedFilterLabel,
-                onFilterSelected = onFilterSelected,
-                modifier =
-                    Modifier.padding(
-                        vertical = AppSpacing.md,
-                    ),
-            )
+            if (sessionGroups.isEmpty()) {
+                ClassListEmpty(
+                    onCreateSessionClick = onCreateSessionClick,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                ClassCategoryFilterRow(
+                    customCategories = customCategories,
+                    selectedLabel = selectedFilterLabel,
+                    onFilterSelected = onFilterSelected,
+                    modifier =
+                        Modifier.padding(
+                            vertical = AppSpacing.md,
+                        ),
+                )
 
-            LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = AppSpacing.screenPadding),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
-                contentPadding = PaddingValues(bottom = AppSpacing.xxxl),
-            ) {
-                visibleSessionGroups.forEach { group ->
-                    item(key = group.dateText) {
-                        ClassSessionDateHeader(dateText = group.dateText)
-                    }
-                    items(group.sessions, key = { it.id }) { session ->
-                        ClassSessionCard(
-                            session = session,
-                            onClick = { onSessionCardClick(session.id) },
-                        )
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = AppSpacing.screenPadding),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
+                    contentPadding = PaddingValues(bottom = AppSpacing.xxxl),
+                ) {
+                    visibleSessionGroups.forEach { group ->
+                        item(key = group.dateText) {
+                            ClassSessionDateHeader(dateText = group.dateText)
+                        }
+                        items(group.sessions, key = { it.id }) { session ->
+                            ClassSessionCard(
+                                session = session,
+                                onClick = { onSessionCardClick(session.id) },
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun ClassListEmpty(
+    onCreateSessionClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(AppSpacing.screenPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "생성된 수업이 없습니다.\n새로운 수업을 생성해주세요!",
+            style = MaterialTheme.typography.bodyMedium,
+            color = InsColors.TextSecondary,
+            textAlign = TextAlign.Center,
+        )
+        Button(
+            onClick = onCreateSessionClick,
+            colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary),
+            modifier = Modifier.padding(top = AppSpacing.lg),
+        ) {
+            Text(text = "생성하기")
         }
     }
 }
@@ -182,6 +221,25 @@ private fun ClassListScreenPreview() {
                             ),
                     ),
                 ),
+        )
+    }
+}
+
+@Composable
+@Preview
+private fun ClassListScreenEmptyPreview() {
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        ClassListScreen(
+            selectedFilterLabel = ClassCategoryFilter.ALL.label,
+            isRefreshing = false,
+            snackbarHostState = remember { SnackbarHostState() },
+            onFilterSelected = {},
+            onBackClick = {},
+            onCreateSessionClick = {},
+            onSessionCardClick = {},
+            bottomBar = {},
+            customCategories = emptyList(),
+            sessionGroups = emptyList(),
         )
     }
 }

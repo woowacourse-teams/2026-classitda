@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -42,7 +41,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
@@ -53,7 +51,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
-import classitda.shared.generated.resources.ic_camera
 import classitda.shared.generated.resources.ic_edit
 import classitda.shared.generated.resources.profile_edit_back
 import classitda.shared.generated.resources.profile_edit_complete
@@ -64,11 +61,10 @@ import classitda.shared.generated.resources.profile_edit_loading
 import classitda.shared.generated.resources.profile_edit_name
 import classitda.shared.generated.resources.profile_edit_name_input
 import classitda.shared.generated.resources.profile_edit_phone_number
-import classitda.shared.generated.resources.profile_edit_phone_number_change
-import classitda.shared.generated.resources.profile_edit_photo_change
 import classitda.shared.generated.resources.profile_edit_retry
 import classitda.shared.generated.resources.profile_edit_save_failed
 import classitda.shared.generated.resources.profile_edit_saving
+import classitda.shared.generated.resources.profile_email_unavailable
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -238,13 +234,8 @@ private fun ProfileEditContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(modifier = Modifier.height(AppSpacing.sm))
-        EditableProfileAvatar(
+        ProfileAvatar(
             name = profile.name,
-            enabled = !isSaving,
-            onClick = {
-                clearEditingFocus()
-                onAction(ProfileEditAction.RequestPhotoChange)
-            },
         )
         Spacer(modifier = Modifier.height(AppSpacing.xxxl * 2))
         EditableNameField(
@@ -254,16 +245,11 @@ private fun ProfileEditContent(
             onDone = clearEditingFocus,
         )
         Spacer(modifier = Modifier.height(AppSpacing.xl))
-        PhoneNumberField(
+        ReadOnlyPhoneNumberField(
             phoneNumber = phoneNumber,
-            enabled = !isSaving,
-            onChange = {
-                clearEditingFocus()
-                onAction(ProfileEditAction.OpenPhoneNumberChange)
-            },
         )
         Spacer(modifier = Modifier.height(AppSpacing.xl))
-        ReadOnlyEmailField(email = profile.email)
+        ReadOnlyEmailField(email = profile.email ?: stringResource(Res.string.profile_email_unavailable))
         if (saveFailureMessage != null) {
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
@@ -282,25 +268,11 @@ private fun ProfileEditContent(
 }
 
 @Composable
-private fun EditableProfileAvatar(
-    name: String,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    val photoChangeDescription = stringResource(Res.string.profile_edit_photo_change)
+private fun ProfileAvatar(name: String) {
     val typography = appTypography()
 
     Box(
-        modifier =
-            Modifier
-                .size(AppSpacing.xxxl * 3)
-                .clickable(
-                    enabled = enabled,
-                    role = Role.Button,
-                    onClick = onClick,
-                ).semantics(mergeDescendants = true) {
-                    contentDescription = photoChangeDescription
-                },
+        modifier = Modifier.size(AppSpacing.xxxl * 3),
     ) {
         val avatarInitial = name.firstOrNull { !it.isWhitespace() }?.toString() ?: "?"
         Box(
@@ -318,29 +290,6 @@ private fun EditableProfileAvatar(
                 style = typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onSurface,
             )
-        }
-        Surface(
-            modifier =
-                Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(x = AppSpacing.sm, y = AppSpacing.sm)
-                    .size(AppSpacing.xxxl),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surface,
-            border =
-                BorderStroke(
-                    width = AppSpacing.xs / 4,
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                ),
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    painter = painterResource(Res.drawable.ic_camera),
-                    contentDescription = null,
-                    modifier = Modifier.size(AppSpacing.xl),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
         }
     }
 }
@@ -399,11 +348,7 @@ private fun EditableNameField(
 }
 
 @Composable
-private fun PhoneNumberField(
-    phoneNumber: String,
-    enabled: Boolean,
-    onChange: () -> Unit,
-) {
+private fun ReadOnlyPhoneNumberField(phoneNumber: String) {
     val typography = appTypography()
 
     Column(
@@ -412,14 +357,7 @@ private fun PhoneNumberField(
     ) {
         ProfileEditFieldLabel(text = stringResource(Res.string.profile_edit_phone_number))
         Surface(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        enabled = enabled,
-                        role = Role.Button,
-                        onClick = onChange,
-                    ),
+            modifier = Modifier.fillMaxWidth(),
             shape = AppShape.Card,
             color = MaterialTheme.colorScheme.surfaceVariant,
             border =
@@ -428,33 +366,12 @@ private fun PhoneNumberField(
                     color = MaterialTheme.colorScheme.outlineVariant,
                 ),
         ) {
-            Row(
-                modifier = Modifier.padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
-            ) {
-                Text(
-                    text = phoneNumber,
-                    modifier = Modifier.weight(1f),
-                    style = typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Surface(
-                    shape = AppShape.Pill,
-                    color = MaterialTheme.colorScheme.onSurface,
-                ) {
-                    Text(
-                        text = stringResource(Res.string.profile_edit_phone_number_change),
-                        modifier =
-                            Modifier.padding(
-                                horizontal = AppSpacing.lg,
-                                vertical = AppSpacing.sm,
-                            ),
-                        style = typography.labelLarge,
-                        color = MaterialTheme.colorScheme.surface,
-                    )
-                }
-            }
+            Text(
+                text = phoneNumber,
+                modifier = Modifier.padding(horizontal = AppSpacing.lg, vertical = AppSpacing.md),
+                style = typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

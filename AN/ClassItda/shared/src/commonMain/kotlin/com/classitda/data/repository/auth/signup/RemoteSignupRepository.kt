@@ -1,5 +1,6 @@
 package com.classitda.data.repository.auth.signup
 
+import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
 import com.classitda.core.auth.InMemoryAuthTokenStorage
 import com.classitda.data.remote.auth.signup.GoogleLoginRequestDto
@@ -27,15 +28,27 @@ import com.classitda.domain.model.auth.signup.SignupTermCode
 import com.classitda.domain.model.auth.signup.SignupToken
 import com.classitda.domain.model.auth.signup.TermId
 import com.classitda.domain.repository.auth.signup.SignupRepository
+import io.ktor.client.plugins.ResponseException
 
 internal class RemoteSignupRepository(
     private val api: SignupApi,
     private val tokenStorage: AuthTokenStorage = InMemoryAuthTokenStorage(),
 ) : SignupRepository {
     override suspend fun loginWithGoogle(idToken: GoogleIdToken): GoogleLoginResult =
-        api.loginWithGoogle(GoogleLoginRequestDto(idToken.value)).toDomain().also { result ->
-            if (result is GoogleLoginResult.Registered) {
-                tokenStorage.write(result.tokens)
+        try {
+            val response = api.loginWithGoogle(GoogleLoginRequestDto(idToken.value))
+            Logger.d("SignupFlow: Google login API response status=${response.status}")
+            response.toDomain().also { result ->
+                if (result is GoogleLoginResult.Registered) {
+                    tokenStorage.write(result.tokens)
+                }
+            }
+        } catch (exception: ResponseException) {
+            if (exception.response.status.value == 403) {
+                Logger.d("SignupFlow: Google login returned 403; treating account as withdrawal pending")
+                GoogleLoginResult.WithdrawalPending
+            } else {
+                throw exception
             }
         }
 
@@ -77,26 +90,41 @@ internal class RemoteSignupRepository(
     }
 
     override suspend fun logout() {
-        val tokens = tokenStorage.read() ?: return
+        val tokens =
+            tokenStorage.read()
+                ?: run {
+                    Logger.d("AuthSession: logout skipped because no local token exists")
+                    return
+                }
+        Logger.d("AuthSession: logout API call with local tokens")
         runCatching {
             api.logout(tokens.accessToken, LogoutRequestDto(tokens.refreshToken))
+        }.onSuccess {
+            Logger.d("AuthSession: logout API succeeded")
+        }.onFailure { error ->
+            Logger.e("AuthSession: logout API failed: ${error.message}")
         }.also {
             tokenStorage.clear()
+            Logger.d("AuthSession: local tokens cleared")
         }
     }
 }
 
 private fun LoginResponseDto.toDomain(): GoogleLoginResult =
     when (status) {
-        LoginStatusDto.REGISTERED -> {
+        LoginStatusDto.REGISTERED.name -> {
             GoogleLoginResult.Registered(toLoginTokens())
         }
 
-        LoginStatusDto.REGISTRATION_REQUIRED -> {
+        LoginStatusDto.REGISTRATION_REQUIRED.name -> {
             GoogleLoginResult.RegistrationRequired(
                 signupToken = SignupToken(requireNotNull(signupToken)),
                 expiresInSeconds = requireNotNull(signupTokenExpiresIn),
             )
+        }
+
+        else -> {
+            error("지원하지 않는 Google 로그인 상태: $status")
         }
     }
 

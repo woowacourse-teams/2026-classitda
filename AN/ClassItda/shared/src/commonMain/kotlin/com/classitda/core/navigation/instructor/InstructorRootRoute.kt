@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import co.touchlab.kermit.Logger
 import com.classitda.feature.instructor.InstructorBottomBar
 import com.classitda.feature.instructor.InstructorBottomTab
 import com.classitda.feature.instructor.classsession.detail.ClassSessionDetailRoute
@@ -17,13 +18,18 @@ import com.classitda.feature.instructor.mypage.InstructorMyPageNavHost
 import com.classitda.feature.instructor.schedule.InstructorScheduleRoute
 
 @Composable
-fun InstructorRootRoute(modifier: Modifier = Modifier) {
+fun InstructorRootRoute(
+    modifier: Modifier = Modifier,
+    onLogout: () -> Unit = {},
+    onWithdrawalCompleted: () -> Unit = {},
+) {
     var selectedTab by remember { mutableStateOf(InstructorBottomTab.HOME) }
     var selectedSessionId by remember { mutableStateOf<String?>(null) }
     var isSessionEditing by remember { mutableStateOf(false) }
     var isMemberEditing by remember { mutableStateOf(false) }
     var scheduleRefreshKey by remember { mutableStateOf(0) }
     var detailRefreshKey by remember { mutableStateOf(0) }
+    var studioRegistrationRequest by remember { mutableStateOf(0) }
 
     val topLevelBottomBar: @Composable () -> Unit = {
         InstructorBottomBar(
@@ -91,11 +97,28 @@ fun InstructorRootRoute(modifier: Modifier = Modifier) {
             }
 
             InstructorBottomTab.MANAGEMENT -> {
-                ManagementFlowNavHost(bottomBar = topLevelBottomBar, modifier = modifier)
+                ManagementFlowNavHost(
+                    bottomBar = topLevelBottomBar,
+                    modifier = modifier,
+                    onOpenStudioRegistration = {
+                        selectedTab = InstructorBottomTab.MY
+                        studioRegistrationRequest++
+                    },
+                )
             }
 
             InstructorBottomTab.MY -> {
-                InstructorMyPageNavHost(bottomBar = topLevelBottomBar, modifier = modifier)
+                InstructorMyPageNavHost(
+                    bottomBar = topLevelBottomBar,
+                    modifier = modifier,
+                    onLogout = {
+                        Logger.d("ProfileLogout: instructor root received logout callback")
+                        onLogout()
+                    },
+                    onWithdrawalCompleted = onWithdrawalCompleted,
+                    openStudioRegistrationRequest = studioRegistrationRequest,
+                    onStudioRegistrationRequestConsumed = { studioRegistrationRequest = 0 },
+                )
             }
         }
     }

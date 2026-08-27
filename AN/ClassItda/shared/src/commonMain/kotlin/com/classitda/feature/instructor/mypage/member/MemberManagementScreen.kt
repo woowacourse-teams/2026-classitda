@@ -1,6 +1,5 @@
 package com.classitda.feature.instructor.mypage.member
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,8 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -51,9 +48,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
-import classitda.shared.generated.resources.ic_arrow_forward
 import classitda.shared.generated.resources.ic_close
-import classitda.shared.generated.resources.ic_expand_more
 import classitda.shared.generated.resources.ic_person_add
 import classitda.shared.generated.resources.ic_search
 import classitda.shared.generated.resources.instructor_member_delete_cancel
@@ -75,18 +70,23 @@ import classitda.shared.generated.resources.instructor_member_management_empty_d
 import classitda.shared.generated.resources.instructor_member_management_empty_title
 import classitda.shared.generated.resources.instructor_member_management_error_description
 import classitda.shared.generated.resources.instructor_member_management_error_title
+import classitda.shared.generated.resources.instructor_member_management_forbidden_description
+import classitda.shared.generated.resources.instructor_member_management_forbidden_title
 import classitda.shared.generated.resources.instructor_member_management_list_title
 import classitda.shared.generated.resources.instructor_member_management_loading
+import classitda.shared.generated.resources.instructor_member_management_no_studio_description
+import classitda.shared.generated.resources.instructor_member_management_no_studio_register
+import classitda.shared.generated.resources.instructor_member_management_no_studio_title
 import classitda.shared.generated.resources.instructor_member_management_retry
 import classitda.shared.generated.resources.instructor_member_management_search_empty_description
 import classitda.shared.generated.resources.instructor_member_management_search_empty_title
 import classitda.shared.generated.resources.instructor_member_management_search_label
 import classitda.shared.generated.resources.instructor_member_management_search_placeholder
-import classitda.shared.generated.resources.instructor_member_management_sort_name
-import classitda.shared.generated.resources.instructor_member_management_sort_recent
 import classitda.shared.generated.resources.instructor_member_management_title
 import classitda.shared.generated.resources.instructor_member_management_total_count
 import classitda.shared.generated.resources.instructor_member_management_total_label
+import classitda.shared.generated.resources.instructor_member_management_unauthorized_description
+import classitda.shared.generated.resources.instructor_member_management_unauthorized_title
 import classitda.shared.generated.resources.instructor_member_registration_success_confirm
 import classitda.shared.generated.resources.phone_number_change_close
 import com.classitda.core.designsystem.AppShape
@@ -102,7 +102,6 @@ import com.classitda.feature.instructor.mypage.contract.MemberManagementActionSt
 import com.classitda.feature.instructor.mypage.contract.MemberManagementDeleteError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiError
 import com.classitda.feature.instructor.mypage.contract.MemberManagementUiState
-import com.classitda.feature.instructor.mypage.contract.MemberSortOption
 import com.classitda.feature.instructor.mypage.contract.MemberUiModel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -136,7 +135,15 @@ fun MemberManagementScreen(
         topBar = {
             MemberManagementTopBar(
                 onBack = { onAction(MemberManagementAction.Back) },
-                onAdd = { onAction(MemberManagementAction.OpenMemberRegistration) },
+                onAdd =
+                    if (uiState is MemberManagementUiState.Content ||
+                        uiState is MemberManagementUiState.Empty ||
+                        uiState is MemberManagementUiState.SearchEmpty
+                    ) {
+                        { onAction(MemberManagementAction.OpenMemberRegistration) }
+                    } else {
+                        null
+                    },
             )
         },
     ) { innerPadding ->
@@ -147,12 +154,18 @@ fun MemberManagementScreen(
                 )
             }
 
+            MemberManagementUiState.NoStudio -> {
+                MemberManagementNoStudio(
+                    onRegister = { onAction(MemberManagementAction.OpenStudioRegistration) },
+                    modifier = Modifier.padding(innerPadding),
+                )
+            }
+
             is MemberManagementUiState.Empty -> {
                 MemberManagementListContent(
                     totalCount = 0,
                     query = "",
                     members = emptyList(),
-                    sortOrder = uiState.sortOrder,
                     emptyState = MemberListEmptyState.Empty,
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
@@ -164,8 +177,12 @@ fun MemberManagementScreen(
                     totalCount = uiState.page.totalCount,
                     query = uiState.query,
                     members = uiState.page.members,
-                    sortOrder = uiState.sortOrder,
-                    emptyState = if (uiState.page.members.isEmpty()) MemberListEmptyState.Empty else null,
+                    emptyState =
+                        when {
+                            uiState.page.members.isNotEmpty() -> null
+                            uiState.query.isBlank() -> MemberListEmptyState.Empty
+                            else -> MemberListEmptyState.SearchEmpty
+                        },
                     onLongPress = { actionMember = it },
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
@@ -174,10 +191,9 @@ fun MemberManagementScreen(
 
             is MemberManagementUiState.SearchEmpty -> {
                 MemberManagementListContent(
-                    totalCount = null,
+                    totalCount = uiState.totalCount,
                     query = uiState.query,
                     members = emptyList(),
-                    sortOrder = uiState.sortOrder,
                     emptyState = MemberListEmptyState.SearchEmpty,
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
@@ -186,6 +202,7 @@ fun MemberManagementScreen(
 
             is MemberManagementUiState.Error -> {
                 MemberManagementError(
+                    reason = uiState.reason,
                     onRetry = { onAction(MemberManagementAction.Retry) },
                     modifier = Modifier.padding(innerPadding),
                 )
@@ -228,7 +245,7 @@ fun MemberManagementScreen(
 @Composable
 private fun MemberManagementTopBar(
     onBack: () -> Unit,
-    onAdd: () -> Unit,
+    onAdd: (() -> Unit)?,
 ) {
     Box(
         modifier = Modifier.fillMaxWidth().statusBarsPadding(),
@@ -250,15 +267,17 @@ private fun MemberManagementTopBar(
             style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
             color = InsColors.TextPrimary,
         )
-        IconButton(
-            onClick = onAdd,
-            modifier = Modifier.align(Alignment.CenterEnd),
-        ) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_person_add),
-                contentDescription = stringResource(Res.string.instructor_member_management_add),
-                tint = InsColors.TextPrimary,
-            )
+        if (onAdd != null) {
+            IconButton(
+                onClick = onAdd,
+                modifier = Modifier.align(Alignment.CenterEnd),
+            ) {
+                Icon(
+                    painter = painterResource(Res.drawable.ic_person_add),
+                    contentDescription = stringResource(Res.string.instructor_member_management_add),
+                    tint = InsColors.TextPrimary,
+                )
+            }
         }
     }
 }
@@ -268,7 +287,6 @@ private fun MemberManagementListContent(
     totalCount: Int?,
     query: String,
     members: List<MemberUiModel>,
-    sortOrder: MemberSortOption,
     emptyState: MemberListEmptyState?,
     onLongPress: (MemberUiModel) -> Unit = {},
     onAction: (MemberManagementAction) -> Unit,
@@ -299,10 +317,7 @@ private fun MemberManagementListContent(
             )
         }
         item {
-            MemberListHeader(
-                sortOrder = sortOrder,
-                onSortOrderChanged = { onAction(MemberManagementAction.SortOrderChanged(it)) },
-            )
+            MemberListHeader()
         }
         if (emptyState == null) {
             items(
@@ -392,11 +407,7 @@ private fun MemberSearchField(
 }
 
 @Composable
-private fun MemberListHeader(
-    sortOrder: MemberSortOption,
-    onSortOrderChanged: (MemberSortOption) -> Unit,
-) {
-    var isMenuExpanded by remember { mutableStateOf(false) }
+private fun MemberListHeader() {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -407,52 +418,6 @@ private fun MemberListHeader(
             color = InsColors.TextPrimary,
         )
         Spacer(modifier = Modifier.weight(1f))
-        Box {
-            Row(
-                modifier =
-                    Modifier
-                        .clickable(role = Role.Button) { isMenuExpanded = true }
-                        .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
-            ) {
-                Text(
-                    text = sortOrder.labelResource(),
-                    style = appTypography().titleMedium,
-                    color = InsColors.TextSecondary,
-                )
-                Icon(
-                    painter = painterResource(Res.drawable.ic_expand_more),
-                    contentDescription = null,
-                    tint = InsColors.TextSecondary,
-                    modifier = Modifier.size(AppSpacing.xxl),
-                )
-            }
-            DropdownMenu(
-                expanded = isMenuExpanded,
-                onDismissRequest = { isMenuExpanded = false },
-            ) {
-                memberSortOptions.forEach { option ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = option.labelResource(),
-                                color =
-                                    if (option == sortOrder) {
-                                        InsColors.Purple
-                                    } else {
-                                        InsColors.TextPrimary
-                                    },
-                            )
-                        },
-                        onClick = {
-                            isMenuExpanded = false
-                            if (option != sortOrder) onSortOrderChanged(option)
-                        },
-                    )
-                }
-            }
-        }
     }
 }
 
@@ -638,7 +603,10 @@ private fun MemberDeleteDialog(
                         color = InsColors.Red,
                     )
                 }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
+                ) {
                     TextButton(onClick = {
                         onAction(MemberManagementAction.CancelDelete)
                     }, enabled = !isSubmitting, modifier = Modifier.weight(1f)) {
@@ -831,9 +799,38 @@ private fun MemberListEmpty(
 
 @Composable
 private fun MemberManagementError(
+    reason: MemberManagementUiError,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val title =
+        when (reason) {
+            MemberManagementUiError.UNAUTHORIZED -> {
+                stringResource(Res.string.instructor_member_management_unauthorized_title)
+            }
+
+            MemberManagementUiError.FORBIDDEN -> {
+                stringResource(Res.string.instructor_member_management_forbidden_title)
+            }
+
+            else -> {
+                stringResource(Res.string.instructor_member_management_error_title)
+            }
+        }
+    val description =
+        when (reason) {
+            MemberManagementUiError.UNAUTHORIZED -> {
+                stringResource(Res.string.instructor_member_management_unauthorized_description)
+            }
+
+            MemberManagementUiError.FORBIDDEN -> {
+                stringResource(Res.string.instructor_member_management_forbidden_description)
+            }
+
+            else -> {
+                stringResource(Res.string.instructor_member_management_error_description)
+            }
+        }
     Box(
         modifier =
             modifier
@@ -847,12 +844,12 @@ private fun MemberManagementError(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
             Text(
-                text = stringResource(Res.string.instructor_member_management_error_title),
+                text = title,
                 style = appTypography().titleLarge,
                 color = InsColors.TextPrimary,
             )
             Text(
-                text = stringResource(Res.string.instructor_member_management_error_description),
+                text = description,
                 style = appTypography().bodyMedium,
                 color = InsColors.TextSecondary,
             )
@@ -866,23 +863,48 @@ private fun MemberManagementError(
     }
 }
 
+@Composable
+private fun MemberManagementNoStudio(
+    onRegister: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = AppSpacing.screenPadding),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+        ) {
+            Text(
+                text = stringResource(Res.string.instructor_member_management_no_studio_title),
+                style = appTypography().titleLarge,
+                color = InsColors.TextPrimary,
+            )
+            Text(
+                text = stringResource(Res.string.instructor_member_management_no_studio_description),
+                style = appTypography().bodyMedium,
+                color = InsColors.TextSecondary,
+            )
+            Button(
+                onClick = onRegister,
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = InsColors.Primary,
+                        contentColor = InsColors.White,
+                    ),
+            ) {
+                Text(stringResource(Res.string.instructor_member_management_no_studio_register))
+            }
+        }
+    }
+}
+
 private enum class MemberListEmptyState {
     Empty,
     SearchEmpty,
 }
-
-@Composable
-private fun MemberSortOption.labelResource(): String =
-    when (this) {
-        MemberSortOption.RECENTLY_REGISTERED -> stringResource(Res.string.instructor_member_management_sort_recent)
-        MemberSortOption.NAME_ASC -> stringResource(Res.string.instructor_member_management_sort_name)
-    }
-
-private val memberSortOptions =
-    listOf(
-        MemberSortOption.RECENTLY_REGISTERED,
-        MemberSortOption.NAME_ASC,
-    )
 
 private val memberManagementPreviewPage =
     MemberListUiModel(
@@ -999,7 +1021,7 @@ private fun MemberManagementScreenPreview_Loading() {
 private fun MemberManagementScreenPreview_Empty() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         MemberManagementScreen(
-            uiState = MemberManagementUiState.Empty(),
+            uiState = MemberManagementUiState.Empty,
             onAction = {},
         )
     }
@@ -1015,7 +1037,7 @@ private fun MemberManagementScreenPreview_Empty() {
 private fun MemberManagementScreenPreview_SearchEmpty() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         MemberManagementScreen(
-            uiState = MemberManagementUiState.SearchEmpty(query = "없는 회원"),
+            uiState = MemberManagementUiState.SearchEmpty(query = "없는 회원", totalCount = 4),
             onAction = {},
         )
     }

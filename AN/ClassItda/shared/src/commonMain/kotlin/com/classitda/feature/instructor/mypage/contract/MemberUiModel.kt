@@ -20,6 +20,7 @@ data class MemberListUiModel(
 data class MemberInputUiModel(
     val name: String = "",
     val phoneNumber: String = "",
+    val phoneNumberEditable: Boolean = true,
 ) {
     val displayPhoneNumber: String
         get() {
@@ -42,9 +43,4 @@ data class MemberInputUiModel(
                 }
             }
         }
-}
-
-enum class MemberSortOption {
-    RECENTLY_REGISTERED,
-    NAME_ASC,
 }

@@ -292,6 +292,7 @@ private fun LocalDateTime.clockText(): String {
 private fun previewClassSession() =
     ClassSession(
         id = "preview-session",
+        classTypeId = "1",
         tags = listOf("그룹 수업", "필라테스"),
         title = "리포머 밸런스",
         startAt = LocalDateTime(2026, 8, 5, 19, 30),
@@ -334,6 +335,7 @@ private fun InstructorTimelinePreview() {
                 listOf(
                     ClassSession(
                         id = "session-1",
+                        classTypeId = "session-1",
                         tags = listOf("그룹 수업", "필라테스"),
                         title = "체어 밸런스",
                         startAt = LocalDateTime(2026, 8, 5, 14, 0),
@@ -344,6 +346,7 @@ private fun InstructorTimelinePreview() {
                     ),
                     ClassSession(
                         id = "session-2",
+                        classTypeId = "session-2",
                         tags = listOf("그룹 수업", "필라테스"),
                         title = "리포머 밸런스",
                         startAt = LocalDateTime(2026, 8, 5, 19, 30),
@@ -354,6 +357,7 @@ private fun InstructorTimelinePreview() {
                     ),
                     ClassSession(
                         id = "session-3",
+                        classTypeId = "session-3",
                         tags = listOf("개인 수업"),
                         title = "바렐 코어 테라피",
                         startAt = LocalDateTime(2026, 8, 5, 20, 30),

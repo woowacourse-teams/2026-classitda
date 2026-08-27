@@ -4,12 +4,10 @@ import com.classitda.domain.model.instructor.mypage.ManagedMember
 import com.classitda.domain.model.instructor.mypage.ManagedStudio
 import com.classitda.domain.model.instructor.mypage.MemberListPage
 import com.classitda.domain.model.instructor.mypage.MemberRegistrationDraft
-import com.classitda.domain.model.instructor.mypage.MemberSortOrder
 import com.classitda.domain.model.instructor.mypage.StudioRegistrationDraft
 import com.classitda.domain.repository.instructor.mypage.StudioList
 import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberListUiModel
-import com.classitda.feature.instructor.mypage.contract.MemberSortOption
 import com.classitda.feature.instructor.mypage.contract.MemberUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioImageInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioImageUiModel
@@ -36,22 +34,10 @@ internal fun MemberRegistrationDraft.toMemberInputUiModel(): MemberInputUiModel 
     MemberInputUiModel(name = name, phoneNumber = phoneNumber)
 
 internal fun ManagedMember.toMemberInputUiModel(): MemberInputUiModel =
-    MemberInputUiModel(name = name, phoneNumber = phoneNumber)
+    MemberInputUiModel(name = name, phoneNumber = phoneNumber, phoneNumberEditable = !registered)
 
 internal fun MemberInputUiModel.toMemberRegistrationDraft(): MemberRegistrationDraft =
     MemberRegistrationDraft(name = name, phoneNumber = phoneNumber)
-
-internal fun MemberSortOption.toDomain(): MemberSortOrder =
-    when (this) {
-        MemberSortOption.RECENTLY_REGISTERED -> MemberSortOrder.RECENTLY_REGISTERED
-        MemberSortOption.NAME_ASC -> MemberSortOrder.NAME_ASC
-    }
-
-internal fun MemberSortOrder.toUiModel(): MemberSortOption =
-    when (this) {
-        MemberSortOrder.RECENTLY_REGISTERED -> MemberSortOption.RECENTLY_REGISTERED
-        MemberSortOrder.NAME_ASC -> MemberSortOption.NAME_ASC
-    }
 
 internal fun ManagedStudio.toStudioUiModel(): StudioUiModel =
     StudioUiModel(

@@ -95,6 +95,7 @@ private fun InstructorScheduleCardPreview() {
             session =
                 ClassSession(
                     id = "session-1",
+                    classTypeId = "session-1",
                     tags = listOf("그룹 수업", "필라테스"),
                     title = "리포머 밸런스",
                     startAt = LocalDateTime(2026, 8, 5, 19, 30),

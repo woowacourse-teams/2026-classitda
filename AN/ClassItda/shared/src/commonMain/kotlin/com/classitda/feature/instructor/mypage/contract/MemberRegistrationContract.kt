@@ -1,7 +1,5 @@
 package com.classitda.feature.instructor.mypage.contract
 
-import com.classitda.domain.model.instructor.mypage.InstructorMemberId
-
 sealed interface MemberRegistrationUiState {
     data class Editing(
         val draft: MemberInputUiModel,
@@ -18,9 +16,7 @@ sealed interface MemberRegistrationUiState {
         val draft: MemberInputUiModel,
     ) : MemberRegistrationUiState
 
-    data class Success(
-        val memberId: InstructorMemberId,
-    ) : MemberRegistrationUiState
+    data object Success : MemberRegistrationUiState
 
     data class Error(
         val draft: MemberInputUiModel,
@@ -59,9 +55,7 @@ sealed interface MemberRegistrationAction {
 
     data object Retry : MemberRegistrationAction
 
-    data class SuccessAcknowledged(
-        val memberId: InstructorMemberId,
-    ) : MemberRegistrationAction
+    data object SuccessAcknowledged : MemberRegistrationAction
 }
 
 internal fun memberRegistrationFieldErrors(draft: MemberInputUiModel): Set<MemberRegistrationField> =

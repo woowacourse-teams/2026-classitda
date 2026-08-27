@@ -6,6 +6,7 @@ data class ManagedMember(
     val id: InstructorMemberId,
     val name: String,
     val phoneNumber: String,
+    val registered: Boolean = false,
     val profileImageUrl: String? = null,
     val registeredAt: Instant? = null,
 )
@@ -24,8 +25,3 @@ data class MemberRegistrationDraft(
     val name: String = "",
     val phoneNumber: String = "",
 )
-
-enum class MemberSortOrder {
-    RECENTLY_REGISTERED,
-    NAME_ASC,
-}

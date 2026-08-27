@@ -81,6 +81,8 @@ data class LoginTokens(
 }
 
 sealed interface GoogleLoginResult {
+    data object WithdrawalPending : GoogleLoginResult
+
     data class Registered(
         val tokens: LoginTokens,
     ) : GoogleLoginResult

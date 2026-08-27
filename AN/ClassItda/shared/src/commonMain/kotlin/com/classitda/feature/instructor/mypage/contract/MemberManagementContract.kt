@@ -5,20 +5,19 @@ import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 sealed interface MemberManagementUiState {
     data object Loading : MemberManagementUiState
 
+    data object NoStudio : MemberManagementUiState
+
     data class Content(
         val page: MemberListUiModel,
         val query: String = "",
-        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
         val actionState: MemberManagementActionState = MemberManagementActionState.Hidden,
     ) : MemberManagementUiState
 
-    data class Empty(
-        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
-    ) : MemberManagementUiState
+    data object Empty : MemberManagementUiState
 
     data class SearchEmpty(
         val query: String,
-        val sortOrder: MemberSortOption = MemberSortOption.RECENTLY_REGISTERED,
+        val totalCount: Int = 0,
     ) : MemberManagementUiState
 
     data class Error(
@@ -28,6 +27,8 @@ sealed interface MemberManagementUiState {
 
 enum class MemberManagementUiError {
     NETWORK,
+    UNAUTHORIZED,
+    FORBIDDEN,
     UNKNOWN,
 }
 
@@ -36,10 +37,6 @@ sealed interface MemberManagementAction {
 
     data class QueryChanged(
         val query: String,
-    ) : MemberManagementAction
-
-    data class SortOrderChanged(
-        val sortOrder: MemberSortOption,
     ) : MemberManagementAction
 
     data class EditMember(
@@ -61,6 +58,8 @@ sealed interface MemberManagementAction {
     data object DeleteAcknowledged : MemberManagementAction
 
     data object OpenMemberRegistration : MemberManagementAction
+
+    data object OpenStudioRegistration : MemberManagementAction
 
     data object Retry : MemberManagementAction
 }
