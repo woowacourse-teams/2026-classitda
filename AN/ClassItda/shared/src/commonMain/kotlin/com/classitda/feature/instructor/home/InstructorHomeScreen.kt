@@ -184,7 +184,7 @@ internal fun InstructorHomeStateless(
         }
         item {
             InstructorTimeline(
-                sessions = visibleSessions.take(4),
+                sessions = visibleSessions,
                 onSessionClick = onSessionClick,
             )
         }
