@@ -48,6 +48,8 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
 
+private const val NO_TEMPLATE_OPTION = "템플릿을 먼저 생성해주세요"
+
 @Composable
 internal fun ClassSessionCreateScreen(
     templates: List<ClassTemplateUiModel>,
@@ -121,7 +123,7 @@ internal fun ClassSessionCreateScreen(
             DropdownField(
                 label = "수업 템플릿",
                 placeholder = "수업 템플릿 선택",
-                options = templates.map { it.title },
+                options = if (templates.isEmpty()) listOf(NO_TEMPLATE_OPTION) else templates.map { it.title },
                 selectedOption = selectedTemplate?.title,
                 onOptionSelected = { selectedTitle ->
                     val template = templates.firstOrNull { it.title == selectedTitle }
