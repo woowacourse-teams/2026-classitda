@@ -1,6 +1,0 @@
-package com.classitda.feature.instructor.management.classtemplates.model
-
-internal data class ClassScheduleUiModel(
-    val timeRangeText: String,
-    val repeatDaysText: String,
-)
