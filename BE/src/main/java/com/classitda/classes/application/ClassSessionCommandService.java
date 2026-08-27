@@ -1,6 +1,7 @@
 package com.classitda.classes.application;
 
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
+import com.classitda.classes.domain.repository.ClassSessionEnrollmentRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.domain.session.ClassSession;
@@ -38,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ClassSessionCommandService {
 
     private final ClassSessionClassTypeRepository classSessionClassTypeRepository;
+    private final ClassSessionEnrollmentRepository classSessionEnrollmentRepository;
     private final ClassSessionRepository classSessionRepository;
     private final ClassTypeRepository classTypeRepository;
     private final StudioMembershipRepository studioMembershipRepository;
@@ -94,7 +96,7 @@ public class ClassSessionCommandService {
     public void updateV1(Long memberId, Long studioId, Long classSessionId, ClassSessionUpdateV1Request request) {
         Studio studio = getStudio(studioId);
         StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
-        ClassSession classSession = getClassSession(studioId, classSessionId);
+        ClassSession classSession = getClassSessionForUpdate(studioId, classSessionId);
 
         validateManagePermission(
                 studio,
@@ -108,7 +110,7 @@ public class ClassSessionCommandService {
     public void updateV2(Long memberId, Long studioId, Long classSessionId, ClassSessionUpdateV2Request request) {
         Studio studio = getStudio(studioId);
         StudioMembership requesterMembership = getActiveMembership(memberId, studioId);
-        ClassSession classSession = getClassSession(studioId, classSessionId);
+        ClassSession classSession = getClassSessionForUpdate(studioId, classSessionId);
 
         Long currentInstructorMembershipId = classSession.getInstructorMembership().getId();
         Long targetInstructorMembershipId = request.instructorMembershipId();
@@ -136,9 +138,21 @@ public class ClassSessionCommandService {
             StudioMembership instructorMembership,
             ClassSessionUpdateRequest request
     ) {
-        validateClassType(studioId, request.classTypeId());
+        if (classSessionEnrollmentRepository.existsActiveByClassSessionId(classSession.getId())) {
+            throw new ClassException(ClassErrorCode.CLASS_SESSION_HAS_ACTIVE_ENROLLMENT);
+        }
+
+        var classSessionClassType = classSessionClassTypeRepository.findByClassSessionId(classSession.getId())
+                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
+        boolean classTypeChanged = !classSessionClassType.getClassTypeId().equals(request.classTypeId());
+        if (classTypeChanged) {
+            validateClassType(studioId, request.classTypeId());
+        }
+
         updateClassSessionDetails(classSession, instructorMembership, request);
-        updateClassSessionClassType(classSession.getId(), request.classTypeId());
+        if (classTypeChanged) {
+            classSessionClassType.updateClassTypeId(request.classTypeId());
+        }
     }
 
     public void cancel(Long memberId, Long studioId, Long classSessionId) {
@@ -175,8 +189,8 @@ public class ClassSessionCommandService {
         return membership;
     }
 
-    private ClassSession getClassSession(Long studioId, Long classSessionId) {
-        return classSessionRepository.findByIdAndStudioId(classSessionId, studioId)
+    private ClassSession getClassSessionForUpdate(Long studioId, Long classSessionId) {
+        return classSessionRepository.findForUpdateByIdAndStudioId(classSessionId, studioId)
                 .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
     }
 
@@ -331,14 +345,6 @@ public class ClassSessionCommandService {
                 .toList();
 
         classSessionClassTypeRepository.saveAll(classSessionClassTypes);
-    }
-
-    private void updateClassSessionClassType(Long classSessionId, Long classTypeId) {
-        ClassSessionClassType classSessionClassType = classSessionClassTypeRepository
-                .findByClassSessionId(classSessionId)
-                .orElseThrow(() -> new ClassException(ClassErrorCode.CLASS_SESSION_NOT_FOUND));
-
-        classSessionClassType.updateClassTypeId(classTypeId);
     }
 
     private LocalDateTime calculateEndAt(LocalDateTime startAt, int durationMinutes) {

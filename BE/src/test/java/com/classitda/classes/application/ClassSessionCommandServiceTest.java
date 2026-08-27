@@ -4,12 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classitda.classes.domain.ClassForm;
-import com.classitda.classes.domain.session.ClassSession;
-import com.classitda.classes.domain.session.ClassSessionClassType;
 import com.classitda.classes.domain.ClassType;
+import com.classitda.classes.domain.enrollment.ClassSessionEnrollment;
+import com.classitda.classes.domain.enrollment.EnrollmentStatus;
 import com.classitda.classes.domain.repository.ClassSessionClassTypeRepository;
+import com.classitda.classes.domain.repository.ClassSessionEnrollmentRepository;
 import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
+import com.classitda.classes.domain.session.ClassSession;
+import com.classitda.classes.domain.session.ClassSessionClassType;
 import com.classitda.classes.exception.ClassErrorCode;
 import com.classitda.classes.exception.ClassException;
 import com.classitda.classes.fixture.ClassSessionFixture;
@@ -48,6 +51,8 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -71,6 +76,7 @@ class ClassSessionCommandServiceTest {
 
     private final ClassSessionCommandService commandService;
     private final ClassSessionClassTypeRepository classSessionClassTypeRepository;
+    private final ClassSessionEnrollmentRepository classSessionEnrollmentRepository;
     private final ClassSessionRepository classSessionRepository;
     private final ClassTypeRepository classTypeRepository;
     private final MemberRepository memberRepository;
@@ -87,6 +93,7 @@ class ClassSessionCommandServiceTest {
     ClassSessionCommandServiceTest(
             ClassSessionCommandService commandService,
             ClassSessionClassTypeRepository classSessionClassTypeRepository,
+            ClassSessionEnrollmentRepository classSessionEnrollmentRepository,
             ClassSessionRepository classSessionRepository,
             ClassTypeRepository classTypeRepository,
             MemberRepository memberRepository,
@@ -101,6 +108,7 @@ class ClassSessionCommandServiceTest {
     ) {
         this.commandService = commandService;
         this.classSessionClassTypeRepository = classSessionClassTypeRepository;
+        this.classSessionEnrollmentRepository = classSessionEnrollmentRepository;
         this.classSessionRepository = classSessionRepository;
         this.classTypeRepository = classTypeRepository;
         this.memberRepository = memberRepository;
@@ -727,6 +735,95 @@ class ClassSessionCommandServiceTest {
                 .extracting(ClassSessionClassType::getClassTypeId)
                 .isEqualTo(newClassType.getId());
         assertThat(classSessionRepository.count()).isEqualTo(1);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = EnrollmentStatus.class, names = {"WAITING", "OFFERED", "RESERVED"})
+    void V2_활성_신청자가_있으면_수업을_수정할_수_없다(EnrollmentStatus enrollmentStatus) {
+        // given
+        Member owner = 회원을_저장한다("update-form-" + enrollmentStatus);
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "수업 형태 변경 제한 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession classSession = 수업을_저장한다(
+                context, classType, LocalDateTime.of(2026, 8, 17, 20, 0), 60, "그룹 수업");
+        StudioMembership studentMembership = 학생_소속을_저장한다(
+                context.studio(), "update-form-student-" + enrollmentStatus);
+        신청을_저장한다(studentMembership, classSession, enrollmentStatus);
+
+        ClassSessionUpdateV2Request request = ClassSessionUpdateV2Request.of(
+                context.membership().getId(),
+                ClassForm.INDIVIDUAL,
+                classType.getId(),
+                "신청 후 수정 수업",
+                10,
+                50,
+                LocalDateTime.of(2026, 8, 18, 19, 30),
+                "수정 안내"
+        );
+
+        // when / then
+        assertClassError(
+                () -> commandService.updateV2(
+                        owner.getId(), context.studio().getId(), classSession.getId(), request),
+                ClassErrorCode.CLASS_SESSION_HAS_ACTIVE_ENROLLMENT
+        );
+        assertThat(classSession.getClassForm()).isEqualTo(ClassForm.GROUP);
+        assertThat(classSessionClassTypeRepository.findByClassSessionId(classSession.getId()))
+                .get()
+                .extracting(ClassSessionClassType::getClassTypeId)
+                .isEqualTo(classType.getId());
+    }
+
+    @Test
+    void 활성_신청자가_있으면_수업_종류와_형태를_유지해도_다른_정보를_수정할_수_없다() {
+        // given
+        Member owner = 회원을_저장한다("update-details-owner");
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "신청 수업 정보 수정 시설");
+        ClassType classType = 수업_종류를_저장한다(context.studio(), "요가");
+        ClassSession classSession = 수업을_저장한다(
+                context, classType, LocalDateTime.of(2026, 8, 17, 20, 0), 60, "기존 그룹 수업");
+        StudioMembership studentMembership = 학생_소속을_저장한다(
+                context.studio(), "update-details-student");
+        신청을_저장한다(studentMembership, classSession, EnrollmentStatus.RESERVED);
+
+        ClassSessionUpdateV1Request request = 수정_요청(ClassForm.GROUP, classType.getId());
+
+        // when / then
+        assertClassError(
+                () -> commandService.updateV1(
+                        owner.getId(), context.studio().getId(), classSession.getId(), request),
+                ClassErrorCode.CLASS_SESSION_HAS_ACTIVE_ENROLLMENT
+        );
+        assertThat(classSession.getName()).isEqualTo("기존 그룹 수업");
+        assertThat(classSession.getClassForm()).isEqualTo(ClassForm.GROUP);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = EnrollmentStatus.class, names = {"CANCELED", "EXPIRED"})
+    void 종료된_신청만_있으면_수업의_모든_정보를_변경할_수_있다(EnrollmentStatus enrollmentStatus) {
+        // given
+        Member owner = 회원을_저장한다("update-terminal-" + enrollmentStatus);
+        StudioContext context = 시설과_대표_소속을_저장한다(owner, "종료 신청 수업 수정 시설");
+        ClassType oldClassType = 수업_종류를_저장한다(context.studio(), "기존 요가");
+        ClassType newClassType = 수업_종류를_저장한다(context.studio(), "변경 필라테스");
+        ClassSession classSession = 수업을_저장한다(
+                context, oldClassType, LocalDateTime.of(2026, 8, 17, 20, 0), 60, "그룹 수업");
+        StudioMembership studentMembership = 학생_소속을_저장한다(
+                context.studio(), "update-terminal-student-" + enrollmentStatus);
+        신청을_저장한다(studentMembership, classSession, enrollmentStatus);
+
+        ClassSessionUpdateV1Request request = 수정_요청(ClassForm.INDIVIDUAL, newClassType.getId());
+
+        // when
+        commandService.updateV1(
+                owner.getId(), context.studio().getId(), classSession.getId(), request);
+
+        // then
+        assertThat(classSession.getClassForm()).isEqualTo(ClassForm.INDIVIDUAL);
+        assertThat(classSessionClassTypeRepository.findByClassSessionId(classSession.getId()))
+                .get()
+                .extracting(ClassSessionClassType::getClassTypeId)
+                .isEqualTo(newClassType.getId());
     }
 
     @Test
@@ -1372,6 +1469,18 @@ class ClassSessionCommandServiceTest {
                 repeatStartDate, repeatEndDate);
     }
 
+    private ClassSessionUpdateV1Request 수정_요청(ClassForm classForm, Long classTypeId) {
+        return ClassSessionUpdateV1Request.of(
+                classForm,
+                classTypeId,
+                "신청 후 수정 수업",
+                10,
+                50,
+                LocalDateTime.of(2026, 8, 18, 19, 30),
+                "수정 안내"
+        );
+    }
+
     private ClassSessionCreateV2Request 단일_요청(
             Long instructorMembershipId,
             Long classTypeId,
@@ -1461,6 +1570,43 @@ class ClassSessionCommandServiceTest {
         entityManager.persist(membership);
         entityManager.flush();
         return membership;
+    }
+
+    private StudioMembership 학생_소속을_저장한다(Studio studio, String providerId) {
+        Member student = 회원을_저장한다(providerId);
+        StudioRole studentRole = 역할을_저장한다(studio, SystemRole.STUDENT);
+        return 소속을_저장한다(studio, student, studentRole, MembershipStatus.ACTIVE);
+    }
+
+    private void 신청을_저장한다(
+            StudioMembership membership,
+            ClassSession classSession,
+            EnrollmentStatus enrollmentStatus
+    ) {
+        ClassSessionEnrollment enrollment = switch (enrollmentStatus) {
+            case WAITING -> ClassSessionEnrollment.waiting(membership, classSession, NOW.minusHours(2));
+            case OFFERED -> {
+                ClassSessionEnrollment offered = ClassSessionEnrollment.waiting(
+                        membership, classSession, NOW.minusHours(2));
+                offered.offer(NOW.minusHours(1), NOW.plusHours(1));
+                yield offered;
+            }
+            case RESERVED -> ClassSessionEnrollment.reservedWithoutPassProduct(
+                    membership, classSession, NOW.minusHours(2));
+            case CANCELED -> {
+                ClassSessionEnrollment canceled = ClassSessionEnrollment.waiting(
+                        membership, classSession, NOW.minusHours(2));
+                canceled.cancelWaiting(NOW.minusHours(1));
+                yield canceled;
+            }
+            case EXPIRED -> {
+                ClassSessionEnrollment expired = ClassSessionEnrollment.waiting(
+                        membership, classSession, NOW.minusHours(2));
+                expired.expire(NOW.minusHours(1));
+                yield expired;
+            }
+        };
+        classSessionEnrollmentRepository.saveAndFlush(enrollment);
     }
 
     private void 권한을_저장한다(StudioRole role, PermissionCode code) {

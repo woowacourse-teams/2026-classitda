@@ -87,6 +87,18 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
     long countOccupied(@Param("classSessionId") Long classSessionId);
 
     @Query("""
+            SELECT CASE WHEN COUNT(enrollment.id) > 0 THEN TRUE ELSE FALSE END
+            FROM ClassSessionEnrollment enrollment
+            WHERE enrollment.classSession.id = :classSessionId
+              AND enrollment.state.status IN (
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.WAITING,
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.OFFERED,
+                  com.classitda.classes.domain.enrollment.EnrollmentStatus.RESERVED
+              )
+            """)
+    boolean existsActiveByClassSessionId(@Param("classSessionId") Long classSessionId);
+
+    @Query("""
             SELECT enrollment
             FROM ClassSessionEnrollment enrollment
             WHERE enrollment.id = :enrollmentId

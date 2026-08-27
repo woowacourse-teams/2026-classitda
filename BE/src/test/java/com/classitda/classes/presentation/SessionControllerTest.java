@@ -247,6 +247,25 @@ class SessionControllerTest {
     }
 
     @Test
+    void 수업_회차_수정_중_활성_신청자가_있으면_CLASS_SESSION_022를_반환한다() {
+        // given
+        ClassSessionUpdateV1Request request = ClassSessionFixture.기본_수업_회차_수정_요청(3L);
+        doThrow(new ClassException(ClassErrorCode.CLASS_SESSION_HAS_ACTIVE_ENROLLMENT))
+                .when(commandService).updateV1(1L, 7L, 11L, request);
+
+        // when
+        RestTestClient.ResponseSpec result = 수업_회차를_수정한다(7L, 11L, "1", request);
+
+        // then
+        오류를_검증한다(
+                result,
+                409,
+                "CLASS_SESSION-022",
+                "신청자가 있는 수업은 수정할 수 없습니다."
+        );
+    }
+
+    @Test
     void 수업_회차를_취소하면_204와_빈_본문을_반환하고_명령_서비스에_위임한다() {
         // when
         RestTestClient.ResponseSpec result = 수업_회차를_취소한다(7L, 11L, "1");
