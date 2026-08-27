@@ -128,7 +128,8 @@ Accepted (YYYY-MM-DD)
 | [0019](0019-delete-membership-by-history.md) | 소속 삭제 방식 | 참조 이력이 없으면 하드 삭제하고 있으면 WITHDRAWN 으로 바꿔요 |
 | [0020](0020-propagate-account-withdrawal-to-membership.md) | 계정 탈퇴의 소속 전파 | 탈퇴 요청 시점에 모든 소속을 종료하고 정리 시점에 개인정보를 지워요 |
 | [0021](0021-share-testcontainers-per-jvm.md) | 테스트 컨테이너와 DB 상태의 공유 범위 | 컨테이너는 JVM 단위로 공유하고 DB 상태는 Context 단위로 격리해요 |
-| [0022](0022-defer-social-login-nonce.md) | 소셜 로그인 nonce 적용 유예 | Apple은 Google과 같이 ID Token만 검증하고 nonce는 두 제공자에 함께 도입해요 |
+| [0022](0022-defer-social-login-nonce.md) | 소셜 로그인 nonce 적용 유예 (`Superseded`) | Apple은 Google과 같이 ID Token만 검증하고 nonce는 두 제공자에 함께 도입해요 |
+| [0023](0023-verify-social-login-nonce-statelessly.md) | Stateless 소셜 로그인 nonce 검증 | 클라이언트 nonce를 ID Token과 연결하되 서버에 사용 상태를 저장하지 않아요 |
 
 ## 다른 문서와의 관계
 
