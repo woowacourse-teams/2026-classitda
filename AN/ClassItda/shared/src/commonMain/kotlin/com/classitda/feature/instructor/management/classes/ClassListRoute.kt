@@ -31,11 +31,16 @@ internal fun ClassListRoute(
     onCreateSessionClick: () -> Unit,
     onSessionCardClick: (String) -> Unit,
     bottomBar: @Composable () -> Unit,
+    shouldRefresh: Boolean = false,
     modifier: Modifier = Modifier,
     viewModel: ClassListViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(shouldRefresh) {
+        if (shouldRefresh) viewModel.onRetry()
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.refreshErrors.collect { message ->

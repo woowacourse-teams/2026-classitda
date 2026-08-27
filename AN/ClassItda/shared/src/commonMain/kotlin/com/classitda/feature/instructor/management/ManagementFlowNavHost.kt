@@ -1,11 +1,10 @@
 package com.classitda.feature.instructor.management
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,6 +15,8 @@ import com.classitda.feature.instructor.management.classes.create.ClassSessionCr
 import com.classitda.feature.instructor.management.classtemplates.ClassTemplateManagementRoute
 import com.classitda.feature.instructor.management.classtemplates.create.ClassTemplateCreateRoute
 import kotlinx.serialization.Serializable
+
+private const val REFRESH_RESULT_KEY = "refresh"
 
 @Serializable
 private data object ManagementMenuDestination
@@ -40,8 +41,6 @@ internal fun ManagementFlowNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
 ) {
-    var templateRefreshKey by remember { mutableStateOf(0) }
-
     NavHost(
         navController = navController,
         startDestination = ManagementMenuDestination,
@@ -56,30 +55,50 @@ internal fun ManagementFlowNavHost(
             )
         }
 
-        composable<ClassListDestination> {
+        composable<ClassListDestination> { backStackEntry ->
+            val shouldRefresh by backStackEntry.savedStateHandle
+                .getStateFlow(REFRESH_RESULT_KEY, false)
+                .collectAsStateWithLifecycle()
+
+            LaunchedEffect(shouldRefresh) {
+                if (shouldRefresh) backStackEntry.savedStateHandle[REFRESH_RESULT_KEY] = false
+            }
+
             ClassListRoute(
                 onBackClick = navController::popBackStack,
                 onCreateSessionClick = { navController.navigate(ClassSessionCreateDestination) },
                 onSessionCardClick = {},
                 bottomBar = {},
+                shouldRefresh = shouldRefresh,
             )
         }
 
         composable<ClassSessionCreateDestination> {
             ClassSessionCreateRoute(
                 onBackClick = navController::popBackStack,
-                onCreated = navController::popBackStack,
+                onCreated = {
+                    navController.previousBackStackEntry?.savedStateHandle?.set(REFRESH_RESULT_KEY, true)
+                    navController.popBackStack()
+                },
             )
         }
 
-        composable<ClassTemplateManagementDestination> {
+        composable<ClassTemplateManagementDestination> { backStackEntry ->
+            val shouldRefresh by backStackEntry.savedStateHandle
+                .getStateFlow(REFRESH_RESULT_KEY, false)
+                .collectAsStateWithLifecycle()
+
+            LaunchedEffect(shouldRefresh) {
+                if (shouldRefresh) backStackEntry.savedStateHandle[REFRESH_RESULT_KEY] = false
+            }
+
             ClassTemplateManagementRoute(
                 onBackClick = navController::popBackStack,
                 onCreateTemplateClick = { navController.navigate(ClassTemplateCreateDestination()) },
                 onTemplateCardClick = {},
                 onTemplateEditClick = { id -> navController.navigate(ClassTemplateCreateDestination(templateId = id)) },
                 bottomBar = {},
-                refreshKey = templateRefreshKey,
+                shouldRefresh = shouldRefresh,
             )
         }
 
@@ -89,7 +108,7 @@ internal fun ManagementFlowNavHost(
                 templateId = destination.templateId,
                 onBackClick = navController::popBackStack,
                 onCreated = {
-                    templateRefreshKey++
+                    navController.previousBackStackEntry?.savedStateHandle?.set(REFRESH_RESULT_KEY, true)
                     navController.popBackStack()
                 },
             )
