@@ -41,7 +41,6 @@ import classitda.shared.generated.resources.instructor_my_page_edit_profile
 import classitda.shared.generated.resources.instructor_my_page_error_description
 import classitda.shared.generated.resources.instructor_my_page_error_title
 import classitda.shared.generated.resources.instructor_my_page_loading
-import classitda.shared.generated.resources.instructor_my_page_member_management
 import classitda.shared.generated.resources.instructor_my_page_retry
 import classitda.shared.generated.resources.instructor_my_page_studio_management
 import classitda.shared.generated.resources.instructor_my_page_title
@@ -134,10 +133,6 @@ private fun InstructorMyPageContent(
         Spacer(modifier = Modifier.size(AppSpacing.sectionGap))
 
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-            InstructorMyPageMenuRow(
-                title = stringResource(Res.string.instructor_my_page_member_management),
-                onClick = { onAction(InstructorMyPageAction.OpenMemberManagement) },
-            )
             InstructorMyPageMenuRow(
                 title = stringResource(Res.string.instructor_my_page_studio_management),
                 onClick = { onAction(InstructorMyPageAction.OpenStudioManagement) },

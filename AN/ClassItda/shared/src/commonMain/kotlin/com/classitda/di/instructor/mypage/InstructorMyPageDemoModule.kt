@@ -4,7 +4,7 @@ import com.classitda.data.repository.instructor.mypage.DemoInstructorMyPageRepos
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
 import org.koin.dsl.module
 
-/** Keeps profile/member smoke data while the studio feature uses its remote repository. */
+/** Keeps profile smoke data while the studio and membership features use remote repositories. */
 internal val instructorMyPageDemoModule =
     module {
         includes(instructorStudioRemoteModule)

@@ -73,7 +73,6 @@ import org.koin.core.parameter.parametersOf
 internal fun InstructorMyPageRoute(
     onBack: () -> Unit,
     onOpenProfile: () -> Unit,
-    onOpenMemberManagement: () -> Unit,
     onOpenStudioManagement: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
     bottomBar: @Composable () -> Unit,
@@ -86,7 +85,6 @@ internal fun InstructorMyPageRoute(
     InstructorMyPageScreen(uiState, onAction = { action ->
         when (action) {
             InstructorMyPageAction.OpenProfile -> onOpenProfile()
-            InstructorMyPageAction.OpenMemberManagement -> onOpenMemberManagement()
             InstructorMyPageAction.OpenStudioManagement -> onOpenStudioManagement()
             InstructorMyPageAction.OpenPrivacyPolicy -> onOpenPrivacyPolicy()
             InstructorMyPageAction.Retry -> viewModel.onAction(action)
@@ -269,6 +267,7 @@ internal fun InstructorMemberManagementRoute(
     onBack: () -> Unit,
     onEditMember: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit,
     onOpenMemberRegistration: () -> Unit,
+    onOpenStudioRegistration: () -> Unit,
     refreshToken: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: MemberManagementViewModel = koinViewModel(),
@@ -281,6 +280,7 @@ internal fun InstructorMemberManagementRoute(
             is MemberManagementAction.EditMember -> onEditMember(action.memberId)
             MemberManagementAction.DeleteAcknowledged -> viewModel.refresh()
             MemberManagementAction.OpenMemberRegistration -> onOpenMemberRegistration()
+            MemberManagementAction.OpenStudioRegistration -> onOpenStudioRegistration()
             else -> viewModel.onAction(action)
         }
     }, modifier = modifier)
@@ -289,7 +289,7 @@ internal fun InstructorMemberManagementRoute(
 @Composable
 internal fun InstructorMemberRegistrationRoute(
     onBack: () -> Unit,
-    onSuccess: (com.classitda.domain.model.instructor.mypage.InstructorMemberId) -> Unit = {},
+    onSuccess: () -> Unit = {},
     onOpenConfirmation: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: MemberRegistrationViewModel = koinViewModel(),
@@ -306,8 +306,8 @@ internal fun InstructorMemberRegistrationRoute(
                 onOpenConfirmation()
             }
 
-            is MemberRegistrationAction.SuccessAcknowledged -> {
-                onSuccess(action.memberId)
+            MemberRegistrationAction.SuccessAcknowledged -> {
+                onSuccess()
             }
 
             else -> {

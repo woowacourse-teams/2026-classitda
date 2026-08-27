@@ -71,15 +71,6 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
                 if (action == MemberManagementAction.Retry) {
                     uiState = MemberManagementUiState.Content(page)
                 }
-                if (action is MemberManagementAction.SortOrderChanged) {
-                    uiState =
-                        when (val state = uiState) {
-                            is MemberManagementUiState.Content -> state.copy(sortOrder = action.sortOrder)
-                            is MemberManagementUiState.Empty -> state.copy(sortOrder = action.sortOrder)
-                            is MemberManagementUiState.SearchEmpty -> state.copy(sortOrder = action.sortOrder)
-                            else -> state
-                        }
-                }
                 if (action is MemberManagementAction.QueryChanged) {
                     uiState =
                         when (val state = uiState) {
@@ -101,7 +92,7 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
             TextButton(onClick = { uiState = MemberManagementUiState.Loading }) {
                 Text(stringResource(Res.string.instructor_member_management_harness_loading))
             }
-            TextButton(onClick = { uiState = MemberManagementUiState.Empty() }) {
+            TextButton(onClick = { uiState = MemberManagementUiState.Empty }) {
                 Text(stringResource(Res.string.instructor_member_management_harness_empty))
             }
         }
@@ -109,7 +100,7 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
         ) {
-            TextButton(onClick = { uiState = MemberManagementUiState.SearchEmpty("없는 회원") }) {
+            TextButton(onClick = { uiState = MemberManagementUiState.SearchEmpty("없는 회원", page.totalCount) }) {
                 Text(stringResource(Res.string.instructor_member_management_harness_search_empty))
             }
             TextButton(onClick = { uiState = MemberManagementUiState.Error(MemberManagementUiError.NETWORK) }) {
@@ -164,12 +155,12 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
                     stringResource(Res.string.instructor_member_management_harness_open_registration)
                 }
 
-                MemberManagementAction.Retry -> {
-                    stringResource(Res.string.instructor_member_management_harness_retry)
+                MemberManagementAction.OpenStudioRegistration -> {
+                    "OpenStudioRegistration"
                 }
 
-                is MemberManagementAction.SortOrderChanged -> {
-                    action.sortOrder.name
+                MemberManagementAction.Retry -> {
+                    stringResource(Res.string.instructor_member_management_harness_retry)
                 }
             }
         Text(

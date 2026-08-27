@@ -2,6 +2,7 @@ package com.classitda.core.studio
 
 import com.classitda.domain.model.studio.Studio
 import com.classitda.domain.repository.studio.StudioRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -16,6 +17,25 @@ internal class InstructorStudioContext(
         mutex.withLock {
             studios ?: repository.getMyStudios().also { studios = it }
         }
+
+    suspend fun refreshStudios() {
+        mutex.withLock {
+            try {
+                val refreshedStudios = repository.getMyStudios()
+                studios = refreshedStudios
+                selectedStudio =
+                    selectedStudio?.let { selected ->
+                        refreshedStudios.firstOrNull { it.id == selected.id }
+                    }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Throwable) {
+                studios = null
+                selectedStudio = null
+                throw exception
+            }
+        }
+    }
 
     suspend fun selectStudio(studioId: String) {
         mutex.withLock {

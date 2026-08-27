@@ -47,12 +47,9 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.window.Dialog
@@ -124,6 +121,7 @@ import com.classitda.core.designsystem.appTypography
 import com.classitda.domain.model.instructor.mypage.StudioAddress
 import com.classitda.domain.model.instructor.mypage.StudioImageSelection
 import com.classitda.feature.instructor.management.component.ClassTimePickerDialog
+import com.classitda.feature.instructor.mypage.InstructorPhoneNumberVisualTransformation
 import com.classitda.feature.instructor.mypage.contract.StudioImageInputUiModel
 import com.classitda.feature.instructor.mypage.contract.StudioImageUiError
 import com.classitda.feature.instructor.mypage.contract.StudioInputUiModel
@@ -132,6 +130,7 @@ import com.classitda.feature.instructor.mypage.contract.StudioRegistrationField
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiError
 import com.classitda.feature.instructor.mypage.contract.StudioRegistrationUiState
 import com.classitda.feature.instructor.mypage.contract.studioRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.instructorPhoneNumberDigits
 import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -588,7 +587,7 @@ private fun StudioRegistrationForm(
         )
         StudioTextField(
             label = stringResource(Res.string.instructor_studio_registration_phone),
-            value = draft.phoneNumber.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS),
+            value = instructorPhoneNumberDigits(draft.phoneNumber),
             placeholder = stringResource(Res.string.instructor_studio_registration_phone_placeholder),
             isError = phoneError,
             errorMessage =
@@ -603,13 +602,13 @@ private fun StudioRegistrationForm(
             onValueChange = {
                 onAction(
                     StudioRegistrationAction.PhoneNumberChanged(
-                        it.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS),
+                        instructorPhoneNumberDigits(it),
                     ),
                 )
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
-            visualTransformation = StudioPhoneVisualTransformation,
+            visualTransformation = InstructorPhoneNumberVisualTransformation,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
             StudioTimeField(
@@ -962,45 +961,6 @@ private fun String.toPickerTime(default: LocalTime): LocalTime =
 
 private fun LocalTime.toStudioTimeText(): String =
     "${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}"
-
-private const val STUDIO_PHONE_MAX_DIGITS = 11
-
-private fun formatStudioPhoneNumber(phoneNumber: String): String {
-    val digits = phoneNumber.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS)
-    if (digits.length <= 3) return digits
-
-    return if (digits.startsWith("02")) {
-        when {
-            digits.length <= 6 -> "${digits.take(2)}-${digits.drop(2)}"
-            digits.length <= 9 -> "${digits.take(2)}-${digits.substring(2, 5)}-${digits.drop(5)}"
-            else -> "${digits.take(2)}-${digits.substring(2, 6)}-${digits.drop(6)}"
-        }
-    } else {
-        when {
-            digits.length <= 7 -> "${digits.take(3)}-${digits.drop(3)}"
-            else -> "${digits.take(3)}-${digits.substring(3, 7)}-${digits.drop(7)}"
-        }
-    }
-}
-
-private object StudioPhoneVisualTransformation : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        val digits = text.text.filter(Char::isDigit).take(STUDIO_PHONE_MAX_DIGITS)
-        val formatted = formatStudioPhoneNumber(digits)
-
-        return TransformedText(
-            text = AnnotatedString(formatted),
-            offsetMapping =
-                object : OffsetMapping {
-                    override fun originalToTransformed(offset: Int): Int =
-                        formatStudioPhoneNumber(digits.take(offset.coerceIn(0, digits.length))).length
-
-                    override fun transformedToOriginal(offset: Int): Int =
-                        formatted.take(offset.coerceIn(0, formatted.length)).count(Char::isDigit)
-                },
-        )
-    }
-}
 
 private val emptyStudioRegistrationState =
     StudioRegistrationUiState.Editing(

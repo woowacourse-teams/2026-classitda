@@ -1,9 +1,11 @@
 package com.classitda.feature.instructor.mypage
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
@@ -11,15 +13,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import co.touchlab.kermit.Logger
-import com.classitda.domain.model.instructor.mypage.InstructorMemberId
+import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.feature.common.privacypolicy.PrivacyPolicyRoute
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-
-@Serializable
-private data class InstructorMemberEditDestination(
-    val memberId: String,
-)
+import org.koin.compose.koinInject
 
 @Serializable
 private data class InstructorStudioDetailDestination(
@@ -40,12 +40,24 @@ internal fun InstructorMyPageNavHost(
     modifier: Modifier = Modifier,
     onLogout: () -> Unit = {},
     onWithdrawalCompleted: () -> Unit = {},
+    openStudioRegistrationRequest: Int = 0,
+    onStudioRegistrationRequestConsumed: () -> Unit = {},
 ) {
     val navController = rememberNavController()
+    val studioContext = koinInject<InstructorStudioContext>()
+    val scope = rememberCoroutineScope()
     var profileRefreshToken by remember { mutableStateOf(0) }
-    var memberRefreshToken by remember { mutableStateOf(0) }
     var studioRefreshToken by remember { mutableStateOf(0) }
     var currentPhoneNumber by remember { mutableStateOf("") }
+
+    LaunchedEffect(openStudioRegistrationRequest) {
+        if (openStudioRegistrationRequest > 0) {
+            navController.navigate(InstructorMyPageDestination.F09) {
+                launchSingleTop = true
+            }
+            onStudioRegistrationRequestConsumed()
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -56,7 +68,6 @@ internal fun InstructorMyPageNavHost(
             InstructorMyPageRoute(
                 onBack = { navController.popBackStack() },
                 onOpenProfile = { navController.navigate(InstructorMyPageDestination.F02) },
-                onOpenMemberManagement = { navController.navigate(InstructorMyPageDestination.F05) },
                 onOpenStudioManagement = { navController.navigate(InstructorMyPageDestination.F08) },
                 onOpenPrivacyPolicy = {
                     navController.navigate(InstructorPrivacyPolicyDestination) {
@@ -100,39 +111,6 @@ internal fun InstructorMyPageNavHost(
                 onComplete = {
                     profileRefreshToken++
                     navController.popBackStack(InstructorMyPageDestination.F02, false)
-                },
-            )
-        }
-
-        composable(InstructorMyPageDestination.F05) {
-            InstructorMemberManagementRoute(
-                onBack = { navController.popBackStack() },
-                onEditMember = { memberId ->
-                    navController.navigate(InstructorMemberEditDestination(memberId.value))
-                },
-                onOpenMemberRegistration = { navController.navigate(InstructorMyPageDestination.F06) },
-                refreshToken = memberRefreshToken,
-            )
-        }
-
-        composable(InstructorMyPageDestination.F06) {
-            InstructorMemberRegistrationRoute(
-                onBack = { navController.popBackStack() },
-                onSuccess = {
-                    memberRefreshToken++
-                    navController.popBackStack(InstructorMyPageDestination.F05, false)
-                },
-            )
-        }
-
-        composable<InstructorMemberEditDestination> { backStackEntry ->
-            val memberId = InstructorMemberId(backStackEntry.toRoute<InstructorMemberEditDestination>().memberId)
-            InstructorMemberEditRoute(
-                memberId = memberId,
-                onBack = { navController.popBackStack() },
-                onSaved = {
-                    memberRefreshToken++
-                    navController.popBackStack(InstructorMyPageDestination.F05, false)
                 },
             )
         }
@@ -184,8 +162,22 @@ internal fun InstructorMyPageNavHost(
             InstructorStudioRegistrationRoute(
                 onBack = { navController.popBackStack() },
                 onSuccess = {
-                    studioRefreshToken++
-                    navController.popBackStack(InstructorMyPageDestination.F08, false)
+                    scope.launch {
+                        try {
+                            studioContext.refreshStudios()
+                        } catch (exception: CancellationException) {
+                            throw exception
+                        } catch (exception: Throwable) {
+                            Logger.e("StudioContext: refresh after registration failed: ${exception.message}")
+                        }
+                        studioRefreshToken++
+                        if (!navController.popBackStack(InstructorMyPageDestination.F08, false)) {
+                            navController.navigate(InstructorMyPageDestination.F08) {
+                                popUpTo(InstructorMyPageDestination.F09) { inclusive = true }
+                                launchSingleTop = true
+                            }
+                        }
+                    }
                 },
             )
         }
@@ -201,9 +193,6 @@ private object InstructorMyPageDestination {
     const val F02 = "instructor_profile_view"
     const val F03 = "instructor_profile_edit"
     const val F04 = "instructor_phone_change"
-    const val F05 = "instructor_member_management"
-    const val F06 = "instructor_member_registration"
-    const val F13 = "instructor_member_edit"
     const val F08 = "instructor_studio_management"
     const val F09 = "instructor_studio_registration"
     const val F10 = "instructor_studio_detail"

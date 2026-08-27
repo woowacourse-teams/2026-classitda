@@ -24,9 +24,9 @@ internal val instructorMyPageModule =
         viewModel { InstructorProfileViewModel(get()) }
         viewModel { InstructorProfileEditViewModel(get()) }
         viewModel { parameters -> InstructorPhoneNumberChangeViewModel(get(), parameters.get()) }
-        viewModel { MemberManagementViewModel(get()) }
-        viewModel { MemberRegistrationViewModel(get()) }
-        viewModel { parameters -> MemberEditViewModel(get(), parameters.get()) }
+        viewModel { MemberManagementViewModel(get(), get()) }
+        viewModel { MemberRegistrationViewModel(get(), get()) }
+        viewModel { parameters -> MemberEditViewModel(get(), get(), parameters.get()) }
         viewModel { StudioManagementViewModel(get()) }
         viewModel { StudioRegistrationViewModel(get()) }
         viewModel { parameters -> StudioDetailViewModel(get(), parameters.get()) }

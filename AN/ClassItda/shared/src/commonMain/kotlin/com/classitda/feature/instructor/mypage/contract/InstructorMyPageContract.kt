@@ -28,8 +28,6 @@ enum class InstructorMyPageUiError {
 sealed interface InstructorMyPageAction {
     data object OpenProfile : InstructorMyPageAction
 
-    data object OpenMemberManagement : InstructorMyPageAction
-
     data object OpenStudioManagement : InstructorMyPageAction
 
     data object OpenPrivacyPolicy : InstructorMyPageAction

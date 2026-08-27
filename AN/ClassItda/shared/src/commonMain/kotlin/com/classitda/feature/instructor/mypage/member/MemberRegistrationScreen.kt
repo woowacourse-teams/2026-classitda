@@ -63,10 +63,12 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.feature.instructor.mypage.InstructorPhoneNumberVisualTransformation
 import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationField
 import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
+import com.classitda.feature.instructor.mypage.instructorPhoneNumberDigits
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -146,8 +148,7 @@ fun MemberRegistrationScreen(
             if (uiState is MemberRegistrationUiState.Success) {
                 MemberRegistrationSuccessDialog(
                     onComplete = {
-                        val memberId = uiState.memberId
-                        onAction(MemberRegistrationAction.SuccessAcknowledged(memberId))
+                        onAction(MemberRegistrationAction.SuccessAcknowledged)
                     },
                 )
             }
@@ -315,8 +316,10 @@ private fun MemberRegistrationForm(
                     text = stringResource(Res.string.instructor_member_registration_phone),
                 )
                 OutlinedTextField(
-                    value = draft.phoneNumber,
-                    onValueChange = { onAction(MemberRegistrationAction.PhoneNumberChanged(it)) },
+                    value = instructorPhoneNumberDigits(draft.phoneNumber),
+                    onValueChange = {
+                        onAction(MemberRegistrationAction.PhoneNumberChanged(instructorPhoneNumberDigits(it)))
+                    },
                     modifier =
                         Modifier
                             .fillMaxWidth()
@@ -341,6 +344,7 @@ private fun MemberRegistrationForm(
                             imeAction = ImeAction.Done,
                         ),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                    visualTransformation = InstructorPhoneNumberVisualTransformation,
                     colors = registrationFieldColors(),
                 )
                 if (phoneError) {
