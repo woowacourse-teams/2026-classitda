@@ -101,12 +101,6 @@ internal fun InstructorMyPageInteractionHarness(modifier: Modifier = Modifier) {
                                 "OpenProfile"
                         }
 
-                        InstructorMyPageAction.OpenMemberManagement -> {
-                            destination = HarnessDestination.F05
-                            lastEvent =
-                                "OpenMemberManagement"
-                        }
-
                         InstructorMyPageAction.OpenStudioManagement -> {
                             destination = HarnessDestination.F08
                             lastEvent =

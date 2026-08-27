@@ -11,9 +11,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.feature.instructor.management.classes.ClassListRoute
 import com.classitda.feature.instructor.management.classtemplates.ClassTemplateManagementRoute
 import com.classitda.feature.instructor.management.classtemplates.create.ClassTemplateCreateRoute
+import com.classitda.feature.instructor.mypage.InstructorMemberEditRoute
+import com.classitda.feature.instructor.mypage.InstructorMemberManagementRoute
+import com.classitda.feature.instructor.mypage.InstructorMemberRegistrationRoute
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -30,6 +34,17 @@ private data class ClassTemplateCreateDestination(
     val templateId: String? = null,
 )
 
+@Serializable
+private data object MemberManagementDestination
+
+@Serializable
+private data object MemberRegistrationDestination
+
+@Serializable
+private data class MemberEditDestination(
+    val memberId: String,
+)
+
 @Composable
 internal fun ManagementFlowNavHost(
     bottomBar: @Composable () -> Unit,
@@ -37,6 +52,7 @@ internal fun ManagementFlowNavHost(
     navController: NavHostController = rememberNavController(),
 ) {
     var templateRefreshKey by remember { mutableStateOf(0) }
+    var memberRefreshKey by remember { mutableStateOf(0) }
 
     NavHost(
         navController = navController,
@@ -47,7 +63,7 @@ internal fun ManagementFlowNavHost(
             ManagementMenuScreen(
                 onClassListClick = { navController.navigate(ClassListDestination) },
                 onClassTemplateManagementClick = { navController.navigate(ClassTemplateManagementDestination) },
-                onMemberManagementClick = {},
+                onMemberManagementClick = { navController.navigate(MemberManagementDestination) },
                 bottomBar = bottomBar,
             )
         }
@@ -69,6 +85,39 @@ internal fun ManagementFlowNavHost(
                 onTemplateEditClick = { id -> navController.navigate(ClassTemplateCreateDestination(templateId = id)) },
                 bottomBar = {},
                 refreshKey = templateRefreshKey,
+            )
+        }
+
+        composable<MemberManagementDestination> {
+            InstructorMemberManagementRoute(
+                onBack = navController::popBackStack,
+                onEditMember = { memberId ->
+                    navController.navigate(MemberEditDestination(memberId.value))
+                },
+                onOpenMemberRegistration = { navController.navigate(MemberRegistrationDestination) },
+                refreshToken = memberRefreshKey,
+            )
+        }
+
+        composable<MemberRegistrationDestination> {
+            InstructorMemberRegistrationRoute(
+                onBack = navController::popBackStack,
+                onSuccess = {
+                    memberRefreshKey++
+                    navController.popBackStack(MemberManagementDestination, false)
+                },
+            )
+        }
+
+        composable<MemberEditDestination> { backStackEntry ->
+            val destination = backStackEntry.toRoute<MemberEditDestination>()
+            InstructorMemberEditRoute(
+                memberId = InstructorMemberId(destination.memberId),
+                onBack = navController::popBackStack,
+                onSaved = {
+                    memberRefreshKey++
+                    navController.popBackStack(MemberManagementDestination, false)
+                },
             )
         }
 

@@ -169,7 +169,6 @@
     <string name="instructor_my_page_title">마이페이지</string>
     <string name="instructor_my_page_description">계정과 시설 정보를 관리해 보세요</string>
     <string name="instructor_my_page_edit_profile">내 정보 수정</string>
-    <string name="instructor_my_page_member_management">회원 관리</string>
     <string name="instructor_my_page_studio_management">내 시설 관리</string>
     <string name="instructor_my_page_loading">강사 마이페이지를 불러오는 중입니다.</string>
     <string name="instructor_my_page_error_title">마이페이지를 불러올 수 없습니다</string>

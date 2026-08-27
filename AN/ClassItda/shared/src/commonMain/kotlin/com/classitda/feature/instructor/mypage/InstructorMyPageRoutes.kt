@@ -73,7 +73,6 @@ import org.koin.core.parameter.parametersOf
 internal fun InstructorMyPageRoute(
     onBack: () -> Unit,
     onOpenProfile: () -> Unit,
-    onOpenMemberManagement: () -> Unit,
     onOpenStudioManagement: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
     bottomBar: @Composable () -> Unit,
@@ -86,7 +85,6 @@ internal fun InstructorMyPageRoute(
     InstructorMyPageScreen(uiState, onAction = { action ->
         when (action) {
             InstructorMyPageAction.OpenProfile -> onOpenProfile()
-            InstructorMyPageAction.OpenMemberManagement -> onOpenMemberManagement()
             InstructorMyPageAction.OpenStudioManagement -> onOpenStudioManagement()
             InstructorMyPageAction.OpenPrivacyPolicy -> onOpenPrivacyPolicy()
             InstructorMyPageAction.Retry -> viewModel.onAction(action)
