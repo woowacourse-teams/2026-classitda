@@ -11,6 +11,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
 import com.classitda.core.auth.InMemoryAuthTokenStorage
+import com.classitda.core.database.AppDatabaseModule
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.navigation.instructor.InstructorRootRoute
@@ -30,6 +31,7 @@ import org.koin.dsl.koinConfiguration
 @Preview
 fun App(
     baseUrl: String,
+    localDatabaseModule: AppDatabaseModule,
     tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() },
 ) {
     var appRoute by remember {
@@ -53,6 +55,7 @@ fun App(
                         NetworkConfig(baseUrl),
                         tokenStorage,
                     ),
+                    localDatabaseModule.koinModule,
                     signupModule(tokenStorage),
                     instructorFeatureModules,
                 )
