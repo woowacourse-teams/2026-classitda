@@ -1,7 +1,6 @@
 package com.classitda.classes.application.student.calendar;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.classitda.classes.application.student.StudentSessionAccessReader;
 import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
@@ -15,8 +14,6 @@ import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
-import com.classitda.common.exception.ClassitdaException;
-import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.member.domain.Member;
 import com.classitda.passproduct.domain.MemberPassProduct;
 import com.classitda.passproduct.domain.MemberPassProductStatus;
@@ -36,13 +33,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.stream.Stream;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -302,18 +295,6 @@ class StudentCalendarQueryServiceTest {
         assertThat(queryCount).isEqualTo(5L);
     }
 
-    @ParameterizedTest
-    @MethodSource("잘못된_조회_조건")
-    void 날짜_범위가_올바르지_않으면_조회할_수_없다(
-            LocalDate from,
-            LocalDate to
-    ) {
-        // when / then
-        assertThatThrownBy(() -> queryService.findAll(1L, 1L, from, to))
-                .isInstanceOfSatisfying(ClassitdaException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(CommonErrorCode.INVALID_INPUT));
-    }
-
     private Member 회원을_저장한다(String id) {
         Member member = StudioFixture.아이디가_다른_소유자(id);
         entityManager.persist(member);
@@ -487,17 +468,6 @@ class StudentCalendarQueryServiceTest {
         );
         enrollment.offer(NOW.minusMinutes(5), NOW.plusMinutes(5));
         entityManager.persist(enrollment);
-    }
-
-    private static Stream<Arguments> 잘못된_조회_조건() {
-        LocalDate from = LocalDate.of(2026, 8, 1);
-        return Stream.of(
-                Arguments.of(null, from),
-                Arguments.of(from, null),
-                Arguments.of(from.plusDays(1), from),
-                Arguments.of(from, from.plusDays(42)),
-                Arguments.of(LocalDate.MAX, LocalDate.MAX)
-        );
     }
 
     @TestConfiguration

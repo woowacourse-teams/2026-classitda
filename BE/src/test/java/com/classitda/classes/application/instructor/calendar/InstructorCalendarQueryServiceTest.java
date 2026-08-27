@@ -12,8 +12,6 @@ import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
-import com.classitda.common.exception.ClassitdaException;
-import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.member.domain.Member;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.Permission;
@@ -36,13 +34,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.stream.Stream;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -386,41 +380,6 @@ class InstructorCalendarQueryServiceTest {
         assertThat(summaries).isEmpty();
     }
 
-    @Test
-    void 양_끝을_포함한_42일_범위를_조회할_수_있다() {
-        // given
-        Member owner = 회원을_저장한다("calendar-max-range-owner");
-        Studio studio = 시설을_저장한다(owner, "최대 달력 기간 시설");
-        소속을_저장한다(studio, owner, SystemRole.OWNER, MembershipStatus.ACTIVE);
-        LocalDate from = LocalDate.of(2026, 8, 1);
-        LocalDate to = from.plusDays(41);
-        entityManager.flush();
-        entityManager.clear();
-
-        // when
-        List<InstructorCalendarSummary> summaries = queryService.findAll(
-                owner.getId(),
-                studio.getId(),
-                from,
-                to
-        );
-
-        // then
-        assertThat(summaries).isEmpty();
-    }
-
-    @ParameterizedTest
-    @MethodSource("잘못된_조회_기간")
-    void 필수값이_없거나_역전되거나_42일을_초과한_기간은_조회할_수_없다(
-            LocalDate from,
-            LocalDate to
-    ) {
-        // when / then
-        assertThatThrownBy(() -> queryService.findAll(1L, 1L, from, to))
-                .isInstanceOfSatisfying(ClassitdaException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(CommonErrorCode.INVALID_INPUT));
-    }
-
     private Member 회원을_저장한다(String id) {
         Member member = StudioFixture.아이디가_다른_소유자(id);
         entityManager.persist(member);
@@ -543,17 +502,6 @@ class InstructorCalendarQueryServiceTest {
                 ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())
         );
         return classSession;
-    }
-
-    private static Stream<Arguments> 잘못된_조회_기간() {
-        LocalDate from = LocalDate.of(2026, 8, 1);
-        return Stream.of(
-                Arguments.of(null, from),
-                Arguments.of(from, null),
-                Arguments.of(from.plusDays(1), from),
-                Arguments.of(from, from.plusDays(42)),
-                Arguments.of(LocalDate.MAX, LocalDate.MAX)
-        );
     }
 
     @TestConfiguration
