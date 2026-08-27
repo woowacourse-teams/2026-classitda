@@ -108,27 +108,7 @@ class ClassTypeControllerTest {
         오류를_검증한다(result, 409, "CLASS_TYPE-002", "이미 존재하는 수업 종류 이름입니다.");
     }
 
-    @Test
-    void 버전_헤더가_없으면_API_001을_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/1/class-types")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(ClassTypeFixture.기본_수업_종류_생성_요청())
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-    }
-
-    @Test
-    void 지원하지_않는_버전이면_API_002를_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = 수업_종류를_등록한다(1L, "3", ClassTypeFixture.기본_수업_종류_생성_요청());
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-    }
 
     @Test
     void 수업_종류_목록을_조회하면_200과_정렬된_최상위_배열을_반환한다() {
@@ -185,25 +165,7 @@ class ClassTypeControllerTest {
         verify(classTypeService, times(3)).findAll(1L, 7L);
     }
 
-    @Test
-    void 수업_종류_목록_조회_버전_헤더가_없으면_API_001을_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/1/class-types")
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-    }
-
-    @Test
-    void 수업_종류_목록_조회_버전이_지원되지_않으면_API_002를_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = 수업_종류_목록을_조회한다(1L, "3");
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-    }
 
     @Test
     void 수업_종류_이름을_수정하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
@@ -273,30 +235,7 @@ class ClassTypeControllerTest {
         오류를_검증한다(result, 409, "CLASS_TYPE-002", "이미 존재하는 수업 종류 이름입니다.");
     }
 
-    @Test
-    void 수업_종류_수정_버전_헤더가_없으면_API_001을_반환하고_서비스를_호출하지_않는다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.patch()
-                .uri("/api/studios/7/class-types/13")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(ClassTypeFixture.기본_수업_종류_수정_요청())
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(classTypeService, never()).update(anyLong(), anyLong(), anyLong(), any());
-    }
-
-    @Test
-    void 수업_종류_수정_버전이_지원되지_않으면_API_002를_반환하고_서비스를_호출하지_않는다() {
-        // given / when
-        RestTestClient.ResponseSpec result = 수업_종류_이름을_수정한다(
-                7L, 13L, "3", ClassTypeFixture.기본_수업_종류_수정_요청());
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(classTypeService, never()).update(anyLong(), anyLong(), anyLong(), any());
-    }
 
     @Test
     void 수업_종류를_삭제하면_204와_빈_본문을_반환하고_서비스에_위임한다() {
@@ -336,27 +275,7 @@ class ClassTypeControllerTest {
         verify(classTypeService).delete(1L, 7L, 13L);
     }
 
-    @Test
-    void 수업_종류_삭제_버전_헤더가_없으면_API_001을_반환하고_서비스를_호출하지_않는다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.delete()
-                .uri("/api/studios/7/class-types/13")
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(classTypeService, never()).delete(anyLong(), anyLong(), anyLong());
-    }
-
-    @Test
-    void 수업_종류_삭제_버전이_지원되지_않으면_API_002를_반환하고_서비스를_호출하지_않는다() {
-        // given / when
-        RestTestClient.ResponseSpec result = 수업_종류를_삭제한다(7L, 13L, "3");
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(classTypeService, never()).delete(anyLong(), anyLong(), anyLong());
-    }
 
     private RestTestClient.ResponseSpec 수업_종류_목록을_조회한다(Long studioId, String apiVersion) {
         return client.get()

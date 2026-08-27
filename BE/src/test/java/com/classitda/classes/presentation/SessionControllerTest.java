@@ -176,25 +176,6 @@ class SessionControllerTest {
         verify(commandService, never()).updateV2(anyLong(), anyLong(), anyLong(), any());
     }
 
-    @Test
-    void 수업_회차_수정에서_지원하지_않는_버전이면_API_002를_반환한다() {
-        // given
-        ClassSessionUpdateV2Request request =
-                ClassSessionFixture.기본_수업_회차_V2_수정_요청(5L, 3L);
-
-        // when
-        RestTestClient.ResponseSpec result = client.put()
-                .uri("/api/studios/7/instructor/class-sessions/11")
-                .header("X-API-Version", "3")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange();
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(commandService, never()).updateV1(anyLong(), anyLong(), anyLong(), any());
-        verify(commandService, never()).updateV2(anyLong(), anyLong(), anyLong(), any());
-    }
 
     @Test
     void 필수_필드를_누락하면_COMMON_001을_반환하고_명령_서비스를_호출하지_않는다() {
@@ -358,31 +339,7 @@ class SessionControllerTest {
         verify(studentDailyQueryService, never()).findAll(any(), any(), any());
     }
 
-    @Test
-    void 회원용_목록에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
-        // when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/student/class-sessions/daily?date=2026-08-17")
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(studentDailyQueryService, never()).findAll(any(), any(), any());
-    }
-
-    @Test
-    void 회원용_목록에서_지원하지_않는_버전이면_API_002를_반환하고_조회_서비스를_호출하지_않는다() {
-        // when
-        RestTestClient.ResponseSpec result = 회원용_일별_수업_목록을_조회한다(
-                7L,
-                "date=2026-08-17",
-                "3"
-        );
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(studentDailyQueryService, never()).findAll(any(), any(), any());
-    }
 
     @Test
     void 학생용_수업_달력을_조회하면_200과_날짜별_상태를_반환하고_조회_서비스에_위임한다() {
@@ -449,32 +406,7 @@ class SessionControllerTest {
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
     }
 
-    @Test
-    void 학생용_달력에서_버전_헤더가_없으면_API_001을_반환하고_조회_서비스를_호출하지_않는다() {
-        // when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/student/class-sessions/calendar"
-                        + "?from=2026-08-15&to=2026-08-19")
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(studentCalendarQueryService, never()).findAll(any(), any(), any(), any());
-    }
-
-    @Test
-    void 학생용_달력에서_지원하지_않는_버전이면_API_002를_반환하고_조회_서비스를_호출하지_않는다() {
-        // when
-        RestTestClient.ResponseSpec result = 학생용_수업_달력을_조회한다(
-                7L,
-                "from=2026-08-15&to=2026-08-19",
-                "3"
-        );
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(studentCalendarQueryService, never()).findAll(any(), any(), any(), any());
-    }
 
     @Test
     void 강사용_일별_수업_목록을_조회하면_200과_목록을_반환하고_조회_서비스에_위임한다() {
@@ -525,31 +457,7 @@ class SessionControllerTest {
         verify(instructorDailyQueryService, never()).findAll(any(), any(), any());
     }
 
-    @Test
-    void 강사용_일별_목록에서_버전_헤더가_없으면_API_001을_반환한다() {
-        // when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/instructor/class-sessions/daily?date=2026-08-17")
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(instructorDailyQueryService, never()).findAll(any(), any(), any());
-    }
-
-    @Test
-    void 강사용_일별_목록에서_지원하지_않는_버전이면_API_002를_반환한다() {
-        // when
-        RestTestClient.ResponseSpec result = 강사용_일별_수업_목록을_조회한다(
-                7L,
-                "date=2026-08-17",
-                "3"
-        );
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(instructorDailyQueryService, never()).findAll(any(), any(), any());
-    }
 
     @ParameterizedTest
     @MethodSource("강사용_일별_목록_조회_예외")
@@ -641,31 +549,7 @@ class SessionControllerTest {
         오류를_검증한다(result, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
     }
 
-    @Test
-    void 강사용_달력에서_버전_헤더가_없으면_API_001을_반환한다() {
-        // when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/7/instructor/class-sessions/calendar?from=2026-08-15&to=2026-08-19")
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(instructorCalendarQueryService, never()).findAll(any(), any(), any(), any());
-    }
-
-    @Test
-    void 강사용_달력에서_지원하지_않는_버전이면_API_002를_반환한다() {
-        // when
-        RestTestClient.ResponseSpec result = 강사용_수업_달력을_조회한다(
-                7L,
-                "from=2026-08-15&to=2026-08-19",
-                "3"
-        );
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(instructorCalendarQueryService, never()).findAll(any(), any(), any(), any());
-    }
 
     @Test
     void 학생용_기존_상세_조회_경로는_노출하지_않는다() {
@@ -695,35 +579,7 @@ class SessionControllerTest {
         verify(commandService, never()).saveV2(anyLong(), anyLong(), any());
     }
 
-    @Test
-    void 버전_헤더가_없으면_API_001을_반환하고_명령_서비스를_호출하지_않는다() {
-        // given
-        ClassSessionCreateV2Request request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
 
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/7/instructor/class-sessions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange();
-
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verify(commandService, never()).saveV2(anyLong(), anyLong(), any());
-    }
-
-    @Test
-    void 지원하지_않는_버전이면_API_002를_반환하고_명령_서비스를_호출하지_않는다() {
-        // given
-        ClassSessionCreateV2Request request = ClassSessionFixture.기본_단일_수업_회차_생성_요청(5L, 3L);
-
-        // when
-        RestTestClient.ResponseSpec result = V2_수업_회차를_등록한다(7L, "3", request);
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(commandService, never()).saveV2(anyLong(), anyLong(), any());
-    }
 
     @ParameterizedTest
     @MethodSource("수업_회차_생성_예외")

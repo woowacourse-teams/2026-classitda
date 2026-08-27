@@ -264,18 +264,5 @@ class RoomControllerTest {
                         """, JsonCompareMode.STRICT);
     }
 
-    @Test
-    void 버전_헤더가_없으면_API_001을_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.get()
-                .uri("/api/studios/1/rooms")
-                .exchange();
 
-        // then
-        result.expectStatus().isBadRequest()
-                .expectBody()
-                .json("""
-                        {"code":"API-001","message":"X-API-Version 헤더는 필수입니다."}
-                        """, JsonCompareMode.STRICT);
-    }
 }

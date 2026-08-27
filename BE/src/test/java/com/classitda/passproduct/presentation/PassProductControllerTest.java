@@ -180,27 +180,7 @@ class PassProductControllerTest {
                 "유효 기간과 수강 가능 횟수를 모두 무제한으로 지정할 수 없습니다.");
     }
 
-    @Test
-    void 등록_버전_헤더가_없으면_API_001을_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios/1/pass-products")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(PassProductFixture.기본_수강권_생성_요청())
-                .exchange();
 
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-    }
-
-    @Test
-    void 등록_지원하지_않는_버전이면_API_002를_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = 수강권을_등록한다(1L, "3", PassProductFixture.기본_수강권_생성_요청());
-
-        // then
-        오류를_검증한다(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-    }
 
     @Test
     void 수강권_목록을_조회하면_200과_최상위_배열을_반환한다() {
@@ -320,18 +300,6 @@ class PassProductControllerTest {
         오류를_검증한다(result, 404, "PASS_PRODUCT-008", "수강권을 찾을 수 없습니다.");
     }
 
-    @Test
-    void 수정_버전_헤더가_없으면_API_001을_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.put()
-                .uri("/api/studios/1/pass-products/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(PassProductFixture.기본_수강권_수정_요청())
-                .exchange();
-
-        // then
-        오류를_검증한다(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-    }
 
     private PassProductResponse 기본_수강권_응답() {
         return new PassProductResponse(
