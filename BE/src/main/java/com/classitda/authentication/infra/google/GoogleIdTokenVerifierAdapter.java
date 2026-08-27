@@ -1,7 +1,8 @@
 package com.classitda.authentication.infra.google;
 
-import com.classitda.authentication.application.identity.GoogleIdentity;
-import com.classitda.authentication.application.identity.GoogleIdentityVerifier;
+import com.classitda.authentication.application.identity.SocialIdentityVerifier;
+import com.classitda.authentication.application.identity.SocialIdentity;
+import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -16,7 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GoogleIdTokenVerifierAdapter implements GoogleIdentityVerifier {
+public class GoogleIdTokenVerifierAdapter implements SocialIdentityVerifier {
 
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
@@ -42,7 +43,12 @@ public class GoogleIdTokenVerifierAdapter implements GoogleIdentityVerifier {
     }
 
     @Override
-    public GoogleIdentity verify(String idToken) {
+    public OauthProvider provider() {
+        return OauthProvider.GOOGLE;
+    }
+
+    @Override
+    public SocialIdentity verify(String idToken) {
         if (idToken == null || idToken.isBlank()) {
             throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
         }
@@ -55,7 +61,19 @@ public class GoogleIdTokenVerifierAdapter implements GoogleIdentityVerifier {
             throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
         }
 
-        return GoogleIdentity.of(payload.getSubject(), payload.getEmail());
+        return toIdentity(payload);
+    }
+
+    SocialIdentity toIdentity(GoogleIdToken.Payload payload) {
+        if (payload.getEmail() == null) {
+            throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
+        }
+
+        try {
+            return SocialIdentity.of(provider(), payload.getSubject(), payload.getEmail());
+        } catch (IllegalArgumentException exception) {
+            throw new AuthException(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
+        }
     }
 
     private GoogleIdToken parse(String idToken) {

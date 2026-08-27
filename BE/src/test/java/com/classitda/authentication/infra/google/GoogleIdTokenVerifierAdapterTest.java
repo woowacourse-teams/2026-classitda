@@ -3,8 +3,10 @@ package com.classitda.authentication.infra.google;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.classitda.authentication.domain.OauthProvider;
 import com.classitda.authentication.exception.AuthErrorCode;
 import com.classitda.authentication.exception.AuthException;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -18,6 +20,12 @@ class GoogleIdTokenVerifierAdapterTest {
 
     private final GoogleIdTokenVerifierAdapter verifier =
             new GoogleIdTokenVerifierAdapter(WEB_CLIENT_ID, IOS_CLIENT_ID);
+
+    @Test
+    void Google_제공자를_지원한다() {
+        // given / when / then
+        assertThat(verifier.provider()).isEqualTo(OauthProvider.GOOGLE);
+    }
 
     @Test
     void Web과_iOS_Client_ID를_Google_ID_토큰_audience로_허용한다() {
@@ -67,6 +75,27 @@ class GoogleIdTokenVerifierAdapterTest {
                 .isEqualTo(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
     }
 
+    @Test
+    void provider_subject가_255자를_초과하면_AUTH_006과_401로_거부한다() {
+        // given
+        GoogleIdToken.Payload payload = new GoogleIdToken.Payload()
+                .setSubject("a".repeat(256))
+                .setEmail("member@example.com");
+
+        // when / then
+        assertInvalidIdentity(payload);
+    }
+
+    @Test
+    void 이메일이_없으면_AUTH_006과_401로_거부한다() {
+        // given
+        GoogleIdToken.Payload payload = new GoogleIdToken.Payload()
+                .setSubject("provider-subject");
+
+        // when / then
+        assertInvalidIdentity(payload);
+    }
+
     private String idTokenWithAudience(String audience) {
         long issuedAt = Instant.now().getEpochSecond();
         String header = """
@@ -84,5 +113,15 @@ class GoogleIdTokenVerifierAdapterTest {
         return Base64.getUrlEncoder()
                 .withoutPadding()
                 .encodeToString(value.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void assertInvalidIdentity(GoogleIdToken.Payload payload) {
+        assertThatThrownBy(() -> verifier.toIdentity(payload))
+                .isInstanceOf(AuthException.class)
+                .satisfies(exception -> {
+                    AuthErrorCode errorCode = (AuthErrorCode) ((AuthException) exception).getErrorCode();
+                    assertThat(errorCode).isEqualTo(AuthErrorCode.GOOGLE_ID_TOKEN_INVALID);
+                    assertThat(errorCode.getStatus().value()).isEqualTo(401);
+                });
     }
 }

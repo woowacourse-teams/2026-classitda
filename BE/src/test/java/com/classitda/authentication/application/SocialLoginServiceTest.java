@@ -6,8 +6,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import com.classitda.authentication.application.identity.GoogleIdentity;
-import com.classitda.authentication.application.identity.GoogleIdentityVerifier;
+import com.classitda.authentication.application.identity.SocialIdentityVerifier;
+import com.classitda.authentication.application.identity.SocialIdentity;
 import com.classitda.authentication.application.token.LoginTokenIssuer;
 import com.classitda.authentication.application.token.SignupTokenIssuer;
 import com.classitda.authentication.application.token.result.IssuedLoginTokens;
@@ -27,6 +27,7 @@ import com.classitda.member.fixture.MemberFixture;
 import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Import;
@@ -45,7 +46,7 @@ class SocialLoginServiceTest {
     private final EntityManager entityManager;
 
     @MockitoBean
-    private GoogleIdentityVerifier googleIdentityVerifier;
+    private SocialIdentityVerifier socialIdentityVerifier;
 
     @MockitoBean
     private SignupTokenIssuer signupTokenIssuer;
@@ -64,12 +65,17 @@ class SocialLoginServiceTest {
         this.entityManager = entityManager;
     }
 
+    @BeforeEach
+    void setUp() {
+        given(socialIdentityVerifier.provider()).willReturn(OauthProvider.GOOGLE);
+    }
+
     @Test
     void 구글_계정이_미가입_상태면_가입_토큰을_반환한다() {
         // given
-        GoogleIdentity identity = GoogleIdentity.of(PROVIDER_SUBJECT, PROVIDER_EMAIL);
+        SocialIdentity identity = googleIdentity(PROVIDER_EMAIL);
         IssuedSignupToken issuedSignupToken = IssuedSignupToken.of("signup-token", 1800L);
-        given(googleIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(socialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
         given(signupTokenIssuer.issueSignupToken(OauthProvider.GOOGLE, PROVIDER_SUBJECT, PROVIDER_EMAIL))
                 .willReturn(issuedSignupToken);
 
@@ -82,7 +88,7 @@ class SocialLoginServiceTest {
             assertThat(registrationRequired.signupToken()).isEqualTo("signup-token");
             assertThat(registrationRequired.signupTokenExpiresIn()).isEqualTo(1800L);
         });
-        verify(googleIdentityVerifier).verify(ID_TOKEN);
+        verify(socialIdentityVerifier).verify(ID_TOKEN);
         verify(signupTokenIssuer).issueSignupToken(OauthProvider.GOOGLE, PROVIDER_SUBJECT, PROVIDER_EMAIL);
         verify(loginTokenIssuer, never()).issueLoginTokens(org.mockito.ArgumentMatchers.anyLong());
     }
@@ -91,9 +97,9 @@ class SocialLoginServiceTest {
     void 기존_계정의_이메일이_동일하면_값을_유지하고_로그인_토큰을_반환한다() {
         // given
         AuthAccount authAccount = saveAuthAccount(PROVIDER_EMAIL);
-        GoogleIdentity identity = GoogleIdentity.of(PROVIDER_SUBJECT, PROVIDER_EMAIL);
+        SocialIdentity identity = googleIdentity(PROVIDER_EMAIL);
         IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L);
-        given(googleIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(socialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
         given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
 
         // when
@@ -121,9 +127,9 @@ class SocialLoginServiceTest {
     void 기존_계정의_이메일이_다르면_갱신한_값을_저장한다() {
         // given
         AuthAccount authAccount = saveAuthAccount(PROVIDER_EMAIL);
-        GoogleIdentity identity = GoogleIdentity.of(PROVIDER_SUBJECT, "changed@example.com");
+        SocialIdentity identity = googleIdentity("changed@example.com");
         IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of("access-token", 3_600L, "refresh-token", 2592000L);
-        given(googleIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(socialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
         given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
 
         // when
@@ -137,6 +143,28 @@ class SocialLoginServiceTest {
     }
 
     @Test
+    void 기존_계정의_검증된_이메일이_없으면_저장된_이메일을_유지한다() {
+        // given
+        AuthAccount authAccount = saveAuthAccount(PROVIDER_EMAIL);
+        SocialIdentity identity = googleIdentity(null);
+        IssuedLoginTokens issuedLoginTokens = IssuedLoginTokens.of(
+                "access-token",
+                3_600L,
+                "refresh-token",
+                2592000L);
+        given(socialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        given(loginTokenIssuer.issueLoginTokens(authAccount.getMemberId())).willReturn(issuedLoginTokens);
+
+        // when
+        socialLoginService.loginWithGoogle(GoogleLoginRequest.from(ID_TOKEN));
+        entityManager.flush();
+        entityManager.clear();
+
+        // then
+        assertThat(findAuthAccount().getProviderEmail()).isEqualTo(PROVIDER_EMAIL);
+    }
+
+    @Test
     void 탈퇴_처리_중인_회원은_구글_로그인과_이메일_갱신이_차단된다() {
         // given
         Member member = MemberFixture.기본_회원();
@@ -147,8 +175,8 @@ class SocialLoginServiceTest {
                 member.getId(),
                 PROVIDER_SUBJECT,
                 PROVIDER_EMAIL));
-        GoogleIdentity identity = GoogleIdentity.of(PROVIDER_SUBJECT, "changed@example.com");
-        given(googleIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
+        SocialIdentity identity = googleIdentity("changed@example.com");
+        given(socialIdentityVerifier.verify(ID_TOKEN)).willReturn(identity);
 
         // when / then
         assertThatThrownBy(() -> socialLoginService.loginWithGoogle(GoogleLoginRequest.from(ID_TOKEN)))
@@ -179,5 +207,9 @@ class SocialLoginServiceTest {
     private AuthAccount findAuthAccount() {
         return authAccountRepository.findByProviderAndProviderSubject(OauthProvider.GOOGLE, PROVIDER_SUBJECT)
                 .orElseThrow();
+    }
+
+    private SocialIdentity googleIdentity(String providerEmail) {
+        return SocialIdentity.of(OauthProvider.GOOGLE, PROVIDER_SUBJECT, providerEmail);
     }
 }
