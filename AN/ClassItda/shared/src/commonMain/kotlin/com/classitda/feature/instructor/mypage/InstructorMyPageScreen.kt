@@ -17,7 +17,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -35,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_forward
 import classitda.shared.generated.resources.instructor_my_page_edit_profile
+import classitda.shared.generated.resources.instructor_my_page_description
 import classitda.shared.generated.resources.instructor_my_page_error_description
 import classitda.shared.generated.resources.instructor_my_page_error_title
 import classitda.shared.generated.resources.instructor_my_page_loading
@@ -45,6 +48,7 @@ import classitda.shared.generated.resources.instructor_my_page_title
 import classitda.shared.generated.resources.my_page_privacy_policy
 import coil3.compose.SubcomposeAsyncImage
 import com.classitda.core.designsystem.AppSpacing
+import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
@@ -103,21 +107,23 @@ private fun InstructorMyPageContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .padding(AppSpacing.screenPadding),
     ) {
         Text(
             text = stringResource(Res.string.instructor_my_page_title),
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(
-                        start = AppSpacing.screenPadding,
-                        top = AppSpacing.xxl,
-                        end = AppSpacing.screenPadding,
-                        bottom = AppSpacing.xxl,
-                    ).semantics { heading() },
-            style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    .semantics { heading() },
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
             color = InsColors.TextPrimary,
+        )
+        Text(
+            text = stringResource(Res.string.instructor_my_page_description),
+            modifier = Modifier.padding(top = AppSpacing.xs, bottom = AppSpacing.lg),
+            style = MaterialTheme.typography.bodyMedium,
+            color = InsColors.TextSecondary,
         )
 
         ProfileSummary(
@@ -125,20 +131,22 @@ private fun InstructorMyPageContent(
             onClick = { onAction(InstructorMyPageAction.OpenProfile) },
         )
 
-        Spacer(modifier = Modifier.size(AppSpacing.xxxl + AppSpacing.xs))
+        Spacer(modifier = Modifier.size(AppSpacing.sectionGap))
 
-        InstructorMyPageMenuRow(
-            title = stringResource(Res.string.instructor_my_page_member_management),
-            onClick = { onAction(InstructorMyPageAction.OpenMemberManagement) },
-        )
-        InstructorMyPageMenuRow(
-            title = stringResource(Res.string.instructor_my_page_studio_management),
-            onClick = { onAction(InstructorMyPageAction.OpenStudioManagement) },
-        )
-        InstructorMyPageMenuRow(
-            title = stringResource(Res.string.my_page_privacy_policy),
-            onClick = { onAction(InstructorMyPageAction.OpenPrivacyPolicy) },
-        )
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+            InstructorMyPageMenuRow(
+                title = stringResource(Res.string.instructor_my_page_member_management),
+                onClick = { onAction(InstructorMyPageAction.OpenMemberManagement) },
+            )
+            InstructorMyPageMenuRow(
+                title = stringResource(Res.string.instructor_my_page_studio_management),
+                onClick = { onAction(InstructorMyPageAction.OpenStudioManagement) },
+            )
+            InstructorMyPageMenuRow(
+                title = stringResource(Res.string.my_page_privacy_policy),
+                onClick = { onAction(InstructorMyPageAction.OpenPrivacyPolicy) },
+            )
+        }
     }
 }
 
@@ -152,46 +160,53 @@ private fun ProfileSummary(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable(role = Role.Button, onClick = onClick)
-                .padding(
-                    horizontal = AppSpacing.screenPadding,
-                    vertical = AppSpacing.sm,
-                ),
+                .clickable(role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        InstructorAvatar(profile = profile)
-        Spacer(modifier = Modifier.width(AppSpacing.lg))
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = AppShape.Card,
+            color = InsColors.Surface,
         ) {
-            Text(
-                text = profile.name,
-                style = appTypography().headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = InsColors.TextPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                text = profile.phoneNumberLabel,
-                style = appTypography().bodyLarge,
-                color = InsColors.TextSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(AppSpacing.cardPadding),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                InstructorAvatar(profile = profile)
+                Spacer(modifier = Modifier.width(AppSpacing.lg))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                ) {
+                    Text(
+                        text = profile.name,
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = InsColors.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = profile.phoneNumberLabel,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = InsColors.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Text(
+                    text = stringResource(Res.string.instructor_my_page_edit_profile),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = InsColors.TextSecondary,
+                )
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                Icon(
+                    painter = painterResource(Res.drawable.ic_arrow_forward),
+                    contentDescription = null,
+                    modifier = Modifier.size(AppSpacing.lg),
+                    tint = InsColors.TextSecondary,
+                )
+            }
         }
-        Text(
-            text = stringResource(Res.string.instructor_my_page_edit_profile),
-            style = appTypography().titleMedium,
-            color = InsColors.TextSecondary,
-        )
-        Spacer(modifier = Modifier.width(AppSpacing.sm))
-        Icon(
-            painter = painterResource(Res.drawable.ic_arrow_forward),
-            contentDescription = null,
-            modifier = Modifier.size(AppSpacing.lg),
-            tint = InsColors.TextSecondary,
-        )
     }
 }
 
@@ -256,25 +271,32 @@ private fun InstructorMyPageMenuRow(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable(role = Role.Button, onClick = onClick)
-                .padding(
-                    horizontal = AppSpacing.screenPadding,
-                    vertical = AppSpacing.lg,
-                ),
+                .clickable(role = Role.Button, onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = title,
-            modifier = Modifier.weight(1f),
-            style = appTypography().titleLarge.copy(fontWeight = FontWeight.Bold),
-            color = InsColors.TextPrimary,
-        )
-        Icon(
-            painter = painterResource(Res.drawable.ic_arrow_forward),
-            contentDescription = null,
-            modifier = Modifier.size(AppSpacing.lg),
-            tint = InsColors.TextSecondary,
-        )
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = AppShape.Card,
+            color = InsColors.Surface,
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(AppSpacing.cardPadding),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = InsColors.TextPrimary,
+                )
+                Icon(
+                    painter = painterResource(Res.drawable.ic_arrow_forward),
+                    contentDescription = null,
+                    modifier = Modifier.size(AppSpacing.lg),
+                    tint = InsColors.TextSecondary,
+                )
+            }
+        }
     }
 }
 
