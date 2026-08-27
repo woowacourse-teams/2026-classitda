@@ -5,18 +5,21 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.flywaydb.core.Flyway;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 public final class SharedTestContainers {
 
+    private static final String MIGRATION_LOCATION = "classpath:db/migration";
+
     private static final AtomicInteger DATABASE_SEQUENCE = new AtomicInteger();
 
     private SharedTestContainers() {
     }
 
-    public static MySqlDatabase createMySqlDatabase() {
+    public static MySqlDatabase createRawMySqlDatabase() {
         MySQLContainer mysql = MySqlHolder.INSTANCE;
         String databaseName = "classitda_test_%d".formatted(DATABASE_SEQUENCE.incrementAndGet());
 
@@ -37,6 +40,21 @@ public final class SharedTestContainers {
                 "/" + databaseName
         );
         return new MySqlDatabase(jdbcUrl, mysql.getUsername(), mysql.getPassword());
+    }
+
+    public static MySqlDatabase createMySqlDatabase() {
+        MySqlDatabase database = createRawMySqlDatabase();
+        migrate(database);
+
+        return database;
+    }
+
+    private static void migrate(MySqlDatabase database) {
+        Flyway.configure()
+                .dataSource(database.jdbcUrl(), database.username(), database.password())
+                .locations(MIGRATION_LOCATION)
+                .load()
+                .migrate();
     }
 
     public static GenericContainer<?> redis() {

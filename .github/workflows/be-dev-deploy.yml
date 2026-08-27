@@ -3,7 +3,7 @@ name: BE DEV CD
 on:
   push:
     branches:
-      - be/dev
+      - develop
     paths:
       - 'BE/**'
       - '.github/workflows/be-dev-deploy.yml'
@@ -41,7 +41,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_IMAGE }}:dev
-            ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_IMAGE }}:dev-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -50,7 +50,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: production
+    environment: development
     steps:
       - uses: actions/checkout@v4
 
@@ -95,15 +95,16 @@ jobs:
       - name: compose 파일 전송
         run: |
           set -eu
+          ssh -F ~/.ssh/config target 'mkdir -p /opt/classitda/nginx'
           scp -F ~/.ssh/config BE/docker/compose.dev.yml target:/opt/classitda/compose.dev.yml
+          scp -F ~/.ssh/config BE/docker/nginx/api-dev.conf target:/opt/classitda/nginx/api-dev.conf
 
       - name: .env 갱신
         env:
-          APP_IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
-          DB_HOST: ${{ secrets.DB_HOST }}
+          APP_IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:dev-${{ github.sha }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           GOOGLE_OAUTH_WEB_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_WEB_CLIENT_ID }}
           GOOGLE_OAUTH_IOS_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_IOS_CLIENT_ID }}
@@ -123,10 +124,9 @@ jobs:
           umask 077
           {
             echo "APP_IMAGE=$APP_IMAGE"
-            echo "DB_HOST=$DB_HOST"
             echo "DB_USERNAME=$DB_USERNAME"
             echo "DB_PASSWORD=$DB_PASSWORD"
-            echo "REDIS_HOST=$REDIS_HOST"
+            echo "DB_ROOT_PASSWORD=$DB_ROOT_PASSWORD"
             echo "REDIS_PASSWORD=$(printf '%s' "$REDIS_PASSWORD" | tr -d '[:space:]')"
             echo "GOOGLE_OAUTH_WEB_CLIENT_ID=$GOOGLE_OAUTH_WEB_CLIENT_ID"
             echo "GOOGLE_OAUTH_IOS_CLIENT_ID=$GOOGLE_OAUTH_IOS_CLIENT_ID"
@@ -148,7 +148,7 @@ jobs:
 
       - name: 배포
         env:
-          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
+          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:dev-${{ github.sha }}
         run: |
           set -eu
           ssh -F ~/.ssh/config target "APP_IMAGE='$IMAGE' bash -s" <<'REMOTE'
@@ -167,7 +167,15 @@ jobs:
             return 1
           }
 
-          docker compose -f compose.dev.yml up -d --pull always app
+          docker compose -f compose.dev.yml pull app
+          docker compose -f compose.dev.yml up -d
+
+          if docker compose -f compose.dev.yml exec -T nginx nginx -t; then
+            docker compose -f compose.dev.yml exec -T nginx nginx -s reload
+            echo "nginx 설정을 다시 읽었습니다."
+          else
+            echo "nginx 설정이 올바르지 않아 reload 를 건너뜁니다. 이전 설정으로 계속 동작합니다."
+          fi
 
           if wait_healthy; then
             echo "배포 성공: $APP_IMAGE"
@@ -188,7 +196,7 @@ jobs:
             echo ".env 도 이전 값으로 되돌립니다."
             cp .env.prev .env
           fi
-          APP_IMAGE="$PREVIOUS" docker compose -f compose.dev.yml up -d app
+          APP_IMAGE="$PREVIOUS" docker compose -f compose.dev.yml up -d
           if wait_healthy; then
             echo "롤백 완료. 배포는 실패로 처리합니다."
           else

@@ -41,7 +41,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_IMAGE }}:latest
-            ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_IMAGE }}:prod-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -99,7 +99,7 @@ jobs:
 
       - name: .env 갱신
         env:
-          APP_IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
+          APP_IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:prod-${{ github.sha }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -148,7 +148,7 @@ jobs:
 
       - name: 배포
         env:
-          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:${{ github.sha }}
+          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:prod-${{ github.sha }}
         run: |
           set -eu
           ssh -F ~/.ssh/config target "APP_IMAGE='$IMAGE' bash -s" <<'REMOTE'
