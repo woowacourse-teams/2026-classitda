@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Import;
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
         "spring.jpa.properties.hibernate.generate_statistics=true",
+        "spring.flyway.enabled=false",
         "spring.sql.init.mode=always",
         "spring.sql.init.data-locations=optional:classpath:/test-data.sql"
 })
