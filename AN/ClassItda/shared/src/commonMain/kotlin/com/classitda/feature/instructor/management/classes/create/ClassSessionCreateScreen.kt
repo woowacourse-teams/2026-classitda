@@ -86,7 +86,7 @@ internal fun ClassSessionCreateScreen(
     fun applyTemplate(template: ClassTemplateUiModel) {
         selectedTemplate = template
         classType = template.classForm.toClassFormOption()
-        selectedCategory = classTypes.firstOrNull { it.id in template.classTypeIds }
+        selectedCategory = classTypes.firstOrNull { it.id == template.classTypeId }
         title = template.title
         template.capacityText
             .digitsOnly()
@@ -362,7 +362,7 @@ private fun ClassSessionCreateScreenPreview() {
                     ClassTemplateUiModel(
                         id = "1",
                         classForm = ClassForm.GROUP,
-                        classTypeIds = listOf("1"),
+                        classTypeId = "1",
                         categoryNames = listOf("필라테스"),
                         title = "리포머 밸런스",
                         durationText = "50분",

@@ -29,7 +29,7 @@ internal fun ClassTemplateResponseDto.toDomain(): ClassTemplate =
         capacity = capacity,
         schedule = toScheduleOrNull(),
         description = description.orEmpty(),
-        classTypeIds = listOf(classType.id.toString()),
+        classTypeId = classType.id.toString(),
     )
 
 private fun ClassTemplateResponseDto.toScheduleOrNull(): ClassTemplateSchedule? {
@@ -52,7 +52,7 @@ internal fun ClassTemplate.toCreateRequestDto(): ClassTemplateCreateRequestDto {
         startTime = schedule.startTime.toApiTimeString(),
         recurringDays = schedule.repeatDays.map { it.toDto() },
         capacity = capacity,
-        classTypeId = classTypeIds.toSingleRequestId(),
+        classTypeId = classTypeId.toRequiredClassTypeId(),
     )
 }
 
@@ -66,14 +66,11 @@ internal fun ClassTemplate.toUpdateRequestDto(): ClassTemplateUpdateRequestDto {
         startTime = schedule.startTime.toApiTimeString(),
         recurringDays = schedule.repeatDays.map { it.toDto() },
         capacity = capacity,
-        classTypeId = classTypeIds.toSingleRequestId(),
+        classTypeId = classTypeId.toRequiredClassTypeId(),
     )
 }
 
-private fun List<String>.toSingleRequestId(): Long {
-    val id = singleOrNull() ?: error("수업 종류를 한 개 선택해야 합니다.")
-    return id.toClassTypeId()
-}
+private fun String?.toRequiredClassTypeId(): Long = (this ?: error("수업 종류를 한 개 선택해야 합니다.")).toClassTypeId()
 
 internal fun ClassFormDto.toDomain(): ClassForm =
     when (this) {

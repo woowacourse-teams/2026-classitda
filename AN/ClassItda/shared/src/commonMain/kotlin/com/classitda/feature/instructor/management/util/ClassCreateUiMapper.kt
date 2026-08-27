@@ -28,14 +28,14 @@ internal fun ClassTemplateDraftUiModel.toClassTemplate(id: String): ClassTemplat
                 repeatDays = if (isRepeating) repeatDays.sortedBy { it.ordinal } else emptyList(),
             ),
         description = description,
-        classTypeIds = listOfNotNull(category?.id),
+        classTypeId = category?.id,
     )
 }
 
 internal fun ClassTemplate.toFormValues(classTypes: List<ClassType>): ClassTemplateFormValues =
     ClassTemplateFormValues(
         classType = tags.classFormOptionOrNull() ?: ClassFormOption.GROUP,
-        category = classTypes.firstOrNull { it.id in classTypeIds },
+        category = classTypes.firstOrNull { it.id == classTypeId },
         title = title,
         capacity = capacity,
         durationMinutes = durationMinutes,
