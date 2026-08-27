@@ -16,6 +16,7 @@ import co.touchlab.kermit.Logger
 import com.classitda.core.studio.InstructorStudioContext
 import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.feature.common.privacypolicy.PrivacyPolicyRoute
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
@@ -162,7 +163,13 @@ internal fun InstructorMyPageNavHost(
                 onBack = { navController.popBackStack() },
                 onSuccess = {
                     scope.launch {
-                        runCatching { studioContext.refreshStudios() }
+                        try {
+                            studioContext.refreshStudios()
+                        } catch (exception: CancellationException) {
+                            throw exception
+                        } catch (exception: Throwable) {
+                            Logger.e("StudioContext: refresh after registration failed: ${exception.message}")
+                        }
                         studioRefreshToken++
                         if (!navController.popBackStack(InstructorMyPageDestination.F08, false)) {
                             navController.navigate(InstructorMyPageDestination.F08) {
