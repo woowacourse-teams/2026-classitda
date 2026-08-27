@@ -28,9 +28,9 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.core.designsystem.component.PrimaryButton
 import com.classitda.feature.auth.signup.SignupAction
 import com.classitda.feature.auth.signup.component.ClassitdaLogo
-import com.classitda.feature.auth.signup.component.SignupActionButton
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -61,9 +61,8 @@ internal fun SignupCompletedScreen(
             textAlign = TextAlign.Center,
         )
         Spacer(modifier = Modifier.height(AppSpacing.sectionGap))
-        SignupActionButton(
+        PrimaryButton(
             text = "시작하기",
-            color = StuColors.Gray900,
             onClick = { onAction(SignupAction.Close) },
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))

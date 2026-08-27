@@ -31,10 +31,10 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.appTypography
+import com.classitda.core.designsystem.component.PrimaryButton
 import com.classitda.feature.auth.signup.SignupAction
 import com.classitda.feature.auth.signup.SignupPage
 import com.classitda.feature.auth.signup.SignupUiState
-import com.classitda.feature.auth.signup.component.SignupActionButton
 import com.classitda.feature.auth.signup.component.SignupPageScaffold
 import com.classitda.feature.auth.signup.component.SignupTextField
 import com.classitda.feature.auth.signup.component.SignupTextFieldWithAction
@@ -139,9 +139,8 @@ internal fun SignupFormScreen(
             )
             Spacer(modifier = Modifier.height(AppSpacing.xl))
         }
-        SignupActionButton(
+        PrimaryButton(
             text = "확인",
-            color = StuColors.Gray900,
             onClick = { onAction(SignupAction.ConfirmForm) },
             modifier = Modifier.padding(horizontal = AppSpacing.xl, vertical = AppSpacing.md),
         )

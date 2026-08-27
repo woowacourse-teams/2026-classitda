@@ -31,6 +31,7 @@ import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
+import com.classitda.core.designsystem.component.PrimaryButton
 
 @Composable
 internal fun SignupTermsSheet(
@@ -111,9 +112,8 @@ internal fun SignupTermsSheet(
                     )
                 }
                 Spacer(modifier = Modifier.height(44.dp))
-                SignupActionButton(
+                PrimaryButton(
                     text = "가입 완료",
-                    color = StuColors.Gray900,
                     onClick = onComplete,
                 )
             }
