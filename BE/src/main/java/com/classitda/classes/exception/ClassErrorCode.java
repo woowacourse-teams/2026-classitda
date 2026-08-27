@@ -50,6 +50,7 @@ public enum ClassErrorCode implements ErrorCode {
     CLASS_SESSION_CANCEL_OCCURRED_AT_REQUIRED("CLASS_SESSION-019", "수업 취소 시각은 필수입니다.", HttpStatus.BAD_REQUEST),
     CLASS_SESSION_ALREADY_CANCELED("CLASS_SESSION-020", "이미 취소된 수업입니다.", HttpStatus.CONFLICT),
     CLASS_SESSION_ALREADY_STARTED("CLASS_SESSION-021", "이미 시작된 수업은 취소할 수 없습니다.", HttpStatus.CONFLICT),
+    CLASS_SESSION_HAS_ACTIVE_ENROLLMENT("CLASS_SESSION-022", "신청자가 있는 수업은 수정할 수 없습니다.", HttpStatus.CONFLICT),
 
     // RESERVATION
     INVALID_RESERVATION_TRANSITION(
