@@ -28,10 +28,13 @@ internal class RemoteInstructorMembershipRepository(
         runRemoteQuery {
             require(size in 1..100) { "회원 목록 페이지 크기는 1부터 100까지여야 합니다." }
             api.getStudents(studioId.value, cursor, size).let { response ->
+                if (response.hasNext && response.nextCursor == null) {
+                    throw MembershipApiContractException("다음 페이지가 있지만 nextCursor가 없습니다.")
+                }
                 MemberListPage(
                     totalCount = response.items.size,
                     members = response.items.map(StudioMembershipResponseDto::toManagedMember),
-                    nextPageCursor = response.nextCursor.takeIf { response.hasNext },
+                    nextPageCursor = response.nextCursor,
                 )
             }
         }
@@ -113,8 +116,13 @@ private fun ResponseException.toMembershipFailureReason(): InstructorMyPageFailu
 
 private fun Throwable.toMembershipFailureReason(): InstructorMyPageFailureReason =
     when (this) {
+        is MembershipApiContractException -> InstructorMyPageFailureReason.CONTRACT
         is IllegalArgumentException -> InstructorMyPageFailureReason.INVALID_REQUEST
         is JsonConvertException, is SerializationException -> InstructorMyPageFailureReason.CONTRACT
         is IOException -> InstructorMyPageFailureReason.NETWORK
         else -> InstructorMyPageFailureReason.UNKNOWN
     }
+
+private class MembershipApiContractException(
+    message: String,
+) : IllegalStateException(message)
