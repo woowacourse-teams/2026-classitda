@@ -538,7 +538,7 @@ private fun StudioRegistrationForm(
                 },
             enabled = !isSubmitting,
             onValueChange = { onAction(StudioRegistrationAction.NameChanged(it)) },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -583,7 +583,7 @@ private fun StudioRegistrationForm(
             errorMessage = null,
             enabled = !isSubmitting,
             onValueChange = { onAction(StudioRegistrationAction.DetailAddressChanged(it)) },
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
         )
         StudioTextField(
@@ -653,7 +653,7 @@ private fun StudioRegistrationForm(
             onValueChange = { onAction(StudioRegistrationAction.DescriptionChanged(it)) },
             singleLine = false,
             minLines = 4,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text, imeAction = ImeAction.Default),
         )
     }
     selectedTimeField?.let { field ->
