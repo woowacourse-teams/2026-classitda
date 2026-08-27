@@ -38,7 +38,7 @@ internal fun InstructorScheduleCard(
     ) {
         Column(
             modifier = Modifier.padding(AppSpacing.cardPadding),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.cardItemVerticalGap)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.cardItemVerticalGap),
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {

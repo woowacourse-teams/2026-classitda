@@ -22,7 +22,10 @@ import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.InsColors
 
 @Composable
-internal fun InstructorCalendarFooter(onTodayClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun InstructorCalendarFooter(
+    onTodayClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg)) {
             InstructorCalendarLegendItem("예정 수업", InsColors.Purple)
@@ -30,8 +33,12 @@ internal fun InstructorCalendarFooter(onTodayClick: () -> Unit, modifier: Modifi
         }
         Spacer(Modifier.weight(1f))
         Box(
-            modifier = Modifier.width(44.dp).height(28.dp).border(1.dp, InsColors.Divider, AppShape.Pill)
-                .clickable(onClick = onTodayClick),
+            modifier =
+                Modifier
+                    .width(44.dp)
+                    .height(28.dp)
+                    .border(1.dp, InsColors.Divider, AppShape.Pill)
+                    .clickable(onClick = onTodayClick),
             contentAlignment = Alignment.Center,
         ) {
             Text("오늘", color = InsColors.TextSecondary, style = MaterialTheme.typography.labelSmall)
@@ -40,7 +47,10 @@ internal fun InstructorCalendarFooter(onTodayClick: () -> Unit, modifier: Modifi
 }
 
 @Composable
-private fun InstructorCalendarLegendItem(text: String, color: Color) {
+private fun InstructorCalendarLegendItem(
+    text: String,
+    color: Color,
+) {
     Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.width(4.dp).height(4.dp).background(color, AppShape.Pill))
         Text(text = text, color = InsColors.TextSecondary, style = MaterialTheme.typography.labelSmall)

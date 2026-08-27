@@ -9,10 +9,10 @@ import platform.CoreGraphics.CGRectMake
 import platform.Foundation.NSError
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLRequest
-import platform.darwin.NSObject
 import platform.WebKit.WKNavigation
 import platform.WebKit.WKNavigationDelegateProtocol
 import platform.WebKit.WKWebView
+import platform.darwin.NSObject
 
 @OptIn(ExperimentalForeignApi::class)
 @Composable
@@ -47,7 +47,8 @@ actual fun PlatformWebView(
 @OptIn(ExperimentalForeignApi::class)
 private class TermsNavigationDelegate(
     private val onLoadingChanged: (Boolean) -> Unit,
-) : NSObject(), WKNavigationDelegateProtocol {
+) : NSObject(),
+    WKNavigationDelegateProtocol {
     @ObjCSignatureOverride
     override fun webView(
         webView: WKWebView,

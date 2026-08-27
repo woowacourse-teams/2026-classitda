@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,8 +21,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppShape
+import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import kotlinx.datetime.DatePeriod
@@ -61,12 +60,13 @@ internal fun InstructorCalendar(
     val weekDays = List(7) { index -> weekStart.plus(DatePeriod(days = index)) }
 
     Column(
-        modifier = modifier.fillMaxWidth().background(InsColors.White).padding(
-            start = AppSpacing.screenPadding,
-            top = AppSpacing.sm,
-            end = AppSpacing.screenPadding,
-            bottom = AppSpacing.cardPadding,
-        ),
+        modifier =
+            modifier.fillMaxWidth().background(InsColors.White).padding(
+                start = AppSpacing.screenPadding,
+                top = AppSpacing.sm,
+                end = AppSpacing.screenPadding,
+                bottom = AppSpacing.cardPadding,
+            ),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
     ) {
         InstructorCalendarHeader(

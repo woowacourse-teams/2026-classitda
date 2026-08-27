@@ -233,11 +233,15 @@ internal fun InstructorScheduleStateless(
         ) {
             item {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "${selectedDate.month.number}월 ${selectedDate.day}일 ${selectedDate.dayOfWeek.koreanName}",
+                        text =
+                            "${selectedDate.month.number}월 ${selectedDate.day}일 " +
+                                selectedDate.dayOfWeek.koreanName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )

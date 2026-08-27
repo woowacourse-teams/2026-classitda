@@ -99,17 +99,19 @@ internal fun EditClassTimePickerDialog(
     }
 }
 
-private fun Int.toHour12(): Int = when {
-    this == 0 -> 12
-    this > 12 -> this - 12
-    else -> this
-}
+private fun Int.toHour12(): Int =
+    when {
+        this == 0 -> 12
+        this > 12 -> this - 12
+        else -> this
+    }
 
-private fun Int.toHour24(isPm: Boolean): Int = when {
-    isPm && this != 12 -> this + 12
-    !isPm && this == 12 -> 0
-    else -> this
-}
+private fun Int.toHour24(isPm: Boolean): Int =
+    when {
+        isPm && this != 12 -> this + 12
+        !isPm && this == 12 -> 0
+        else -> this
+    }
 
 @Preview(name = "수정 화면 시간 선택", showBackground = true)
 @Composable

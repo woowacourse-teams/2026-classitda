@@ -50,9 +50,10 @@ internal fun <T> EditWheelPicker(
             .collect {
                 val layoutInfo = listState.layoutInfo
                 val centerY = layoutInfo.viewportSize.height / 2
-                val centerItem = layoutInfo.visibleItemsInfo.minByOrNull { info ->
-                    abs((info.offset + info.size / 2) - centerY)
-                }
+                val centerItem =
+                    layoutInfo.visibleItemsInfo.minByOrNull { info ->
+                        abs((info.offset + info.size / 2) - centerY)
+                    }
                 centerItem?.let { info ->
                     val centeredIndex = info.index - spacerCount
                     if (centeredIndex in items.indices && centeredIndex != currentSelectedIndex.value) {
@@ -82,11 +83,12 @@ internal fun <T> EditWheelPicker(
                 ) {
                     Text(
                         text = itemText(item),
-                        style = if (isSelected) {
-                            MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                        } else {
-                            MaterialTheme.typography.bodyMedium
-                        },
+                        style =
+                            if (isSelected) {
+                                MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            } else {
+                                MaterialTheme.typography.bodyMedium
+                            },
                         color = if (isSelected) InsColors.Black else InsColors.TextTertiary,
                     )
                 }

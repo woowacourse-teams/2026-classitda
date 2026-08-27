@@ -62,9 +62,10 @@ internal fun EditOutlinedSegmentedToggle(
             ) {
                 Text(
                     text = option,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    ),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        ),
                     color = if (isSelected) InsColors.Purple else InsColors.TextSecondary,
                 )
             }
