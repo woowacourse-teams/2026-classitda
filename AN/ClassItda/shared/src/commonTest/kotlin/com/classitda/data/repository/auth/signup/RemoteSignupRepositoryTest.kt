@@ -1,5 +1,6 @@
 package com.classitda.data.repository.auth.signup
 
+import com.classitda.core.auth.InMemoryAuthTokenStorage
 import com.classitda.core.network.createClassItdaHttpClient
 import com.classitda.data.remote.auth.signup.SignupApi
 import com.classitda.domain.model.auth.signup.GoogleIdToken
@@ -23,6 +24,29 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class RemoteSignupRepositoryTest {
+    @Test
+    fun `Google 로그인 403 응답은 탈퇴 진행 상태로 변환한다`() =
+        runBlocking {
+            val tokenStorage = InMemoryAuthTokenStorage()
+            val engine = MockEngine { respond("", HttpStatusCode.Forbidden) }
+            val client =
+                createClassItdaHttpClient(
+                    engine = engine,
+                    baseUrl = "https://api.classitda.test/",
+                    tokenStorage = tokenStorage,
+                )
+
+            try {
+                val result =
+                    RemoteSignupRepository(SignupApi(client), tokenStorage)
+                        .loginWithGoogle(GoogleIdToken("google-id-token"))
+
+                assertEquals(GoogleLoginResult.WithdrawalPending, result)
+            } finally {
+                client.close()
+            }
+        }
+
     @Test
     fun `확정된 BE 계약으로 회원가입 전체 흐름을 호출한다`() =
         runBlocking {

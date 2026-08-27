@@ -51,10 +51,24 @@ class SignupViewModelTest {
             assertEquals(SignupPage.Welcome, viewModel.uiState.value.page)
             Unit
         }
+
+    @Test
+    fun `Google 로그인 403 결과는 탈퇴 진행 이벤트를 발생시킨다`() =
+        runBlocking {
+            val viewModel = SignupViewModel(RegisteredMemberRepository(GoogleLoginResult.WithdrawalPending))
+            val withdrawalPendingEvent = async(start = CoroutineStart.UNDISPATCHED) {
+                viewModel.events.first()
+            }
+
+            viewModel.loginWithGoogle("google-id-token")
+
+            assertEquals(SignupEvent.WithdrawalPending, withdrawalPendingEvent.await())
+            Unit
+        }
 }
 
-private class RegisteredMemberRepository : SignupRepository {
-    override suspend fun loginWithGoogle(idToken: GoogleIdToken): GoogleLoginResult =
+private class RegisteredMemberRepository(
+    private val loginResult: GoogleLoginResult =
         GoogleLoginResult.Registered(
             LoginTokens(
                 accessToken = "access-token",
@@ -62,7 +76,9 @@ private class RegisteredMemberRepository : SignupRepository {
                 refreshToken = "refresh-token",
                 refreshTokenExpiresInSeconds = 2592000,
             ),
-        )
+        ),
+) : SignupRepository {
+    override suspend fun loginWithGoogle(idToken: GoogleIdToken): GoogleLoginResult = loginResult
 
     override suspend fun getTerms(signupToken: SignupToken): List<SignupTerm> = error("사용하지 않는 동작입니다.")
 

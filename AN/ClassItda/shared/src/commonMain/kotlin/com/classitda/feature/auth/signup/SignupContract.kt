@@ -12,6 +12,8 @@ enum class SignupPage {
 
 sealed interface SignupEvent {
     data object LoginCompleted : SignupEvent
+
+    data object WithdrawalPending : SignupEvent
 }
 
 data class SignupUiState(

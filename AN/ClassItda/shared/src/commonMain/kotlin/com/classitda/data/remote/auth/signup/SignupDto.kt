@@ -9,7 +9,7 @@ internal data class GoogleLoginRequestDto(
 
 @Serializable
 internal data class LoginResponseDto(
-    val status: LoginStatusDto,
+    val status: String,
     val accessToken: String? = null,
     val accessTokenExpiresIn: Long? = null,
     val refreshToken: String? = null,

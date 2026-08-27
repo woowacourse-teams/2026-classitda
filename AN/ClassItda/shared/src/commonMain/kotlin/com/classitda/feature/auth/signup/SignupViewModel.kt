@@ -121,8 +121,17 @@ internal class SignupViewModel(
                                 )
                             }
                         }
+
+                        com.classitda.domain.model.auth.signup.GoogleLoginResult.WithdrawalPending -> {
+                            update { copy(isLoading = false) }
+                            Logger.d("SignupFlow: withdrawal pending screen requested after Google login")
+                            _events.tryEmit(SignupEvent.WithdrawalPending)
+                        }
                     }
-                }.onFailure { error -> showError(error) }
+                }.onFailure { error ->
+                    Logger.e("SignupFlow: Google login failed: ${error.message}")
+                    showError(error)
+                }
         }
     }
 

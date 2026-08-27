@@ -28,15 +28,27 @@ import com.classitda.domain.model.auth.signup.SignupTermCode
 import com.classitda.domain.model.auth.signup.SignupToken
 import com.classitda.domain.model.auth.signup.TermId
 import com.classitda.domain.repository.auth.signup.SignupRepository
+import io.ktor.client.plugins.ResponseException
 
 internal class RemoteSignupRepository(
     private val api: SignupApi,
     private val tokenStorage: AuthTokenStorage = InMemoryAuthTokenStorage(),
 ) : SignupRepository {
     override suspend fun loginWithGoogle(idToken: GoogleIdToken): GoogleLoginResult =
-        api.loginWithGoogle(GoogleLoginRequestDto(idToken.value)).toDomain().also { result ->
-            if (result is GoogleLoginResult.Registered) {
-                tokenStorage.write(result.tokens)
+        try {
+            api.loginWithGoogle(GoogleLoginRequestDto(idToken.value)).also { response ->
+                Logger.d("SignupFlow: Google login API response status=${response.status}")
+            }.toDomain().also { result ->
+                if (result is GoogleLoginResult.Registered) {
+                    tokenStorage.write(result.tokens)
+                }
+            }
+        } catch (exception: ResponseException) {
+            if (exception.response.status.value == 403) {
+                Logger.d("SignupFlow: Google login returned 403; treating account as withdrawal pending")
+                GoogleLoginResult.WithdrawalPending
+            } else {
+                throw exception
             }
         }
 
@@ -98,16 +110,18 @@ internal class RemoteSignupRepository(
 
 private fun LoginResponseDto.toDomain(): GoogleLoginResult =
     when (status) {
-        LoginStatusDto.REGISTERED -> {
+        LoginStatusDto.REGISTERED.name -> {
             GoogleLoginResult.Registered(toLoginTokens())
         }
 
-        LoginStatusDto.REGISTRATION_REQUIRED -> {
+        LoginStatusDto.REGISTRATION_REQUIRED.name -> {
             GoogleLoginResult.RegistrationRequired(
                 signupToken = SignupToken(requireNotNull(signupToken)),
                 expiresInSeconds = requireNotNull(signupTokenExpiresIn),
             )
         }
+
+        else -> error("지원하지 않는 Google 로그인 상태: $status")
     }
 
 private fun LoginResponseDto.toLoginTokens() =

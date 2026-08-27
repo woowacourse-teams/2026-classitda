@@ -36,6 +36,7 @@ private const val PRIVACY_POLICY_URL = "https://classitda.com/privacy-policy"
 internal fun SignupScreen(
     onSignupCompleted: () -> Unit,
     onLoginCompleted: () -> Unit = {},
+    onWithdrawalPending: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SignupViewModel = koinViewModel(),
 ) {
@@ -52,6 +53,7 @@ internal fun SignupScreen(
         viewModel.events.collect { event ->
             when (event) {
                 SignupEvent.LoginCompleted -> onLoginCompleted()
+                SignupEvent.WithdrawalPending -> onWithdrawalPending()
             }
         }
     }

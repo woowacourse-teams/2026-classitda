@@ -11,8 +11,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
 import com.classitda.core.auth.InMemoryAuthTokenStorage
-import com.classitda.core.auth.InMemoryWithdrawalStateStorage
-import com.classitda.core.auth.WithdrawalStateStorage
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.navigation.instructor.InstructorRootRoute
@@ -32,12 +30,10 @@ import org.koin.dsl.koinConfiguration
 @Preview
 fun App(
     tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() },
-    withdrawalStateStorage: WithdrawalStateStorage = remember { InMemoryWithdrawalStateStorage() },
 ) {
     var appRoute by remember {
         mutableStateOf(
             when {
-                withdrawalStateStorage.isPending() -> AppRoute.WithdrawalPending
                 tokenStorage.read() == null -> AppRoute.Signup
                 else -> AppRoute.Home
             },
@@ -73,6 +69,7 @@ fun App(
                     SignupRoute(
                         onSignupCompleted = { appRoute = AppRoute.Home },
                         onLoginCompleted = { appRoute = AppRoute.Home },
+                        onWithdrawalPending = { appRoute = AppRoute.WithdrawalPending },
                     )
                 }
 
@@ -92,10 +89,9 @@ fun App(
                             }
                         },
                         onWithdrawalCompleted = {
-                            Logger.d("AuthSession: withdrawal succeeded, saving pending state")
-                            withdrawalStateStorage.markPending()
+                            Logger.d("AuthSession: withdrawal succeeded, switching to Google login screen")
                             tokenStorage.clear()
-                            appRoute = AppRoute.WithdrawalPending
+                            appRoute = AppRoute.Signup
                         },
                     )
                 }
