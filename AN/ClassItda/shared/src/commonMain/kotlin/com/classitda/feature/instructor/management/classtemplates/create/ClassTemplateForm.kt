@@ -5,10 +5,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,119 +68,134 @@ internal fun ClassTemplateForm(
             durationMinutes > 0 &&
             (!isRepeating || selectedDays.isNotEmpty())
 
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-            SectionLabel(text = "수업 유형 *")
-            OutlinedSegmentedToggle(
-                options = ClassFormOption.entries.map { it.label },
-                selectedIndex = ClassFormOption.entries.indexOf(classType),
-                onOptionSelected = { classType = ClassFormOption.entries[it] },
-            )
-        }
-
-        CategoryChipSelector(
-            label = "카테고리 *",
-            allCategories = classTypes,
-            selectedCategory = selectedCategory,
-            onCategorySelected = { selectedCategory = it },
-        )
-
-        CreateTextField(
-            label = "수업명 *",
-            value = title,
-            placeholder = "예: 리포머 비기너 클래스",
-            onValueChange = { title = it },
-        )
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg),
-        ) {
-            CreateTextField(
-                label = "기본 정원 *",
-                value = capacityText,
-                placeholder = "0",
-                onValueChange = { capacityText = it.filter { c -> c.isDigit() } },
-                keyboardType = KeyboardType.Number,
-                trailingText = "명",
-                modifier = Modifier.weight(1f),
-            )
-            CreateTextField(
-                label = "진행 시간 *",
-                value = durationMinutesText,
-                placeholder = "0",
-                onValueChange = { durationMinutesText = it.filter { c -> c.isDigit() } },
-                keyboardType = KeyboardType.Number,
-                trailingText = "분",
-                modifier = Modifier.weight(1f),
-            )
-        }
-
-        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-            SectionLabel(text = "반복 여부 *")
-            OutlinedSegmentedToggle(
-                options = listOf("반복함", "반복 없음"),
-                selectedIndex = if (isRepeating) 0 else 1,
-                onOptionSelected = { isRepeating = it == 0 },
-            )
-
-            if (isRepeating) {
-                WeekdaySelector(
-                    selectedDays = selectedDays,
-                    onDayToggled = { day ->
-                        selectedDays =
-                            if (day in selectedDays) selectedDays - day else selectedDays + day
+    Scaffold(
+        modifier = modifier,
+        containerColor = InsColors.Background,
+        bottomBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding(),
+                color = InsColors.Background,
+            ) {
+                PrimaryButton(
+                    text = submitButtonText,
+                    enabled = isFormValid,
+                    onClick = {
+                        onSubmit(
+                            ClassTemplateDraftUiModel(
+                                classType = classType,
+                                category = selectedCategory,
+                                title = title,
+                                capacity = capacity,
+                                durationMinutes = durationMinutes,
+                                isRepeating = isRepeating,
+                                repeatDays = if (isRepeating) selectedDays else emptySet(),
+                                startTime = startTime,
+                                description = description,
+                            ),
+                        )
                     },
-                    modifier = Modifier.padding(top = AppSpacing.sm),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
                 )
             }
-        }
+        },
+    ) { contentPadding ->
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(contentPadding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+                SectionLabel(text = "수업 유형 *")
+                OutlinedSegmentedToggle(
+                    options = ClassFormOption.entries.map { it.label },
+                    selectedIndex = ClassFormOption.entries.indexOf(classType),
+                    onOptionSelected = { classType = ClassFormOption.entries[it] },
+                )
+            }
 
-        if (isRepeating) {
-            ClassStartTimeField(
-                label = "수업 시작 *",
-                startTimeText = formatAmPmTime(startTime),
-                endTimeText = formatAmPmTime(endTime),
-                onStartTimeClick = { isTimePickerVisible = true },
+            CategoryChipSelector(
+                label = "카테고리 *",
+                allCategories = classTypes,
+                selectedCategory = selectedCategory,
+                onCategorySelected = { selectedCategory = it },
+            )
+
+            CreateTextField(
+                label = "수업명 *",
+                value = title,
+                placeholder = "예: 리포머 비기너 클래스",
+                onValueChange = { title = it },
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+            ) {
+                CreateTextField(
+                    label = "기본 정원 *",
+                    value = capacityText,
+                    placeholder = "0",
+                    onValueChange = { capacityText = it.filter { c -> c.isDigit() } },
+                    keyboardType = KeyboardType.Number,
+                    trailingText = "명",
+                    modifier = Modifier.weight(1f),
+                )
+                CreateTextField(
+                    label = "진행 시간 *",
+                    value = durationMinutesText,
+                    placeholder = "0",
+                    onValueChange = { durationMinutesText = it.filter { c -> c.isDigit() } },
+                    keyboardType = KeyboardType.Number,
+                    trailingText = "분",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+                SectionLabel(text = "반복 여부 *")
+                OutlinedSegmentedToggle(
+                    options = listOf("반복함", "반복 없음"),
+                    selectedIndex = if (isRepeating) 0 else 1,
+                    onOptionSelected = { isRepeating = it == 0 },
+                )
+
+                if (isRepeating) {
+                    WeekdaySelector(
+                        selectedDays = selectedDays,
+                        onDayToggled = { day ->
+                            selectedDays =
+                                if (day in selectedDays) selectedDays - day else selectedDays + day
+                        },
+                        modifier = Modifier.padding(top = AppSpacing.sm),
+                    )
+                }
+            }
+
+            if (isRepeating) {
+                ClassStartTimeField(
+                    label = "수업 시작 *",
+                    startTimeText = formatAmPmTime(startTime),
+                    endTimeText = formatAmPmTime(endTime),
+                    onStartTimeClick = { isTimePickerVisible = true },
+                )
+            }
+
+            CreateTextField(
+                label = "상세설명",
+                value = description,
+                placeholder = "예: 리포머룸, 숙련자 추천, 준비물 - 수건",
+                onValueChange = { description = it },
+                singleLine = false,
+                minLines = 3,
             )
         }
-
-        CreateTextField(
-            label = "상세설명",
-            value = description,
-            placeholder = "예: 리포머룸, 숙련자 추천, 준비물 - 수건",
-            onValueChange = { description = it },
-            singleLine = false,
-            minLines = 3,
-        )
-
-        PrimaryButton(
-            text = submitButtonText,
-            enabled = isFormValid,
-            onClick = {
-                onSubmit(
-                    ClassTemplateDraftUiModel(
-                        classType = classType,
-                        category = selectedCategory,
-                        title = title,
-                        capacity = capacity,
-                        durationMinutes = durationMinutes,
-                        isRepeating = isRepeating,
-                        repeatDays = if (isRepeating) selectedDays else emptySet(),
-                        startTime = startTime,
-                        description = description,
-                    ),
-                )
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 
     if (isTimePickerVisible) {
