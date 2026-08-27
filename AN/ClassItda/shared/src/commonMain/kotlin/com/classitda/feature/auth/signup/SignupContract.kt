@@ -10,6 +10,10 @@ enum class SignupPage {
     Completed,
 }
 
+sealed interface SignupEvent {
+    data object LoginCompleted : SignupEvent
+}
+
 data class SignupUiState(
     val page: SignupPage = SignupPage.Welcome,
     val name: String = "",

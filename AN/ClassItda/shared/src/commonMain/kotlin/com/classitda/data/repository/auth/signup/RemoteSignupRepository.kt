@@ -1,5 +1,6 @@
 package com.classitda.data.repository.auth.signup
 
+import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
 import com.classitda.core.auth.InMemoryAuthTokenStorage
 import com.classitda.data.remote.auth.signup.GoogleLoginRequestDto
@@ -77,11 +78,20 @@ internal class RemoteSignupRepository(
     }
 
     override suspend fun logout() {
-        val tokens = tokenStorage.read() ?: return
+        val tokens = tokenStorage.read() ?: run {
+            Logger.d("AuthSession: logout skipped because no local token exists")
+            return
+        }
+        Logger.d("AuthSession: logout API call with local tokens")
         runCatching {
             api.logout(tokens.accessToken, LogoutRequestDto(tokens.refreshToken))
+        }.onSuccess {
+            Logger.d("AuthSession: logout API succeeded")
+        }.onFailure { error ->
+            Logger.e("AuthSession: logout API failed: ${error.message}")
         }.also {
             tokenStorage.clear()
+            Logger.d("AuthSession: local tokens cleared")
         }
     }
 }

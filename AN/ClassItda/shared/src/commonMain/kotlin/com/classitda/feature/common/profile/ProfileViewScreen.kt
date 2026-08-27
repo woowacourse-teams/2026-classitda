@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import co.touchlab.kermit.Logger
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_edit
@@ -92,7 +93,10 @@ fun ProfileViewScreen(
             is ProfileViewUiState.Content -> {
                 ProfileViewContent(
                     profile = uiState.profile,
-                    onLogout = { onAction(ProfileViewAction.RequestLogout) },
+                    onLogout = {
+                        Logger.d("ProfileLogout: logout button clicked")
+                        onAction(ProfileViewAction.RequestLogout)
+                    },
                     onWithdrawal = { onAction(ProfileViewAction.RequestWithdrawal) },
                     modifier = Modifier.padding(innerPadding),
                 )

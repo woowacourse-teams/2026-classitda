@@ -99,7 +99,10 @@ internal fun InstructorProfileViewRoute(
         when (action) {
             ProfileViewAction.Back -> onBack()
             ProfileViewAction.OpenEdit -> onOpenEdit()
-            ProfileViewAction.RequestLogout -> onRequestLogout()
+            ProfileViewAction.RequestLogout -> {
+                Logger.d("ProfileLogout: instructor F02 logout action received")
+                onRequestLogout()
+            }
             ProfileViewAction.RequestWithdrawal -> onRequestWithdrawal()
             ProfileViewAction.Retry -> viewModel.onAction(action)
         }

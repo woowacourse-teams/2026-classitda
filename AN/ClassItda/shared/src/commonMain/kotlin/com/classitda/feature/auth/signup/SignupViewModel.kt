@@ -2,6 +2,7 @@ package com.classitda.feature.auth.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import co.touchlab.kermit.Logger
 import com.classitda.domain.model.auth.signup.GoogleIdToken
 import com.classitda.domain.model.auth.signup.PhoneVerificationCode
 import com.classitda.domain.model.auth.signup.SignupName
@@ -10,8 +11,11 @@ import com.classitda.domain.model.auth.signup.SignupToken
 import com.classitda.domain.repository.auth.signup.SignupRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -21,7 +25,15 @@ internal class SignupViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(SignupUiState())
     val uiState: StateFlow<SignupUiState> = _uiState.asStateFlow()
+    private val _events = MutableSharedFlow<SignupEvent>(extraBufferCapacity = 1)
+    val events: SharedFlow<SignupEvent> = _events.asSharedFlow()
     private var verificationTimerJob: Job? = null
+
+    fun reset() {
+        verificationTimerJob?.cancel()
+        verificationTimerJob = null
+        _uiState.value = SignupUiState()
+    }
 
     fun onAction(action: SignupAction) {
         when (action) {
@@ -91,10 +103,13 @@ internal class SignupViewModel(
                 .onSuccess { result ->
                     when (result) {
                         is com.classitda.domain.model.auth.signup.GoogleLoginResult.Registered -> {
-                            update { copy(isLoading = false, page = SignupPage.Completed) }
+                            update { copy(isLoading = false) }
+                            Logger.d("SignupFlow: existing member Google login completed")
+                            _events.tryEmit(SignupEvent.LoginCompleted)
                         }
 
                         is com.classitda.domain.model.auth.signup.GoogleLoginResult.RegistrationRequired -> {
+                            Logger.d("SignupFlow: registration required after Google login")
                             val terms = repository.getTerms(result.signupToken)
                             update {
                                 copy(

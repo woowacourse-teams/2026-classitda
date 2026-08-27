@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import co.touchlab.kermit.Logger
 import com.classitda.domain.model.instructor.mypage.InstructorMemberId
 import com.classitda.domain.model.instructor.mypage.InstructorStudioId
 import com.classitda.feature.common.privacypolicy.PrivacyPolicyRoute
@@ -37,6 +38,7 @@ private data object InstructorPrivacyPolicyDestination
 internal fun InstructorMyPageNavHost(
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    onLogout: () -> Unit = {},
 ) {
     val navController = rememberNavController()
     var profileRefreshToken by remember { mutableStateOf(0) }
@@ -69,7 +71,10 @@ internal fun InstructorMyPageNavHost(
             InstructorProfileViewRoute(
                 onBack = { navController.popBackStack() },
                 onOpenEdit = { navController.navigate(InstructorMyPageDestination.F03) },
-                onRequestLogout = {},
+                onRequestLogout = {
+                    Logger.d("ProfileLogout: instructor my page nav host forwarded logout")
+                    onLogout()
+                },
                 onRequestWithdrawal = {},
                 refreshToken = profileRefreshToken,
             )

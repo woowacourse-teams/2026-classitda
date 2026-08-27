@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,7 @@ private const val PRIVACY_POLICY_URL = "https://classitda.com/privacy-policy"
 @Composable
 internal fun SignupScreen(
     onSignupCompleted: () -> Unit,
+    onLoginCompleted: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SignupViewModel = koinViewModel(),
 ) {
@@ -41,6 +43,18 @@ internal fun SignupScreen(
     val googleSignInProvider = rememberGoogleSignInProvider()
     val scope = rememberCoroutineScope()
     var selectedTerm by remember { mutableStateOf<SignupTermLink?>(null) }
+
+    LaunchedEffect(Unit) {
+        viewModel.reset()
+    }
+
+    LaunchedEffect(viewModel) {
+        viewModel.events.collect { event ->
+            when (event) {
+                SignupEvent.LoginCompleted -> onLoginCompleted()
+            }
+        }
+    }
 
     if (selectedTerm == null) {
         SignupScreenStateless(
