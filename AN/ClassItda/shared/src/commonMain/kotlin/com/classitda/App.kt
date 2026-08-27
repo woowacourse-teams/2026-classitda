@@ -28,9 +28,7 @@ import org.koin.dsl.koinConfiguration
 
 @Composable
 @Preview
-fun App(
-    tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() },
-) {
+fun App(tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() }) {
     var appRoute by remember {
         mutableStateOf(
             when {
@@ -63,7 +61,9 @@ fun App(
             val coroutineScope = rememberCoroutineScope()
 
             when (appRoute) {
-                AppRoute.WithdrawalPending -> WithdrawalPendingScreen()
+                AppRoute.WithdrawalPending -> {
+                    WithdrawalPendingScreen()
+                }
 
                 AppRoute.Signup -> {
                     SignupRoute(

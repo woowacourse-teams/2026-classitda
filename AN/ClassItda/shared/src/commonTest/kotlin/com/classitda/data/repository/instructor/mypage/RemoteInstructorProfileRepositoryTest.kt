@@ -45,7 +45,9 @@ class RemoteInstructorProfileRepositoryTest {
                             )
                         }
 
-                        else -> error("예상하지 못한 요청입니다: ${request.url}")
+                        else -> {
+                            error("예상하지 못한 요청입니다: ${request.url}")
+                        }
                     }
                 }
             val client =

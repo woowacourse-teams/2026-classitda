@@ -36,8 +36,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_forward
-import classitda.shared.generated.resources.instructor_my_page_edit_profile
 import classitda.shared.generated.resources.instructor_my_page_description
+import classitda.shared.generated.resources.instructor_my_page_edit_profile
 import classitda.shared.generated.resources.instructor_my_page_error_description
 import classitda.shared.generated.resources.instructor_my_page_error_title
 import classitda.shared.generated.resources.instructor_my_page_loading
@@ -47,8 +47,8 @@ import classitda.shared.generated.resources.instructor_my_page_studio_management
 import classitda.shared.generated.resources.instructor_my_page_title
 import classitda.shared.generated.resources.my_page_privacy_policy
 import coil3.compose.SubcomposeAsyncImage
-import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppShape
+import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType

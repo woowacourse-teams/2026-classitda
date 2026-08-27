@@ -37,14 +37,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import co.touchlab.kermit.Logger
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.ic_arrow_back
 import classitda.shared.generated.resources.ic_edit
+import classitda.shared.generated.resources.profile_email_unavailable
 import classitda.shared.generated.resources.profile_view_back
 import classitda.shared.generated.resources.profile_view_edit
 import classitda.shared.generated.resources.profile_view_email
-import classitda.shared.generated.resources.profile_email_unavailable
 import classitda.shared.generated.resources.profile_view_error_description
 import classitda.shared.generated.resources.profile_view_error_title
 import classitda.shared.generated.resources.profile_view_loading
@@ -54,6 +53,7 @@ import classitda.shared.generated.resources.profile_view_phone_number
 import classitda.shared.generated.resources.profile_view_retry
 import classitda.shared.generated.resources.profile_view_title
 import classitda.shared.generated.resources.profile_view_withdrawal
+import co.touchlab.kermit.Logger
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme

@@ -4,11 +4,11 @@ import com.classitda.core.network.createClassItdaHttpClient
 import com.classitda.data.repository.instructor.mypage.DemoInstructorMyPageRepository
 import com.classitda.data.repository.instructor.mypage.RemoteInstructorProfileRepository
 import com.classitda.data.repository.instructor.mypage.RemoteInstructorStudioRepository
-import com.classitda.domain.repository.instructor.mypage.InstructorProfileRepository
+import com.classitda.di.instructor.instructorModule
 import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorProfileRepository
 import com.classitda.domain.repository.instructor.mypage.InstructorStudioRepository
 import com.classitda.domain.repository.instructor.mypage.StudioImageUploader
-import com.classitda.di.instructor.instructorModule
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import org.koin.core.qualifier.named

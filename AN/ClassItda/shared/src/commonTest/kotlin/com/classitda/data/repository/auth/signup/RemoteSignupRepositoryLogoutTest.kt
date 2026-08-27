@@ -20,16 +20,17 @@ class RemoteSignupRepositoryLogoutTest {
     @Test
     fun `로그아웃은 현재 기기의 refresh token을 전송하고 로컬 토큰을 삭제한다`() =
         runBlocking {
-            val tokenStorage = InMemoryAuthTokenStorage().apply {
-                write(
-                    LoginTokens(
-                        accessToken = "access-token",
-                        accessTokenExpiresInSeconds = 3600,
-                        refreshToken = "refresh-token",
-                        refreshTokenExpiresInSeconds = 2592000,
-                    ),
-                )
-            }
+            val tokenStorage =
+                InMemoryAuthTokenStorage().apply {
+                    write(
+                        LoginTokens(
+                            accessToken = "access-token",
+                            accessTokenExpiresInSeconds = 3600,
+                            refreshToken = "refresh-token",
+                            refreshTokenExpiresInSeconds = 2592000,
+                        ),
+                    )
+                }
             val engine =
                 MockEngine { request ->
                     assertEquals(HttpMethod.Post, request.method)
@@ -64,16 +65,17 @@ class RemoteSignupRepositoryLogoutTest {
     @Test
     fun `로그아웃 API가 실패해도 로컬 토큰을 삭제한다`() =
         runBlocking {
-            val tokenStorage = InMemoryAuthTokenStorage().apply {
-                write(
-                    LoginTokens(
-                        accessToken = "access-token",
-                        accessTokenExpiresInSeconds = 3600,
-                        refreshToken = "refresh-token",
-                        refreshTokenExpiresInSeconds = 2592000,
-                    ),
-                )
-            }
+            val tokenStorage =
+                InMemoryAuthTokenStorage().apply {
+                    write(
+                        LoginTokens(
+                            accessToken = "access-token",
+                            accessTokenExpiresInSeconds = 3600,
+                            refreshToken = "refresh-token",
+                            refreshTokenExpiresInSeconds = 2592000,
+                        ),
+                    )
+                }
             val engine =
                 MockEngine {
                     respond("", HttpStatusCode.InternalServerError)

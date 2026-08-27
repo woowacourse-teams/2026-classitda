@@ -41,9 +41,10 @@ class SignupViewModelTest {
     fun `기존 회원의 Google 로그인은 회원가입 화면 없이 로그인 완료 상태가 된다`() =
         runBlocking {
             val viewModel = SignupViewModel(RegisteredMemberRepository())
-            val loginCompletedEvent = async(start = CoroutineStart.UNDISPATCHED) {
-                viewModel.events.first()
-            }
+            val loginCompletedEvent =
+                async(start = CoroutineStart.UNDISPATCHED) {
+                    viewModel.events.first()
+                }
 
             viewModel.loginWithGoogle("google-id-token")
 
@@ -56,9 +57,10 @@ class SignupViewModelTest {
     fun `Google 로그인 403 결과는 탈퇴 진행 이벤트를 발생시킨다`() =
         runBlocking {
             val viewModel = SignupViewModel(RegisteredMemberRepository(GoogleLoginResult.WithdrawalPending))
-            val withdrawalPendingEvent = async(start = CoroutineStart.UNDISPATCHED) {
-                viewModel.events.first()
-            }
+            val withdrawalPendingEvent =
+                async(start = CoroutineStart.UNDISPATCHED) {
+                    viewModel.events.first()
+                }
 
             viewModel.loginWithGoogle("google-id-token")
 

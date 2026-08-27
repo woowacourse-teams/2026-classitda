@@ -36,9 +36,9 @@ internal class RemoteSignupRepository(
 ) : SignupRepository {
     override suspend fun loginWithGoogle(idToken: GoogleIdToken): GoogleLoginResult =
         try {
-            api.loginWithGoogle(GoogleLoginRequestDto(idToken.value)).also { response ->
-                Logger.d("SignupFlow: Google login API response status=${response.status}")
-            }.toDomain().also { result ->
+            val response = api.loginWithGoogle(GoogleLoginRequestDto(idToken.value))
+            Logger.d("SignupFlow: Google login API response status=${response.status}")
+            response.toDomain().also { result ->
                 if (result is GoogleLoginResult.Registered) {
                     tokenStorage.write(result.tokens)
                 }
@@ -90,10 +90,12 @@ internal class RemoteSignupRepository(
     }
 
     override suspend fun logout() {
-        val tokens = tokenStorage.read() ?: run {
-            Logger.d("AuthSession: logout skipped because no local token exists")
-            return
-        }
+        val tokens =
+            tokenStorage.read()
+                ?: run {
+                    Logger.d("AuthSession: logout skipped because no local token exists")
+                    return
+                }
         Logger.d("AuthSession: logout API call with local tokens")
         runCatching {
             api.logout(tokens.accessToken, LogoutRequestDto(tokens.refreshToken))
@@ -121,7 +123,9 @@ private fun LoginResponseDto.toDomain(): GoogleLoginResult =
             )
         }
 
-        else -> error("지원하지 않는 Google 로그인 상태: $status")
+        else -> {
+            error("지원하지 않는 Google 로그인 상태: $status")
+        }
     }
 
 private fun LoginResponseDto.toLoginTokens() =

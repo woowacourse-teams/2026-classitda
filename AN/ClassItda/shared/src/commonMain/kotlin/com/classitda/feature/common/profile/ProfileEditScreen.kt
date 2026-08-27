@@ -57,7 +57,6 @@ import classitda.shared.generated.resources.profile_edit_complete
 import classitda.shared.generated.resources.profile_edit_email
 import classitda.shared.generated.resources.profile_edit_error_description
 import classitda.shared.generated.resources.profile_edit_error_title
-import classitda.shared.generated.resources.profile_email_unavailable
 import classitda.shared.generated.resources.profile_edit_loading
 import classitda.shared.generated.resources.profile_edit_name
 import classitda.shared.generated.resources.profile_edit_name_input
@@ -65,6 +64,7 @@ import classitda.shared.generated.resources.profile_edit_phone_number
 import classitda.shared.generated.resources.profile_edit_retry
 import classitda.shared.generated.resources.profile_edit_save_failed
 import classitda.shared.generated.resources.profile_edit_saving
+import classitda.shared.generated.resources.profile_email_unavailable
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -268,9 +268,7 @@ private fun ProfileEditContent(
 }
 
 @Composable
-private fun ProfileAvatar(
-    name: String,
-) {
+private fun ProfileAvatar(name: String) {
     val typography = appTypography()
 
     Box(
@@ -350,9 +348,7 @@ private fun EditableNameField(
 }
 
 @Composable
-private fun ReadOnlyPhoneNumberField(
-    phoneNumber: String,
-) {
+private fun ReadOnlyPhoneNumberField(phoneNumber: String) {
     val typography = appTypography()
 
     Column(

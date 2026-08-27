@@ -7,15 +7,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.touchlab.kermit.Logger
 import classitda.shared.generated.resources.Res
 import classitda.shared.generated.resources.withdrawal_conflict
 import classitda.shared.generated.resources.withdrawal_failed
+import co.touchlab.kermit.Logger
 import com.classitda.core.platform.KakaoPostcodeResult
 import com.classitda.core.platform.KakaoPostcodeSearchState
 import com.classitda.core.platform.StudioImagePickerError
@@ -64,10 +64,10 @@ import com.classitda.feature.instructor.mypage.studio.StudioRegistrationViewMode
 import com.classitda.feature.instructor.mypage.studio.address.KakaoPostcodeSearchDialog
 import com.classitda.feature.instructor.mypage.studio.image.StudioImagePickerOverlay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
-import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun InstructorMyPageRoute(
@@ -122,17 +122,27 @@ internal fun InstructorProfileViewRoute(
     LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
     ProfileViewScreen(uiState, onAction = { action ->
         when (action) {
-            ProfileViewAction.Back -> onBack()
-            ProfileViewAction.OpenEdit -> onOpenEdit()
+            ProfileViewAction.Back -> {
+                onBack()
+            }
+
+            ProfileViewAction.OpenEdit -> {
+                onOpenEdit()
+            }
+
             ProfileViewAction.RequestLogout -> {
                 Logger.d("ProfileLogout: instructor F02 logout action received")
                 onRequestLogout()
             }
+
             ProfileViewAction.RequestWithdrawal -> {
                 withdrawalFailureReason = null
                 isWithdrawalDialogVisible = true
             }
-            ProfileViewAction.Retry -> viewModel.onAction(action)
+
+            ProfileViewAction.Retry -> {
+                viewModel.onAction(action)
+            }
         }
     }, modifier = modifier)
 

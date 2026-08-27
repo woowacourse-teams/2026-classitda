@@ -34,9 +34,7 @@ private fun MemberMeResponseDto.toDomain() =
         email = email,
     )
 
-private suspend inline fun <T> runRemoteQuery(
-    block: suspend () -> T,
-): InstructorMyPageResult<T> =
+private suspend inline fun <T> runRemoteQuery(block: suspend () -> T): InstructorMyPageResult<T> =
     try {
         InstructorMyPageResult.Success(block())
     } catch (exception: CancellationException) {

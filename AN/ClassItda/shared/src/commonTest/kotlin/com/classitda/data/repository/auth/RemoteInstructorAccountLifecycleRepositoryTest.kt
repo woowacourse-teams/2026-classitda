@@ -59,15 +59,16 @@ class RemoteInstructorAccountLifecycleRepositoryTest {
         createClassItdaHttpClient(
             engine = engine,
             baseUrl = "https://api.classitda.test/",
-            tokenStorage = InMemoryAuthTokenStorage().apply {
-                write(
-                    LoginTokens(
-                        accessToken = "access-token",
-                        accessTokenExpiresInSeconds = 3600,
-                        refreshToken = "refresh-token",
-                        refreshTokenExpiresInSeconds = 86400,
-                    ),
-                )
-            },
+            tokenStorage =
+                InMemoryAuthTokenStorage().apply {
+                    write(
+                        LoginTokens(
+                            accessToken = "access-token",
+                            accessTokenExpiresInSeconds = 3600,
+                            refreshToken = "refresh-token",
+                            refreshTokenExpiresInSeconds = 86400,
+                        ),
+                    )
+                },
         )
 }
