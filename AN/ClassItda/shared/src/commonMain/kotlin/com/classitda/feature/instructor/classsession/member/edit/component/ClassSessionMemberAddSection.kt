@@ -41,7 +41,7 @@ internal fun ClassSessionMemberAddSection(
             OutlinedTextField(
                 value = "",
                 onValueChange = {},
-                enabled = false,
+                readOnly = true,
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = {
                     androidx.compose.material3.Icon(
