@@ -22,14 +22,14 @@ internal fun ClassTypeResponseDto.toDomain(): ClassType =
 internal fun ClassTemplateResponseDto.toDomain(): ClassTemplate =
     ClassTemplate(
         id = id.toString(),
-        tags = classTypes.map { it.name },
+        tags = listOf(classType.name),
         title = name,
         classForm = classForm.toDomain(),
         durationMinutes = durationMinutes,
         capacity = capacity,
         schedule = toScheduleOrNull(),
         description = description.orEmpty(),
-        classTypeIds = classTypes.map { it.id.toString() },
+        classTypeIds = listOf(classType.id.toString()),
     )
 
 private fun ClassTemplateResponseDto.toScheduleOrNull(): ClassTemplateSchedule? {
@@ -52,7 +52,7 @@ internal fun ClassTemplate.toCreateRequestDto(): ClassTemplateCreateRequestDto {
         startTime = schedule.startTime.toApiTimeString(),
         recurringDays = schedule.repeatDays.map { it.toDto() },
         capacity = capacity,
-        classTypeIds = classTypeIds.toRequestIds(),
+        classTypeId = classTypeIds.toSingleRequestId(),
     )
 }
 
@@ -66,13 +66,13 @@ internal fun ClassTemplate.toUpdateRequestDto(): ClassTemplateUpdateRequestDto {
         startTime = schedule.startTime.toApiTimeString(),
         recurringDays = schedule.repeatDays.map { it.toDto() },
         capacity = capacity,
-        classTypeIds = classTypeIds.toRequestIds(),
+        classTypeId = classTypeIds.toSingleRequestId(),
     )
 }
 
-private fun List<String>.toRequestIds(): List<Long> {
-    require(isNotEmpty()) { "수업 종류를 한 개 이상 선택해야 합니다." }
-    return map { it.toClassTypeId() }
+private fun List<String>.toSingleRequestId(): Long {
+    val id = singleOrNull() ?: error("수업 종류를 한 개 선택해야 합니다.")
+    return id.toClassTypeId()
 }
 
 internal fun ClassFormDto.toDomain(): ClassForm =
