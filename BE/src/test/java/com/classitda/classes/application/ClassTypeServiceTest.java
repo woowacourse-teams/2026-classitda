@@ -17,8 +17,6 @@ import com.classitda.classes.fixture.ClassTypeFixture;
 import com.classitda.classes.presentation.dto.ClassTypeResponse;
 import com.classitda.classes.presentation.dto.ClassTypeUpdateRequest;
 import com.classitda.member.domain.Member;
-import com.classitda.studio.application.StudioPermissionService;
-import com.classitda.studio.application.StudioPolicyService;
 import com.classitda.studio.application.StudioService;
 import com.classitda.studio.domain.MembershipStatus;
 import com.classitda.studio.domain.PermissionCode;
@@ -32,7 +30,7 @@ import com.classitda.studio.domain.repository.StudioRoleRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import jakarta.persistence.EntityManager;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -41,13 +39,11 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@Import({ClassTypeService.class, StudioService.class, StudioPermissionService.class, StudioPolicyService.class})
-@MySqlRepositoryTest
+@MySqlDataJpaTest
 class ClassTypeServiceTest {
 
     private final ClassTypeService classTypeService;

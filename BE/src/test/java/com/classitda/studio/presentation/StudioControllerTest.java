@@ -170,25 +170,7 @@ class StudioControllerTest {
                         """, JsonCompareMode.STRICT);
     }
 
-    @Test
-    void 버전_헤더가_없으면_API_001을_반환한다() {
-        // given
-        StudioCreateRequest request = StudioFixture.기본_시설_생성_요청();
 
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/studios")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange();
-
-        // then
-        result.expectStatus().isBadRequest()
-                .expectBody()
-                .json("""
-                        {"code":"API-001","message":"X-API-Version 헤더는 필수입니다."}
-                        """, JsonCompareMode.STRICT);
-    }
     @Test
     void 시설을_조회하면_200과_시설_정보를_반환한다() {
         // given

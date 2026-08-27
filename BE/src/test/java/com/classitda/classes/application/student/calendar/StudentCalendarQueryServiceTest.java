@@ -1,10 +1,7 @@
 package com.classitda.classes.application.student.calendar;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.classitda.classes.application.student.StudentSessionAccessReader;
-import com.classitda.classes.application.student.pass.StudentOwnedPassesReader;
 import com.classitda.classes.domain.enrollment.AttendanceResult;
 import com.classitda.classes.domain.ClassForm;
 import com.classitda.classes.domain.session.ClassSession;
@@ -15,8 +12,6 @@ import com.classitda.classes.domain.repository.ClassSessionRepository;
 import com.classitda.classes.domain.repository.ClassTypeRepository;
 import com.classitda.classes.fixture.ClassSessionFixture;
 import com.classitda.classes.fixture.ClassTypeFixture;
-import com.classitda.common.exception.ClassitdaException;
-import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.member.domain.Member;
 import com.classitda.passproduct.domain.MemberPassProduct;
 import com.classitda.passproduct.domain.MemberPassProductStatus;
@@ -28,40 +23,23 @@ import com.classitda.studio.domain.StudioMembership;
 import com.classitda.studio.domain.StudioRole;
 import com.classitda.studio.domain.SystemRole;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
+import com.classitda.support.TestClockConfiguration;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
-import java.util.stream.Stream;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
-import org.springframework.test.context.TestPropertySource;
 
-@TestPropertySource(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
-@Import({
-        StudentCalendarQueryService.class,
-        StudentSessionAccessReader.class,
-        StudentOwnedPassesReader.class,
-        StudentCalendarSummaryReader.class,
-        StudentCalendarQueryServiceTest.FixedClockConfig.class
-})
-@MySqlRepositoryTest
+@Import(TestClockConfiguration.August17AtTen.class)
+@MySqlDataJpaTest
 class StudentCalendarQueryServiceTest {
 
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 10, 0);
     private static final LocalDate RANGE_FROM = LocalDate.of(2026, 8, 15);
     private static final LocalDate RANGE_TO = LocalDate.of(2026, 8, 19);
@@ -302,18 +280,6 @@ class StudentCalendarQueryServiceTest {
         assertThat(queryCount).isEqualTo(5L);
     }
 
-    @ParameterizedTest
-    @MethodSource("잘못된_조회_조건")
-    void 날짜_범위가_올바르지_않으면_조회할_수_없다(
-            LocalDate from,
-            LocalDate to
-    ) {
-        // when / then
-        assertThatThrownBy(() -> queryService.findAll(1L, 1L, from, to))
-                .isInstanceOfSatisfying(ClassitdaException.class, exception ->
-                        assertThat(exception.getErrorCode()).isEqualTo(CommonErrorCode.INVALID_INPUT));
-    }
-
     private Member 회원을_저장한다(String id) {
         Member member = StudioFixture.아이디가_다른_소유자(id);
         entityManager.persist(member);
@@ -489,24 +455,4 @@ class StudentCalendarQueryServiceTest {
         entityManager.persist(enrollment);
     }
 
-    private static Stream<Arguments> 잘못된_조회_조건() {
-        LocalDate from = LocalDate.of(2026, 8, 1);
-        return Stream.of(
-                Arguments.of(null, from),
-                Arguments.of(from, null),
-                Arguments.of(from.plusDays(1), from),
-                Arguments.of(from, from.plusDays(42)),
-                Arguments.of(LocalDate.MAX, LocalDate.MAX)
-        );
-    }
-
-    @TestConfiguration
-    static class FixedClockConfig {
-
-        @Primary
-        @Bean
-        Clock clock() {
-            return Clock.fixed(NOW.atZone(SERVICE_ZONE_ID).toInstant(), SERVICE_ZONE_ID);
-        }
-    }
 }

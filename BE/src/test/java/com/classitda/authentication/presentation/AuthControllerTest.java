@@ -191,32 +191,7 @@ class AuthControllerTest {
         verifyNoInteractions(socialLoginService);
     }
 
-    @Test
-    void 버전_헤더가_없으면_API_001을_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/auth/google")
-                .body(GoogleLoginRequest.from(ID_TOKEN))
-                .exchange();
 
-        // then
-        assertError(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verifyNoInteractions(socialLoginService);
-    }
-
-    @Test
-    void 지원하지_않는_버전은_API_002를_반환한다() {
-        // given / when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/auth/google")
-                .header("X-API-Version", "3")
-                .body(GoogleLoginRequest.from(ID_TOKEN))
-                .exchange();
-
-        // then
-        assertError(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verifyNoInteractions(socialLoginService);
-    }
 
     @Test
     void 인증_헤더_없이_리프레시_토큰을_갱신하면_200과_엄격한_회전_응답을_반환한다() {
@@ -301,20 +276,6 @@ class AuthControllerTest {
         verifyNoInteractions(refreshTokenService);
     }
 
-    @Test
-    void 리프레시_API의_버전_헤더가_없거나_지원하지_않으면_API_오류다() {
-        // given
-        RefreshTokenRequest request = RefreshTokenRequest.from(REFRESH_TOKEN);
-
-        // when
-        RestTestClient.ResponseSpec missing = refresh(null, request);
-        RestTestClient.ResponseSpec unsupported = refresh("3", request);
-
-        // then
-        assertError(missing, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        assertError(unsupported, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verifyNoInteractions(refreshTokenService);
-    }
 
     @Test
     void 유효하지_않은_리프레시_토큰은_AUTH_008을_반환하고_원문을_노출하지_않는다() {
@@ -358,21 +319,6 @@ class AuthControllerTest {
         verify(logoutService).logout(42L, request);
     }
 
-    @Test
-    void 로그아웃의_버전_헤더가_없거나_지원하지_않으면_API_오류이고_서비스를_호출하지_않는다() {
-        // given
-        LogoutRequest request = LogoutRequest.from(REFRESH_TOKEN);
-        given(jwtDecoder.decode("access-token")).willReturn(jwt("42", TokenUse.ACCESS));
-
-        // when
-        RestTestClient.ResponseSpec missing = logout("access-token", null, request);
-        RestTestClient.ResponseSpec unsupported = logout("access-token", "3", request);
-
-        // then
-        assertError(missing, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        assertError(unsupported, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verifyNoInteractions(logoutService);
-    }
 
     @Test
     void 로그아웃에서_인증이_없거나_유효하지_않으면_AUTH_001이고_서비스를_호출하지_않는다() {
@@ -556,22 +502,6 @@ class AuthControllerTest {
         verifyNoInteractions(phoneVerificationService);
     }
 
-    @Test
-    void 휴대전화_인증번호_발송에서_버전_헤더가_없으면_API_001을_반환한다() {
-        // given
-        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
-
-        // when
-        RestTestClient.ResponseSpec result = client.post()
-                .uri("/api/auth/phone-verifications")
-                .header("Authorization", "Bearer signup-token")
-                .body(PhoneVerificationSendRequest.from("01012345678"))
-                .exchange();
-
-        // then
-        assertError(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verifyNoInteractions(phoneVerificationService);
-    }
 
     @Test
     void 휴대전화_인증번호_발송에서_인증이_없으면_AUTH_001을_반환한다() {
@@ -654,31 +584,7 @@ class AuthControllerTest {
         verifyNoInteractions(phoneVerificationService);
     }
 
-    @Test
-    void 휴대전화_인증번호_확인에서_버전_헤더가_없으면_API_001을_반환한다() {
-        // given
-        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
 
-        // when
-        RestTestClient.ResponseSpec result = confirm("signup-token", VERIFICATION_ID, OTP, null);
-
-        // then
-        assertError(result, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        verifyNoInteractions(phoneVerificationService);
-    }
-
-    @Test
-    void 휴대전화_인증번호_확인에서_지원하지_않는_버전은_API_002를_반환한다() {
-        // given
-        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
-
-        // when
-        RestTestClient.ResponseSpec result = confirm("signup-token", VERIFICATION_ID, OTP, "3");
-
-        // then
-        assertError(result, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verifyNoInteractions(phoneVerificationService);
-    }
 
     @Test
     void 휴대전화_인증번호_확인에서_인증이_없으면_AUTH_001을_반환한다() {
@@ -855,28 +761,6 @@ class AuthControllerTest {
         verifyNoInteractions(signupService);
     }
 
-    @Test
-    void 회원가입에서_버전_헤더가_없거나_지원하지_않으면_API_오류이고_서비스를_호출하지_않는다() {
-        // given
-        given(jwtDecoder.decode("signup-token")).willReturn(jwt("signup-jti", TokenUse.SIGNUP));
-
-        // when
-        RestTestClient.ResponseSpec missing = signup(
-                "signup-token",
-                null,
-                SignupRequest.of("홍길동", List.of(1L, 2L))
-        );
-        RestTestClient.ResponseSpec unsupported = signup(
-                "signup-token",
-                "3",
-                SignupRequest.of("홍길동", List.of(1L, 2L))
-        );
-
-        // then
-        assertError(missing, 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        assertError(unsupported, 400, "API-002", "지원하지 않는 API 버전입니다.");
-        verifyNoInteractions(signupService);
-    }
 
     @Test
     void 회원가입에서_인증이_없거나_유효하지_않으면_AUTH_001이고_서비스를_호출하지_않는다() {

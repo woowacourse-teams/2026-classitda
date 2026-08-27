@@ -15,10 +15,16 @@ import org.springframework.context.annotation.Import;
 @Retention(RetentionPolicy.RUNTIME)
 @DataJpaTest(properties = {
         "spring.jpa.hibernate.ddl-auto=validate",
+        "spring.jpa.properties.hibernate.generate_statistics=true",
         "spring.sql.init.mode=always",
         "spring.sql.init.data-locations=optional:classpath:/test-data.sql"
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({MySqlTestContainerConfiguration.class, JpaAuditingConfig.class, ImageTestConfiguration.class})
-public @interface MySqlRepositoryTest {
+@Import({
+        SharedMySqlTestConfiguration.class,
+        SharedDataJpaTestConfiguration.class,
+        JpaAuditingConfig.class,
+        ImageTestConfiguration.class
+})
+public @interface MySqlDataJpaTest {
 }

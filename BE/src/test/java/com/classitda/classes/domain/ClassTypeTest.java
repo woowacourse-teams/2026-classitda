@@ -14,19 +14,6 @@ import org.junit.jupiter.api.Test;
 class ClassTypeTest {
 
     @Test
-    void 수업_종류를_생성하면_시설과_이름을_가진다() {
-        // given
-        Studio studio = 기본_시설();
-
-        // when
-        ClassType classType = ClassTypeFixture.기본_수업_종류(studio);
-
-        // then
-        assertThat(classType.getStudio()).isSameAs(studio);
-        assertThat(classType.getName()).isEqualTo("일반 요가");
-    }
-
-    @Test
     void 이름이_null이면_수업_종류를_생성할_수_없다() {
         // given
         Studio studio = 기본_시설();

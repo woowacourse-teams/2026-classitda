@@ -39,14 +39,13 @@ import com.classitda.studio.domain.repository.StudioRoleRepository;
 import com.classitda.studio.exception.StudioErrorCode;
 import com.classitda.studio.exception.StudioException;
 import com.classitda.studio.fixture.StudioFixture;
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
+import com.classitda.support.TestClockConfiguration;
 import jakarta.persistence.EntityManager;
-import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -54,8 +53,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -63,16 +60,12 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
-@Import({
-        ClassSessionCommandService.class,
-        ClassSessionCommandServiceTest.FixedClockConfig.class
-})
-@MySqlRepositoryTest
+@Import(TestClockConfiguration.August17AtNoon.class)
+@MySqlDataJpaTest
 class ClassSessionCommandServiceTest {
 
     private static final String LINK_FAILURE_CONSTRAINT = "ck_test_reject_class_session_class_type";
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 8, 17, 12, 0);
-    private static final ZoneId SERVICE_ZONE_ID = ZoneId.of("Asia/Seoul");
 
     private final ClassSessionCommandService commandService;
     private final ClassSessionClassTypeRepository classSessionClassTypeRepository;
@@ -1759,12 +1752,4 @@ class ClassSessionCommandServiceTest {
     ) {
     }
 
-    @TestConfiguration(proxyBeanMethods = false)
-    static class FixedClockConfig {
-
-        @Bean
-        Clock clock() {
-            return Clock.fixed(NOW.atZone(SERVICE_ZONE_ID).toInstant(), SERVICE_ZONE_ID);
-        }
-    }
 }

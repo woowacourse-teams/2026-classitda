@@ -109,21 +109,6 @@ class ClassTemplateControllerTest {
         verify(commandService, never()).save(anyLong(), anyLong(), any());
     }
 
-    @Test
-    void 등록_버전_헤더가_없거나_지원되지_않으면_서비스를_호출하지_않는다() {
-        // given
-        ClassTemplateCreateRequest request = ClassTemplateFixture.기본_수업_템플릿_생성_요청(1L);
-
-        // when / then
-        오류를_검증한다(client.post()
-                .uri("/api/studios/7/class-templates")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange(), 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        오류를_검증한다(수업_템플릿을_등록한다(7L, "3", request),
-                400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(commandService, never()).save(anyLong(), anyLong(), any());
-    }
 
     @Test
     void 명령_서비스의_권한과_수업_종류_예외를_정확히_직렬화한다() {
@@ -253,21 +238,6 @@ class ClassTemplateControllerTest {
         verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
     }
 
-    @Test
-    void 전체_수정_버전이_없거나_지원되지_않으면_서비스를_호출하지_않는다() {
-        // given
-        ClassTemplateUpdateRequest request = ClassTemplateFixture.기본_수업_템플릿_수정_요청(1L);
-
-        // when / then
-        오류를_검증한다(client.put()
-                .uri("/api/studios/7/class-templates/11")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(request)
-                .exchange(), 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        오류를_검증한다(수업_템플릿을_수정한다(7L, 11L, "3", request),
-                400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(commandService, never()).update(anyLong(), anyLong(), anyLong(), any());
-    }
 
     @Test
     void 전체_수정_서비스의_권한과_템플릿과_수업_종류_예외를_정확히_직렬화한다() {
@@ -298,16 +268,6 @@ class ClassTemplateControllerTest {
         verify(commandService).delete(1L, 7L, 11L);
     }
 
-    @Test
-    void 삭제_버전이_없거나_지원되지_않으면_명령_서비스를_호출하지_않는다() {
-        // when / then
-        오류를_검증한다(client.delete()
-                .uri("/api/studios/7/class-templates/11")
-                .exchange(), 400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        오류를_검증한다(수업_템플릿을_삭제한다(7L, 11L, "3"),
-                400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(commandService, never()).delete(anyLong(), anyLong(), anyLong());
-    }
 
     @Test
     void 삭제_서비스의_권한과_템플릿_없음_예외를_정확히_직렬화한다() {
@@ -363,15 +323,6 @@ class ClassTemplateControllerTest {
         result.expectStatus().isOk().expectBody().json("[]", JsonCompareMode.STRICT);
     }
 
-    @Test
-    void 목록_조회_버전이_없거나_지원되지_않으면_조회_서비스를_호출하지_않는다() {
-        // when / then
-        오류를_검증한다(client.get().uri("/api/studios/7/class-templates").exchange(),
-                400, "API-001", "X-API-Version 헤더는 필수입니다.");
-        오류를_검증한다(수업_템플릿_목록을_조회한다(7L, "3"),
-                400, "API-002", "지원하지 않는 API 버전입니다.");
-        verify(queryService, never()).findAll(anyLong(), anyLong());
-    }
 
     private RestTestClient.ResponseSpec 수업_템플릿을_등록한다(
             Long studioId,

@@ -2,14 +2,17 @@ package com.classitda;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 
-import com.classitda.support.MySqlRepositoryTest;
+import com.classitda.support.MySqlDataJpaTest;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 
-@MySqlRepositoryTest
+@Import(SeedScriptValidationTest.IsolatedDatabaseConfiguration.class)
+@MySqlDataJpaTest
 class SeedScriptValidationTest {
 
     private final DataSource dataSource;
@@ -43,5 +46,9 @@ class SeedScriptValidationTest {
                 new ClassPathResource("schema.sql"),
                 new ClassPathResource(dataScript)
         );
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class IsolatedDatabaseConfiguration {
     }
 }
