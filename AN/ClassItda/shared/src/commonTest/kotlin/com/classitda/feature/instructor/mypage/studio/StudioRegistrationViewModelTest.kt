@@ -62,14 +62,14 @@ class StudioRegistrationViewModelTest {
     fun `시설 이름 상세 주소 소개 입력은 공백을 보존한다`() {
         val viewModel = StudioRegistrationViewModel(NoOpStudioRepository)
 
-        viewModel.onAction(StudioRegistrationAction.NameChanged("클래스 잇다"))
-        viewModel.onAction(StudioRegistrationAction.DetailAddressChanged("5층 501호"))
-        viewModel.onAction(StudioRegistrationAction.DescriptionChanged("편하게 운동할 수 있는 공간"))
+        viewModel.onAction(StudioRegistrationAction.NameChanged(" 클래스 잇다 "))
+        viewModel.onAction(StudioRegistrationAction.DetailAddressChanged(" 5층 501호 "))
+        viewModel.onAction(StudioRegistrationAction.DescriptionChanged(" 편하게 운동할 수 있는 공간 "))
 
         val draft = assertIs<StudioRegistrationUiState.Editing>(viewModel.uiState.value).draft
-        assertEquals("클래스 잇다", draft.name)
-        assertEquals("5층 501호", draft.address.detailAddress)
-        assertEquals("편하게 운동할 수 있는 공간", draft.description)
+        assertEquals(" 클래스 잇다 ", draft.name)
+        assertEquals(" 5층 501호 ", draft.address.detailAddress)
+        assertEquals(" 편하게 운동할 수 있는 공간 ", draft.description)
     }
 
     @Test
