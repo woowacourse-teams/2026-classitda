@@ -22,6 +22,7 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.domain.model.instructor.management.ClassSession
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.feature.instructor.component.ClassSessionStatusBadge
+import com.classitda.feature.instructor.component.InstructorClassTagChip
 import kotlinx.datetime.LocalDateTime
 
 @Composable
@@ -42,7 +43,7 @@ internal fun InstructorScheduleCard(
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
                     session.tags.take(2).forEach { tag ->
-                        InstructorScheduleChip(text = tag)
+                        InstructorClassTagChip(text = tag)
                     }
                 }
                 Spacer(Modifier.weight(1f))

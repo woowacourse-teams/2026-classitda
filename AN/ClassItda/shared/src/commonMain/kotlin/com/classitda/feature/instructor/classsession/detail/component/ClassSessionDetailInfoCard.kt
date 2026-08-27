@@ -4,17 +4,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -22,6 +23,7 @@ import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.domain.model.instructor.management.ClassSessionStatus
 import com.classitda.feature.instructor.classsession.detail.model.ClassSessionDetailUiModel
+import com.classitda.feature.instructor.component.InstructorClassTagChip
 
 @Composable
 internal fun ClassSessionDetailInfoCard(
@@ -35,48 +37,34 @@ internal fun ClassSessionDetailInfoCard(
     ) {
         Column(
             modifier = Modifier.padding(AppSpacing.cardPadding),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.cardItemVerticalGap),
         ) {
             FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
             ) {
                 detail.tags.forEach { tag ->
-                    Surface(
-                        shape = AppShape.Pill,
-                        color = InsColors.SurfaceVariant,
-                    ) {
-                        Text(
-                            text = tag,
-                            color = InsColors.TextSecondary,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier =
-                                Modifier.padding(
-                                    horizontal = AppSpacing.sm,
-                                    vertical = AppSpacing.xs,
-                                ),
-                        )
-                    }
+                    InstructorClassTagChip(text = tag)
                 }
             }
             Text(
                 text = detail.title,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 20.sp),
                 fontWeight = FontWeight.Bold,
                 color = InsColors.TextPrimary,
             )
             Text(
                 text = detail.timeText,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = InsColors.TextPrimary,
             )
-            Spacer(modifier = Modifier.height(AppSpacing.xs))
+            HorizontalDivider(modifier = Modifier.padding(vertical = AppSpacing.cardItemVerticalGap))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxl),
             ) {
-                DetailStat(label = "예약 인원", value = "${detail.reservedCount}명")
-                DetailStat(label = "정원", value = "${detail.capacity}명")
+                DetailDescription(label = "예약 인원", value = "${detail.reservedCount}명", modifier = Modifier.weight(1f))
+                DetailDescription(label = "정원", value = "${detail.capacity}명", modifier = Modifier.weight(1f))
             }
             DetailDescription(label = "설명", value = detail.description)
         }
@@ -84,30 +72,16 @@ internal fun ClassSessionDetailInfoCard(
 }
 
 @Composable
-private fun DetailStat(
-    label: String,
-    value: String,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = InsColors.TextTertiary,
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = InsColors.TextPrimary,
-        )
-    }
-}
-
-@Composable
 private fun DetailDescription(
     label: String,
     value: String,
+    modifier: Modifier = Modifier,
 ) {
-    Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg)) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.cardGap),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
@@ -115,8 +89,8 @@ private fun DetailDescription(
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = InsColors.TextSecondary,
+            style = MaterialTheme.typography.labelMedium,
+            color = InsColors.TextPrimary,
         )
     }
 }
