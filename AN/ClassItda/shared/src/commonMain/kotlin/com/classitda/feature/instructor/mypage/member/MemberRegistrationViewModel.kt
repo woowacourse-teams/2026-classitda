@@ -1,0 +1,103 @@
+package com.classitda.feature.instructor.mypage.member
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.classitda.domain.repository.instructor.mypage.InstructorMyPageRepository
+import com.classitda.domain.repository.instructor.mypage.InstructorMyPageResult
+import com.classitda.feature.instructor.mypage.contract.MemberInputUiModel
+import com.classitda.feature.instructor.mypage.contract.MemberRegistrationAction
+import com.classitda.feature.instructor.mypage.contract.MemberRegistrationUiState
+import com.classitda.feature.instructor.mypage.contract.isMemberRegistrationValid
+import com.classitda.feature.instructor.mypage.contract.memberRegistrationFieldErrors
+import com.classitda.feature.instructor.mypage.toMemberRegistrationDraft
+import com.classitda.feature.instructor.mypage.toMemberRegistrationError
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+internal class MemberRegistrationViewModel(
+    private val repository: InstructorMyPageRepository,
+) : ViewModel() {
+    private val _uiState = MutableStateFlow<MemberRegistrationUiState>(editing(MemberInputUiModel()))
+    val uiState: StateFlow<MemberRegistrationUiState> = _uiState.asStateFlow()
+
+    fun onAction(action: MemberRegistrationAction) {
+        when (action) {
+            is MemberRegistrationAction.NameChanged -> {
+                update { copy(name = action.name) }
+            }
+
+            is MemberRegistrationAction.PhoneNumberChanged -> {
+                update { copy(phoneNumber = action.phoneNumber) }
+            }
+
+            MemberRegistrationAction.OpenConfirmation -> {
+                val state = _uiState.value as? MemberRegistrationUiState.Editing ?: return
+                val fieldErrors = memberRegistrationFieldErrors(state.draft)
+                if (fieldErrors.isEmpty()) {
+                    _uiState.value = MemberRegistrationUiState.Confirmation(state.draft)
+                } else {
+                    _uiState.value = state.copy(canSubmit = false, fieldErrors = fieldErrors)
+                }
+            }
+
+            MemberRegistrationAction.CancelConfirmation -> {
+                when (val state = _uiState.value) {
+                    is MemberRegistrationUiState.Confirmation -> {
+                        _uiState.value = editing(state.draft)
+                    }
+
+                    is MemberRegistrationUiState.Error -> {
+                        _uiState.value = editing(state.draft)
+                    }
+
+                    else -> {}
+                }
+            }
+
+            MemberRegistrationAction.ConfirmRegistration -> {
+                val state = _uiState.value as? MemberRegistrationUiState.Confirmation ?: return
+                submit(state.draft)
+            }
+
+            MemberRegistrationAction.Retry -> {
+                val state = _uiState.value as? MemberRegistrationUiState.Error ?: return
+                submit(state.draft)
+            }
+
+            else -> {}
+        }
+    }
+
+    private fun update(change: MemberInputUiModel.() -> MemberInputUiModel) {
+        val state = _uiState.value as? MemberRegistrationUiState.Editing ?: return
+        _uiState.value = editing(state.draft.change())
+    }
+
+    private fun editing(draft: MemberInputUiModel) =
+        MemberRegistrationUiState.Editing(
+            draft,
+            draft.isMemberRegistrationValid(),
+        )
+
+    private fun submit(draft: MemberInputUiModel) {
+        val domainDraft = draft.toMemberRegistrationDraft()
+        _uiState.value = MemberRegistrationUiState.Submitting(draft)
+        viewModelScope.launch {
+            _uiState.value =
+                when (val result = repository.registerMember(domainDraft)) {
+                    is InstructorMyPageResult.Success -> {
+                        MemberRegistrationUiState.Success(result.value)
+                    }
+
+                    is InstructorMyPageResult.Failure -> {
+                        MemberRegistrationUiState.Error(
+                            draft,
+                            result.reason.toMemberRegistrationError(),
+                        )
+                    }
+                }
+        }
+    }
+}
