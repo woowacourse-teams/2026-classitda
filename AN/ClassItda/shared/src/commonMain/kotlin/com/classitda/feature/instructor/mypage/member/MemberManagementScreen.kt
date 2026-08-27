@@ -177,7 +177,12 @@ fun MemberManagementScreen(
                     totalCount = uiState.page.totalCount,
                     query = uiState.query,
                     members = uiState.page.members,
-                    emptyState = if (uiState.page.members.isEmpty()) MemberListEmptyState.Empty else null,
+                    emptyState =
+                        when {
+                            uiState.page.members.isNotEmpty() -> null
+                            uiState.query.isBlank() -> MemberListEmptyState.Empty
+                            else -> MemberListEmptyState.SearchEmpty
+                        },
                     onLongPress = { actionMember = it },
                     onAction = onAction,
                     modifier = Modifier.padding(innerPadding),
@@ -186,7 +191,7 @@ fun MemberManagementScreen(
 
             is MemberManagementUiState.SearchEmpty -> {
                 MemberManagementListContent(
-                    totalCount = null,
+                    totalCount = uiState.totalCount,
                     query = uiState.query,
                     members = emptyList(),
                     emptyState = MemberListEmptyState.SearchEmpty,
@@ -1032,7 +1037,7 @@ private fun MemberManagementScreenPreview_Empty() {
 private fun MemberManagementScreenPreview_SearchEmpty() {
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         MemberManagementScreen(
-            uiState = MemberManagementUiState.SearchEmpty(query = "없는 회원"),
+            uiState = MemberManagementUiState.SearchEmpty(query = "없는 회원", totalCount = 4),
             onAction = {},
         )
     }

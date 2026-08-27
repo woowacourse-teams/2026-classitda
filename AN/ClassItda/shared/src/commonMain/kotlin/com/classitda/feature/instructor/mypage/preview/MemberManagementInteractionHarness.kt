@@ -100,7 +100,7 @@ internal fun MemberManagementInteractionHarness(modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
         ) {
-            TextButton(onClick = { uiState = MemberManagementUiState.SearchEmpty("없는 회원") }) {
+            TextButton(onClick = { uiState = MemberManagementUiState.SearchEmpty("없는 회원", page.totalCount) }) {
                 Text(stringResource(Res.string.instructor_member_management_harness_search_empty))
             }
             TextButton(onClick = { uiState = MemberManagementUiState.Error(MemberManagementUiError.NETWORK) }) {
