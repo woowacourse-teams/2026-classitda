@@ -40,6 +40,7 @@ internal fun InstructorMyPageNavHost(
     onLogout: () -> Unit = {},
     onWithdrawalCompleted: () -> Unit = {},
     openStudioRegistrationRequest: Int = 0,
+    onStudioRegistrationRequestConsumed: () -> Unit = {},
 ) {
     val navController = rememberNavController()
     val studioContext = koinInject<InstructorStudioContext>()
@@ -53,6 +54,7 @@ internal fun InstructorMyPageNavHost(
             navController.navigate(InstructorMyPageDestination.F09) {
                 launchSingleTop = true
             }
+            onStudioRegistrationRequestConsumed()
         }
     }
 

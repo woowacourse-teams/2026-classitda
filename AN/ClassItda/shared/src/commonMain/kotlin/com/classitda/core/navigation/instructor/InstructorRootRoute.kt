@@ -117,6 +117,7 @@ fun InstructorRootRoute(
                     },
                     onWithdrawalCompleted = onWithdrawalCompleted,
                     openStudioRegistrationRequest = studioRegistrationRequest,
+                    onStudioRegistrationRequestConsumed = { studioRegistrationRequest = 0 },
                 )
             }
         }
