@@ -75,14 +75,56 @@ class InstructorScheduleViewModelTest {
             assertEquals(listOf(firstDate, nextDate), repository.dailyRequests)
             assertEquals(1, repository.calendarRequestCount)
         }
+
+    @Test
+    fun `전체 조회가 실패하면 재시도 시 캘린더와 수업 목록을 모두 다시 불러온다`() =
+        runBlocking {
+            val date = LocalDate(2026, 8, 5)
+            val initialCalendarDays = listOf(InstructorCalendarDay(date, true, false, true, false))
+            val refreshedCalendarDays = listOf(InstructorCalendarDay(date, false, true, false, true))
+            val repository =
+                RecordingSessionRepository(
+                    deferredDate = LocalDate(2099, 1, 1),
+                    deferredSessions = CompletableDeferred(),
+                    calendarDays = initialCalendarDays,
+                )
+            val viewModel =
+                InstructorScheduleViewModel(
+                    repository = repository,
+                    studioContext = InstructorStudioContext(FixedStudioRepository),
+                )
+
+            viewModel.load(date)
+            val initialState = assertIs<InstructorScheduleUiState.Success>(viewModel.uiState.value)
+            assertEquals(initialCalendarDays, initialState.calendarDays)
+
+            repository.calendarFailure = IllegalStateException("캘린더 조회 실패")
+            viewModel.refresh(date)
+
+            val failed = assertIs<InstructorScheduleUiState.Success>(viewModel.uiState.value)
+            assertIs<InstructorScheduleListUiState.Error>(failed.sessionList)
+            assertEquals(initialCalendarDays, failed.calendarDays)
+            assertEquals(2, repository.calendarRequestCount)
+
+            repository.calendarFailure = null
+            repository.calendarDays = refreshedCalendarDays
+            viewModel.retry()
+
+            val retried = assertIs<InstructorScheduleUiState.Success>(viewModel.uiState.value)
+            assertIs<InstructorScheduleListUiState.Content>(retried.sessionList)
+            assertEquals(refreshedCalendarDays, retried.calendarDays)
+            assertEquals(3, repository.calendarRequestCount)
+            assertEquals(listOf(date, date), repository.dailyRequests)
+        }
 }
 
 private class RecordingSessionRepository(
     private val deferredDate: LocalDate,
     private val deferredSessions: CompletableDeferred<List<InstructorDailySession>>,
-    private val calendarDays: List<InstructorCalendarDay>,
+    var calendarDays: List<InstructorCalendarDay>,
 ) : InstructorSessionRepository {
     val dailyRequests = mutableListOf<LocalDate>()
+    var calendarFailure: Exception? = null
     var calendarRequestCount: Int = 0
         private set
 
@@ -100,6 +142,7 @@ private class RecordingSessionRepository(
         to: LocalDate,
     ): List<InstructorCalendarDay> {
         calendarRequestCount += 1
+        calendarFailure?.let { throw it }
         return calendarDays
     }
 

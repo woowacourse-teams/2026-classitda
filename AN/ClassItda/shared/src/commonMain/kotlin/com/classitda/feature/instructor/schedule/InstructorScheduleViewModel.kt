@@ -31,9 +31,15 @@ internal class InstructorScheduleViewModel(
     private var loadJob: Job? = null
     private var calendarRangeStart: LocalDate? = null
     private var calendarRangeEnd: LocalDate? = null
+    private var retryTarget = InstructorScheduleRetryTarget.ALL
 
     fun retry() {
-        load(lastRequestedDate ?: Clock.System.todayIn(TimeZone.of("Asia/Seoul")))
+        val date = lastRequestedDate ?: Clock.System.todayIn(TimeZone.of("Asia/Seoul"))
+        if (retryTarget == InstructorScheduleRetryTarget.ALL) {
+            refresh(date)
+        } else {
+            load(date)
+        }
     }
 
     fun load(date: LocalDate = Clock.System.todayIn(TimeZone.of("Asia/Seoul"))) {
@@ -42,6 +48,8 @@ internal class InstructorScheduleViewModel(
         val current = _uiState.value as? InstructorScheduleUiState.Success
         if (current == null) {
             loadAll(date)
+        } else if (retryTarget == InstructorScheduleRetryTarget.ALL) {
+            loadAll(date, current)
         } else if (isInLoadedCalendarRange(date)) {
             loadSessions(date, current)
         } else {
@@ -59,6 +67,7 @@ internal class InstructorScheduleViewModel(
         date: LocalDate,
         current: InstructorScheduleUiState.Success? = null,
     ) {
+        retryTarget = InstructorScheduleRetryTarget.ALL
         _uiState.value = current?.copy(sessionList = InstructorScheduleListUiState.Loading)
             ?: InstructorScheduleUiState.Loading
         loadJob =
@@ -74,6 +83,7 @@ internal class InstructorScheduleViewModel(
                     val sessions = repository.getDailySessions(studio.id, date).map { it.toClassSession() }
                     calendarRangeStart = date.minus(DatePeriod(days = 20))
                     calendarRangeEnd = date.plus(DatePeriod(days = 20))
+                    retryTarget = InstructorScheduleRetryTarget.SESSIONS
                     _uiState.value =
                         InstructorScheduleUiState.Success(
                             calendarDays = calendarDays,
@@ -93,6 +103,7 @@ internal class InstructorScheduleViewModel(
         date: LocalDate,
         current: InstructorScheduleUiState.Success,
     ) {
+        retryTarget = InstructorScheduleRetryTarget.SESSIONS
         _uiState.value = current.copy(sessionList = InstructorScheduleListUiState.Loading)
         loadJob =
             viewModelScope.launch {
@@ -113,6 +124,11 @@ internal class InstructorScheduleViewModel(
         val end = calendarRangeEnd ?: return false
         return date >= start && date <= end
     }
+}
+
+private enum class InstructorScheduleRetryTarget {
+    ALL,
+    SESSIONS,
 }
 
 internal sealed interface InstructorScheduleUiState {
