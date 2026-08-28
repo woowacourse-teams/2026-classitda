@@ -26,11 +26,7 @@ internal class NetworkFirstInstructorMyPageRepository(
             }
 
             is InstructorMyPageResult.Failure -> {
-                if (remote.reason != InstructorMyPageFailureReason.NETWORK) {
-                    remote
-                } else {
-                    readCacheOr(remote.reason)
-                }
+                readCacheOr(remote.reason)
             }
         }
 

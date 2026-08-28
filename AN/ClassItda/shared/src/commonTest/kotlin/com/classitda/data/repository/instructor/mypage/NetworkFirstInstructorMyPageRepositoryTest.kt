@@ -28,34 +28,33 @@ class NetworkFirstInstructorMyPageRepositoryTest {
         }
 
     @Test
-    fun `network 실패와 cache가 함께 있으면 cache 성공을 반환한다`() =
+    fun `모든 remote 실패는 cache가 있으면 cache 성공을 반환한다`() =
         runBlocking {
             val cache = FakeInstructorMyPageCache(InstructorMyPageSummary("저장된 이름", "01011112222"))
-            val repository =
-                NetworkFirstInstructorMyPageRepository(
-                    FailingRemote(InstructorMyPageFailureReason.NETWORK),
-                    cache,
-                )
 
-            val result = repository.getSummary()
+            InstructorMyPageFailureReason.entries.forEach { reason ->
+                val repository = NetworkFirstInstructorMyPageRepository(FailingRemote(reason), cache)
 
-            assertEquals(cache.value, assertIs<InstructorMyPageResult.Success<*>>(result).value)
-            assertEquals(1, cache.readCalls)
+                val result = repository.getSummary()
+
+                assertEquals(cache.value, assertIs<InstructorMyPageResult.Success<*>>(result).value)
+            }
+            assertEquals(InstructorMyPageFailureReason.entries.size, cache.readCalls)
         }
 
     @Test
-    fun `network 실패와 cache가 없으면 원래 network 오류를 반환한다`() =
+    fun `모든 remote 실패는 cache가 없으면 원래 오류를 반환한다`() =
         runBlocking {
             val cache = FakeInstructorMyPageCache()
-            val repository =
-                NetworkFirstInstructorMyPageRepository(
-                    FailingRemote(InstructorMyPageFailureReason.NETWORK),
-                    cache,
-                )
 
-            val result = repository.getSummary()
+            InstructorMyPageFailureReason.entries.forEach { reason ->
+                val repository = NetworkFirstInstructorMyPageRepository(FailingRemote(reason), cache)
 
-            assertEquals(InstructorMyPageFailureReason.NETWORK, assertIs<InstructorMyPageResult.Failure>(result).reason)
+                val result = repository.getSummary()
+
+                assertEquals(reason, assertIs<InstructorMyPageResult.Failure>(result).reason)
+            }
+            assertEquals(InstructorMyPageFailureReason.entries.size, cache.readCalls)
         }
 
     @Test
@@ -73,37 +72,21 @@ class NetworkFirstInstructorMyPageRepositoryTest {
         }
 
     @Test
-    fun `network 실패 후 cache 조회 실패는 원래 network 오류를 반환한다`() =
+    fun `remote 실패 후 cache 조회 실패는 원래 오류를 반환한다`() =
         runBlocking {
             val cache = FakeInstructorMyPageCache(readError = IllegalStateException("read failed"))
             val repository =
                 NetworkFirstInstructorMyPageRepository(
-                    FailingRemote(InstructorMyPageFailureReason.NETWORK),
-                    cache,
-                )
-
-            val result = repository.getSummary()
-
-            assertEquals(InstructorMyPageFailureReason.NETWORK, assertIs<InstructorMyPageResult.Failure>(result).reason)
-        }
-
-    @Test
-    fun `인증 실패는 cache가 있어도 fallback하지 않는다`() =
-        runBlocking {
-            val cache = FakeInstructorMyPageCache(InstructorMyPageSummary("오래된 이름", "01011112222"))
-            val repository =
-                NetworkFirstInstructorMyPageRepository(
-                    FailingRemote(InstructorMyPageFailureReason.UNAUTHORIZED),
+                    FailingRemote(InstructorMyPageFailureReason.SERVER),
                     cache,
                 )
 
             val result = repository.getSummary()
 
             assertEquals(
-                InstructorMyPageFailureReason.UNAUTHORIZED,
+                InstructorMyPageFailureReason.SERVER,
                 assertIs<InstructorMyPageResult.Failure>(result).reason,
             )
-            assertEquals(0, cache.readCalls)
         }
 }
 
