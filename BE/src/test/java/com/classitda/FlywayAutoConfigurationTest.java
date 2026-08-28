@@ -47,11 +47,7 @@ class FlywayAutoConfigurationTest {
         new ApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(FlywayAutoConfiguration.class))
                 .withBean(DataSource.class, () -> dataSource)
-                .withPropertyValues(
-                        "spring.flyway.baseline-on-migrate=true",
-                        "spring.flyway.baseline-version=1",
-                        "spring.flyway.locations=classpath:db/migration"
-                )
+                .withPropertyValues("spring.flyway.locations=classpath:db/migration")
                 .run(context -> {
                     // then
                     assertThat(context).hasNotFailed();
@@ -61,7 +57,8 @@ class FlywayAutoConfigurationTest {
                     List<String> applied = jdbcTemplate.queryForList(
                             "SELECT version FROM flyway_schema_history WHERE success = 1 AND version IS NOT NULL",
                             String.class);
-                    assertThat(applied).contains("1");
+                    assertThat(applied).isNotEmpty();
+                    assertThat(applied).allMatch(version -> version.matches("\\d{6}\\.\\d{2}"));
 
                     Integer tables = jdbcTemplate.queryForObject(
                             "SELECT COUNT(*) FROM information_schema.tables "

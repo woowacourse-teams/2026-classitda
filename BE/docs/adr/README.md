@@ -108,12 +108,12 @@ Accepted (YYYY-MM-DD)
 | 번호                                                            | 결정 | 한 줄 요약 |
 |---------------------------------------------------------------| --- | --- |
 | [0001](0001-integrity-enforcement-location.md)                | 스튜디오 경계 무결성 검증 | 스튜디오 경계를 넘는 참조는 저장 전에 애플리케이션이 검증해요 |
-| [0002](0002-schema-source-of-truth.md)                        | DDL 원본 | `schema.sql`을 DDL 원본으로 사용하고 JPA는 매핑을 검증해요 |
+| [0002](0002-schema-source-of-truth.md)                        | DDL 원본 (`Superseded`) | ADR-0023이 DDL 원본의 위치를 Flyway 마이그레이션으로 옮겨요 |
 | [0003](0003-use-testcontainers-for-mysql-tests.md)            | Testcontainers 기반 MySQL 검증 | Repository와 스키마 검증 테스트를 MySQL 8.4에서 실행해요 |
 | [0004](0004-keep-external-io-outside-db-transaction.md)       | 외부 I/O와 DB 트랜잭션 경계 | Redis·외부 API 호출은 DB 트랜잭션 밖에서 수행하고 DB 쓰기만 짧게 묶어요 |
 | [0005](0005-authentication-token-and-session-boundary.md)     | Access·Refresh 상태 경계 (`Superseded`) | ADR-0012가 토큰 상태 경계와 Access Token 수명 결정을 대체해요 |
 | [0006](0006-terminate-tls-at-cloudflare.md)                   | DNS·TLS 종단 위치 | DNS와 TLS를 Cloudflare에서 처리하고 Origin Certificate로 origin 구간까지 암호화해요 |
-| [0007](0007-manual-production-schema-application.md)          | 프로덕션 스키마 반영 | 마이그레이션 도구를 보류하고 `schema.sql`을 운영 DB에 직접 적용해요 |
+| [0007](0007-manual-production-schema-application.md)          | 프로덕션 스키마 반영 (`Superseded`) | ADR-0023이 Flyway를 도입해 수동 적용 결정을 대체해요 |
 | [0008](0008-run-rds-without-storage-encryption.md)            | RDS 저장 시 암호화 | KMS 권한 제약으로 저장 시 암호화 없이 운영하고 전송 구간을 강제해요 |
 | [0009](0009-deploy-through-cloudflare-tunnel.md)              | 배포 경로 | 인바운드 포트 없이 Cloudflare Tunnel로 배포하고 서버에 접속해요 |
 | [0010](0010-use-managed-database-and-cache.md)                | 데이터 계층 위치 | MySQL과 Redis를 RDS·ElastiCache로 분리하고 EC2에는 앱만 둬요 |
@@ -129,6 +129,7 @@ Accepted (YYYY-MM-DD)
 | [0020](0020-propagate-account-withdrawal-to-membership.md) | 계정 탈퇴의 소속 전파 | 탈퇴 요청 시점에 모든 소속을 종료하고 정리 시점에 개인정보를 지워요 |
 | [0021](0021-share-testcontainers-per-jvm.md) | 테스트 컨테이너와 DB 상태의 공유 범위 | 컨테이너는 JVM 단위로 공유하고 DB 상태는 Context 단위로 격리해요 |
 | [0022](0022-defer-social-login-nonce.md) | 소셜 로그인 nonce 적용 유예 | Apple은 Google과 같이 ID Token만 검증하고 nonce는 두 제공자에 함께 도입해요 |
+| [0023](0023-manage-schema-with-flyway.md) | 스키마 관리 방식 | Flyway로 스키마를 관리하고 시드는 프로필별 locations 로 분리해요 |
 
 ## 다른 문서와의 관계
 
