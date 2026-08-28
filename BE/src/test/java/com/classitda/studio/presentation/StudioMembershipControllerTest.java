@@ -172,7 +172,7 @@ class StudioMembershipControllerTest {
                             "id": 1,
                             "name": "김철수",
                             "phoneNumber": "01012345678",
-                            "studioRole": {"id": 3, "name": "회원", "instructor": false},
+                            "studioRole": {"name": "회원", "instructor": false},
                             "registered": false,
                             "status": "ACTIVE",
                             "joinedAt": "2026-08-14T10:00:00"
@@ -259,7 +259,7 @@ class StudioMembershipControllerTest {
                 1L,
                 StudioMembershipFixture.기본_이름,
                 StudioMembershipFixture.기본_전화번호,
-                new StudioRoleResponse(3L, "회원", false),
+                new StudioRoleResponse("회원", false),
                 false,
                 MembershipStatus.ACTIVE,
                 JOINED_AT
