@@ -11,6 +11,6 @@ import org.koin.dsl.module
 internal fun signupModule(tokenStorage: AuthTokenStorage) =
     module {
         single { SignupApi(get()) }
-        single<SignupRepository> { RemoteSignupRepository(get(), tokenStorage) }
+        single<SignupRepository> { RemoteSignupRepository(get(), tokenStorage, get()) }
         viewModel { SignupViewModel(get()) }
     }

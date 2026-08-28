@@ -17,6 +17,11 @@ interface AuthTokenStorage {
     fun clear()
 }
 
+/** Clears persisted, user-scoped data when the authenticated session changes. */
+fun interface SessionCacheCleaner {
+    suspend fun clear()
+}
+
 /**
  * 현재 앱의 기본 저장소.
  *

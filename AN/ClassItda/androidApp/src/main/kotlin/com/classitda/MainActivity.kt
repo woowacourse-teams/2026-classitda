@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.classitda.core.auth.AndroidKeystoreAuthTokenStorage
+import com.classitda.core.database.createInMemoryDatabaseModule
+import com.classitda.core.database.createPlatformDatabaseModule
 import com.classitda.core.network.ClassItdaApiConfig
 
 class MainActivity : ComponentActivity() {
@@ -14,9 +16,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
+        val localDatabaseModule = createPlatformDatabaseModule(applicationContext)
         setContent {
             App(
                 baseUrl = if (BuildConfig.DEBUG) ClassItdaApiConfig.DEV_BASE_URL else ClassItdaApiConfig.PROD_BASE_URL,
+                localDatabaseModule = localDatabaseModule,
                 tokenStorage =
                     AndroidKeystoreAuthTokenStorage(applicationContext),
             )
@@ -27,5 +31,8 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 fun AppAndroidPreview() {
-    App(baseUrl = ClassItdaApiConfig.DEV_BASE_URL)
+    App(
+        baseUrl = ClassItdaApiConfig.DEV_BASE_URL,
+        localDatabaseModule = createInMemoryDatabaseModule(),
+    )
 }

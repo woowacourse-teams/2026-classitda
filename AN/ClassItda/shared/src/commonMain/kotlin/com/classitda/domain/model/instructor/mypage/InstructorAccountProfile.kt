@@ -8,5 +8,6 @@ data class InstructorAccountProfile(
 )
 
 data class InstructorMyPageSummary(
-    val profile: InstructorAccountProfile,
+    val name: String,
+    val phoneNumber: String,
 )

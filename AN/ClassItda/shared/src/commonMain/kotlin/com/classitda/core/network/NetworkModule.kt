@@ -1,6 +1,7 @@
 package com.classitda.core.network
 
 import com.classitda.core.auth.AuthTokenStorage
+import com.classitda.core.auth.SessionCacheCleaner
 import io.ktor.client.HttpClient
 import org.koin.dsl.module
 
@@ -15,5 +16,11 @@ fun networkModule(
     tokenStorage: AuthTokenStorage,
 ) = module {
     single { config }
-    single<HttpClient> { createConfiguredHttpClient(get(), tokenStorage) }
+    single<HttpClient> {
+        createConfiguredHttpClient(
+            config = get(),
+            tokenStorage = tokenStorage,
+            sessionCacheCleaner = getOrNull<SessionCacheCleaner>(),
+        )
+    }
 }

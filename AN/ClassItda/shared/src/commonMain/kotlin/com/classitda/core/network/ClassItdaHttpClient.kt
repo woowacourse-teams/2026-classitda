@@ -2,6 +2,7 @@ package com.classitda.core.network
 
 import co.touchlab.kermit.Logger
 import com.classitda.core.auth.AuthTokenStorage
+import com.classitda.core.auth.SessionCacheCleaner
 import com.classitda.domain.model.auth.signup.LoginTokens
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -29,6 +30,7 @@ internal fun createClassItdaHttpClient(
     engine: HttpClientEngine,
     baseUrl: String,
     tokenStorage: AuthTokenStorage? = null,
+    sessionCacheCleaner: SessionCacheCleaner? = null,
 ): HttpClient =
     HttpClient(engine) {
         expectSuccess = true
@@ -47,12 +49,13 @@ internal fun createClassItdaHttpClient(
             url.takeFrom(baseUrl)
             header("X-API-Version", "1")
         }
-        installBearerAuth(tokenStorage)
+        installBearerAuth(tokenStorage, sessionCacheCleaner)
     }
 
 internal fun createConfiguredHttpClient(
     config: NetworkConfig,
     tokenStorage: AuthTokenStorage,
+    sessionCacheCleaner: SessionCacheCleaner? = null,
 ): HttpClient =
     HttpClient {
         expectSuccess = true
@@ -70,7 +73,7 @@ internal fun createConfiguredHttpClient(
             url.takeFrom(config.baseUrl)
             header("X-API-Version", "1")
         }
-        installBearerAuth(tokenStorage)
+        installBearerAuth(tokenStorage, sessionCacheCleaner)
     }
 
 internal fun createObjectStorageHttpClient(engine: HttpClientEngine): HttpClient =
@@ -83,7 +86,10 @@ internal fun createObjectStorageHttpClient(): HttpClient =
         expectSuccess = false
     }
 
-private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: AuthTokenStorage?) {
+private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(
+    tokenStorage: AuthTokenStorage?,
+    sessionCacheCleaner: SessionCacheCleaner?,
+) {
     if (tokenStorage == null) return
 
     install(Auth) {
@@ -120,6 +126,9 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
                     throw exception
                 } catch (exception: ClientRequestException) {
                     if (exception.response.status.value == 401) {
+                        sessionCacheCleaner?.let { cleaner ->
+                            clearSessionCacheOrThrow(cleaner)
+                        }
                         tokenStorage.clear()
                     }
                     null
@@ -128,6 +137,17 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(tokenStorage: A
                 }
             }
         }
+    }
+}
+
+private suspend fun clearSessionCacheOrThrow(cleaner: SessionCacheCleaner) {
+    try {
+        cleaner.clear()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Throwable) {
+        Logger.e("AuthSession: local cache clear failed: ${exception.message}")
+        throw exception
     }
 }
 
