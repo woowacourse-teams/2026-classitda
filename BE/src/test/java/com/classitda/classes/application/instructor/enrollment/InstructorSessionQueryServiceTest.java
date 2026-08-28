@@ -420,6 +420,7 @@ class InstructorSessionQueryServiceTest {
                 "다른 시설 회원"
         );
         entityManager.clear();
+        statistics.clear();
 
         // when
         List<StudioStudentView> result = queryService.findAllStudioStudents(
@@ -427,6 +428,7 @@ class InstructorSessionQueryServiceTest {
                 context.studio().getId(),
                 context.classSession().getId()
         );
+        long queryCount = statistics.getPrepareStatementCount();
 
         // then
         assertThat(result).containsExactly(
@@ -439,6 +441,7 @@ class InstructorSessionQueryServiceTest {
                 new StudioStudentView(activeStudent.getId(), "최유진", null, false),
                 new StudioStudentView(waitingStudent.getId(), "정하늘", null, false)
         );
+        assertThat(queryCount).isEqualTo(6L);
     }
 
     @Test
