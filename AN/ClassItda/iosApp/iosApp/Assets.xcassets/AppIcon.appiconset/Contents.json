@@ -1,29 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "잇다-로고-ios-1024-fdfdfd.png",
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
-      "idiom" : "universal",
-      "platform" : "ios",
-      "size" : "1024x1024"
-    },
-    {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "tinted"
-        }
-      ],
+      "filename" : "itda-logo.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
