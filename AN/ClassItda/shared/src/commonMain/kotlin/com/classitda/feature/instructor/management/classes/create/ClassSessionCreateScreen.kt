@@ -116,6 +116,9 @@ internal fun ClassSessionCreateScreen(
             .digitsOnly()
             .takeIf { it.isNotEmpty() }
             ?.let { durationMinutesText = it }
+        isRepeating = template.schedule != null
+        selectedDays = template.schedule?.repeatDays.orEmpty()
+        template.schedule?.startTime?.let { startTime = it }
     }
 
     Scaffold(

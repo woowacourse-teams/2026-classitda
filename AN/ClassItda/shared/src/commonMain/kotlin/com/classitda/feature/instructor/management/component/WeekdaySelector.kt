@@ -30,7 +30,7 @@ internal fun WeekdaySelector(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+        horizontalArrangement = Arrangement.SpaceAround,
     ) {
         WEEK_DAYS.forEach { day ->
             val isSelected = day in selectedDays
@@ -38,7 +38,7 @@ internal fun WeekdaySelector(
             Box(
                 modifier =
                     Modifier
-                        .size(32.dp)
+                        .size(36.dp)
                         .background(
                             color = if (isSelected) InsColors.Black else InsColors.Surface,
                             shape = CircleShape,

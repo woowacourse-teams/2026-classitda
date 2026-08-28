@@ -21,6 +21,8 @@ internal fun ClassTemplate.toUiModel(): ClassTemplateUiModel =
 
 private fun ClassTemplateSchedule.toUiModel(): ClassScheduleUiModel =
     ClassScheduleUiModel(
+        startTime = startTime,
+        repeatDays = repeatDays.toSet(),
         timeRangeText = "${formatTime24(startTime)} ~ ${formatTime24(endTime)}",
         repeatDaysText = repeatDays.sortedBy { it.ordinal }.joinToString(", ") { it.toKoreanShort() },
     )
