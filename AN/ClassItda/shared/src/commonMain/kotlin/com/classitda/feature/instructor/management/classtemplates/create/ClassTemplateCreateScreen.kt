@@ -1,8 +1,6 @@
 package com.classitda.feature.instructor.management.classtemplates.create
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -20,9 +18,11 @@ internal fun ClassTemplateCreateScreen(
     onSubmit: (ClassTemplateDraftUiModel) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Scaffold(
-        modifier = modifier,
-        containerColor = InsColors.Background,
+    ClassTemplateForm(
+        classTypes = classTypes,
+        initialValues = null,
+        submitButtonText = "생성 완료",
+        onSubmit = onSubmit,
         topBar = {
             NavigateBackTopBar(
                 onNavigateBack = onBackClick,
@@ -30,15 +30,8 @@ internal fun ClassTemplateCreateScreen(
                 title = "수업 템플릿 생성",
             )
         },
-    ) { contentPadding ->
-        ClassTemplateForm(
-            classTypes = classTypes,
-            initialValues = null,
-            submitButtonText = "생성 완료",
-            onSubmit = onSubmit,
-            modifier = Modifier.padding(contentPadding),
-        )
-    }
+        modifier = modifier,
+    )
 }
 
 @Composable

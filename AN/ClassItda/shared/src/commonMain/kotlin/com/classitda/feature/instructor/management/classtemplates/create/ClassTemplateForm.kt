@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,6 +44,7 @@ internal fun ClassTemplateForm(
     initialValues: ClassTemplateFormValues?,
     submitButtonText: String,
     onSubmit: (ClassTemplateDraftUiModel) -> Unit,
+    topBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var classType by remember { mutableStateOf(initialValues?.classType ?: ClassFormOption.GROUP) }
@@ -67,11 +69,46 @@ internal fun ClassTemplateForm(
             durationMinutes > 0 &&
             (!isRepeating || selectedDays.isNotEmpty())
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Scaffold(
+        modifier = modifier,
+        containerColor = InsColors.Background,
+        topBar = topBar,
+        bottomBar = {
+            Surface(
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding(),
+                color = InsColors.Background,
+            ) {
+                PrimaryButton(
+                    text = submitButtonText,
+                    enabled = isFormValid,
+                    onClick = {
+                        onSubmit(
+                            ClassTemplateDraftUiModel(
+                                classType = classType,
+                                category = selectedCategory,
+                                title = title,
+                                capacity = capacity,
+                                durationMinutes = durationMinutes,
+                                isRepeating = isRepeating,
+                                repeatDays = if (isRepeating) selectedDays else emptySet(),
+                                startTime = startTime,
+                                description = description,
+                            ),
+                        )
+                    },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+                )
+            }
+        },
+    ) { contentPadding ->
         Column(
             modifier =
                 Modifier
-                    .weight(1f)
+                    .fillMaxSize()
+                    .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = AppSpacing.screenPadding)
                     .padding(top = AppSpacing.lg),
@@ -139,7 +176,7 @@ internal fun ClassTemplateForm(
                             selectedDays =
                                 if (day in selectedDays) selectedDays - day else selectedDays + day
                         },
-                        modifier = Modifier.padding(top = AppSpacing.sm),
+                        modifier = Modifier.padding(top = AppSpacing.sm).fillMaxWidth(),
                     )
                 }
             }
@@ -160,35 +197,6 @@ internal fun ClassTemplateForm(
                 onValueChange = { description = it },
                 singleLine = false,
                 minLines = 3,
-            )
-        }
-
-        Surface(
-            modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding(),
-            color = InsColors.Background,
-        ) {
-            PrimaryButton(
-                text = submitButtonText,
-                enabled = isFormValid,
-                onClick = {
-                    onSubmit(
-                        ClassTemplateDraftUiModel(
-                            classType = classType,
-                            category = selectedCategory,
-                            title = title,
-                            capacity = capacity,
-                            durationMinutes = durationMinutes,
-                            isRepeating = isRepeating,
-                            repeatDays = if (isRepeating) selectedDays else emptySet(),
-                            startTime = startTime,
-                            description = description,
-                        ),
-                    )
-                },
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
             )
         }
     }
