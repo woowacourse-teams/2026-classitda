@@ -40,12 +40,8 @@ internal fun ClassTemplateManagementRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(shouldRefresh) {
-        if (shouldRefresh) viewModel.onRetry()
-    }
-
-    LaunchedEffect(refreshKey) {
-        if (refreshKey > 0) viewModel.onRetry()
+    LaunchedEffect(shouldRefresh, refreshKey) {
+        if (shouldRefresh || refreshKey > 0) viewModel.onRetry()
     }
 
     LaunchedEffect(viewModel) {

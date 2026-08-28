@@ -62,9 +62,11 @@ internal class InstructorStudioContext(
             }
         }
 
-    fun clearSelectedStudio() {
-        selectedStudio = null
-        selectionStorage.clear()
+    suspend fun clearSelectedStudio() {
+        mutex.withLock {
+            selectedStudio = null
+            selectionStorage.clear()
+        }
     }
 
     private fun restoreSelectedStudio(availableStudios: List<Studio>) {

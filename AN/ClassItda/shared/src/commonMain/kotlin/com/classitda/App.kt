@@ -89,10 +89,10 @@ fun App(
                 AppRoute.Home -> {
                     InstructorRootRoute(
                         onLogout = {
-                            studioContext.clearSelectedStudio()
                             Logger.d("AuthSession: logout callback started")
                             coroutineScope.launch {
                                 try {
+                                    studioContext.clearSelectedStudio()
                                     Logger.d("AuthSession: logout repository call started")
                                     signupRepository.logout()
                                     Logger.d("AuthSession: logout repository call completed")
@@ -104,8 +104,11 @@ fun App(
                         },
                         onWithdrawalCompleted = {
                             Logger.d("AuthSession: withdrawal succeeded, switching to Google login screen")
-                            tokenStorage.clear()
-                            appRoute = AppRoute.Signup
+                            coroutineScope.launch {
+                                studioContext.clearSelectedStudio()
+                                tokenStorage.clear()
+                                appRoute = AppRoute.Signup
+                            }
                         },
                     )
                 }

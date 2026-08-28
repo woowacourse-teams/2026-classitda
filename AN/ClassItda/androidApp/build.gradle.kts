@@ -12,6 +12,7 @@ kotlin {
 }
 dependencies {
     implementation(project(":shared"))
+    implementation(libs.multiplatformSettings)
 
     implementation(libs.androidx.activity.compose)
 

@@ -142,7 +142,7 @@ internal fun InstructorMyPageNavHost(
                 },
                 onDeleted = {
                     scope.launch {
-                        studioContext.refreshStudios()
+                        refreshStudiosAfterMutation(studioContext, "deletion")
                         studioRefreshToken++
                         navController.popBackStack(InstructorMyPageDestination.F08, false)
                     }
@@ -158,7 +158,7 @@ internal fun InstructorMyPageNavHost(
                 onBack = { navController.popBackStack() },
                 onSaved = {
                     scope.launch {
-                        studioContext.refreshStudios()
+                        refreshStudiosAfterMutation(studioContext, "save")
                         studioRefreshToken++
                         navController.popBackStack(InstructorMyPageDestination.F08, false)
                     }
@@ -193,6 +193,19 @@ internal fun InstructorMyPageNavHost(
         composable<InstructorPrivacyPolicyDestination> {
             PrivacyPolicyRoute(onBack = navController::popBackStack)
         }
+    }
+}
+
+private suspend fun refreshStudiosAfterMutation(
+    studioContext: InstructorStudioContext,
+    mutation: String,
+) {
+    try {
+        studioContext.refreshStudios()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Throwable) {
+        Logger.e("StudioContext: refresh after studio $mutation failed: ${exception.message}")
     }
 }
 

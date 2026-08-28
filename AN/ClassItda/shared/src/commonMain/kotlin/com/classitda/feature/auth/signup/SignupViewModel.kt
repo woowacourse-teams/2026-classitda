@@ -9,6 +9,7 @@ import com.classitda.domain.model.auth.signup.SignupName
 import com.classitda.domain.model.auth.signup.SignupPhoneNumber
 import com.classitda.domain.model.auth.signup.SignupToken
 import com.classitda.domain.repository.auth.signup.SignupRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,10 +29,13 @@ internal class SignupViewModel(
     private val _events = MutableSharedFlow<SignupEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<SignupEvent> = _events.asSharedFlow()
     private var verificationTimerJob: Job? = null
+    private var verificationRequestJob: Job? = null
 
     fun reset() {
         verificationTimerJob?.cancel()
         verificationTimerJob = null
+        verificationRequestJob?.cancel()
+        verificationRequestJob = null
         _uiState.value = SignupUiState()
     }
 
@@ -219,32 +223,36 @@ internal class SignupViewModel(
         if (!Regex("^010[0-9]{8}$").matches(state.phoneNumber)) {
             return showError(IllegalStateException("휴대전화 번호를 올바르게 입력해 주세요."))
         }
-        viewModelScope.launch {
-            update {
-                copy(
-                    isLoading = true,
-                    verificationId = null,
-                    verificationCode = "",
-                    isPhoneVerified = false,
-                    errorMessage = null,
-                )
-            }
-            runCatching {
-                repository.requestPhoneVerification(token, SignupPhoneNumber(state.phoneNumber))
-            }.onSuccess { challenge ->
+        verificationRequestJob =
+            viewModelScope.launch {
                 update {
                     copy(
-                        isLoading = false,
-                        isVerificationSent = true,
-                        verificationId = challenge.id,
-                        verificationPhoneNumber = state.phoneNumber,
-                        verificationRemainingSeconds = challenge.expiresInSeconds,
-                        resendRemainingSeconds = challenge.resendAfterSeconds,
+                        isLoading = true,
+                        verificationId = null,
+                        verificationCode = "",
+                        isPhoneVerified = false,
+                        errorMessage = null,
                     )
                 }
-                startVerificationTimer()
-            }.onFailure { error -> showError(error) }
-        }
+                try {
+                    val challenge = repository.requestPhoneVerification(token, SignupPhoneNumber(state.phoneNumber))
+                    update {
+                        copy(
+                            isLoading = false,
+                            isVerificationSent = true,
+                            verificationId = challenge.id,
+                            verificationPhoneNumber = state.phoneNumber,
+                            verificationRemainingSeconds = challenge.expiresInSeconds,
+                            resendRemainingSeconds = challenge.resendAfterSeconds,
+                        )
+                    }
+                    startVerificationTimer()
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Throwable) {
+                    showError(exception)
+                }
+            }
     }
 
     private fun startVerificationTimer() {
@@ -267,6 +275,7 @@ internal class SignupViewModel(
 
     override fun onCleared() {
         verificationTimerJob?.cancel()
+        verificationRequestJob?.cancel()
         super.onCleared()
     }
 

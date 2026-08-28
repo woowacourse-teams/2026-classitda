@@ -69,7 +69,9 @@ internal class ClassSessionCreateViewModel(
 
         val startDate = if (draft.isRepeating) draft.repeatStartDate else draft.sessionDate
         val now = currentDateTimeProvider.now()
-        if (startDate == now.date && draft.startTime <= now.time) {
+        if (startDate != null &&
+            (startDate < now.date || (startDate == now.date && draft.startTime <= now.time))
+        ) {
             showMessage("오늘은 현재 시간 이후의 수업만 등록할 수 있어요")
             return
         }
