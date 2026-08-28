@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -42,15 +41,27 @@ internal fun InstructorCalendarHeader(
         )
         InstructorCalendarMoveButton("›", onNextMonth)
         Spacer(Modifier.weight(1f))
-        Row(
+        Box(
             modifier =
                 Modifier
-                    .selectableGroup()
-                    .background(InsColors.Divider, RoundedCornerShape(8.dp))
-                    .padding(2.dp),
+                    .width(96.dp)
+                    .height(48.dp)
+                    .selectableGroup(),
+            contentAlignment = Alignment.Center,
         ) {
-            InstructorCalendarModeItem("월", isMonthMode) { onModeChange(true) }
-            InstructorCalendarModeItem("주", !isMonthMode) { onModeChange(false) }
+            Box(
+                modifier =
+                    Modifier
+                        .width(96.dp)
+                        .height(40.dp)
+                        .background(InsColors.Divider, RoundedCornerShape(10.dp)),
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                InstructorCalendarModeItem("월", isMonthMode) { onModeChange(true) }
+                InstructorCalendarModeItem("주", !isMonthMode) { onModeChange(false) }
+            }
         }
     }
 }
@@ -97,8 +108,8 @@ private fun InstructorCalendarModeItem(
         Box(
             modifier =
                 Modifier
-                    .width(32.dp)
-                    .height(24.dp)
+                    .width(40.dp)
+                    .height(32.dp)
                     .background(
                         color = if (selected) InsColors.White else Color.Transparent,
                         shape = RoundedCornerShape(8.dp),
@@ -108,7 +119,7 @@ private fun InstructorCalendarModeItem(
             Text(
                 text = text,
                 color = if (selected) InsColors.TextPrimary else InsColors.TextSecondary,
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
             )
         }
     }
