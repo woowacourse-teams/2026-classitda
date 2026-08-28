@@ -37,9 +37,12 @@ internal class SignupViewModel(
 
     fun onAction(action: SignupAction) {
         when (action) {
+            SignupAction.Back -> {
+                reset()
+            }
+
             SignupAction.LoginWithGoogle,
             SignupAction.LoginWithApple,
-            SignupAction.Back,
             SignupAction.Close,
             SignupAction.DismissTerms,
             SignupAction.ToggleAllTerms,
@@ -99,39 +102,38 @@ internal class SignupViewModel(
     fun loginWithGoogle(idToken: String) {
         viewModelScope.launch {
             update { copy(isLoading = true, errorMessage = null) }
-            runCatching { repository.loginWithGoogle(GoogleIdToken(idToken)) }
-                .onSuccess { result ->
-                    when (result) {
-                        is com.classitda.domain.model.auth.signup.GoogleLoginResult.Registered -> {
-                            update { copy(isLoading = false) }
-                            Logger.d("SignupFlow: existing member Google login completed")
-                            _events.tryEmit(SignupEvent.LoginCompleted)
-                        }
+            runCatching {
+                when (val result = repository.loginWithGoogle(GoogleIdToken(idToken))) {
+                    is com.classitda.domain.model.auth.signup.GoogleLoginResult.Registered -> {
+                        update { copy(isLoading = false) }
+                        Logger.d("SignupFlow: existing member Google login completed")
+                        _events.tryEmit(SignupEvent.LoginCompleted)
+                    }
 
-                        is com.classitda.domain.model.auth.signup.GoogleLoginResult.RegistrationRequired -> {
-                            Logger.d("SignupFlow: registration required after Google login")
-                            val terms = repository.getTerms(result.signupToken)
-                            update {
-                                copy(
-                                    isLoading = false,
-                                    page = SignupPage.Form,
-                                    signupToken = result.signupToken,
-                                    terms = terms,
-                                    errorMessage = null,
-                                )
-                            }
-                        }
-
-                        com.classitda.domain.model.auth.signup.GoogleLoginResult.WithdrawalPending -> {
-                            update { copy(isLoading = false) }
-                            Logger.d("SignupFlow: withdrawal pending screen requested after Google login")
-                            _events.tryEmit(SignupEvent.WithdrawalPending)
+                    is com.classitda.domain.model.auth.signup.GoogleLoginResult.RegistrationRequired -> {
+                        Logger.d("SignupFlow: registration required after Google login")
+                        val terms = repository.getTerms(result.signupToken)
+                        update {
+                            copy(
+                                isLoading = false,
+                                page = SignupPage.Form,
+                                signupToken = result.signupToken,
+                                terms = terms,
+                                errorMessage = null,
+                            )
                         }
                     }
-                }.onFailure { error ->
-                    Logger.e("SignupFlow: Google login failed: ${error.message}")
-                    showError(error)
+
+                    com.classitda.domain.model.auth.signup.GoogleLoginResult.WithdrawalPending -> {
+                        update { copy(isLoading = false) }
+                        Logger.d("SignupFlow: withdrawal pending screen requested after Google login")
+                        _events.tryEmit(SignupEvent.WithdrawalPending)
+                    }
                 }
+            }.onFailure { error ->
+                Logger.e("SignupFlow: Google login failed: ${error.message}")
+                showError(error)
+            }
         }
     }
 

@@ -70,9 +70,18 @@ internal fun SignupScreen(
                     }
                 } else {
                     when (action) {
-                        SignupAction.Close -> onSignupCompleted()
-                        SignupAction.OpenProfile -> Unit
-                        else -> viewModel.onAction(action)
+                        SignupAction.Close -> {
+                            viewModel.reset()
+                            onSignupCompleted()
+                        }
+
+                        SignupAction.OpenProfile -> {
+                            Unit
+                        }
+
+                        else -> {
+                            viewModel.onAction(action)
+                        }
                     }
                 }
             },

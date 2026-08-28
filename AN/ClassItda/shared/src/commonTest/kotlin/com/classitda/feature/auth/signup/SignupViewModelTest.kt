@@ -67,6 +67,18 @@ class SignupViewModelTest {
             assertEquals(SignupEvent.WithdrawalPending, withdrawalPendingEvent.await())
             Unit
         }
+
+    @Test
+    fun `뒤로가기를 누르면 회원가입 입력 상태가 초기화된다`() {
+        val viewModel = SignupViewModel(RegisteredMemberRepository())
+
+        viewModel.onAction(SignupAction.ChangeName("김민지"))
+        viewModel.onAction(SignupAction.ChangePhoneNumber("01012345678"))
+        viewModel.onAction(SignupAction.ChangeVerificationCode("123456"))
+        viewModel.onAction(SignupAction.Back)
+
+        assertEquals(SignupUiState(), viewModel.uiState.value)
+    }
 }
 
 private class RegisteredMemberRepository(
