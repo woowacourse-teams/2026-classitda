@@ -41,6 +41,8 @@ import com.classitda.feature.instructor.management.classtemplates.model.ClassSch
 import com.classitda.feature.instructor.management.classtemplates.model.ClassTemplateUiModel
 import com.classitda.feature.instructor.management.component.CategoryFilter
 import com.classitda.feature.instructor.management.component.CreateFabButton
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -211,7 +213,13 @@ private fun ClassTemplateManagementScreenPreview() {
                         title = "리포머 밸런스",
                         durationText = "50분",
                         capacityText = "8명",
-                        schedule = ClassScheduleUiModel(timeRangeText = "10:00 ~ 10:50", repeatDaysText = "월, 수"),
+                        schedule =
+                            ClassScheduleUiModel(
+                                startTime = LocalTime(10, 0),
+                                repeatDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
+                                timeRangeText = "10:00 ~ 10:50",
+                                repeatDaysText = "월, 수",
+                            ),
                     ),
                     ClassTemplateUiModel(
                         id = "2",
@@ -221,7 +229,13 @@ private fun ClassTemplateManagementScreenPreview() {
                         title = "리포머 밸런스",
                         durationText = "50분",
                         capacityText = "8명",
-                        schedule = ClassScheduleUiModel(timeRangeText = "12:00 ~ 12:50", repeatDaysText = "월, 수"),
+                        schedule =
+                            ClassScheduleUiModel(
+                                startTime = LocalTime(12, 0),
+                                repeatDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
+                                timeRangeText = "12:00 ~ 12:50",
+                                repeatDaysText = "월, 수",
+                            ),
                     ),
                     ClassTemplateUiModel(
                         id = "3",

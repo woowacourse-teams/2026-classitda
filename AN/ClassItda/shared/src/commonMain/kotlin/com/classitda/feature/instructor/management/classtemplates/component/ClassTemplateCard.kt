@@ -38,6 +38,8 @@ import com.classitda.feature.instructor.management.classtemplates.model.ClassSch
 import com.classitda.feature.instructor.management.classtemplates.model.ClassTemplateUiModel
 import com.classitda.feature.instructor.management.component.Chip
 import com.classitda.feature.instructor.management.component.toDisplayLabel
+import kotlinx.datetime.DayOfWeek
+import kotlinx.datetime.LocalTime
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
@@ -184,7 +186,13 @@ private fun ClassTemplateCardPreview_WithSchedule() {
                     title = "리포머 밸런스",
                     durationText = "50분",
                     capacityText = "8명",
-                    schedule = ClassScheduleUiModel(timeRangeText = "10:00 ~ 10:50", repeatDaysText = "월, 수"),
+                    schedule =
+                        ClassScheduleUiModel(
+                            startTime = LocalTime(10, 0),
+                            repeatDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY),
+                            timeRangeText = "10:00 ~ 10:50",
+                            repeatDaysText = "월, 수",
+                        ),
                 ),
             onClick = {},
             onEditClick = {},
