@@ -1,11 +1,15 @@
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
   datasource:
-    url: "jdbc:mysql://${LOCAL_DB_HOST:localhost}:${LOCAL_DB_PORT:3306}/${LOCAL_DB_NAME:classitda}?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=Asia%2FSeoul"
-    username: ${LOCAL_DB_USERNAME:classitda}
-    password: ${LOCAL_DB_PASSWORD:classitda}
-  sql:
-    init:
-      mode: always
-      schema-locations:
-        - classpath:reset-schema.sql
-        - classpath:schema.sql
+    url: "jdbc:mysql://localhost:3306/classitda?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=Asia%2FSeoul"
+    username: classitda
+    password: classitda
+  flyway:
+    locations: classpath:db/migration,classpath:db/local
+
+auth:
+  sms:
+    provider: ${AUTH_SMS_PROVIDER:local}

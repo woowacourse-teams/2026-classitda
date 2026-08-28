@@ -2,7 +2,7 @@ package com.classitda.common;
 
 import com.classitda.common.config.ApiVersionConfig;
 import com.classitda.common.exception.ClassitdaException;
-import com.classitda.common.exception.ErrorCode;
+import com.classitda.common.exception.CommonErrorCode;
 import com.classitda.common.exception.GlobalExceptionHandler;
 import jakarta.validation.constraints.Positive;
 import org.junit.jupiter.api.Test;
@@ -10,16 +10,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureRestTestClient;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.test.json.JsonCompareMode;
 import org.springframework.test.web.servlet.client.RestTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-@AutoConfigureRestTestClient
 @Import({ApiVersionConfig.class, GlobalExceptionHandler.class, CommonWebContractTest.TestController.class})
-@WebMvcTest
+@AutoConfigureRestTestClient
+@WebMvcTest(controllers = CommonWebContractTest.TestController.class)
 class CommonWebContractTest {
 
     private final RestTestClient client;
@@ -61,7 +64,7 @@ class CommonWebContractTest {
         // given / when
         RestTestClient.ResponseSpec response = client.get()
                 .uri("/test/success")
-                .header("X-API-Version", "2")
+                .header("X-API-Version", "3")
                 .exchange();
 
         // then
@@ -78,6 +81,18 @@ class CommonWebContractTest {
 
         // then
         assertError(response, 400, "API-002", "지원하지 않는 API 버전입니다.");
+    }
+
+    @Test
+    void 존재하지_않는_API_경로는_API_003을_반환한다() {
+        // given / when
+        RestTestClient.ResponseSpec response = client.get()
+                .uri("/test/not-found")
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        assertError(response, 404, "API-003", "요청한 API를 찾을 수 없습니다.");
     }
 
     @Test
@@ -107,6 +122,45 @@ class CommonWebContractTest {
     }
 
     @Test
+    void 필수_요청_body가_없으면_COMMON_001을_반환한다() {
+        // given / when
+        RestTestClient.ResponseSpec response = client.post()
+                .uri("/test/required-body")
+                .header("X-API-Version", "1")
+                .exchange();
+
+        // then
+        assertError(response, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+    }
+
+    @Test
+    void 필수_요청_body가_비어_있으면_COMMON_001을_반환한다() {
+        // given / when
+        RestTestClient.ResponseSpec response = requiredBody("");
+
+        // then
+        assertError(response, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+    }
+
+    @Test
+    void 필수_요청_body가_JSON_null이면_COMMON_001을_반환한다() {
+        // given / when
+        RestTestClient.ResponseSpec response = requiredBody("null");
+
+        // then
+        assertError(response, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+    }
+
+    @Test
+    void 필수_요청_body가_잘못된_JSON이면_COMMON_001을_반환한다() {
+        // given / when
+        RestTestClient.ResponseSpec response = requiredBody("{\"value\":");
+
+        // then
+        assertError(response, 400, "COMMON-001", "요청 값이 올바르지 않습니다.");
+    }
+
+    @Test
     void 예상하지_못한_예외는_메시지를_노출하지_않고_COMMON_002를_반환한다() {
         // given / when
         RestTestClient.ResponseSpec response = client.get()
@@ -124,6 +178,15 @@ class CommonWebContractTest {
                 .json("""
                         {"code":"%s","message":"%s"}
                         """.formatted(code, message), JsonCompareMode.STRICT);
+    }
+
+    private RestTestClient.ResponseSpec requiredBody(String body) {
+        return client.post()
+                .uri("/test/required-body")
+                .header("X-API-Version", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body)
+                .exchange();
     }
 
     @RestController
@@ -144,7 +207,14 @@ class CommonWebContractTest {
 
         @GetMapping(path = "/common-exception", version = "1")
         public TestResponse commonException() {
-            throw new ClassitdaException(ErrorCode.INVALID_INPUT);
+            throw new ClassitdaException(CommonErrorCode.INVALID_INPUT);
+        }
+
+        @PostMapping(path = "/required-body", version = "1")
+        public TestResponse requiredBody(
+                @RequestBody TestRequest request
+        ) {
+            return TestResponse.from(request.value());
         }
 
         @GetMapping(path = "/unexpected", version = "1")
@@ -158,5 +228,8 @@ class CommonWebContractTest {
         public static TestResponse from(String value) {
             return new TestResponse(value);
         }
+    }
+
+    public record TestRequest(String value) {
     }
 }

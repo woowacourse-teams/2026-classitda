@@ -38,6 +38,11 @@ out/
 ### VS Code ###
 .vscode/
 
+### Local environment ###
+.env
+.env.*
+!.env.example
+
 .claude
 .codex
 .agents

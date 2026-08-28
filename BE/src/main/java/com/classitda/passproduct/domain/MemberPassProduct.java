@@ -40,6 +40,7 @@ public class MemberPassProduct extends BaseEntity {
     @JoinColumn(name = "pass_product_id", nullable = false)
     private PassProduct passProduct;
 
+    @Column
     private Integer remainingCount;
 
     @Column(nullable = false)
@@ -54,4 +55,15 @@ public class MemberPassProduct extends BaseEntity {
 
     @Column(nullable = false)
     private LocalDate expiresAt;
+
+    public boolean isUsable() {
+        return status == MemberPassProductStatus.ACTIVE
+                && (remainingCount == null || remainingCount > 0);
+    }
+
+    public boolean isValidOn(LocalDate date) {
+        return date != null
+                && !date.isBefore(startedAt)
+                && !date.isAfter(expiresAt);
+    }
 }

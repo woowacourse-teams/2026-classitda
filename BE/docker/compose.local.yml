@@ -7,30 +7,45 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
+    env_file:
+      - .env
     environment:
       SPRING_PROFILES_ACTIVE: local
-      LOCAL_DB_HOST: mysql
-      LOCAL_DB_PORT: 3306
-      LOCAL_DB_NAME: ${LOCAL_DB_NAME:-classitda}
-      LOCAL_DB_USERNAME: ${LOCAL_DB_USERNAME:-classitda}
-      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD:-classitda}
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/classitda?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=Asia%2FSeoul"
+      SPRING_DATASOURCE_USERNAME: classitda
+      SPRING_DATASOURCE_PASSWORD: classitda
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+
+      IMAGE_BUCKET: ${IMAGE_BUCKET}
+      IMAGE_KEY_PREFIX: ${IMAGE_KEY_PREFIX}
+      IMAGE_BASE_URL: ${IMAGE_BASE_URL}
+      IMAGE_REGION: ${IMAGE_REGION}
     ports:
-      - "${LOCAL_APP_BIND_ADDRESS:-127.0.0.1}:${LOCAL_APP_PORT:-8080}:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     init: true
 
   mysql:
     container_name: be-mysql
     image: mysql:8.4
     environment:
-      MYSQL_DATABASE: ${LOCAL_DB_NAME:-classitda}
-      MYSQL_USER: ${LOCAL_DB_USERNAME:-classitda}
-      MYSQL_PASSWORD: ${LOCAL_DB_PASSWORD:-classitda}
-      MYSQL_ROOT_PASSWORD: ${LOCAL_DB_ROOT_PASSWORD:-classitda-root}
+      MYSQL_DATABASE: classitda
+      MYSQL_USER: classitda
+      MYSQL_PASSWORD: classitda
+      MYSQL_ROOT_PASSWORD: classitda-root
     ports:
-      - "${LOCAL_DB_BIND_ADDRESS:-127.0.0.1}:${LOCAL_DB_PORT:-3306}:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
@@ -40,5 +55,19 @@ services:
       retries: 10
       start_period: 30s
 
+  redis:
+    container_name: be-redis
+    image: redis:7.4-alpine
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
 volumes:
   mysql-data:
+  redis-data:

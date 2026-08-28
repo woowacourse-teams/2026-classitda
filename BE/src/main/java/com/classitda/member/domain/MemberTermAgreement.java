@@ -10,17 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Table(name = "member_term_agreement")
 @Entity
 public class MemberTermAgreement extends BaseEntity {
@@ -40,6 +36,35 @@ public class MemberTermAgreement extends BaseEntity {
     @Column(nullable = false)
     private boolean agreed;
 
-    @Column(nullable = false)
-    private LocalDateTime agreedAt;
+    @Builder
+    private MemberTermAgreement(
+            Member member,
+            Term term,
+            boolean agreed
+    ) {
+        validateMember(member);
+        validateTerm(term);
+        validateAgreed(agreed);
+        this.member = member;
+        this.term = term;
+        this.agreed = agreed;
+    }
+
+    private void validateMember(Member member) {
+        if (member == null) {
+            throw new IllegalArgumentException("약관 동의 회원은 필수입니다.");
+        }
+    }
+
+    private void validateTerm(Term term) {
+        if (term == null) {
+            throw new IllegalArgumentException("동의 약관은 필수입니다.");
+        }
+    }
+
+    private void validateAgreed(boolean agreed) {
+        if (!agreed) {
+            throw new IllegalArgumentException("동의한 약관만 저장할 수 있습니다.");
+        }
+    }
 }
