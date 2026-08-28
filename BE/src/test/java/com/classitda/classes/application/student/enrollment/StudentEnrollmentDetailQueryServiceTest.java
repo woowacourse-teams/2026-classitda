@@ -232,6 +232,36 @@ class StudentEnrollmentDetailQueryServiceTest {
     }
 
     @Test
+    void 계정이_없는_강사의_신청_상세도_프로필_이미지_없이_반환한다() {
+        // given
+        DetailContext context = 기본_환경("unlinked-instructor");
+        StudioMembership unlinkedInstructor = 미가입_소속을_저장한다(
+                context.studio(), SystemRole.INSTRUCTOR, "미가입 강사");
+        ClassSession classSession = 수업을_저장한다(
+                context.studio(), unlinkedInstructor, "미가입 강사 수업", SESSION_START_AT.plusDays(1));
+        ClassSessionEnrollment reserved = 신청을_저장한다(ClassSessionEnrollment.reserved(
+                context.studentMembership(),
+                classSession,
+                context.memberPassProduct(),
+                ENROLLED_AT
+        ));
+        Long memberId = context.studentMembership().getMember().getId();
+        entityManager.clear();
+
+        // when
+        StudentEnrollmentDetailView result = queryService.findOne(
+                memberId, context.studio().getId(), classSession.getId(), reserved.getId());
+
+        // then
+        assertThat(result.instructor()).isEqualTo(new StudentEnrollmentDetailView.Instructor(
+                unlinkedInstructor.getId(),
+                "미가입 강사",
+                null,
+                context.studio().getName()
+        ));
+    }
+
+    @Test
     void 대기_순번은_현재_WAITING만_상태_변경_시각과_ID_순서로_계산한다() {
         // given
         DetailContext context = 기본_환경("queue");
@@ -560,6 +590,25 @@ class StudentEnrollmentDetailQueryServiceTest {
                 MembershipStatus.ACTIVE,
                 name
         );
+    }
+
+    private StudioMembership 미가입_소속을_저장한다(
+            Studio studio,
+            SystemRole systemRole,
+            String name
+    ) {
+        StudioMembership membership = StudioMembership.builder()
+                .studio(studio)
+                .member(null)
+                .phoneNumber("010%08d".formatted(PHONE_SEQUENCE.getAndIncrement()))
+                .studioRole(역할을_조회하거나_저장한다(studio, systemRole))
+                .name(name)
+                .status(MembershipStatus.ACTIVE)
+                .joinedAt(LocalDateTime.of(2026, 6, 1, 9, 0))
+                .build();
+        entityManager.persist(membership);
+        entityManager.flush();
+        return membership;
     }
 
     private StudioMembership 소속을_저장한다(

@@ -442,6 +442,27 @@ class InstructorSessionQueryServiceTest {
     }
 
     @Test
+    void 계정이_없는_활성_학생도_후보_목록에_포함한다() {
+        // given
+        DetailContext context = 기본_환경("unlinked-candidates");
+        StudioRole studentRole = 역할을_저장한다(context.studio(), SystemRole.STUDENT);
+        StudioMembership unlinked = 미가입_소속을_저장한다(context.studio(), studentRole, "대리 등록 회원");
+        entityManager.clear();
+
+        // when
+        List<StudioStudentView> result = queryService.findAllStudioStudents(
+                context.owner().getId(),
+                context.studio().getId(),
+                context.classSession().getId()
+        );
+
+        // then
+        assertThat(result).containsExactly(
+                new StudioStudentView(unlinked.getId(), "대리 등록 회원", null, false)
+        );
+    }
+
+    @Test
     void 본인_수업만_관리하는_강사가_다른_강사의_수업_후보를_조회하면_찾을_수_없다() {
         // given
         DetailContext context = 기본_환경("other-session-candidates");

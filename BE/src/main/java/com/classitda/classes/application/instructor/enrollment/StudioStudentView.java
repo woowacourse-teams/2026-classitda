@@ -13,7 +13,7 @@ public record StudioStudentView(
         return new StudioStudentView(
                 membership.getId(),
                 membership.getName(),
-                membership.getMember().getProfileImageUrl(),
+                membership.getProfileImageUrl(),
                 enrolled
         );
     }

@@ -95,7 +95,7 @@ public record StudentEnrollmentDetailView(
             return new Instructor(
                     instructor.getId(),
                     instructor.getName(),
-                    instructor.getMember().getProfileImageUrl(),
+                    instructor.getProfileImageUrl(),
                     instructor.getStudio().getName()
             );
         }

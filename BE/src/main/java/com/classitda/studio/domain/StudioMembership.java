@@ -100,6 +100,13 @@ public class StudioMembership extends BaseEntity {
         return member != null;
     }
 
+    public String getProfileImageUrl() {
+        if (member == null) {
+            return null;
+        }
+        return member.getProfileImageUrl();
+    }
+
     public boolean isWithdrawn() {
         return status == MembershipStatus.WITHDRAWN;
     }
