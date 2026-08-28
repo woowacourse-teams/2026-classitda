@@ -32,6 +32,7 @@ internal fun ClassListRoute(
     onSessionCardClick: (String) -> Unit,
     bottomBar: @Composable () -> Unit,
     shouldRefresh: Boolean = false,
+    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: ClassListViewModel = koinViewModel(),
 ) {
@@ -40,6 +41,10 @@ internal fun ClassListRoute(
 
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) viewModel.onRetry()
+    }
+
+    LaunchedEffect(refreshKey) {
+        if (refreshKey > 0) viewModel.onRetry()
     }
 
     LaunchedEffect(viewModel) {

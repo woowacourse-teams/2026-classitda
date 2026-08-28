@@ -33,6 +33,7 @@ internal fun ClassTemplateManagementRoute(
     onTemplateEditClick: (String) -> Unit,
     bottomBar: @Composable () -> Unit,
     shouldRefresh: Boolean = false,
+    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: ClassTemplateManagementViewModel = koinViewModel(),
 ) {
@@ -41,6 +42,10 @@ internal fun ClassTemplateManagementRoute(
 
     LaunchedEffect(shouldRefresh) {
         if (shouldRefresh) viewModel.onRetry()
+    }
+
+    LaunchedEffect(refreshKey) {
+        if (refreshKey > 0) viewModel.onRetry()
     }
 
     LaunchedEffect(viewModel) {

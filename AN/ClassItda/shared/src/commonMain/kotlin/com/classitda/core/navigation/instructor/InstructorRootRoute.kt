@@ -29,12 +29,16 @@ fun InstructorRootRoute(
     var isMemberEditing by remember { mutableStateOf(false) }
     var scheduleRefreshKey by remember { mutableStateOf(0) }
     var detailRefreshKey by remember { mutableStateOf(0) }
+    var tabRefreshKey by remember { mutableStateOf(0) }
     var studioRegistrationRequest by remember { mutableStateOf(0) }
 
     val topLevelBottomBar: @Composable () -> Unit = {
         InstructorBottomBar(
             selectedTab = selectedTab,
-            onTabSelected = { tab -> selectedTab = tab },
+            onTabSelected = { tab ->
+                selectedTab = tab
+                tabRefreshKey++
+            },
         )
     }
 
@@ -82,6 +86,7 @@ fun InstructorRootRoute(
                 InstructorHomeRoute(
                     onSessionClick = { selectedSessionId = it },
                     onStudioChanged = { scheduleRefreshKey++ },
+                    refreshKey = tabRefreshKey,
                     bottomBar = topLevelBottomBar,
                     modifier = modifier,
                 )
@@ -91,7 +96,7 @@ fun InstructorRootRoute(
                 InstructorScheduleRoute(
                     bottomBar = topLevelBottomBar,
                     onSessionClick = { selectedSessionId = it },
-                    refreshKey = scheduleRefreshKey,
+                    refreshKey = scheduleRefreshKey + tabRefreshKey,
                     modifier = modifier,
                 )
             }
@@ -99,6 +104,7 @@ fun InstructorRootRoute(
             InstructorBottomTab.MANAGEMENT -> {
                 ManagementFlowNavHost(
                     bottomBar = topLevelBottomBar,
+                    refreshKey = tabRefreshKey,
                     modifier = modifier,
                     onOpenStudioRegistration = {
                         selectedTab = InstructorBottomTab.MY
@@ -110,6 +116,7 @@ fun InstructorRootRoute(
             InstructorBottomTab.MY -> {
                 InstructorMyPageNavHost(
                     bottomBar = topLevelBottomBar,
+                    refreshToken = tabRefreshKey,
                     modifier = modifier,
                     onLogout = {
                         Logger.d("ProfileLogout: instructor root received logout callback")

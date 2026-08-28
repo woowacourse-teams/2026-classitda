@@ -49,12 +49,14 @@ internal fun InstructorHomeRoute(
     onSessionClick: (String) -> Unit,
     onStudioChanged: () -> Unit = {},
     bottomBar: @Composable () -> Unit,
+    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: InstructorHomeViewModel = koinViewModel(),
 ) = InstructorHomeStateful(
     onSessionClick = onSessionClick,
     onStudioChanged = onStudioChanged,
     bottomBar = bottomBar,
+    refreshKey = refreshKey,
     modifier = modifier,
     viewModel = viewModel,
 )
@@ -65,6 +67,7 @@ internal fun InstructorHomeStateful(
     onSessionClick: (String) -> Unit,
     onStudioChanged: () -> Unit = {},
     bottomBar: @Composable () -> Unit,
+    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: InstructorHomeViewModel = koinViewModel(),
 ) {
@@ -76,6 +79,10 @@ internal fun InstructorHomeStateful(
     var studios by remember { mutableStateOf<List<Studio>>(emptyList()) }
     var studioLoadError by remember { mutableStateOf<String?>(null) }
     var isStudioSheetVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(refreshKey) {
+        if (refreshKey > 0) viewModel.retry()
+    }
 
     LaunchedEffect(Unit) {
         selectedStudio = runCatching { studioContext.getSelectedStudio() }.getOrNull()

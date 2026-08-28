@@ -56,6 +56,7 @@ private data class MemberEditDestination(
 @Composable
 internal fun ManagementFlowNavHost(
     bottomBar: @Composable () -> Unit,
+    refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
     onOpenStudioRegistration: () -> Unit = {},
@@ -91,6 +92,7 @@ internal fun ManagementFlowNavHost(
                 onSessionCardClick = {},
                 bottomBar = {},
                 shouldRefresh = shouldRefresh,
+                refreshKey = refreshKey,
             )
         }
 
@@ -120,6 +122,7 @@ internal fun ManagementFlowNavHost(
                 onTemplateEditClick = { id -> navController.navigate(ClassTemplateCreateDestination(templateId = id)) },
                 bottomBar = {},
                 shouldRefresh = shouldRefresh,
+                refreshKey = refreshKey,
             )
         }
 
@@ -131,7 +134,7 @@ internal fun ManagementFlowNavHost(
                 },
                 onOpenMemberRegistration = { navController.navigate(MemberRegistrationDestination) },
                 onOpenStudioRegistration = onOpenStudioRegistration,
-                refreshToken = memberRefreshKey,
+                refreshToken = memberRefreshKey + refreshKey,
             )
         }
 

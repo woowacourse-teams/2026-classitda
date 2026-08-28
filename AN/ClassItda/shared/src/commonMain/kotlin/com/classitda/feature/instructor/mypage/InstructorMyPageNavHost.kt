@@ -42,6 +42,7 @@ internal fun InstructorMyPageNavHost(
     onWithdrawalCompleted: () -> Unit = {},
     openStudioRegistrationRequest: Int = 0,
     onStudioRegistrationRequestConsumed: () -> Unit = {},
+    refreshToken: Int = 0,
 ) {
     val navController = rememberNavController()
     val studioContext = koinInject<InstructorStudioContext>()
@@ -76,6 +77,7 @@ internal fun InstructorMyPageNavHost(
                 },
                 bottomBar = bottomBar,
                 refreshToken = profileRefreshToken,
+                tabRefreshToken = refreshToken,
             )
         }
 
@@ -125,7 +127,7 @@ internal fun InstructorMyPageNavHost(
                     navController.navigate(InstructorStudioDetailDestination(studioId.value))
                 },
                 onOpenStudioRegistration = { navController.navigate(InstructorMyPageDestination.F09) },
-                refreshToken = studioRefreshToken,
+                refreshToken = studioRefreshToken + refreshToken,
             )
         }
 
@@ -139,8 +141,11 @@ internal fun InstructorMyPageNavHost(
                     navController.navigate(InstructorStudioEditDestination(id.value))
                 },
                 onDeleted = {
-                    studioRefreshToken++
-                    navController.popBackStack(InstructorMyPageDestination.F08, false)
+                    scope.launch {
+                        studioContext.refreshStudios()
+                        studioRefreshToken++
+                        navController.popBackStack(InstructorMyPageDestination.F08, false)
+                    }
                 },
             )
         }
@@ -152,8 +157,11 @@ internal fun InstructorMyPageNavHost(
                 studioId = studioId,
                 onBack = { navController.popBackStack() },
                 onSaved = {
-                    studioRefreshToken++
-                    navController.popBackStack(InstructorMyPageDestination.F08, false)
+                    scope.launch {
+                        studioContext.refreshStudios()
+                        studioRefreshToken++
+                        navController.popBackStack(InstructorMyPageDestination.F08, false)
+                    }
                 },
             )
         }
