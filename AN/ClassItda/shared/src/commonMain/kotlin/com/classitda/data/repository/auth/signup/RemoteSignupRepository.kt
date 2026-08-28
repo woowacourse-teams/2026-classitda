@@ -30,6 +30,7 @@ import com.classitda.domain.model.auth.signup.SignupToken
 import com.classitda.domain.model.auth.signup.TermId
 import com.classitda.domain.repository.auth.signup.SignupRepository
 import io.ktor.client.plugins.ResponseException
+import kotlinx.coroutines.CancellationException
 
 internal class RemoteSignupRepository(
     private val api: SignupApi,
@@ -42,7 +43,7 @@ internal class RemoteSignupRepository(
             Logger.d("SignupFlow: Google login API response status=${response.status}")
             response.toDomain().also { result ->
                 if (result is GoogleLoginResult.Registered) {
-                    clearSessionCacheBestEffort()
+                    clearSessionCacheOrThrow()
                     tokenStorage.write(result.tokens)
                 }
             }
@@ -88,7 +89,7 @@ internal class RemoteSignupRepository(
                     signupToken.value,
                     SignupRequestDto(name.value, agreedTermIds.map(TermId::value)),
                 ).toDomain()
-        clearSessionCacheBestEffort()
+        clearSessionCacheOrThrow()
         tokenStorage.write(tokens)
         return tokens
     }
@@ -98,7 +99,7 @@ internal class RemoteSignupRepository(
             tokenStorage.read()
                 ?: run {
                     Logger.d("AuthSession: logout skipped because no local token exists")
-                    clearSessionCacheBestEffort()
+                    clearSessionCacheOrThrow()
                     return
                 }
         Logger.d("AuthSession: logout API call with local tokens")
@@ -109,16 +110,21 @@ internal class RemoteSignupRepository(
         }.onFailure { error ->
             Logger.e("AuthSession: logout API failed: ${error.message}")
         }.also {
-            runCatching { sessionCacheCleaner.clear() }
-                .onFailure { error -> Logger.e("AuthSession: local cache clear failed: ${error.message}") }
+            clearSessionCacheOrThrow()
             tokenStorage.clear()
             Logger.d("AuthSession: local tokens cleared")
         }
     }
 
-    private suspend fun clearSessionCacheBestEffort() {
-        runCatching { sessionCacheCleaner.clear() }
-            .onFailure { error -> Logger.e("AuthSession: local cache clear failed: ${error.message}") }
+    private suspend fun clearSessionCacheOrThrow() {
+        try {
+            sessionCacheCleaner.clear()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Throwable) {
+            Logger.e("AuthSession: local cache clear failed: ${exception.message}")
+            throw exception
+        }
     }
 }
 

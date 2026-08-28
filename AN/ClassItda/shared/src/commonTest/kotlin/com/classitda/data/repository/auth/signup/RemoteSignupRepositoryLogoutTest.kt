@@ -1,6 +1,7 @@
 package com.classitda.data.repository.auth.signup
 
 import com.classitda.core.auth.InMemoryAuthTokenStorage
+import com.classitda.core.auth.SessionCacheCleaner
 import com.classitda.core.network.createClassItdaHttpClient
 import com.classitda.data.remote.auth.signup.SignupApi
 import com.classitda.domain.model.auth.signup.LoginTokens
@@ -13,6 +14,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -95,5 +97,41 @@ class RemoteSignupRepositoryLogoutTest {
 
             assertNull(tokenStorage.read())
             Unit
+        }
+
+    @Test
+    fun `캐시 삭제에 실패하면 로그아웃 토큰을 삭제하지 않고 예외를 전달한다`() =
+        runBlocking {
+            val tokenStorage =
+                InMemoryAuthTokenStorage().apply {
+                    write(
+                        LoginTokens(
+                            accessToken = "access-token",
+                            accessTokenExpiresInSeconds = 3600,
+                            refreshToken = "refresh-token",
+                            refreshTokenExpiresInSeconds = 2592000,
+                        ),
+                    )
+                }
+            val client =
+                createClassItdaHttpClient(
+                    engine = MockEngine { respond("", HttpStatusCode.NoContent) },
+                    baseUrl = "https://api.classitda.test/",
+                    tokenStorage = tokenStorage,
+                )
+
+            try {
+                val repository =
+                    RemoteSignupRepository(
+                        SignupApi(client),
+                        tokenStorage,
+                        SessionCacheCleaner { error("cache clear failed") },
+                    )
+
+                assertFailsWith<IllegalStateException> { repository.logout() }
+                assertEquals("access-token", tokenStorage.read()?.accessToken)
+            } finally {
+                client.close()
+            }
         }
 }

@@ -18,9 +18,8 @@ internal class RemoteInstructorAccountLifecycleRepository(
 ) : InstructorAccountLifecycleRepository {
     override suspend fun withdraw(): AccountLifecycleResult =
         try {
+            clearSessionCacheOrThrow()
             api.deleteMe()
-            runCatching { sessionCacheCleaner.clear() }
-                .onFailure { error -> Logger.e("AccountLifecycle: local cache clear failed: ${error.message}") }
             AccountLifecycleResult.Success
         } catch (exception: CancellationException) {
             throw exception
@@ -29,6 +28,17 @@ internal class RemoteInstructorAccountLifecycleRepository(
         } catch (exception: Throwable) {
             AccountLifecycleResult.Failure(exception.toFailureReason())
         }
+
+    private suspend fun clearSessionCacheOrThrow() {
+        try {
+            sessionCacheCleaner.clear()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Throwable) {
+            Logger.e("AccountLifecycle: local cache clear failed: ${exception.message}")
+            throw exception
+        }
+    }
 }
 
 private fun ResponseException.toFailureReason(): AccountLifecycleFailureReason =

@@ -1,6 +1,7 @@
 package com.classitda.data.repository.auth
 
 import com.classitda.core.auth.InMemoryAuthTokenStorage
+import com.classitda.core.auth.SessionCacheCleaner
 import com.classitda.core.network.createClassItdaHttpClient
 import com.classitda.data.remote.member.MemberApi
 import com.classitda.domain.model.auth.signup.LoginTokens
@@ -50,6 +51,32 @@ class RemoteInstructorAccountLifecycleRepositoryTest {
 
                 val failure = assertIs<AccountLifecycleResult.Failure>(result)
                 assertEquals(AccountLifecycleFailureReason.CONFLICT, failure.reason)
+            } finally {
+                client.close()
+            }
+        }
+
+    @Test
+    fun `캐시 삭제에 실패하면 탈퇴 API를 호출하지 않고 성공을 반환하지 않는다`() =
+        runBlocking {
+            var requestCount = 0
+            val engine =
+                MockEngine {
+                    requestCount++
+                    respond("", HttpStatusCode.NoContent)
+                }
+            val client = createClient(engine)
+
+            try {
+                val result =
+                    RemoteInstructorAccountLifecycleRepository(
+                        MemberApi(client),
+                        SessionCacheCleaner { error("cache clear failed") },
+                    ).withdraw()
+
+                val failure = assertIs<AccountLifecycleResult.Failure>(result)
+                assertEquals(AccountLifecycleFailureReason.UNKNOWN, failure.reason)
+                assertEquals(0, requestCount)
             } finally {
                 client.close()
             }

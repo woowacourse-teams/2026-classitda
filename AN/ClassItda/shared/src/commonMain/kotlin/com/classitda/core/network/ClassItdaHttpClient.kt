@@ -127,12 +127,7 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(
                 } catch (exception: ClientRequestException) {
                     if (exception.response.status.value == 401) {
                         sessionCacheCleaner?.let { cleaner ->
-                            runCatching { cleaner.clear() }
-                                .onFailure { error ->
-                                    Logger.e(
-                                        "AuthSession: local cache clear failed: ${error.message}",
-                                    )
-                                }
+                            clearSessionCacheOrThrow(cleaner)
                         }
                         tokenStorage.clear()
                     }
@@ -142,6 +137,17 @@ private fun io.ktor.client.HttpClientConfig<*>.installBearerAuth(
                 }
             }
         }
+    }
+}
+
+private suspend fun clearSessionCacheOrThrow(cleaner: SessionCacheCleaner) {
+    try {
+        cleaner.clear()
+    } catch (exception: CancellationException) {
+        throw exception
+    } catch (exception: Throwable) {
+        Logger.e("AuthSession: local cache clear failed: ${exception.message}")
+        throw exception
     }
 }
 
