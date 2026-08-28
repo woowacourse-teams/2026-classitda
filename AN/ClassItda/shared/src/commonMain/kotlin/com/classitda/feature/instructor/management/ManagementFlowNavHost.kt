@@ -56,6 +56,7 @@ private data class MemberEditDestination(
 @Composable
 internal fun ManagementFlowNavHost(
     bottomBar: @Composable () -> Unit,
+    onSessionCardClick: (String) -> Unit = {},
     refreshKey: Int = 0,
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
@@ -89,7 +90,7 @@ internal fun ManagementFlowNavHost(
             ClassListRoute(
                 onBackClick = navController::popBackStack,
                 onCreateSessionClick = { navController.navigate(ClassSessionCreateDestination) },
-                onSessionCardClick = {},
+                onSessionCardClick = onSessionCardClick,
                 bottomBar = {},
                 shouldRefresh = shouldRefresh,
                 refreshKey = refreshKey,

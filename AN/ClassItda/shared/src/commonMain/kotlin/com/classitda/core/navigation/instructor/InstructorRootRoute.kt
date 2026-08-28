@@ -104,6 +104,7 @@ fun InstructorRootRoute(
             InstructorBottomTab.MANAGEMENT -> {
                 ManagementFlowNavHost(
                     bottomBar = topLevelBottomBar,
+                    onSessionCardClick = { selectedSessionId = it },
                     refreshKey = tabRefreshKey,
                     modifier = modifier,
                     onOpenStudioRegistration = {
