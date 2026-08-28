@@ -35,6 +35,26 @@ class InstructorStudioContextTest {
             assertEquals(3, requestCount)
         }
 
+    @Test
+    fun `선택한 시설을 저장하고 다음 앱 실행에서 복원한다`() =
+        runBlocking {
+            val studios = listOf(studio("1"), studio("2"))
+            val storage = InMemoryInstructorStudioSelectionStorage()
+            val repository =
+                object : StudioRepository {
+                    override suspend fun getMyStudios(): List<Studio> = studios
+                }
+
+            InstructorStudioContext(repository, storage).apply {
+                getStudios()
+                selectStudio("2")
+            }
+
+            val restoredContext = InstructorStudioContext(repository, storage)
+
+            assertEquals(studio("2"), restoredContext.getSelectedStudio())
+        }
+
     private fun studio(id: String) =
         Studio(
             id = StudioId(id),

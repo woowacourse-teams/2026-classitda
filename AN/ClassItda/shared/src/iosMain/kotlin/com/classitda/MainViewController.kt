@@ -4,8 +4,10 @@ import androidx.compose.ui.window.ComposeUIViewController
 import com.classitda.core.auth.SettingsAuthTokenStorage
 import com.classitda.core.database.createPlatformDatabaseModule
 import com.classitda.core.network.ClassItdaApiConfig
+import com.classitda.core.studio.SettingsInstructorStudioSelectionStorage
 import com.russhwolf.settings.ExperimentalSettingsImplementation
 import com.russhwolf.settings.KeychainSettings
+import com.russhwolf.settings.NSUserDefaultsSettings
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.Platform
@@ -24,6 +26,10 @@ fun MainViewController() =
                     },
                 localDatabaseModule = localDatabaseModule,
                 tokenStorage = SettingsAuthTokenStorage(KeychainSettings.Factory().create("auth_tokens")),
+                studioSelectionStorage =
+                    SettingsInstructorStudioSelectionStorage(
+                        NSUserDefaultsSettings.Factory().create("app_preferences"),
+                    ),
             )
         }
     }

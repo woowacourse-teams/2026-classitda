@@ -10,6 +10,8 @@ import com.classitda.core.auth.AndroidKeystoreAuthTokenStorage
 import com.classitda.core.database.createInMemoryDatabaseModule
 import com.classitda.core.database.createPlatformDatabaseModule
 import com.classitda.core.network.ClassItdaApiConfig
+import com.classitda.core.studio.SettingsInstructorStudioSelectionStorage
+import com.russhwolf.settings.SharedPreferencesSettings
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,6 +25,10 @@ class MainActivity : ComponentActivity() {
                 localDatabaseModule = localDatabaseModule,
                 tokenStorage =
                     AndroidKeystoreAuthTokenStorage(applicationContext),
+                studioSelectionStorage =
+                    SettingsInstructorStudioSelectionStorage(
+                        SharedPreferencesSettings.Factory(applicationContext).create("app_preferences"),
+                    ),
             )
         }
     }
