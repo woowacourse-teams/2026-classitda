@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -47,6 +45,7 @@ import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
 import kotlinx.datetime.minus
 import kotlinx.datetime.number
 import kotlinx.datetime.plus
@@ -89,18 +88,29 @@ internal fun InstructorScheduleStateful(
     var displayedMonth by remember { mutableStateOf(firstSessionDate.month.number) }
     var selectedDate by remember { mutableStateOf(firstSessionDate) }
     var isMonthMode by remember { mutableStateOf(true) }
+    var isDateInitialized by remember { mutableStateOf(false) }
+
+    fun moveMonth(monthOffset: Int) {
+        val movedMonthDate = LocalDate(displayedYear, displayedMonth, 1).plus(DatePeriod(months = monthOffset))
+        val movedMonth = YearMonth(movedMonthDate.year, movedMonthDate.month)
+        val selectedDay = minOf(selectedDate.day, movedMonth.lastDay.day)
+        selectedDate = LocalDate(movedMonthDate.year, movedMonthDate.month, selectedDay)
+        displayedYear = movedMonthDate.year
+        displayedMonth = movedMonthDate.month.number
+    }
 
     LaunchedEffect(selectedDate, refreshKey) {
         viewModel.load(selectedDate)
     }
 
     LaunchedEffect(sessions) {
-        if (sessions.isNotEmpty()) {
+        if (!isDateInitialized && sessions.isNotEmpty()) {
             val sessionDate = sessions.minOf { it.startAt.date }
             displayedYear = sessionDate.year
             displayedMonth = sessionDate.month.number
             selectedDate = sessionDate
             isMonthMode = true
+            isDateInitialized = true
         }
     }
 
@@ -153,11 +163,8 @@ internal fun InstructorScheduleStateful(
                             selectedDate = selectedDate.minus(DatePeriod(days = 7))
                             displayedYear = selectedDate.year
                             displayedMonth = selectedDate.month.number
-                        } else if (displayedMonth == 1) {
-                            displayedYear -= 1
-                            displayedMonth = 12
                         } else {
-                            displayedMonth -= 1
+                            moveMonth(-1)
                         }
                     },
                     onNextMonth = {
@@ -165,11 +172,8 @@ internal fun InstructorScheduleStateful(
                             selectedDate = selectedDate.plus(DatePeriod(days = 7))
                             displayedYear = selectedDate.year
                             displayedMonth = selectedDate.month.number
-                        } else if (displayedMonth == 12) {
-                            displayedYear += 1
-                            displayedMonth = 1
                         } else {
-                            displayedMonth += 1
+                            moveMonth(1)
                         }
                     },
                     onSessionClick = onSessionClick,
@@ -198,68 +202,73 @@ internal fun InstructorScheduleStateless(
 ) {
     val selectedSessions = sessions.filter { it.startAt.date == selectedDate }.sortedBy { it.startAt }
 
-    LazyColumn(
+    Column(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = AppSpacing.xxxl),
     ) {
-        item {
-            TopBar(title = "일정", hasBackground = true)
-        }
-        item {
-            InstructorCalendar(
-                displayedYear = displayedYear,
-                displayedMonth = displayedMonth,
-                selectedDate = selectedDate,
-                isMonthMode = isMonthMode,
-                scheduledDates =
-                    calendarDays
-                        .filter { it.scheduled }
-                        .map { it.date }
-                        .toSet(),
-                completedDates =
-                    calendarDays
-                        .filter { it.completed }
-                        .map { it.date }
-                        .toSet(),
-                onDateSelected = onDateSelected,
-                onModeChange = onModeChange,
-                onTodayClick = onTodayClick,
-                onPreviousMonth = onPreviousMonth,
-                onNextMonth = onNextMonth,
-            )
-        }
-        item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = "${selectedDate.month.number}월 ${selectedDate.day}일 ${selectedDate.dayOfWeek.koreanName}",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    text = "수업 ${selectedSessions.size}개",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = InsColors.TextSecondary,
-                )
-            }
-        }
-        if (selectedSessions.isEmpty()) {
+        TopBar(title = "일정", hasBackground = true)
+        InstructorCalendar(
+            displayedYear = displayedYear,
+            displayedMonth = displayedMonth,
+            selectedDate = selectedDate,
+            isMonthMode = isMonthMode,
+            scheduledDates =
+                calendarDays
+                    .filter { it.scheduled }
+                    .map { it.date }
+                    .toSet(),
+            completedDates =
+                calendarDays
+                    .filter { it.completed }
+                    .map { it.date }
+                    .toSet(),
+            onDateSelected = onDateSelected,
+            onModeChange = onModeChange,
+            onTodayClick = onTodayClick,
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
+        )
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            contentPadding = PaddingValues(bottom = AppSpacing.xxxl),
+        ) {
             item {
-                Text(
-                    "등록된 수업이 없어요",
-                    color = InsColors.TextSecondary,
-                    modifier = Modifier.padding(horizontal = AppSpacing.screenPadding),
-                )
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text =
+                            "${selectedDate.month.number}월 ${selectedDate.day}일 " +
+                                selectedDate.dayOfWeek.koreanName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        text = "수업 ${selectedSessions.size}개",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = InsColors.TextSecondary,
+                    )
+                }
             }
-        } else {
-            items(selectedSessions, key = { it.id }) { session ->
-                InstructorScheduleCard(
-                    session = session,
-                    onClick = { onSessionClick(session.id) },
-                )
+            if (selectedSessions.isEmpty()) {
+                item {
+                    Text(
+                        "등록된 수업이 없어요",
+                        color = InsColors.TextSecondary,
+                        modifier = Modifier.padding(horizontal = AppSpacing.screenPadding),
+                    )
+                }
+            } else {
+                items(selectedSessions, key = { it.id }) { session ->
+                    InstructorScheduleCard(
+                        session = session,
+                        onClick = { onSessionClick(session.id) },
+                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.cardGap))
+                }
             }
         }
     }
@@ -297,6 +306,28 @@ private fun InstructorScheduleStatelessPreview() {
                         reservedCount = 6,
                         capacity = 6,
                         status = ClassSessionStatus.COMPLETED,
+                    ),
+                    ClassSession(
+                        id = "3",
+                        classTypeId = "1",
+                        tags = listOf("그룹 수업"),
+                        title = "바렐 스트레칭",
+                        startAt = LocalDateTime(2026, 8, 5, 21, 0),
+                        endAt = LocalDateTime(2026, 8, 5, 21, 50),
+                        reservedCount = 4,
+                        capacity = 8,
+                        status = ClassSessionStatus.SCHEDULED,
+                    ),
+                    ClassSession(
+                        id = "4",
+                        classTypeId = "1",
+                        tags = listOf("그룹 수업"),
+                        title = "모닝 요가 플로우",
+                        startAt = LocalDateTime(2026, 8, 5, 22, 30),
+                        endAt = LocalDateTime(2026, 8, 5, 23, 20),
+                        reservedCount = 3,
+                        capacity = 8,
+                        status = ClassSessionStatus.SCHEDULED,
                     ),
                 ),
             calendarDays = emptyList(),

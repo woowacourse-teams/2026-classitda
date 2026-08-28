@@ -16,6 +16,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 @Composable
 actual fun PlatformWebView(
     url: String,
+    onLoadingChanged: (Boolean) -> Unit,
     modifier: Modifier,
 ) {
     val context = LocalContext.current
@@ -34,11 +35,28 @@ actual fun PlatformWebView(
                 settings.domStorageEnabled = true
                 webViewClient =
                     object : WebViewClient() {
+                        override fun onPageStarted(
+                            view: WebView?,
+                            url: String?,
+                            favicon: android.graphics.Bitmap?,
+                        ) {
+                            onLoadingChanged(true)
+                        }
+
                         override fun onPageFinished(
                             view: WebView?,
                             url: String?,
                         ) {
                             canGoBack = view?.canGoBack() == true
+                            onLoadingChanged(false)
+                        }
+
+                        override fun onReceivedError(
+                            view: WebView?,
+                            request: android.webkit.WebResourceRequest?,
+                            error: android.webkit.WebResourceError?,
+                        ) {
+                            if (request?.isForMainFrame == true) onLoadingChanged(false)
                         }
                     }
                 loadUrl(url)

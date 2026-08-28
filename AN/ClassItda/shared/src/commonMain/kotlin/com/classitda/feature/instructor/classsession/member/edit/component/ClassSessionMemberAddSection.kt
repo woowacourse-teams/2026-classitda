@@ -70,8 +70,13 @@ private fun memberEditTextFieldColors() =
     OutlinedTextFieldDefaults.colors(
         focusedContainerColor = InsColors.White,
         unfocusedContainerColor = InsColors.White,
+        disabledContainerColor = InsColors.White,
         focusedBorderColor = InsColors.Purple,
         unfocusedBorderColor = InsColors.Divider,
+        disabledBorderColor = InsColors.Divider,
+        disabledTextColor = InsColors.TextPrimary,
+        disabledPlaceholderColor = InsColors.TextTertiary,
+        disabledLeadingIconColor = InsColors.TextSecondary,
         cursorColor = InsColors.Purple,
     )
 

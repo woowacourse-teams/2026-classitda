@@ -13,22 +13,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import classitda.shared.generated.resources.Res
-import classitda.shared.generated.resources.ic_arrow_back
-import classitda.shared.generated.resources.ic_arrow_forward
 import com.classitda.core.designsystem.AppShape
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
@@ -40,7 +32,6 @@ import kotlinx.datetime.Month
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
-import org.jetbrains.compose.resources.painterResource
 
 @Composable
 internal fun InstructorCalendar(
@@ -55,6 +46,7 @@ internal fun InstructorCalendar(
     onTodayClick: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val calendarMonth = YearMonth(displayedYear, Month.entries[displayedMonth - 1])
     val firstDay = calendarMonth.firstDay
@@ -68,78 +60,24 @@ internal fun InstructorCalendar(
     val weekDays = List(7) { index -> weekStart.plus(DatePeriod(days = index)) }
 
     Column(
-        modifier = Modifier.fillMaxWidth().background(InsColors.White).padding(AppSpacing.screenPadding),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+        modifier =
+            modifier.fillMaxWidth().background(InsColors.White).padding(
+                start = AppSpacing.screenPadding,
+                top = AppSpacing.sm,
+                end = AppSpacing.screenPadding,
+                bottom = AppSpacing.cardPadding,
+            ),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
     ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(Res.drawable.ic_arrow_back),
-                contentDescription = "이전 달",
-                tint = InsColors.TextSecondary,
-                modifier = Modifier.size(20.dp).clickable(onClick = onPreviousMonth),
-            )
-            Spacer(Modifier.width(AppSpacing.sm))
-            Text(
-                text = "${displayedYear}년 ${displayedMonth}월",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Spacer(Modifier.width(AppSpacing.sm))
-            Icon(
-                painter = painterResource(Res.drawable.ic_arrow_forward),
-                contentDescription = "다음 달",
-                tint = InsColors.TextSecondary,
-                modifier = Modifier.size(20.dp).clickable(onClick = onNextMonth),
-            )
-            Spacer(Modifier.weight(1f))
-            Surface(shape = AppShape.Card, color = InsColors.SurfaceVariant) {
-                Row(Modifier.padding(2.dp)) {
-                    Surface(
-                        shape = AppShape.Card,
-                        color = if (isMonthMode) InsColors.White else Color.Transparent,
-                        modifier = Modifier.clickable { onModeChange(true) },
-                    ) {
-                        Text(
-                            text = "월",
-                            color = if (isMonthMode) InsColors.TextPrimary else InsColors.TextSecondary,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier =
-                                Modifier.padding(
-                                    horizontal = AppSpacing.sm,
-                                    vertical = AppSpacing.xs,
-                                ),
-                        )
-                    }
-                    Surface(
-                        shape = AppShape.Card,
-                        color = if (isMonthMode) Color.Transparent else InsColors.White,
-                        modifier = Modifier.clickable { onModeChange(false) },
-                    ) {
-                        Text(
-                            text = "주",
-                            color = if (isMonthMode) InsColors.TextSecondary else InsColors.TextPrimary,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier =
-                                Modifier.padding(
-                                    horizontal = AppSpacing.sm,
-                                    vertical = AppSpacing.xs,
-                                ),
-                        )
-                    }
-                }
-            }
-        }
-        Row(Modifier.fillMaxWidth()) {
-            listOf("월", "화", "수", "목", "금", "토", "일").forEach { day ->
-                Text(
-                    text = day,
-                    modifier = Modifier.weight(1f),
-                    color = InsColors.TextTertiary,
-                    style = MaterialTheme.typography.labelSmall,
-                    textAlign = TextAlign.Center,
-                )
-            }
-        }
+        InstructorCalendarHeader(
+            year = displayedYear,
+            month = displayedMonth,
+            isMonthMode = isMonthMode,
+            onPreviousMonth = onPreviousMonth,
+            onNextMonth = onNextMonth,
+            onModeChange = onModeChange,
+        )
+        InstructorCalendarWeekdayHeader()
         val visibleWeeks: List<List<LocalDate?>> = if (isMonthMode) monthDays.chunked(7) else listOf(weekDays)
         visibleWeeks.forEach { week ->
             Row(Modifier.fillMaxWidth()) {
@@ -155,28 +93,7 @@ internal fun InstructorCalendar(
                 }
             }
         }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            InstructorCalendarLegendDot(InsColors.Purple)
-            Text(
-                text = "예정 수업",
-                color = InsColors.TextSecondary,
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(Modifier.width(AppSpacing.xxl))
-            InstructorCalendarLegendDot(InsColors.Gray400)
-            Text(
-                text = "완료 수업",
-                color = InsColors.TextSecondary,
-                style = MaterialTheme.typography.bodySmall,
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                text = "오늘",
-                color = InsColors.TextSecondary,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.clickable(onClick = onTodayClick),
-            )
-        }
+        InstructorCalendarFooter(onTodayClick = onTodayClick)
     }
 }
 
@@ -189,33 +106,36 @@ private fun InstructorCalendarDay(
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Column(
         modifier =
             modifier
-                .height(40.dp)
-                .clip(AppShape.Pill)
+                .fillMaxWidth()
+                .height(48.dp)
                 .clickable(enabled = date != null) { date?.let(onDateSelected) },
-        contentAlignment = Alignment.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
     ) {
         if (date != null) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
-                    modifier =
-                        Modifier
-                            .size(28.dp)
-                            .clip(AppShape.Pill)
-                            .background(if (isSelected) InsColors.Black else Color.Transparent),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = date.day.toString(),
-                        color = if (isSelected) InsColors.White else InsColors.TextPrimary,
-                    )
-                }
-                Row(Modifier.height(6.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                    if (hasScheduledSession) InstructorCalendarLegendDot(InsColors.Purple)
-                    if (hasCompletedSession) InstructorCalendarLegendDot(InsColors.Gray400)
-                }
+            Box(
+                modifier =
+                    Modifier
+                        .size(28.dp)
+                        .clip(AppShape.Pill)
+                        .background(if (isSelected) InsColors.Black else Color.Transparent),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = date.day.toString(),
+                    color = if (isSelected) InsColors.White else InsColors.TextPrimary,
+                )
+            }
+            Row(
+                modifier = Modifier.height(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (hasScheduledSession) InstructorCalendarLegendDot(InsColors.Purple)
+                if (hasCompletedSession) InstructorCalendarLegendDot(InsColors.Gray400)
             }
         }
     }

@@ -2,7 +2,6 @@ package com.classitda.feature.instructor.classsession.edit
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -18,7 +17,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,22 +36,25 @@ import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.InsColors
 import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.designsystem.component.NavigateBackTopBar
-import com.classitda.domain.model.instructor.management.ClassType
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionCapacityChangeDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDatePickerDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionDeleteConfirmDialog
 import com.classitda.feature.instructor.classsession.edit.component.ClassSessionEditExitDialog
+import com.classitda.feature.instructor.classsession.edit.component.EditCategoryChip
+import com.classitda.feature.instructor.classsession.edit.component.EditClassStartTimeField
+import com.classitda.feature.instructor.classsession.edit.component.EditClassTimePickerDialog
+import com.classitda.feature.instructor.classsession.edit.component.EditDatePickerField
+import com.classitda.feature.instructor.classsession.edit.component.EditFieldDefaults
+import com.classitda.feature.instructor.classsession.edit.component.EditOutlinedSegmentedToggle
+import com.classitda.feature.instructor.classsession.edit.component.EditTextField
+import com.classitda.feature.instructor.classsession.edit.component.EditUnitTextField
 import com.classitda.feature.instructor.classsession.edit.model.ClassSessionEditFormUiModel
-import com.classitda.feature.instructor.management.component.ClassStartTimeField
-import com.classitda.feature.instructor.management.component.ClassTimePickerDialog
-import com.classitda.feature.instructor.management.component.CreateTextField
-import com.classitda.feature.instructor.management.component.DatePickerField
-import com.classitda.feature.instructor.management.component.OutlinedSegmentedToggle
 import com.classitda.feature.instructor.management.model.ClassFormOption
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.number
 import org.koin.compose.viewmodel.koinViewModel
+import com.classitda.domain.model.instructor.management.ClassType as DomainClassType
 
 @Composable
 internal fun ClassSessionEditRoute(
@@ -98,7 +99,7 @@ internal fun ClassSessionEditRoute(
 @Composable
 private fun ClassSessionEditStateful(
     initialForm: ClassSessionEditFormUiModel,
-    categories: List<ClassType>,
+    categories: List<DomainClassType>,
     onBackClick: () -> Unit,
     onSave: (ClassSessionEditFormUiModel) -> Unit,
     onDelete: () -> Unit,
@@ -187,7 +188,7 @@ private fun ClassSessionEditStateful(
     )
 
     if (isTimePickerVisible) {
-        ClassTimePickerDialog(
+        EditClassTimePickerDialog(
             initialTime = startTime,
             onDismissRequest = { isTimePickerVisible = false },
             onConfirm = {
@@ -235,7 +236,7 @@ private fun ClassSessionEditStateful(
 internal fun ClassSessionEditStateless(
     classType: ClassFormOption,
     selectedCategories: List<String>,
-    categories: List<ClassType>,
+    categories: List<DomainClassType>,
     title: String,
     capacityText: String,
     durationText: String,
@@ -262,7 +263,7 @@ internal fun ClassSessionEditStateless(
         topBar = {
             NavigateBackTopBar(
                 onNavigateBack = onBackClick,
-                modifier = Modifier.background(InsColors.Surface),
+                modifier = Modifier.background(InsColors.Background),
                 title = "수업 수정",
             )
         },
@@ -273,22 +274,24 @@ internal fun ClassSessionEditStateless(
                     .fillMaxSize()
                     .padding(contentPadding)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.xl),
+                    .padding(horizontal = AppSpacing.screenPadding, vertical = AppSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
         ) {
-            EditSectionLabel(text = "수업 유형 *")
-            OutlinedSegmentedToggle(
-                options = ClassFormOption.entries.map { it.label },
-                selectedIndex = ClassFormOption.entries.indexOf(classType),
-                onOptionSelected = { onClassTypeChange(ClassFormOption.entries[it]) },
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(EditFieldDefaults.labelFieldGap)) {
+                EditSectionLabel(text = "수업 유형 *")
+                EditOutlinedSegmentedToggle(
+                    options = ClassFormOption.entries.map { it.label },
+                    selectedIndex = ClassFormOption.entries.indexOf(classType),
+                    onOptionSelected = { onClassTypeChange(ClassFormOption.entries[it]) },
+                )
+            }
             SingleCategorySelector(
                 label = "카테고리 *",
                 categories = categories,
                 selectedCategories = selectedCategories,
                 onSelectedCategoriesChanged = onCategoriesChange,
             )
-            CreateTextField(
+            EditTextField(
                 label = "수업명 *",
                 value = title,
                 placeholder = "수업명을 입력해 주세요",
@@ -298,39 +301,39 @@ internal fun ClassSessionEditStateless(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg),
             ) {
-                CreateTextField(
+                EditUnitTextField(
                     label = "기본 정원 *",
                     value = capacityText,
                     placeholder = "0",
                     onValueChange = onCapacityChange,
                     keyboardType = KeyboardType.Number,
-                    trailingText = "명",
+                    unit = "명",
                     modifier = Modifier.weight(1f),
                 )
-                CreateTextField(
+                EditUnitTextField(
                     label = "진행 시간 *",
                     value = durationText,
                     placeholder = "0",
                     onValueChange = onDurationChange,
                     keyboardType = KeyboardType.Number,
-                    trailingText = "분",
+                    unit = "분",
                     modifier = Modifier.weight(1f),
                 )
             }
-            ClassStartTimeField(
+            EditClassStartTimeField(
                 label = "수업 시간 *",
                 startTimeText = startTime.toAmPmText(),
                 endTimeText = endTime.toAmPmText(),
                 onStartTimeClick = onStartTimeClick,
             )
-            Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+            Column(verticalArrangement = Arrangement.spacedBy(EditFieldDefaults.labelFieldGap)) {
                 EditSectionLabel(text = "수업일 *")
-                DatePickerField(
+                EditDatePickerField(
                     dateText = sessionDate.toDateText(),
                     onClick = onDateClick,
                 )
             }
-            CreateTextField(
+            EditTextField(
                 label = "상세 설명",
                 value = description,
                 placeholder = "수업에 대한 설명을 입력해 주세요",
@@ -365,30 +368,24 @@ internal fun ClassSessionEditStateless(
 @Composable
 private fun SingleCategorySelector(
     label: String,
-    categories: List<ClassType>,
+    categories: List<DomainClassType>,
     selectedCategories: List<String>,
     onSelectedCategoriesChanged: (List<String>) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
+    Column(verticalArrangement = Arrangement.spacedBy(EditFieldDefaults.labelFieldGap)) {
         EditSectionLabel(text = label)
         FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
         ) {
             categories.forEach { category ->
-                val isSelected = category.name in selectedCategories
-                Surface(
-                    modifier = Modifier.clickable { onSelectedCategoriesChanged(listOf(category.name)) },
-                    shape = com.classitda.core.designsystem.AppShape.Pill,
-                    color = if (isSelected) InsColors.PurpleLight else InsColors.Gray100,
-                    contentColor = if (isSelected) InsColors.Purple else InsColors.TextSecondary,
-                ) {
-                    Text(
-                        text = category.name,
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
-                    )
-                }
+                EditCategoryChip(
+                    text = category.name,
+                    isSelected = category.name in selectedCategories,
+                    onClick = {
+                        onSelectedCategoriesChanged(listOf(category.name))
+                    },
+                )
             }
         }
     }
@@ -445,9 +442,9 @@ private fun ClassSessionEditStatelessPreview() {
             selectedCategories = listOf("필라테스"),
             categories =
                 listOf(
-                    ClassType(id = "1", name = "필라테스"),
-                    ClassType(id = "2", name = "요가"),
-                    ClassType(id = "3", name = "그룹 PT"),
+                    DomainClassType(id = "1", name = "필라테스"),
+                    DomainClassType(id = "2", name = "요가"),
+                    DomainClassType(id = "3", name = "그룹 PT"),
                 ),
             title = "리포머 밸런스",
             capacityText = "8",

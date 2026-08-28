@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,13 +24,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.classitda.core.designsystem.AppSpacing
 import com.classitda.core.designsystem.AppTheme
 import com.classitda.core.designsystem.StuColors
 import com.classitda.core.designsystem.ThemeType
-import com.classitda.core.designsystem.appTypography
+import com.classitda.core.designsystem.component.PrimaryButton
 
 @Composable
 internal fun SignupTermsSheet(
@@ -69,7 +72,7 @@ internal fun SignupTermsSheet(
                     ),
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().clickable(onClick = onToggleAllTerms),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     SignupCheckBox(
@@ -80,23 +83,20 @@ internal fun SignupTermsSheet(
                     Text(
                         text = "약관 전체 동의",
                         style =
-                            appTypography().labelLarge.copy(
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                            MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
                             ),
                         color = StuColors.TextPrimary,
                     )
                 }
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(top = AppSpacing.md)
-                            .height(1.dp)
-                            .background(StuColors.Divider),
+                HorizontalDivider(
+                    modifier = Modifier.padding(top = AppSpacing.md, start = AppSpacing.md, end = AppSpacing.md),
+                    thickness = 1.dp,
+                    color = StuColors.Divider,
                 )
                 Column(
                     modifier = Modifier.padding(top = AppSpacing.md),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
                 ) {
                     SignupTermRow(
                         text = "[필수] 이용약관 동의",
@@ -112,10 +112,10 @@ internal fun SignupTermsSheet(
                     )
                 }
                 Spacer(modifier = Modifier.height(44.dp))
-                SignupActionButton(
+                PrimaryButton(
                     text = "가입 완료",
-                    color = StuColors.Gray900,
                     onClick = onComplete,
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }

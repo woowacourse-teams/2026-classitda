@@ -119,13 +119,7 @@ private fun InstructorStudioSwitchSheetContent(
                     Text("다시 시도")
                 }
             } else {
-                Text(
-                    text = "강사모드",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = InsColors.TextTertiary,
-                )
-                Spacer(Modifier.height(AppSpacing.sm))
-                Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+                Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xl)) {
                     studios.forEach { studio ->
                         StudioOption(
                             studio = studio,

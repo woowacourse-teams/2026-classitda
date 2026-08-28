@@ -13,10 +13,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -81,27 +77,18 @@ internal fun ExternalLoginButton(
 @Composable
 private fun ExternalLoginButtonPreview() {
     AppTheme(theme = ThemeType.STUDENT) {
-        var selectedProvider by remember { mutableStateOf<ExternalLoginProvider?>(null) }
-
         Column(
             modifier = Modifier.padding(AppSpacing.lg),
         ) {
             ExternalLoginButton(
                 provider = ExternalLoginProvider.Google,
-                onClick = { selectedProvider = ExternalLoginProvider.Google },
+                onClick = { },
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             ExternalLoginButton(
                 provider = ExternalLoginProvider.Apple,
-                onClick = { selectedProvider = ExternalLoginProvider.Apple },
+                onClick = { },
             )
-            selectedProvider?.let {
-                Text(
-                    text = "선택됨: ${it.label}",
-                    modifier = Modifier.padding(top = AppSpacing.sm),
-                    color = StuColors.Green,
-                )
-            }
         }
     }
 }
