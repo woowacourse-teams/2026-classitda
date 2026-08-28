@@ -182,6 +182,53 @@ class StudentSessionDetailQueryServiceTest {
     }
 
     @Test
+    void 계정이_없는_강사의_수업도_프로필_이미지_없이_상세를_반환한다() {
+        // given
+        DetailContext context = 상세_조회_환경을_만든다("unlinked-instructor", 2, true);
+        StudioMembership unlinkedInstructor = 미가입_소속을_저장한다(
+                context.studio(), SystemRole.INSTRUCTOR, "미가입 강사");
+        ClassType classType = entityManager.createQuery("""
+                        SELECT classType
+                        FROM ClassType classType
+                        WHERE classType.studio.id = :studioId
+                        """, ClassType.class)
+                .setParameter("studioId", context.studio().getId())
+                .getResultList()
+                .getFirst();
+        ClassSession classSession = classSessionRepository.saveAndFlush(ClassSessionFixture.수업_회차(
+                context.studio().getId(),
+                unlinkedInstructor,
+                "미가입 강사 수업",
+                "개인 수건을 준비해 주세요.",
+                ClassForm.GROUP,
+                60,
+                2,
+                SESSION_START_AT
+        ));
+        classSessionClassTypeRepository.saveAndFlush(
+                ClassSessionFixture.수업_종류_연결(classSession.getId(), classType.getId())
+        );
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        StudentSessionDetailView result = queryService.findOne(
+                context.studentMembership().getMember().getId(),
+                context.studio().getId(),
+                classSession.getId()
+        );
+
+        // then
+        assertThat(result.instructor())
+                .isEqualTo(new StudentSessionDetailView.Instructor(
+                        unlinkedInstructor.getId(),
+                        "미가입 강사",
+                        null,
+                        context.studio().getName()
+                ));
+    }
+
+    @Test
     void 취소된_수업과_호환_수강권이_없는_수업과_다른_시설_수업은_상세에서_숨긴다() {
         // given
         DetailContext canceled = 상세_조회_환경을_만든다("canceled", 2, true);
@@ -282,6 +329,25 @@ class StudentSessionDetailQueryServiceTest {
                 SystemRole.STUDENT,
                 name
         );
+    }
+
+    private StudioMembership 미가입_소속을_저장한다(
+            Studio studio,
+            SystemRole systemRole,
+            String name
+    ) {
+        StudioMembership membership = StudioMembership.builder()
+                .studio(studio)
+                .member(null)
+                .phoneNumber("010%08d".formatted(PHONE_SEQUENCE.getAndIncrement()))
+                .studioRole(역할을_조회하거나_저장한다(studio, systemRole))
+                .status(MembershipStatus.ACTIVE)
+                .name(name)
+                .joinedAt(NOW.minusMonths(1))
+                .build();
+        entityManager.persist(membership);
+        entityManager.flush();
+        return membership;
     }
 
     private StudioMembership 소속을_저장한다(

@@ -118,7 +118,7 @@ public interface ClassSessionEnrollmentRepository extends JpaRepository<ClassSes
                    member.profileImageUrl AS profileImageUrl
             FROM ClassSessionEnrollment enrollment
             JOIN enrollment.membership membership
-            JOIN membership.member member
+            LEFT JOIN membership.member member
             WHERE enrollment.classSession.id = :classSessionId
               AND enrollment.classSession.studioId = :studioId
               AND membership.studio.id = :studioId

@@ -181,6 +181,36 @@ class InstructorSessionQueryServiceTest {
     }
 
     @Test
+    void 계정이_없는_소속의_예약도_프로필_이미지_없이_조회한다() {
+        // given
+        DetailContext context = 기본_환경("unlinked-detail");
+        StudioRole studentRole = 역할을_저장한다(context.studio(), SystemRole.STUDENT);
+        StudioMembership unlinked = 미가입_소속을_저장한다(context.studio(), studentRole, "대리 예약 회원");
+        ClassSessionEnrollment enrollment = 예약을_저장한다(
+                context.classSession(), unlinked, NOW.minusDays(1));
+        entityManager.flush();
+        entityManager.clear();
+
+        // when
+        InstructorSessionDetailView result = queryService.findDetail(
+                context.owner().getId(),
+                context.studio().getId(),
+                context.classSession().getId()
+        );
+
+        // then
+        assertThat(result.reservedCount()).isEqualTo(1);
+        assertThat(result.reservedMembers()).containsExactly(
+                new InstructorSessionDetailView.ReservedMember(
+                        enrollment.getId(),
+                        unlinked.getId(),
+                        "대리 예약 회원",
+                        null
+                )
+        );
+    }
+
+    @Test
     void 예약_회원이_없으면_예약_인원은_0이고_빈_목록을_반환한다() {
         // given
         DetailContext context = 기본_환경("empty-detail");
@@ -554,6 +584,25 @@ class InstructorSessionQueryServiceTest {
             String name
     ) {
         return 소속을_저장한다(studio, 회원을_저장한다(name, null), studentRole, name);
+    }
+
+    private StudioMembership 미가입_소속을_저장한다(
+            Studio studio,
+            StudioRole studentRole,
+            String name
+    ) {
+        StudioMembership membership = StudioMembership.builder()
+                .studio(studio)
+                .member(null)
+                .phoneNumber("010%08d".formatted(phoneSequence++))
+                .studioRole(studentRole)
+                .name(name)
+                .status(MembershipStatus.ACTIVE)
+                .joinedAt(LocalDateTime.of(2026, 8, 1, 9, 0))
+                .build();
+        entityManager.persist(membership);
+        entityManager.flush();
+        return membership;
     }
 
     private void 권한을_저장한다(StudioRole role, PermissionCode code) {

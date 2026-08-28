@@ -72,7 +72,7 @@ public interface ClassSessionRepository extends JpaRepository<ClassSession, Long
                    ownEnrollment.attendance.result AS ownAttendanceResult
             FROM ClassSession classSession
             JOIN classSession.instructorMembership instructorMembership
-            JOIN instructorMembership.member instructorMember
+            LEFT JOIN instructorMembership.member instructorMember
             JOIN ClassSessionClassType classSessionClassType
               ON classSessionClassType.classSessionId = classSession.id
             JOIN ClassType classType
