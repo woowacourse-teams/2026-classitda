@@ -8,6 +8,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal class InstructorStudioContext(
     private val repository: StudioRepository,
+    private val selectionStorage: InstructorStudioSelectionStorage = InMemoryInstructorStudioSelectionStorage(),
 ) {
     private val mutex = Mutex()
     private var studios: List<Studio>? = null
@@ -15,7 +16,11 @@ internal class InstructorStudioContext(
 
     suspend fun getStudios(): List<Studio> =
         mutex.withLock {
-            studios ?: repository.getMyStudios().also { studios = it }
+            studios
+                ?: repository.getMyStudios().also {
+                    studios = it
+                    restoreSelectedStudio(it)
+                }
         }
 
     suspend fun refreshStudios() {
@@ -23,10 +28,7 @@ internal class InstructorStudioContext(
             try {
                 val refreshedStudios = repository.getMyStudios()
                 studios = refreshedStudios
-                selectedStudio =
-                    selectedStudio?.let { selected ->
-                        refreshedStudios.firstOrNull { it.id == selected.id }
-                    }
+                restoreSelectedStudio(refreshedStudios)
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: Throwable) {
@@ -44,15 +46,39 @@ internal class InstructorStudioContext(
                     .firstOrNull { it.id.value == studioId }
                     ?: error("선택한 시설을 찾을 수 없습니다.")
             selectedStudio = studio
+            selectionStorage.save(studio.id.value)
         }
     }
 
     suspend fun getSelectedStudio(): Studio =
         mutex.withLock {
-            selectedStudio
-                ?: (studios ?: repository.getMyStudios().also { studios = it })
-                    .firstOrNull()
-                    ?.also { selectedStudio = it }
-                ?: error("사용할 수 있는 시설이 없습니다.")
+            selectedStudio ?: run {
+                val availableStudios =
+                    studios ?: repository.getMyStudios().also {
+                        studios = it
+                    }
+                restoreSelectedStudio(availableStudios)
+                selectedStudio ?: error("사용할 수 있는 시설이 없습니다.")
+            }
         }
+
+    suspend fun clearSelectedStudio() {
+        mutex.withLock {
+            selectedStudio = null
+            selectionStorage.clear()
+        }
+    }
+
+    private fun restoreSelectedStudio(availableStudios: List<Studio>) {
+        val storedStudioId = selectedStudio?.id?.value ?: selectionStorage.read()
+        val restoredStudio =
+            availableStudios.firstOrNull { it.id.value == storedStudioId }
+                ?: availableStudios.firstOrNull()
+        selectedStudio = restoredStudio
+        if (restoredStudio == null) {
+            selectionStorage.clear()
+        } else {
+            selectionStorage.save(restoredStudio.id.value)
+        }
+    }
 }

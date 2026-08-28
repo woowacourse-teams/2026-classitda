@@ -78,10 +78,13 @@ internal fun InstructorMyPageRoute(
     bottomBar: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     refreshToken: Int = 0,
+    tabRefreshToken: Int = 0,
     viewModel: InstructorMyPageViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
+    LaunchedEffect(refreshToken, tabRefreshToken) {
+        if (refreshToken > 0 || tabRefreshToken > 0) viewModel.refresh()
+    }
     InstructorMyPageScreen(uiState, onAction = { action ->
         when (action) {
             InstructorMyPageAction.OpenProfile -> onOpenProfile()
@@ -99,6 +102,7 @@ internal fun InstructorProfileViewRoute(
     onRequestLogout: () -> Unit,
     onWithdrawalCompleted: () -> Unit,
     refreshToken: Int = 0,
+    tabRefreshToken: Int = 0,
     modifier: Modifier = Modifier,
     viewModel: InstructorProfileViewModel = koinViewModel(),
 ) {
@@ -117,7 +121,9 @@ internal fun InstructorProfileViewRoute(
             }
         }
 
-    LaunchedEffect(refreshToken) { if (refreshToken > 0) viewModel.refresh() }
+    LaunchedEffect(refreshToken, tabRefreshToken) {
+        if (refreshToken > 0 || tabRefreshToken > 0) viewModel.refresh()
+    }
     ProfileViewScreen(uiState, onAction = { action ->
         when (action) {
             ProfileViewAction.Back -> {

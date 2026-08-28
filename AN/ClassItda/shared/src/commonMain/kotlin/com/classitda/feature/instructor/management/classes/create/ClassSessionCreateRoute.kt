@@ -37,18 +37,14 @@ internal fun ClassSessionCreateRoute(
     val formLoadState by viewModel.formLoadState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState) {
-        when (val state = uiState) {
-            is ClassSessionCreateUiState.Success -> {
-                onCreated()
-            }
-
-            is ClassSessionCreateUiState.Error -> {
-                snackbarHostState.showSnackbar(state.message ?: "수업 등록에 실패했어요")
-            }
-
-            else -> {}
+    LaunchedEffect(viewModel) {
+        viewModel.messages.collect { message ->
+            snackbarHostState.showSnackbar(message)
         }
+    }
+
+    LaunchedEffect(uiState) {
+        if (uiState is ClassSessionCreateUiState.Success) onCreated()
     }
 
     Box(modifier = modifier.fillMaxSize()) {

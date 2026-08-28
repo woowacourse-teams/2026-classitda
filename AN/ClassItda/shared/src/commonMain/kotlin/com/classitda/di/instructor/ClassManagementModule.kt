@@ -1,5 +1,7 @@
 package com.classitda.di.instructor
 
+import com.classitda.core.time.CurrentDateTimeProvider
+import com.classitda.core.time.DeviceCurrentDateTimeProvider
 import com.classitda.data.remote.api.ClassSessionsApi
 import com.classitda.data.remote.api.ClassTemplatesApi
 import com.classitda.data.remote.api.ClassTypesApi
@@ -36,5 +38,6 @@ internal val classManagementModule =
                 studioContext = get(),
             )
         }
-        viewModel { ClassSessionCreateViewModel(get(), get(), get()) }
+        single<CurrentDateTimeProvider> { DeviceCurrentDateTimeProvider }
+        viewModel { ClassSessionCreateViewModel(get(), get(), get(), get()) }
     }

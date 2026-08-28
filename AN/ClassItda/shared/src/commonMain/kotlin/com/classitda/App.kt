@@ -17,6 +17,9 @@ import com.classitda.core.designsystem.ThemeType
 import com.classitda.core.navigation.instructor.InstructorRootRoute
 import com.classitda.core.network.NetworkConfig
 import com.classitda.core.network.networkModule
+import com.classitda.core.studio.InMemoryInstructorStudioSelectionStorage
+import com.classitda.core.studio.InstructorStudioContext
+import com.classitda.core.studio.InstructorStudioSelectionStorage
 import com.classitda.di.instructorFeatureModules
 import com.classitda.di.signup.signupModule
 import com.classitda.domain.repository.auth.signup.SignupRepository
@@ -26,6 +29,7 @@ import kotlinx.coroutines.launch
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import org.koin.dsl.koinConfiguration
+import org.koin.dsl.module
 
 @Composable
 @Preview
@@ -33,6 +37,8 @@ fun App(
     baseUrl: String,
     localDatabaseModule: AppDatabaseModule,
     tokenStorage: AuthTokenStorage = remember { InMemoryAuthTokenStorage() },
+    studioSelectionStorage: InstructorStudioSelectionStorage =
+        remember { InMemoryInstructorStudioSelectionStorage() },
 ) {
     var appRoute by remember {
         mutableStateOf(
@@ -56,6 +62,7 @@ fun App(
                         tokenStorage,
                     ),
                     localDatabaseModule.koinModule,
+                    module { single<InstructorStudioSelectionStorage> { studioSelectionStorage } },
                     signupModule(tokenStorage),
                     instructorFeatureModules,
                 )
@@ -63,6 +70,7 @@ fun App(
     ) {
         AppTheme(theme = ThemeType.INSTRUCTOR) {
             val signupRepository = koinInject<SignupRepository>()
+            val studioContext = koinInject<InstructorStudioContext>()
             val coroutineScope = rememberCoroutineScope()
 
             when (appRoute) {
@@ -84,6 +92,7 @@ fun App(
                             Logger.d("AuthSession: logout callback started")
                             coroutineScope.launch {
                                 try {
+                                    studioContext.clearSelectedStudio()
                                     Logger.d("AuthSession: logout repository call started")
                                     signupRepository.logout()
                                     Logger.d("AuthSession: logout repository call completed")
@@ -95,8 +104,11 @@ fun App(
                         },
                         onWithdrawalCompleted = {
                             Logger.d("AuthSession: withdrawal succeeded, switching to Google login screen")
-                            tokenStorage.clear()
-                            appRoute = AppRoute.Signup
+                            coroutineScope.launch {
+                                studioContext.clearSelectedStudio()
+                                tokenStorage.clear()
+                                appRoute = AppRoute.Signup
+                            }
                         },
                     )
                 }

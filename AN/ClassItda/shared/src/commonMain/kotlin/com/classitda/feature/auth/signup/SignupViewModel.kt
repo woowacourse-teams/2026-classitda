@@ -9,6 +9,7 @@ import com.classitda.domain.model.auth.signup.SignupName
 import com.classitda.domain.model.auth.signup.SignupPhoneNumber
 import com.classitda.domain.model.auth.signup.SignupToken
 import com.classitda.domain.repository.auth.signup.SignupRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -28,18 +29,24 @@ internal class SignupViewModel(
     private val _events = MutableSharedFlow<SignupEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<SignupEvent> = _events.asSharedFlow()
     private var verificationTimerJob: Job? = null
+    private var verificationRequestJob: Job? = null
 
     fun reset() {
         verificationTimerJob?.cancel()
         verificationTimerJob = null
+        verificationRequestJob?.cancel()
+        verificationRequestJob = null
         _uiState.value = SignupUiState()
     }
 
     fun onAction(action: SignupAction) {
         when (action) {
+            SignupAction.Back -> {
+                reset()
+            }
+
             SignupAction.LoginWithGoogle,
             SignupAction.LoginWithApple,
-            SignupAction.Back,
             SignupAction.Close,
             SignupAction.DismissTerms,
             SignupAction.ToggleAllTerms,
@@ -99,39 +106,38 @@ internal class SignupViewModel(
     fun loginWithGoogle(idToken: String) {
         viewModelScope.launch {
             update { copy(isLoading = true, errorMessage = null) }
-            runCatching { repository.loginWithGoogle(GoogleIdToken(idToken)) }
-                .onSuccess { result ->
-                    when (result) {
-                        is com.classitda.domain.model.auth.signup.GoogleLoginResult.Registered -> {
-                            update { copy(isLoading = false) }
-                            Logger.d("SignupFlow: existing member Google login completed")
-                            _events.tryEmit(SignupEvent.LoginCompleted)
-                        }
+            runCatching {
+                when (val result = repository.loginWithGoogle(GoogleIdToken(idToken))) {
+                    is com.classitda.domain.model.auth.signup.GoogleLoginResult.Registered -> {
+                        update { copy(isLoading = false) }
+                        Logger.d("SignupFlow: existing member Google login completed")
+                        _events.tryEmit(SignupEvent.LoginCompleted)
+                    }
 
-                        is com.classitda.domain.model.auth.signup.GoogleLoginResult.RegistrationRequired -> {
-                            Logger.d("SignupFlow: registration required after Google login")
-                            val terms = repository.getTerms(result.signupToken)
-                            update {
-                                copy(
-                                    isLoading = false,
-                                    page = SignupPage.Form,
-                                    signupToken = result.signupToken,
-                                    terms = terms,
-                                    errorMessage = null,
-                                )
-                            }
-                        }
-
-                        com.classitda.domain.model.auth.signup.GoogleLoginResult.WithdrawalPending -> {
-                            update { copy(isLoading = false) }
-                            Logger.d("SignupFlow: withdrawal pending screen requested after Google login")
-                            _events.tryEmit(SignupEvent.WithdrawalPending)
+                    is com.classitda.domain.model.auth.signup.GoogleLoginResult.RegistrationRequired -> {
+                        Logger.d("SignupFlow: registration required after Google login")
+                        val terms = repository.getTerms(result.signupToken)
+                        update {
+                            copy(
+                                isLoading = false,
+                                page = SignupPage.Form,
+                                signupToken = result.signupToken,
+                                terms = terms,
+                                errorMessage = null,
+                            )
                         }
                     }
-                }.onFailure { error ->
-                    Logger.e("SignupFlow: Google login failed: ${error.message}")
-                    showError(error)
+
+                    com.classitda.domain.model.auth.signup.GoogleLoginResult.WithdrawalPending -> {
+                        update { copy(isLoading = false) }
+                        Logger.d("SignupFlow: withdrawal pending screen requested after Google login")
+                        _events.tryEmit(SignupEvent.WithdrawalPending)
+                    }
                 }
+            }.onFailure { error ->
+                Logger.e("SignupFlow: Google login failed: ${error.message}")
+                showError(error)
+            }
         }
     }
 
@@ -217,32 +223,36 @@ internal class SignupViewModel(
         if (!Regex("^010[0-9]{8}$").matches(state.phoneNumber)) {
             return showError(IllegalStateException("휴대전화 번호를 올바르게 입력해 주세요."))
         }
-        viewModelScope.launch {
-            update {
-                copy(
-                    isLoading = true,
-                    verificationId = null,
-                    verificationCode = "",
-                    isPhoneVerified = false,
-                    errorMessage = null,
-                )
-            }
-            runCatching {
-                repository.requestPhoneVerification(token, SignupPhoneNumber(state.phoneNumber))
-            }.onSuccess { challenge ->
+        verificationRequestJob =
+            viewModelScope.launch {
                 update {
                     copy(
-                        isLoading = false,
-                        isVerificationSent = true,
-                        verificationId = challenge.id,
-                        verificationPhoneNumber = state.phoneNumber,
-                        verificationRemainingSeconds = challenge.expiresInSeconds,
-                        resendRemainingSeconds = challenge.resendAfterSeconds,
+                        isLoading = true,
+                        verificationId = null,
+                        verificationCode = "",
+                        isPhoneVerified = false,
+                        errorMessage = null,
                     )
                 }
-                startVerificationTimer()
-            }.onFailure { error -> showError(error) }
-        }
+                try {
+                    val challenge = repository.requestPhoneVerification(token, SignupPhoneNumber(state.phoneNumber))
+                    update {
+                        copy(
+                            isLoading = false,
+                            isVerificationSent = true,
+                            verificationId = challenge.id,
+                            verificationPhoneNumber = state.phoneNumber,
+                            verificationRemainingSeconds = challenge.expiresInSeconds,
+                            resendRemainingSeconds = challenge.resendAfterSeconds,
+                        )
+                    }
+                    startVerificationTimer()
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Throwable) {
+                    showError(exception)
+                }
+            }
     }
 
     private fun startVerificationTimer() {
@@ -265,6 +275,7 @@ internal class SignupViewModel(
 
     override fun onCleared() {
         verificationTimerJob?.cancel()
+        verificationRequestJob?.cancel()
         super.onCleared()
     }
 
