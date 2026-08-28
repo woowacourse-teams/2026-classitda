@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -79,7 +80,10 @@ internal fun InstructorScheduleStateful(
     viewModel: InstructorScheduleViewModel,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val sessions = (uiState as? InstructorScheduleUiState.Success)?.sessions.orEmpty()
+    val sessions =
+        ((uiState as? InstructorScheduleUiState.Success)?.sessionList as? InstructorScheduleListUiState.Content)
+            ?.sessions
+            .orEmpty()
     val calendarDays = (uiState as? InstructorScheduleUiState.Success)?.calendarDays.orEmpty()
     val firstSessionDate =
         sessions.minOfOrNull { it.startAt.date }
@@ -99,8 +103,12 @@ internal fun InstructorScheduleStateful(
         displayedMonth = movedMonthDate.month.number
     }
 
-    LaunchedEffect(selectedDate, refreshKey) {
+    LaunchedEffect(selectedDate) {
         viewModel.load(selectedDate)
+    }
+
+    LaunchedEffect(refreshKey) {
+        if (refreshKey != 0) viewModel.refresh(selectedDate)
     }
 
     LaunchedEffect(sessions) {
@@ -134,7 +142,7 @@ internal fun InstructorScheduleStateful(
 
             is InstructorScheduleUiState.Success -> {
                 InstructorScheduleStateless(
-                    sessions = state.sessions,
+                    sessionList = state.sessionList,
                     calendarDays = state.calendarDays,
                     displayedYear = displayedYear,
                     displayedMonth = displayedMonth,
@@ -176,6 +184,7 @@ internal fun InstructorScheduleStateful(
                             moveMonth(1)
                         }
                     },
+                    onSessionsRetry = viewModel::retry,
                     onSessionClick = onSessionClick,
                     modifier = Modifier.padding(contentPadding),
                 )
@@ -186,7 +195,7 @@ internal fun InstructorScheduleStateful(
 
 @Composable
 internal fun InstructorScheduleStateless(
-    sessions: List<ClassSession>,
+    sessionList: InstructorScheduleListUiState,
     calendarDays: List<InstructorCalendarDay>,
     displayedYear: Int,
     displayedMonth: Int,
@@ -197,10 +206,16 @@ internal fun InstructorScheduleStateless(
     onTodayClick: () -> Unit,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
+    onSessionsRetry: () -> Unit,
     onSessionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val selectedSessions = sessions.filter { it.startAt.date == selectedDate }.sortedBy { it.startAt }
+    val selectedSessions =
+        (sessionList as? InstructorScheduleListUiState.Content)
+            ?.sessions
+            .orEmpty()
+            .filter { it.startAt.date == selectedDate }
+            .sortedBy { it.startAt }
 
     Column(
         modifier = modifier.fillMaxSize(),
@@ -246,28 +261,50 @@ internal fun InstructorScheduleStateless(
                         fontWeight = FontWeight.Bold,
                     )
                     Spacer(Modifier.weight(1f))
-                    Text(
-                        text = "수업 ${selectedSessions.size}개",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = InsColors.TextSecondary,
-                    )
+                    if (sessionList is InstructorScheduleListUiState.Content) {
+                        Text(
+                            text = "수업 ${selectedSessions.size}개",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = InsColors.TextSecondary,
+                        )
+                    }
                 }
             }
-            if (selectedSessions.isEmpty()) {
-                item {
-                    Text(
-                        "등록된 수업이 없어요",
-                        color = InsColors.TextSecondary,
-                        modifier = Modifier.padding(horizontal = AppSpacing.screenPadding),
-                    )
+
+            when (sessionList) {
+                InstructorScheduleListUiState.Loading -> {
+                    item {
+                        ScheduleListLoading()
+                    }
                 }
-            } else {
-                items(selectedSessions, key = { it.id }) { session ->
-                    InstructorScheduleCard(
-                        session = session,
-                        onClick = { onSessionClick(session.id) },
-                    )
-                    Spacer(modifier = Modifier.height(AppSpacing.cardGap))
+
+                is InstructorScheduleListUiState.Error -> {
+                    item {
+                        ScheduleListError(
+                            message = sessionList.message,
+                            onRetry = onSessionsRetry,
+                        )
+                    }
+                }
+
+                is InstructorScheduleListUiState.Content -> {
+                    if (selectedSessions.isEmpty()) {
+                        item {
+                            Text(
+                                "등록된 수업이 없어요",
+                                color = InsColors.TextSecondary,
+                                modifier = Modifier.padding(horizontal = AppSpacing.screenPadding),
+                            )
+                        }
+                    } else {
+                        items(selectedSessions, key = { it.id }) { session ->
+                            InstructorScheduleCard(
+                                session = session,
+                                onClick = { onSessionClick(session.id) },
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.cardGap))
+                        }
+                    }
                 }
             }
         }
@@ -283,52 +320,9 @@ private fun InstructorScheduleStatelessPreview() {
 
     AppTheme(theme = ThemeType.INSTRUCTOR) {
         InstructorScheduleStateless(
-            sessions =
-                listOf(
-                    ClassSession(
-                        id = "1",
-                        classTypeId = "1",
-                        tags = listOf("그룹 수업"),
-                        title = "체어 밸런스",
-                        startAt = LocalDateTime(2026, 8, 5, 14, 0),
-                        endAt = LocalDateTime(2026, 8, 5, 14, 50),
-                        reservedCount = 7,
-                        capacity = 8,
-                        status = ClassSessionStatus.SCHEDULED,
-                    ),
-                    ClassSession(
-                        id = "2",
-                        classTypeId = "2",
-                        tags = listOf("개인 수업"),
-                        title = "리포머 밸런스",
-                        startAt = LocalDateTime(2026, 8, 5, 19, 30),
-                        endAt = LocalDateTime(2026, 8, 5, 20, 20),
-                        reservedCount = 6,
-                        capacity = 6,
-                        status = ClassSessionStatus.COMPLETED,
-                    ),
-                    ClassSession(
-                        id = "3",
-                        classTypeId = "1",
-                        tags = listOf("그룹 수업"),
-                        title = "바렐 스트레칭",
-                        startAt = LocalDateTime(2026, 8, 5, 21, 0),
-                        endAt = LocalDateTime(2026, 8, 5, 21, 50),
-                        reservedCount = 4,
-                        capacity = 8,
-                        status = ClassSessionStatus.SCHEDULED,
-                    ),
-                    ClassSession(
-                        id = "4",
-                        classTypeId = "1",
-                        tags = listOf("그룹 수업"),
-                        title = "모닝 요가 플로우",
-                        startAt = LocalDateTime(2026, 8, 5, 22, 30),
-                        endAt = LocalDateTime(2026, 8, 5, 23, 20),
-                        reservedCount = 3,
-                        capacity = 8,
-                        status = ClassSessionStatus.SCHEDULED,
-                    ),
+            sessionList =
+                InstructorScheduleListUiState.Content(
+                    sessions = previewSessions,
                 ),
             calendarDays = emptyList(),
             displayedYear = selectedDate.year,
@@ -340,10 +334,83 @@ private fun InstructorScheduleStatelessPreview() {
             onTodayClick = { selectedDate = today },
             onPreviousMonth = {},
             onNextMonth = {},
+            onSessionsRetry = {},
             onSessionClick = {},
         )
     }
 }
+
+@Preview(name = "강사 일정 - 수업 목록 로딩", showBackground = true, widthDp = 390, heightDp = 844)
+@Composable
+private fun InstructorScheduleStatelessListLoadingPreview() {
+    val selectedDate = LocalDate(2026, 8, 5)
+
+    AppTheme(theme = ThemeType.INSTRUCTOR) {
+        InstructorScheduleStateless(
+            sessionList = InstructorScheduleListUiState.Loading,
+            calendarDays = emptyList(),
+            displayedYear = selectedDate.year,
+            displayedMonth = selectedDate.month.number,
+            selectedDate = selectedDate,
+            isMonthMode = true,
+            onDateSelected = {},
+            onModeChange = {},
+            onTodayClick = {},
+            onPreviousMonth = {},
+            onNextMonth = {},
+            onSessionsRetry = {},
+            onSessionClick = {},
+        )
+    }
+}
+
+private val previewSessions =
+    listOf(
+        ClassSession(
+            id = "1",
+            classTypeId = "1",
+            tags = listOf("그룹 수업"),
+            title = "체어 밸런스",
+            startAt = LocalDateTime(2026, 8, 5, 14, 0),
+            endAt = LocalDateTime(2026, 8, 5, 14, 50),
+            reservedCount = 7,
+            capacity = 8,
+            status = ClassSessionStatus.SCHEDULED,
+        ),
+        ClassSession(
+            id = "2",
+            classTypeId = "2",
+            tags = listOf("개인 수업"),
+            title = "리포머 밸런스",
+            startAt = LocalDateTime(2026, 8, 5, 19, 30),
+            endAt = LocalDateTime(2026, 8, 5, 20, 20),
+            reservedCount = 6,
+            capacity = 6,
+            status = ClassSessionStatus.COMPLETED,
+        ),
+        ClassSession(
+            id = "3",
+            classTypeId = "1",
+            tags = listOf("그룹 수업"),
+            title = "바렐 스트레칭",
+            startAt = LocalDateTime(2026, 8, 5, 21, 0),
+            endAt = LocalDateTime(2026, 8, 5, 21, 50),
+            reservedCount = 4,
+            capacity = 8,
+            status = ClassSessionStatus.SCHEDULED,
+        ),
+        ClassSession(
+            id = "4",
+            classTypeId = "1",
+            tags = listOf("그룹 수업"),
+            title = "모닝 요가 플로우",
+            startAt = LocalDateTime(2026, 8, 5, 22, 30),
+            endAt = LocalDateTime(2026, 8, 5, 23, 20),
+            reservedCount = 3,
+            capacity = 8,
+            status = ClassSessionStatus.SCHEDULED,
+        ),
+    )
 
 @Composable
 private fun ScheduleLoading(modifier: Modifier = Modifier) {
@@ -352,6 +419,44 @@ private fun ScheduleLoading(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(color = InsColors.Primary)
+    }
+}
+
+@Composable
+private fun ScheduleListLoading(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxWidth().height(120.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(AppSpacing.xxl),
+            color = InsColors.Primary,
+            strokeWidth = 2.dp,
+        )
+    }
+}
+
+@Composable
+private fun ScheduleListError(
+    message: String?,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = AppSpacing.screenPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+    ) {
+        Text(
+            text = message ?: "수업 목록을 불러오지 못했어요",
+            color = InsColors.TextSecondary,
+        )
+        Button(
+            onClick = onRetry,
+            colors = ButtonDefaults.buttonColors(containerColor = InsColors.Primary),
+        ) {
+            Text("다시 시도")
+        }
     }
 }
 

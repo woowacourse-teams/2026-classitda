@@ -29,6 +29,8 @@ internal class InstructorScheduleViewModel(
     val uiState: StateFlow<InstructorScheduleUiState> = _uiState.asStateFlow()
     private var lastRequestedDate: LocalDate? = null
     private var loadJob: Job? = null
+    private var calendarRangeStart: LocalDate? = null
+    private var calendarRangeEnd: LocalDate? = null
 
     fun retry() {
         load(lastRequestedDate ?: Clock.System.todayIn(TimeZone.of("Asia/Seoul")))
@@ -37,7 +39,28 @@ internal class InstructorScheduleViewModel(
     fun load(date: LocalDate = Clock.System.todayIn(TimeZone.of("Asia/Seoul"))) {
         lastRequestedDate = date
         loadJob?.cancel()
-        _uiState.value = InstructorScheduleUiState.Loading
+        val current = _uiState.value as? InstructorScheduleUiState.Success
+        if (current == null) {
+            loadAll(date)
+        } else if (isInLoadedCalendarRange(date)) {
+            loadSessions(date, current)
+        } else {
+            loadAll(date, current)
+        }
+    }
+
+    fun refresh(date: LocalDate = lastRequestedDate ?: Clock.System.todayIn(TimeZone.of("Asia/Seoul"))) {
+        lastRequestedDate = date
+        loadJob?.cancel()
+        loadAll(date, _uiState.value as? InstructorScheduleUiState.Success)
+    }
+
+    private fun loadAll(
+        date: LocalDate,
+        current: InstructorScheduleUiState.Success? = null,
+    ) {
+        _uiState.value = current?.copy(sessionList = InstructorScheduleListUiState.Loading)
+            ?: InstructorScheduleUiState.Loading
         loadJob =
             viewModelScope.launch {
                 try {
@@ -49,13 +72,46 @@ internal class InstructorScheduleViewModel(
                             to = date.plus(DatePeriod(days = 20)),
                         )
                     val sessions = repository.getDailySessions(studio.id, date).map { it.toClassSession() }
-                    _uiState.value = InstructorScheduleUiState.Success(sessions, calendarDays)
+                    calendarRangeStart = date.minus(DatePeriod(days = 20))
+                    calendarRangeEnd = date.plus(DatePeriod(days = 20))
+                    _uiState.value =
+                        InstructorScheduleUiState.Success(
+                            calendarDays = calendarDays,
+                            sessionList = InstructorScheduleListUiState.Content(sessions),
+                        )
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (exception: Exception) {
-                    _uiState.value = InstructorScheduleUiState.Error(exception.message)
+                    _uiState.value =
+                        current?.copy(sessionList = InstructorScheduleListUiState.Error(exception.message))
+                            ?: InstructorScheduleUiState.Error(exception.message)
                 }
             }
+    }
+
+    private fun loadSessions(
+        date: LocalDate,
+        current: InstructorScheduleUiState.Success,
+    ) {
+        _uiState.value = current.copy(sessionList = InstructorScheduleListUiState.Loading)
+        loadJob =
+            viewModelScope.launch {
+                try {
+                    val studio = studioContext.getSelectedStudio()
+                    val sessions = repository.getDailySessions(studio.id, date).map { it.toClassSession() }
+                    _uiState.value = current.copy(sessionList = InstructorScheduleListUiState.Content(sessions))
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (exception: Exception) {
+                    _uiState.value = current.copy(sessionList = InstructorScheduleListUiState.Error(exception.message))
+                }
+            }
+    }
+
+    private fun isInLoadedCalendarRange(date: LocalDate): Boolean {
+        val start = calendarRangeStart ?: return false
+        val end = calendarRangeEnd ?: return false
+        return date >= start && date <= end
     }
 }
 
@@ -63,11 +119,23 @@ internal sealed interface InstructorScheduleUiState {
     data object Loading : InstructorScheduleUiState
 
     data class Success(
-        val sessions: List<ClassSession>,
         val calendarDays: List<InstructorCalendarDay>,
+        val sessionList: InstructorScheduleListUiState,
     ) : InstructorScheduleUiState
 
     data class Error(
         val message: String?,
     ) : InstructorScheduleUiState
+}
+
+internal sealed interface InstructorScheduleListUiState {
+    data object Loading : InstructorScheduleListUiState
+
+    data class Content(
+        val sessions: List<ClassSession>,
+    ) : InstructorScheduleListUiState
+
+    data class Error(
+        val message: String?,
+    ) : InstructorScheduleListUiState
 }
