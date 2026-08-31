@@ -3,11 +3,10 @@ package com.pheeeew.sigh.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.pheeeew.common.config.JpaAuditingConfig;
 import com.pheeeew.sigh.domain.repository.SighRepository;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
-import com.pheeeew.sigh.infra.PostgisSighLocationGenerator;
+import com.pheeeew.support.PostgisDataJpaTest;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,39 +18,19 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
-@DataJpaTest
-@ActiveProfiles("test")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import({JpaAuditingConfig.class, SighService.class, PostgisSighLocationGenerator.class})
+@PostgisDataJpaTest
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-@Testcontainers
 class SighServiceIntegrationTest {
 
     private static final double SEOUL_CITY_HALL_LONGITUDE = 126.9780;
     private static final double SEOUL_CITY_HALL_LATITUDE = 37.5664;
     private static final UUID REJECTED_REQUEST_ID =
             UUID.fromString("00000000-0000-0000-0000-000000000001");
-
-    @Container
-    @ServiceConnection
-    static final PostgreSQLContainer POSTGRESQL = new PostgreSQLContainer(
-            DockerImageName.parse("postgis/postgis:17-3.5")
-                    .asCompatibleSubstituteFor("postgres")
-    );
 
     @Autowired
     private SighService sighService;

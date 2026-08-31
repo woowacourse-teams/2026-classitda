@@ -3,38 +3,19 @@ package com.pheeeew.sigh.infra;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.pheeeew.sigh.application.SighLocationGenerator;
+import com.pheeeew.support.PostgisDataJpaTest;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Point;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
-import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.postgresql.PostgreSQLContainer;
-import org.testcontainers.utility.DockerImageName;
 
-@DataJpaTest
-@ActiveProfiles("test")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@Import(PostgisSighLocationGenerator.class)
-@Testcontainers
+@PostgisDataJpaTest
 class PostgisSighLocationGeneratorIntegrationTest {
 
     private static final int WGS84_SRID = 4326;
     private static final double GRID_HALF_SIZE_METERS = 150.0;
     private static final double SEOUL_CITY_HALL_LONGITUDE = 126.9780;
     private static final double SEOUL_CITY_HALL_LATITUDE = 37.5664;
-
-    @Container
-    @ServiceConnection
-    static final PostgreSQLContainer POSTGRESQL = new PostgreSQLContainer(
-            DockerImageName.parse("postgis/postgis:17-3.5")
-                    .asCompatibleSubstituteFor("postgres")
-    );
 
     @Autowired
     private SighLocationGenerator sighLocationGenerator;
