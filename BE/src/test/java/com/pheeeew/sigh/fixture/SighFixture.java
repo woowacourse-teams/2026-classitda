@@ -1,11 +1,13 @@
 package com.pheeeew.sigh.fixture;
 
 import com.pheeeew.sigh.domain.Sigh;
+import java.time.Instant;
 import java.util.UUID;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public final class SighFixture {
 
@@ -30,5 +32,12 @@ public final class SighFixture {
         Point point = new GeometryFactory().createPoint(new Coordinate(126.9774, 37.5669));
         point.setSRID(srid);
         return point;
+    }
+
+    public static Sigh 저장된_기본_한숨(Long id, Instant createdAt) {
+        Sigh sigh = 기본_한숨_빌더().build();
+        ReflectionTestUtils.setField(sigh, "id", id);
+        ReflectionTestUtils.setField(sigh, "createdAt", createdAt);
+        return sigh;
     }
 }
