@@ -1,8 +1,8 @@
-name: classitda-dev
+name: pheeeew-dev
 
 services:
   nginx:
-    container_name: classitda-dev-nginx
+    container_name: pheeeew-dev-nginx
     image: nginx:1.27-alpine
     restart: unless-stopped
     environment:
@@ -26,45 +26,18 @@ services:
     init: true
 
   app:
-    container_name: classitda-dev-app
+    container_name: pheeeew-dev-app
     image: ${APP_IMAGE:?}
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: dev
       TZ: Asia/Seoul
-
-      DB_HOST: mysql
-      DB_PORT: "3306"
-      DB_NAME: classitda
+      DB_URL: jdbc:postgresql://postgres:5432/pheeeew
       DB_USERNAME: ${DB_USERNAME:?}
       DB_PASSWORD: ${DB_PASSWORD:?}
-
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-      REDIS_SSL: "false"
-
-      APPLE_OAUTH_IOS_CLIENT_ID: ${APPLE_OAUTH_IOS_CLIENT_ID:?}
-      GOOGLE_OAUTH_WEB_CLIENT_ID: ${GOOGLE_OAUTH_WEB_CLIENT_ID:?}
-      GOOGLE_OAUTH_IOS_CLIENT_ID: ${GOOGLE_OAUTH_IOS_CLIENT_ID:?}
-      AUTH_JWT_PRIVATE_KEY_BASE64: ${AUTH_JWT_PRIVATE_KEY_BASE64:?}
-      AUTH_JWT_PUBLIC_KEY_BASE64: ${AUTH_JWT_PUBLIC_KEY_BASE64:?}
-      AUTH_PHONE_KEY_HMAC_SECRET_BASE64: ${AUTH_PHONE_KEY_HMAC_SECRET_BASE64:?}
-      NCP_SENS_SERVICE_ID: ${NCP_SENS_SERVICE_ID:?}
-      NCP_SENS_ACCESS_KEY: ${NCP_SENS_ACCESS_KEY:?}
-      NCP_SENS_SECRET_KEY: ${NCP_SENS_SECRET_KEY:?}
-      NCP_SENS_SENDER_NUMBER: ${NCP_SENS_SENDER_NUMBER:?}
-
-      IMAGE_BUCKET: ${IMAGE_BUCKET:?}
-      IMAGE_KEY_PREFIX: ${IMAGE_KEY_PREFIX:?}
-      IMAGE_BASE_URL: ${IMAGE_BASE_URL:?}
-      IMAGE_REGION: ${IMAGE_REGION:?}
-
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=60"
     depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
+      postgres:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
@@ -75,58 +48,25 @@ services:
     mem_limit: 1024m
     init: true
 
-  mysql:
-    container_name: classitda-dev-mysql
-    image: mysql:8.4
+  postgres:
+    container_name: pheeeew-dev-postgres
+    image: imresamu/postgis:17-3.5-alpine
     restart: unless-stopped
     environment:
       TZ: Asia/Seoul
-      MYSQL_DATABASE: classitda
-      MYSQL_USER: ${DB_USERNAME:?}
-      MYSQL_PASSWORD: ${DB_PASSWORD:?}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?}
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_0900_ai_ci
-      - --innodb-buffer-pool-size=192M
-      - --performance-schema=OFF
-    ports:
-      - "127.0.0.1:3306:3306"
+      POSTGRES_DB: pheeeew
+      POSTGRES_USER: ${DB_USERNAME:?}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?}
     volumes:
-      - mysql-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
-      retries: 12
-      start_period: 30s
-    mem_limit: 512m
-
-  redis:
-    container_name: classitda-dev-redis
-    image: redis:8.2-alpine
-    restart: unless-stopped
-    environment:
-      TZ: Asia/Seoul
-    command:
-      - redis-server
-      - --maxmemory
-      - 128mb
-      - --maxmemory-policy
-      - noeviction
-      - --save
-      - ""
-      - --appendonly
-      - "no"
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
       retries: 10
-    mem_limit: 192m
+      start_period: 20s
+    mem_limit: 512m
+    init: true
 
 volumes:
-  mysql-data:
-  redis-data:
+  postgres-data:

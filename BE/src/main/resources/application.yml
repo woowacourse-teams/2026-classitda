@@ -1,6 +1,6 @@
 spring:
   application:
-    name: classitda
+    name: pheeeew
   profiles:
     default: local
   jpa:
@@ -9,32 +9,9 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
-    locations: classpath:db/migration
-
   sql:
     init:
       mode: never
-  data:
-    redis:
-      repositories:
-        enabled: false
-  http:
-    clients:
-      connect-timeout: 3s
-      read-timeout: 5s
-
-server:
-  forward-headers-strategy: native
-
-springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    enabled: true
-
-logging:
-  level:
-    org.hibernate.orm.jdbc.error: "ERROR"
 
 management:
   endpoints:
@@ -46,34 +23,3 @@ management:
   endpoint:
     health:
       show-details: never
-
-images:
-  bucket: ${IMAGE_BUCKET}
-  key-prefix: ${IMAGE_KEY_PREFIX}
-  base-url: ${IMAGE_BASE_URL}
-  region: ${IMAGE_REGION}
-  upload-url-ttl: PT5M
-
-auth:
-  apple:
-    ios-client-id: ${APPLE_OAUTH_IOS_CLIENT_ID}
-  google:
-    web-client-id: ${GOOGLE_OAUTH_WEB_CLIENT_ID}
-    ios-client-id: ${GOOGLE_OAUTH_IOS_CLIENT_ID}
-  phone:
-    key-hmac-secret-base64: ${AUTH_PHONE_KEY_HMAC_SECRET_BASE64:}
-  sms:
-    local:
-      fixed-otp: ${AUTH_SMS_LOCAL_FIXED_OTP:}
-    sens:
-      service-id: ${NCP_SENS_SERVICE_ID:}
-      access-key: ${NCP_SENS_ACCESS_KEY:}
-      secret-key: ${NCP_SENS_SECRET_KEY:}
-      sender-number: ${NCP_SENS_SENDER_NUMBER:}
-  jwt:
-    private-key-base64: ${AUTH_JWT_PRIVATE_KEY_BASE64}
-    public-key-base64: ${AUTH_JWT_PUBLIC_KEY_BASE64}
-  token:
-    signup-ttl: PT30M
-    access-ttl: PT1H
-    refresh-ttl: P30D

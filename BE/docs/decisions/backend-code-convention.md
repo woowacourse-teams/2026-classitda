@@ -10,9 +10,9 @@
 
 | 구분 | 접미어 | 예시 |
 | --- | --- | --- |
-| 요청 DTO | `Request` | `StudioCreateRequest` |
-| 응답 DTO | `Response` | `StudioResponse` |
-| Entity | 없음 | `Studio` |
+| 요청 DTO | `Request` | `SighCreateRequest` |
+| 응답 DTO | `Response` | `SighResponse` |
+| Entity | 없음 | `Sigh` |
 
 ### 1.2 정적 팩토리 메서드 네이밍
 
@@ -22,14 +22,14 @@
 | 2개 이상 | `of()` |
 
 ```java
-public record StudioResponse(Long id, String name) {
+public record SighResponse(Long id, String memo) {
 
-    public static StudioResponse from(Studio studio) {
-        return new StudioResponse(studio.getId(), studio.getName());
+    public static SighResponse from(Sigh sigh) {
+        return new SighResponse(sigh.getId(), sigh.getMemo());
     }
 
-    public static StudioResponse of(Long id, String name) {
-        return new StudioResponse(id, name);
+    public static SighResponse of(Long id, String memo) {
+        return new SighResponse(id, memo);
     }
 }
 ```
@@ -46,9 +46,9 @@ public record StudioResponse(Long id, String name) {
 **Controller - Service - Repository의 메서드명은 통일한다.** (단순한 흐름인 경우에만)
 
 ```java
-StudioController.findAll()
-    └─ StudioService.findAll()
-        └─ StudioRepository.findAll()
+SighController.findAll()
+    └─ SighService.findAll()
+        └─ SighRepository.findAll()
 ```
 
 ---
@@ -67,9 +67,10 @@ StudioController.findAll()
 - Entity에서 감사 필드를 다시 선언하거나 빌더·Setter로 직접 주입하지 않는다.
 
 ```java
-Studio studio = Studio.builder()
-        .name("스튜디오")
-        .address("서울시 강남구")
+Sigh sigh = Sigh.builder()
+        .requestId(UUID.randomUUID())
+        .memo("오늘은 조금 지쳤다")
+        .location(approximateLocation)
         .build();
 ```
 
@@ -83,7 +84,7 @@ Studio studio = Studio.builder()
 @RequiredArgsConstructor
 @RequestMapping("/")
 @RestController
-public class StudioController {
+public class SighController {
 }
 ```
 
@@ -92,7 +93,7 @@ public class StudioController {
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 @Service
-public class StudioService {
+public class SighService {
 }
 ```
 
@@ -101,9 +102,9 @@ public class StudioService {
 @Getter
 @Builder
 @NoArgsConstructor
-@Table(name = "studio")
+@Table(name = "sigh")
 @Entity
-public class Studio {
+public class Sigh {
 }
 ```
 
@@ -118,7 +119,7 @@ public class Studio {
 - **메서드 내부 첫 줄은 공백 없이 시작**한다.
 
 ```java
-class Studio {
+class Sigh {
 
     void test() {
         System.out.println("시작");
@@ -131,30 +132,44 @@ class Studio {
 인터페이스의 계약(메서드 선언)은 **모두 한 줄씩 띄운다.**
 
 ```java
-public interface StudioRepository extends JpaRepository<Studio, Long> {
+public interface SighRepository extends JpaRepository<Sigh, Long> {
 
-    Optional<Studio> findByName(String name);
+    Optional<Sigh> findByRequestId(UUID requestId);
 
-    List<Studio> findAllByOwnerId(Long ownerId);
+    List<Sigh> findAllByStatus(SighStatus status);
 
-    void deleteByName(String name);
+    void deleteByRequestId(UUID requestId);
 }
 ```
 
-### 4.3 컨트롤러 메서드 매개변수
+### 4.3 메서드 매개변수
 
-**매개변수 개수에 관계없이** 항상 줄바꿈하여 작성한다.
+- Controller 메서드는 **매개변수 개수에 관계없이** 항상 줄바꿈하여 작성한다.
+- Service, Repository와 도메인 객체 등 다른 계층의 메서드는 매개변수를 한 줄로 작성한다.
+- 다른 계층에서도 메서드 선언이 한 줄에서 읽기 어려울 정도로 길어질 때만 매개변수별로 줄바꿈한다.
 
 ```java
-public StudioResponse findOne(
-        @PathVariable String studioName
+// Controller
+public SighResponse findOne(
+        @PathVariable Long sighId
 ) {
 }
 
-public CursorResponse<StudioResponse> findAll(
-        @PathVariable Long studioId,
-        @RequestParam(required = false) String cursor,
+public CursorResponse<SighResponse> findAll(
+        @RequestParam(required = false) Long cursor,
         @RequestParam(defaultValue = "20") int limit
+) {
+}
+
+// Service - 한 줄 우선
+public Sigh findByRequestId(UUID requestId) {
+}
+
+// Service - 선언이 한 줄에서 읽기 어려울 정도로 긴 경우
+public Sigh create(
+        UUID requestId,
+        String memo,
+        Point approximateLocation
 ) {
 }
 ```
@@ -175,19 +190,19 @@ public CursorResponse<StudioResponse> findAll(
 1. **private 메서드** — public 메서드 전체 아래에 일괄 배치, **public에서 호출된 순서대로**
 
 ```java
-public class StudioService {
+public class SighService {
 
-    public void save(...) { validateName(...); }
+    public void save(...) { validateRequestId(...); }
 
-    public StudioResponse findOne(...) { }
+    public SighResponse findOne(...) { }
 
-    public void update(...) { validateOwner(...); }
+    public void update(...) { validateLocation(...); }
 
     public void delete(...) { }
 
-    private void validateName(...) { }
+    private void validateRequestId(...) { }
 
-    private void validateOwner(...) { }
+    private void validateLocation(...) { }
 
     @Override
     public String toString() { }
@@ -206,15 +221,15 @@ public class StudioService {
 
 ```java
 @Test
-void 스튜디오_이름으로_조회할_수_있다() {
+void 요청_식별자로_한숨을_조회할_수_있다() {
     // given
-    Studio studio = StudioFixture.기본_스튜디오();
+    Sigh sigh = SighFixture.기본_한숨();
 
     // when
-    StudioResponse response = studioService.findByName(studio.getName());
+    SighResponse response = sighService.findByRequestId(sigh.getRequestId());
 
     // then
-    assertThat(response.name()).isEqualTo(studio.getName());
+    assertThat(response.id()).isEqualTo(sigh.getId());
 }
 ```
 
@@ -224,13 +239,22 @@ void 스튜디오_이름으로_조회할_수_있다() {
 | --- | --- |
 | 통합 테스트 | `XXXIntegrationTest`를 만들어서 테스트 |
 | Controller | 슬라이스 테스트 — `@WebMvcTest`에서 Service를 모킹 |
-| Service | 통합 테스트 — `@MySqlRepositoryTest`로 실제 Repository와 MySQL Testcontainers를 사용 |
+| Service | 통합 테스트 — 실제 Repository와 PostgreSQL/PostGIS Testcontainers를 사용 |
 | Repository | 단독 테스트를 작성하지 않음 |
 | 도메인 | 단위 테스트 |
 
 - Repository 동작과 영속성 매핑은 Service 통합 테스트에서 함께 검증한다.
 - Service 테스트는 대상 Service를 import하고 Repository를 모킹하지 않는다.
 - Controller 테스트는 HTTP 요청·응답 계약과 Service 위임을 검증한다.
+- 공간 타입 매핑과 공간 조회는 실제 PostgreSQL/PostGIS 환경에서 검증하고 H2로 대체하지 않는다.
+
+#### 테스트 선별 원칙
+
+- 테스트가 보호하는 프로젝트 동작, 계약 또는 회귀 위험을 한 문장으로 설명할 수 있을 때만 작성한다. 테스트 개수나 커버리지를 늘리기 위한 테스트는 작성하지 않는다.
+- Swagger/OpenAPI 라이브러리 버전, Swagger UI의 단순 노출 여부처럼 의존성이 제공하는 사실만 확인하는 테스트는 작성하지 않는다. 프로젝트가 직접 추가한 문서화 동작이나 회귀 위험이 있을 때만 검증한다.
+- 애플리케이션이 단순히 실행되는지 확인하는 `contextLoads()`와 Bean 생성·주입 여부만 확인하는 테스트는 작성하지 않는다. 프로젝트의 초기화 로직이나 설정 조합 자체가 실제 계약일 때만 검증한다.
+- 데이터베이스나 외부 시스템에 연결된다는 사실만 확인하는 테스트는 작성하지 않는다. 영속성 매핑, 공간 조회, 트랜잭션과 실패 처리처럼 프로젝트가 직접 책임지는 동작을 함께 검증할 때만 통합 테스트를 작성한다.
+- 프레임워크의 기본 보안 동작이나 보안 Bean 존재 여부만 반복 검증하지 않는다. 권한 우회, 위치정보 노출, 요청 위변조, 멱등성 충돌처럼 Pheeeew가 직접 정의한 보안·개인정보·정합성 경계는 반드시 테스트한다.
 
 ---
 
@@ -239,18 +263,18 @@ void 스튜디오_이름으로_조회할_수_있다() {
 **도메인형 → 계층형** 구조를 따른다.
 
 ```
-com.classitda
+com.pheeeew
 ├── common/            # 공통 설정, 예외, 에러 응답, 페이지네이션 등
-└── studio/
+└── sigh/
     ├── presentation/
     │   ├── dto/
-    │   └── StudioController
+    │   └── SighController
     ├── application/
-    │   └── StudioService
+    │   └── SighService
     ├── domain/
     │   ├── repository/
-    │   ├       └──StudioRepository
-    │   └── Studio
+    │   │   └── SighRepository
+    │   └── Sigh
     └── infra/
 ```
 
@@ -262,6 +286,10 @@ OpenAPI 문서는 클라이언트 개발자가 별도의 코드 확인 없이 AP
 
 ### 8.1 API 설명
 
+- Controller마다 `{도메인}ControllerApi` 인터페이스를 만들고 실제 Controller가 이를 구현한다.
+- `@Tag`, `@Operation`, `@ApiResponses`, `@Parameter` 등 OpenAPI 문서화 애노테이션은 `ControllerApi` 인터페이스에 작성한다.
+- `@RequestMapping`, `@GetMapping`, `@PostMapping` 등 Spring MVC 매핑 애노테이션과 실제 요청 처리 로직은 Controller 구현체에 작성한다.
+- `ControllerApi`와 Controller 구현체의 메서드명, 매개변수와 반환 타입은 동일하게 유지한다.
 - 모든 API에 `@Operation`을 사용하여 `summary`와 `description`을 작성한다.
 - `summary`에는 API의 목적을 간결하게 작성한다.
 - `description`에는 다음과 같이 요청 처리에 필요한 핵심 규칙을 작성한다.
@@ -276,26 +304,48 @@ OpenAPI 문서는 클라이언트 개발자가 별도의 코드 확인 없이 AP
 예시:
 
 ```java
-@Operation(
-        summary = "수업 생성",
-        description = """
-                ### 생성 방식
+@Tag(name = "한숨", description = "한숨 등록과 조회 API")
+public interface SighControllerApi {
 
-                - `recurring`이 `false`이면 `classDate`에 수업 한 건을 생성합니다.
-                - `recurring`이 `true`이면 반복 기간 중 `recurringDays`에 해당하는 날짜마다 수업을 생성합니다.
+    @Operation(
+            summary = "한숨 등록",
+            description = """
+                    ### 중복 요청
 
-                ### 담당 강사
+                    - 한 번의 등록 시도마다 새로운 `requestId`를 사용합니다.
+                    - 같은 `requestId`로 재시도하면 기존 한숨을 반환합니다.
+                    - 서버는 재시도 요청의 위치가 달라도 최초 등록 결과를 반환합니다.
 
-                - `instructorMembershipId`로 같은 시설의 활성 강사 또는 관리자를 지정합니다.
-                - 본인 관리 권한은 자신만 지정할 수 있습니다.
-                - 대표 또는 전체 관리 권한은 같은 시설의 다른 강사도 지정할 수 있습니다.
+                    ### 위치
 
-                ### 수업 시간
+                    - `latitude`와 `longitude`에는 기기에서 흐린 근사 좌표를 전달합니다.
+                    - 서버는 좌표의 유효 범위를 검증하지만 실제 위치가 흐려졌는지는 판별할 수 없습니다.
 
-                - 수업 진행 시간은 1분 이상 1,440분 이하입니다.
-                - 담당 강사의 기존 수업과 시간이 겹치면 생성할 수 없습니다.
-                """
-)
+                    ### 한숨 내용
+
+                    - `memo`는 생략할 수 있습니다.
+                    - 빠른 MVP에서는 실제 음성을 서버로 전송하거나 저장하지 않습니다.
+                    """
+    )
+    ResponseEntity<SighResponse> save(SighCreateRequest request);
+}
+
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/sighs")
+@RestController
+public class SighController implements SighControllerApi {
+
+    private final SighService sighService;
+
+    @Override
+    @PostMapping
+    public ResponseEntity<SighResponse> save(
+            @Valid @RequestBody SighCreateRequest request
+    ) {
+        SighResponse response = sighService.save(request);
+        return ResponseEntity.status(CREATED).body(response);
+    }
+}
 ```
 
 ### 8.2 요청 및 응답 필드 설명
@@ -317,22 +367,21 @@ OpenAPI 문서는 클라이언트 개발자가 별도의 코드 확인 없이 AP
 ```java
 @Schema(
         description = """
-                반복하지 않는 수업의 날짜입니다.
+                한 번의 한숨 등록 시도를 식별하는 값입니다.
 
-                `recurring`이 `false`일 때 필수입니다.
-                이 경우 `recurringDays`, `repeatStartDate`, `repeatEndDate`는
-                생략하거나 `null`로 전달해야 합니다.
+                네트워크 재시도에는 같은 값을 사용하고,
+                사용자가 등록 버튼을 다시 누르면 새로운 값을 사용합니다.
                 """,
-        example = "2026-08-20"
+        example = "8e0e5d17-fcf8-486e-8878-39c8fcfb4c25"
 )
-LocalDate classDate;
+UUID requestId;
 ```
 
 ### 8.3 요청 예시
 
 - 조건에 따라 요청 구조가 달라지는 API는 주요 요청 형태별 예시를 제공한다.
 - 예시는 실제 요청 가능한 값과 필드 조합으로 작성한다.
-- 단건 수업과 반복 수업처럼 서로 배타적인 요청 형태는 각각 구분하여 보여준다.
+- 메모 포함 등록과 메모 없는 등록처럼 요청 형태가 달라지면 각각 구분하여 보여준다.
 
 ### 8.4 Swagger UI 표시
 

@@ -1,15 +1,5 @@
 spring:
-  data:
-    redis:
-      host: localhost
-      port: 6379
   datasource:
-    url: "jdbc:mysql://localhost:3306/classitda?useUnicode=true&characterEncoding=UTF-8&connectionTimeZone=Asia%2FSeoul"
-    username: classitda
-    password: classitda
-  flyway:
-    locations: classpath:db/migration,classpath:db/local
-
-auth:
-  sms:
-    provider: ${AUTH_SMS_PROVIDER:local}
+    url: jdbc:postgresql://localhost:5432/pheeeew
+    username: pheeeew
+    password: pheeeew
