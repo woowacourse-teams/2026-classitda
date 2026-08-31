@@ -6,7 +6,6 @@ import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 @Preview
-@Suppress("ktlint:standard:function-naming")
 fun App() {
     MaterialTheme {
     }
