@@ -1,0 +1,7 @@
+language: "ko-KR"
+
+reviews:
+  auto_review:
+    base_branches:
+      - "be/dev"
+      - "an/dev"

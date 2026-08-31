@@ -1,0 +1,42 @@
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse / STS ###
+.apt_generated/
+.classpath
+.factorypath
+.project
+.settings/
+.springBeans
+.sts4-cache/
+bin/
+
+### VS Code ###
+.vscode/
+
+### macOS ###
+.DS_Store
+
+### Local environment ###
+.env
+.env.*
+!.env.example
+
+### AI agent local files ###
+.claude/
+.codex/
+.agents/
+CLAUDE.md
+AGENTS.md
+
+### Harness 산출물 ###
+_workspace/
+_workspace_*/

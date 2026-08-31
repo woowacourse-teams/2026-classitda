@@ -1,0 +1,8 @@
+.git
+.gradle
+.idea
+build
+.env
+.env.*
+*.iml
+.DS_Store

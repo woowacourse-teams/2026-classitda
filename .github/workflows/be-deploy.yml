@@ -1,0 +1,187 @@
+name: BE CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'BE/**'
+      - '.github/workflows/be-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: 이미지 빌드 및 푸시
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Docker Hub 로그인
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: 빌드 및 푸시
+        uses: docker/build-push-action@v6
+        with:
+          context: BE
+          file: BE/docker/Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_IMAGE }}:latest
+            ${{ secrets.DOCKERHUB_IMAGE }}:prod-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: 운영 서버 배포
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: cloudflared 설치
+        env:
+          CLOUDFLARED_VERSION: '2026.8.2'
+          CLOUDFLARED_SHA256: 'fcfb02b575a52ca1af2e3267af4e1517bcdeb30ac48c834c69abaed3c0576ad2'
+        run: |
+          set -eu
+          curl -fsSL -o cloudflared \
+            "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-amd64"
+          echo "${CLOUDFLARED_SHA256}  cloudflared" | sha256sum -c -
+          chmod +x cloudflared
+          sudo mv cloudflared /usr/local/bin/
+
+      - name: SSH 설정
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          CF_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: |
+          set -eu
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          cat > ~/.ssh/config <<CFG
+          Host target
+            HostName $SSH_HOST
+            User ubuntu
+            IdentityFile ~/.ssh/id_deploy
+            StrictHostKeyChecking yes
+            UserKnownHostsFile ~/.ssh/known_hosts
+            ProxyCommand cloudflared access ssh --hostname %h --service-token-id $CF_ID --service-token-secret $CF_SECRET
+          CFG
+          chmod 600 ~/.ssh/config
+          ssh -o ConnectTimeout=30 target 'echo 터널 연결 확인'
+
+      - name: compose 와 nginx 설정 전송
+        run: |
+          set -eu
+          ssh -F ~/.ssh/config target 'mkdir -p /opt/pheeeew/nginx'
+          scp -F ~/.ssh/config BE/docker/compose.prod.yml target:/opt/pheeeew/compose.yml
+          scp -F ~/.ssh/config BE/docker/nginx/api.conf target:/opt/pheeeew/nginx/api.conf
+
+      - name: .env 갱신
+        env:
+          APP_IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:prod-${{ github.sha }}
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          set -eu
+          umask 077
+          {
+            echo "APP_IMAGE=$APP_IMAGE"
+            echo "DB_URL=$DB_URL"
+            echo "DB_USERNAME=$DB_USERNAME"
+            echo "DB_PASSWORD=$DB_PASSWORD"
+          } > env.tmp
+          scp -F ~/.ssh/config env.tmp target:/opt/pheeeew/.env.new
+          ssh -F ~/.ssh/config target 'set -eu; umask 077; cd /opt/pheeeew; [ -f .env ] && cp .env .env.prev && chmod 600 .env.prev || true; chmod 600 .env.new; mv .env.new .env'
+          rm -f env.tmp
+
+      - name: 배포
+        env:
+          IMAGE: ${{ secrets.DOCKERHUB_IMAGE }}:prod-${{ github.sha }}
+        run: |
+          set -eu
+          ssh -F ~/.ssh/config target "APP_IMAGE='$IMAGE' bash -s" <<'REMOTE'
+          set -eu
+          cd /opt/pheeeew
+
+          PREVIOUS=$(docker inspect --format '{{.Config.Image}}' pheeeew-prod-app 2>/dev/null || true)
+          echo "이전 이미지: ${PREVIOUS:-없음}"
+
+          wait_healthy() {
+            for _ in $(seq 1 30); do
+              status=$(docker inspect -f '{{.State.Health.Status}}' pheeeew-prod-app 2>/dev/null || echo none)
+              [ "$status" = healthy ] && return 0
+              sleep 5
+            done
+            return 1
+          }
+
+          docker compose -f compose.yml pull app
+
+          started=1
+          if ! docker compose -f compose.yml up -d; then
+            started=0
+            echo "===== 컨테이너 기동 실패 — 상태와 로그 ====="
+            docker compose -f compose.yml ps
+            docker compose -f compose.yml logs --tail=100
+          fi
+
+          if [ "$started" -eq 1 ]; then
+            if docker compose -f compose.yml exec -T nginx nginx -t; then
+              docker compose -f compose.yml exec -T nginx nginx -s reload
+              echo "nginx 설정을 다시 읽었습니다."
+            else
+              echo "nginx 설정이 올바르지 않아 reload 를 건너뜁니다. 이전 설정으로 계속 동작합니다."
+            fi
+
+            if wait_healthy; then
+              echo "배포 성공: $APP_IMAGE"
+              docker image prune -f
+              exit 0
+            fi
+
+            echo "===== 헬스체크 실패 — 앱 로그 ====="
+            docker compose -f compose.yml logs --tail=100 app
+          fi
+
+          if [ -z "$PREVIOUS" ]; then
+            echo "롤백할 이전 이미지가 없습니다."
+            exit 1
+          fi
+
+          echo "===== 롤백: $PREVIOUS ====="
+          if [ -f .env.prev ]; then
+            echo ".env 도 이전 값으로 되돌립니다."
+            cp .env.prev .env
+          fi
+          APP_IMAGE="$PREVIOUS" docker compose -f compose.yml up -d
+          if wait_healthy; then
+            echo "롤백 완료. 배포는 실패로 처리합니다."
+          else
+            echo "롤백도 실패했습니다. 수동 개입이 필요합니다."
+          fi
+          exit 1
+          REMOTE
