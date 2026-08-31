@@ -36,3 +36,7 @@ bin/
 .agents/
 CLAUDE.md
 AGENTS.md
+
+### Harness 산출물 ###
+_workspace/
+_workspace_*/
