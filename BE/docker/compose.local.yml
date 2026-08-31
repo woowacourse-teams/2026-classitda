@@ -28,6 +28,7 @@ services:
   postgres:
     container_name: pheeeew-be-postgres
     image: postgis/postgis:17-3.5-alpine
+    platform: linux/amd64
     environment:
       POSTGRES_DB: pheeeew
       POSTGRES_USER: pheeeew
