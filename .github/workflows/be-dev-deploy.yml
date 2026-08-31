@@ -5,6 +5,7 @@ on:
     branches:
       - be/dev
       - develop
+      - be/feat/1-CICD-파이프라인
     paths:
       - 'BE/**'
       - '.github/workflows/be-dev-deploy.yml'
