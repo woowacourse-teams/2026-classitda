@@ -182,6 +182,29 @@ public Sigh create(
 - 목록 응답은 공통 `CursorResponse<T>`를 사용하고 `items`, `hasNext`, `nextCursor`를 반환한다.
 - 성공 응답을 `ApiResponse<T>` 같은 공통 래퍼로 감싸지 않는다.
 
+### 4.5 메서드 내부 단락
+
+- 메서드 내부는 조회, 판단, 변환, 반환처럼 의미 있는 작업 단위가 바뀔 때 빈 줄로 구분한다.
+- 하나의 연속된 작업이나 메서드 체인 내부에는 불필요한 빈 줄을 넣지 않는다.
+- 한 단락으로 충분한 짧은 메서드에는 빈 줄을 강제하지 않는다.
+
+```java
+public SighMapResult findAllWithinBounds(...) {
+    List<SighMapProjection> projections = sighRepository.findAllWithinBounds(...);
+
+    boolean truncated = projections.size() > MAX_FIND_COUNT;
+    if (truncated) {
+        projections = projections.subList(0, MAX_FIND_COUNT);
+    }
+
+    List<SighMapItem> sighs = projections.stream()
+            .map(...)
+            .toList();
+
+    return SighMapResult.of(sighs, truncated);
+}
+```
+
 ---
 
 ## 5. 코드 정렬 순서
@@ -388,3 +411,28 @@ UUID requestId;
 - 재사용 가능한 요청 및 응답 모델은 `components/schemas`로 정의한다.
 - Swagger UI 하단의 전체 `Schemas` 영역은 기본 설정대로 표시한다.
 - Swagger UI 전역 설정을 변경할 때는 다른 API 문서의 가독성에 미치는 영향도 확인한다.
+
+---
+
+## 9. Flyway Migration
+
+### 9.1 버전
+
+- 파일명은 `VyyyyMMdd[_순번]__설명.sql` 형식을 사용한다.
+- 해당 날짜의 첫 migration은 순번을 생략한다.
+- 같은 날짜에 migration을 추가하면 `_1`, `_2` 순서로 작성한다.
+- 설명은 소문자 snake_case로 작성한다.
+
+예시:
+
+```text
+V20260831__create_sighs_location_gist_index.sql
+V20260831_1__add_sigh_status.sql
+V20260831_2__create_sigh_status_index.sql
+```
+
+### 9.2 변경과 충돌
+
+- 공유 브랜치에 병합되었거나 어느 환경에 적용된 migration은 파일명과 내용을 수정하지 않는다.
+- 적용된 migration을 변경해야 하면 새로운 버전의 migration을 추가한다.
+- 같은 버전이 충돌하면 먼저 공유 브랜치에 병합된 파일을 유지하고, 후속 변경의 순번을 조정한다.
