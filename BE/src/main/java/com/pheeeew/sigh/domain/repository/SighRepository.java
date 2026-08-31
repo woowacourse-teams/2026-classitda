@@ -2,6 +2,8 @@ package com.pheeeew.sigh.domain.repository;
 
 import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.projection.GeneratedLocation;
+import com.pheeeew.sigh.domain.repository.projection.SighMapProjection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +13,39 @@ import org.springframework.data.repository.query.Param;
 public interface SighRepository extends JpaRepository<Sigh, Long> {
 
     Optional<Sigh> findByRequestId(UUID requestId);
+
+    @Query(
+            value = """
+                    WITH bounds AS (
+                        SELECT ST_MakeEnvelope(
+                            :minLongitude,
+                            :minLatitude,
+                            :maxLongitude,
+                            :maxLatitude,
+                            4326
+                        ) AS area
+                    )
+                    SELECT
+                        sigh.id AS id,
+                        ST_X(sigh.location) AS longitude,
+                        ST_Y(sigh.location) AS latitude,
+                        sigh.created_at AS "createdAt"
+                    FROM sighs sigh
+                    CROSS JOIN bounds
+                    WHERE sigh.location && bounds.area
+                      AND ST_Intersects(sigh.location, bounds.area)
+                    ORDER BY sigh.created_at DESC, sigh.id DESC
+                    LIMIT :limit
+                    """,
+            nativeQuery = true
+    )
+    List<SighMapProjection> findAllWithinBounds(
+            @Param("minLongitude") double minLongitude,
+            @Param("minLatitude") double minLatitude,
+            @Param("maxLongitude") double maxLongitude,
+            @Param("maxLatitude") double maxLatitude,
+            @Param("limit") int limit
+    );
 
     @Query(
             value = """

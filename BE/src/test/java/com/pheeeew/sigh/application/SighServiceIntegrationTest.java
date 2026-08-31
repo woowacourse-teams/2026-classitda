@@ -3,11 +3,14 @@ package com.pheeeew.sigh.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.SighRepository;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
 import com.pheeeew.support.PostgisDataJpaTest;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -60,9 +63,11 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(result.created()).isTrue();
-        assertThat(result.sigh().getId()).isPositive();
-        assertThat(result.sigh().getCreatedAt()).isNotNull();
-        assertThat(result.sigh().getUpdatedAt()).isNotNull();
+        assertThat(result.sigh().id()).isPositive();
+        assertThat(result.sigh().createdAt()).isNotNull();
+
+        Sigh saved = sighRepository.findById(result.sigh().id()).orElseThrow();
+        assertThat(saved.getUpdatedAt()).isNotNull();
         assertThat(sighRepository.count()).isOne();
     }
 
@@ -81,9 +86,9 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(retried.created()).isFalse();
-        assertThat(retried.sigh().getId()).isEqualTo(first.sigh().getId());
-        assertThat(retried.sigh().getLongitude()).isEqualTo(first.sigh().getLongitude());
-        assertThat(retried.sigh().getLatitude()).isEqualTo(first.sigh().getLatitude());
+        assertThat(retried.sigh().id()).isEqualTo(first.sigh().id());
+        assertThat(retried.sigh().longitude()).isEqualTo(first.sigh().longitude());
+        assertThat(retried.sigh().latitude()).isEqualTo(first.sigh().latitude());
         assertThat(sighRepository.count()).isOne();
     }
 
@@ -100,10 +105,64 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(results)
-                .extracting(result -> result.sigh().getId())
-                .containsOnly(results.getFirst().sigh().getId());
+                .extracting(result -> result.sigh().id())
+                .containsOnly(results.getFirst().sigh().id());
         assertThat(results).filteredOn(SighSaveResult::created).hasSize(1);
         assertThat(sighRepository.count()).isOne();
+    }
+
+    @Test
+    void 지도_영역_안과_경계의_한숨만_최신순으로_조회한다() {
+        // given
+        Long insideId = insertSigh(126.9780, 37.5664, "2026-08-31T10:30:00Z");
+        insertSigh(127.2000, 37.5664, "2026-08-31T10:31:00Z");
+        Long boundaryId = insertSigh(127.1000, 37.6000, "2026-08-31T10:32:00Z");
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(result.truncated()).isFalse();
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .containsExactly(boundaryId, insideId);
+        assertThat(result.sighs().getFirst().longitude()).isEqualTo(127.1000);
+        assertThat(result.sighs().getFirst().latitude()).isEqualTo(37.6000);
+        assertThat(result.sighs().getFirst().createdAt())
+                .isEqualTo(Instant.parse("2026-08-31T10:32:00Z"));
+    }
+
+    @Test
+    void 지도_영역의_한숨이_500건이면_모두_반환하고_잘리지_않았음을_알린다() {
+        // given
+        insertSighs(500, 126.9780, 37.5664);
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(result.truncated()).isFalse();
+        assertThat(result.sighs()).hasSize(500);
+    }
+
+    @Test
+    void 지도_영역의_한숨이_500건을_초과하면_최신_500건과_잘림_여부를_반환한다() {
+        // given
+        insertSighs(501, 126.9780, 37.5664);
+        Long oldestId = jdbcClient.sql("SELECT MIN(id) FROM sighs")
+                .query(Long.class)
+                .single();
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(result.truncated()).isTrue();
+        assertThat(result.sighs()).hasSize(500);
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .isSortedAccordingTo(Comparator.reverseOrder())
+                .doesNotContain(oldestId);
     }
 
     @Test
@@ -169,6 +228,46 @@ class SighServiceIntegrationTest {
                         ADD CONSTRAINT ck_sighs_reject_test_request
                         CHECK (request_id <> '00000000-0000-0000-0000-000000000001'::uuid)
                         """)
+                .update();
+    }
+
+    private Long insertSigh(double longitude, double latitude, String createdAt) {
+        return jdbcClient.sql("""
+                        INSERT INTO sighs (request_id, location, created_at, updated_at)
+                        VALUES (
+                            :requestId,
+                            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            CAST(:createdAt AS TIMESTAMPTZ),
+                            CAST(:createdAt AS TIMESTAMPTZ)
+                        )
+                        RETURNING id
+                        """)
+                .param("requestId", UUID.randomUUID())
+                .param("longitude", longitude)
+                .param("latitude", latitude)
+                .param("createdAt", createdAt)
+                .query(Long.class)
+                .single();
+    }
+
+    private void insertSighs(int count, double longitude, double latitude) {
+        jdbcClient.sql("""
+                        INSERT INTO sighs (request_id, location, created_at, updated_at)
+                        SELECT
+                            (
+                                '00000000-0000-0000-0000-'
+                                || LPAD(sequence::text, 12, '0')
+                            )::uuid,
+                            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            TIMESTAMPTZ '2026-08-31T10:30:00Z'
+                                + sequence * INTERVAL '1 microsecond',
+                            TIMESTAMPTZ '2026-08-31T10:30:00Z'
+                                + sequence * INTERVAL '1 microsecond'
+                        FROM generate_series(1, :count) AS sequence
+                        """)
+                .param("longitude", longitude)
+                .param("latitude", latitude)
+                .param("count", count)
                 .update();
     }
 
