@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: pheeeew
+  profiles:
+    default: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  sql:
+    init:
+      mode: never
+
+management:
+  endpoints:
+    web:
+      discovery:
+        enabled: false
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
