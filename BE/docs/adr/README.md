@@ -86,6 +86,7 @@ Accepted (YYYY-MM-DD)
 | 번호 | 결정 | 한 줄 요약 |
 | --- | --- | --- |
 | [0001](0001-use-postgresql-with-postgis.md) | PostgreSQL과 PostGIS 사용 | 지도 영역 조회를 공간 타입·함수와 GiST 인덱스로 처리해요 |
+| [0002](0002-use-grid-center-for-sigh-location.md) | 격자 중심과 최종 표시 위치 분리 | 클라이언트는 격자 중심만 보내고 서버가 최종 표시 위치를 한 번 정해요 |
 
 ## AI 사용
 
