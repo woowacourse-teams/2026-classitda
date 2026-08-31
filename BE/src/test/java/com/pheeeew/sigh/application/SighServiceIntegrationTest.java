@@ -3,6 +3,7 @@ package com.pheeeew.sigh.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.SighRepository;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
@@ -62,9 +63,11 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(result.created()).isTrue();
-        assertThat(result.sigh().getId()).isPositive();
-        assertThat(result.sigh().getCreatedAt()).isNotNull();
-        assertThat(result.sigh().getUpdatedAt()).isNotNull();
+        assertThat(result.sigh().id()).isPositive();
+        assertThat(result.sigh().createdAt()).isNotNull();
+
+        Sigh saved = sighRepository.findById(result.sigh().id()).orElseThrow();
+        assertThat(saved.getUpdatedAt()).isNotNull();
         assertThat(sighRepository.count()).isOne();
     }
 
@@ -83,9 +86,9 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(retried.created()).isFalse();
-        assertThat(retried.sigh().getId()).isEqualTo(first.sigh().getId());
-        assertThat(retried.sigh().getLongitude()).isEqualTo(first.sigh().getLongitude());
-        assertThat(retried.sigh().getLatitude()).isEqualTo(first.sigh().getLatitude());
+        assertThat(retried.sigh().id()).isEqualTo(first.sigh().id());
+        assertThat(retried.sigh().longitude()).isEqualTo(first.sigh().longitude());
+        assertThat(retried.sigh().latitude()).isEqualTo(first.sigh().latitude());
         assertThat(sighRepository.count()).isOne();
     }
 
@@ -102,8 +105,8 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(results)
-                .extracting(result -> result.sigh().getId())
-                .containsOnly(results.getFirst().sigh().getId());
+                .extracting(result -> result.sigh().id())
+                .containsOnly(results.getFirst().sigh().id());
         assertThat(results).filteredOn(SighSaveResult::created).hasSize(1);
         assertThat(sighRepository.count()).isOne();
     }

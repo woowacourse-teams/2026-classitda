@@ -1,6 +1,6 @@
 package com.pheeeew.sigh.presentation.dto;
 
-import com.pheeeew.sigh.domain.Sigh;
+import com.pheeeew.sigh.application.SighMapItem;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
@@ -19,12 +19,12 @@ public record SighResponse(
 
     private static final String FEATURE_TYPE = "Feature";
 
-    public static SighResponse from(Sigh sigh) {
+    public static SighResponse from(SighMapItem sigh) {
         return new SighResponse(
                 FEATURE_TYPE,
-                sigh.getId(),
-                PointGeometry.of(sigh.getLongitude(), sigh.getLatitude()),
-                SighProperties.from(sigh.getCreatedAt())
+                sigh.id(),
+                PointGeometry.of(sigh.longitude(), sigh.latitude()),
+                SighProperties.from(sigh.createdAt())
         );
     }
 

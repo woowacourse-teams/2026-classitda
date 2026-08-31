@@ -7,6 +7,7 @@ import com.pheeeew.sigh.domain.repository.SighRepository;
 import com.pheeeew.sigh.domain.repository.projection.SighMapProjection;
 import com.pheeeew.sigh.exception.SighException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
@@ -23,17 +24,16 @@ public class SighService {
     private final SighLocationGenerator sighLocationGenerator;
 
     public SighSaveResult save(UUID requestId, double longitude, double latitude) {
-        return sighRepository.findByRequestId(requestId)
-                .map(sigh -> SighSaveResult.of(sigh, false))
-                .orElseGet(() -> saveNewSigh(requestId, longitude, latitude));
+        Optional<Sigh> existingSigh = sighRepository.findByRequestId(requestId);
+
+        if (existingSigh.isPresent()) {
+            return createSaveResult(existingSigh.get(), false);
+        }
+
+        return saveNewSigh(requestId, longitude, latitude);
     }
 
-    public SighMapResult findAllWithinBounds(
-            double minLongitude,
-            double minLatitude,
-            double maxLongitude,
-            double maxLatitude
-    ) {
+    public SighMapResult findAllWithinBounds(double minLongitude, double minLatitude, double maxLongitude, double maxLatitude) {
         List<SighMapProjection> projections = sighRepository.findAllWithinBounds(
                 minLongitude,
                 minLatitude,
@@ -59,6 +59,17 @@ public class SighService {
         return SighMapResult.of(sighs, truncated);
     }
 
+    private SighSaveResult createSaveResult(Sigh sigh, boolean created) {
+        SighMapItem item = SighMapItem.of(
+                sigh.getId(),
+                sigh.getLongitude(),
+                sigh.getLatitude(),
+                sigh.getCreatedAt()
+        );
+
+        return SighSaveResult.of(item, created);
+    }
+
     private SighSaveResult saveNewSigh(UUID requestId, double longitude, double latitude) {
         Point location = sighLocationGenerator.generate(longitude, latitude);
         Sigh sigh = Sigh.builder()
@@ -67,15 +78,15 @@ public class SighService {
                 .build();
 
         try {
-            return SighSaveResult.of(sighRepository.saveAndFlush(sigh), true);
-        } catch (DataIntegrityViolationException exception) {
-            return findExistingSigh(requestId, exception);
+            return createSaveResult(sighRepository.saveAndFlush(sigh), true);
+        } catch (DataIntegrityViolationException cause) {
+            return findExistingSigh(requestId, cause);
         }
     }
 
-    private SighSaveResult findExistingSigh(UUID requestId, DataIntegrityViolationException exception) {
+    private SighSaveResult findExistingSigh(UUID requestId, DataIntegrityViolationException cause) {
         return sighRepository.findByRequestId(requestId)
-                .map(sigh -> SighSaveResult.of(sigh, false))
-                .orElseThrow(() -> new SighException(SIGH_SAVE_FAILED, exception));
+                .map(sigh -> createSaveResult(sigh, false))
+                .orElseThrow(() -> new SighException(SIGH_SAVE_FAILED, cause));
     }
 }

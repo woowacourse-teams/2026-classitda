@@ -2,6 +2,8 @@ package com.pheeeew.sigh.presentation;
 
 import com.pheeeew.common.exception.ErrorResponse;
 import com.pheeeew.sigh.presentation.dto.SighCreateRequest;
+import com.pheeeew.sigh.presentation.dto.SighMapRequest;
+import com.pheeeew.sigh.presentation.dto.SighMapResponse;
 import com.pheeeew.sigh.presentation.dto.SighResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -11,9 +13,55 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springdoc.core.annotations.ParameterObject;
 
-@Tag(name = "한숨", description = "한숨 등록 API")
+@Tag(name = "한숨", description = "한숨 등록과 지도 영역 조회 API")
 public interface SighControllerApi {
+
+    @Operation(
+            summary = "지도 영역 내 한숨 조회",
+            description = """
+                    ### 지도 영역
+
+                    - WGS84 경계 상자를 `minLongitude`, `minLatitude`, `maxLongitude`, `maxLatitude`로 전달합니다.
+                    - 최소 좌표는 최대 좌표보다 작아야 하며 antimeridian을 가로지르는 영역은 지원하지 않습니다.
+                    - 경계선 위에 저장된 한숨도 조회 결과에 포함합니다.
+
+                    ### 조회 결과
+
+                    - DB에 저장된 최종 표시 위치를 최신순으로 최대 500건 반환합니다.
+                    - 결과가 500건을 초과하면 `truncated`가 `true`입니다.
+                    - 결과가 없으면 `truncated`가 `false`이고 `features`는 빈 배열입니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "지도 영역 내 한숨 조회 성공",
+                    content = @Content(
+                            mediaType = "application/geo+json",
+                            schema = @Schema(implementation = SighMapResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "필수 좌표가 없거나 좌표 범위 또는 경계 순서가 올바르지 않음",
+                    content = @Content(
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "한숨을 조회하지 못한 서버 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+            )
+    })
+    ResponseEntity<SighMapResponse> findAllWithinBounds(
+            @ParameterObject SighMapRequest request
+    );
 
     @Operation(
             summary = "한숨 등록",
