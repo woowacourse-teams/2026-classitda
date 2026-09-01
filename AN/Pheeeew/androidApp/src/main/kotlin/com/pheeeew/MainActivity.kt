@@ -29,8 +29,7 @@ class MainActivity : ComponentActivity() {
             ).also { holder.dependencies = it }
 
         setContent {
-            App(appVersion = BuildConfig.VERSION_NAME)
-            App(locationDependencies)
+            App(appVersion = BuildConfig.VERSION_NAME, locationDependencies = locationDependencies)
         }
     }
 }
@@ -46,5 +45,5 @@ class LocationDependenciesHolder : ViewModel() {
 @Preview
 @Composable
 fun appAndroidPreview() {
-    App(appVersion = "1.0.0")
+    App(appVersion = "1.0.0", locationDependencies = null)
 }
