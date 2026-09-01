@@ -1,6 +1,7 @@
 package com.pheeeew.feature.map.map
 
 import android.animation.ValueAnimator
+import android.graphics.Color
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
@@ -23,6 +24,7 @@ import com.pheeeew.feature.map.SighMarker
 import org.maplibre.android.MapLibre
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
+import org.maplibre.android.maps.MapLibreMapOptions
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.layers.PropertyFactory.iconOpacity
@@ -51,8 +53,13 @@ internal actual fun NativeBreathMap(
         remember(context, lifecycleOwner) {
             runCatching {
                 MapLibre.getInstance(context.applicationContext)
+                val mapOptions = MapLibreMapOptions.createFromAttributes(context).textureMode(true)
                 AndroidBreathMapHost(
-                    mapView = MapView(context).apply { onCreate(null) },
+                    mapView =
+                        MapView(context, mapOptions).apply {
+                            setBackgroundColor(Color.parseColor(MapDarkStyle.MAP_BACKGROUND_HEX))
+                            onCreate(null)
+                        },
                     onSighClick = { id -> currentOnSighClick(id) },
                     onBoundsChanged = { bounds -> currentOnBoundsChanged(bounds) },
                     onMapError = { error -> currentOnMapError(error) },

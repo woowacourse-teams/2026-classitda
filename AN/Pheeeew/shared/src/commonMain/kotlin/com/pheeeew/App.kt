@@ -1,6 +1,8 @@
 package com.pheeeew
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -38,21 +40,30 @@ fun App(
         val mapViewModel: MapViewModel = viewModel { MapViewModel(sighRepository, locationDependencies) }
         var selectedLegalDocument by remember { mutableStateOf<LegalDocument?>(null) }
 
+        // 오버레이 화면들이 뒤에 깔린 지도로 터치가 새어나가지 않도록 막습니다.
+        val overlayModifier =
+            Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
+
         Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
+            // Map은 항상 조립된 상태로 유지해, 화면 전환 시 지도 뷰가 매번 새로 생성되며
+            // 생기는 깜박임을 막습니다. Splash/Settings/LegalDocument는 그 위에 오버레이로 뜹니다.
+            MapScreen(
+                locationDependencies = locationDependencies,
+                onSettingsClick = { screen = Screen.Settings },
+                viewModel = mapViewModel,
+            )
+
             when (screen) {
                 Screen.Splash -> {
                     SplashScreen(
                         isReady = mapViewModel.isReady,
                         onFinished = { screen = Screen.Map },
+                        modifier = overlayModifier,
                     )
                 }
 
                 Screen.Map -> {
-                    MapScreen(
-                        locationDependencies = locationDependencies,
-                        onSettingsClick = { screen = Screen.Settings },
-                        viewModel = mapViewModel,
-                    )
+                    Unit
                 }
 
                 Screen.Settings -> {
@@ -81,6 +92,7 @@ fun App(
                         onLocationPolicyClick = {},
                         onCreditsClick = {},
                         appVersion = appVersion,
+                        modifier = overlayModifier,
                     )
                 }
 
@@ -89,6 +101,7 @@ fun App(
                         LegalDocumentRoute(
                             document = document,
                             onBack = { screen = Screen.Settings },
+                            modifier = overlayModifier,
                         )
                     }
                 }

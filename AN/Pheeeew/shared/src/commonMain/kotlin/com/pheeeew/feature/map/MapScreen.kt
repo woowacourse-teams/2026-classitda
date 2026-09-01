@@ -1,5 +1,6 @@
 package com.pheeeew.feature.map
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -65,7 +66,7 @@ fun MapScreen(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().background(AppTheme.colors.background)) {
         if (successState != null) {
             BreathMap(
                 state = successState.toMapRenderState(hiddenMarkerId),
