@@ -1,4 +1,4 @@
-package com.pheeeew.feature.map
+package com.pheeeew.feature.map.overlay
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

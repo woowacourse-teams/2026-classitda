@@ -1,4 +1,4 @@
-package com.pheeeew.feature.map
+package com.pheeeew.feature.map.overlay
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween

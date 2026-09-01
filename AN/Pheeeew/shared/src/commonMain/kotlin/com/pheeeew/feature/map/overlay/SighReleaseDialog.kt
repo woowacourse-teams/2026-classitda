@@ -1,4 +1,4 @@
-package com.pheeeew.feature.map
+package com.pheeeew.feature.map.overlay
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -23,6 +23,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.pheeeew.core.designsystem.theme.AppColors
 import com.pheeeew.core.designsystem.theme.AppTheme
+import com.pheeeew.feature.map.SighReleaseState
 
 @Composable
 fun SighReleaseDialog(

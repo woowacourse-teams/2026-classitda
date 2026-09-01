@@ -1,4 +1,4 @@
-package com.pheeeew.feature.map
+package com.pheeeew.feature.map.overlay
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
