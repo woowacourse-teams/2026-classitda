@@ -145,4 +145,25 @@ class FakeSighRepositoryTest {
                 repository.receivedRequestIds,
             )
         }
+
+    @Test
+    fun `조회 영역 안의 한숨만 반환한다`() =
+        runTest {
+            val inside = Coordinate(latitude = 37.55, longitude = 127.0)
+            val outside = Coordinate(latitude = 35.0, longitude = 129.0)
+            repository.setRegisterSighSuccess(SighPin(id = 1L, coordinate = inside))
+            repository.registerSigh("inside", inside)
+            repository.setRegisterSighSuccess(SighPin(id = 2L, coordinate = outside))
+            repository.registerSigh("outside", outside)
+            repository.setGetSighsSuccess(
+                listOf(
+                    SighPin(id = 1L, coordinate = inside),
+                    SighPin(id = 2L, coordinate = outside),
+                ),
+            )
+
+            val result = repository.getSighs(sighBounds)
+
+            assertEquals(listOf(inside), result.map { it.coordinate })
+        }
 }

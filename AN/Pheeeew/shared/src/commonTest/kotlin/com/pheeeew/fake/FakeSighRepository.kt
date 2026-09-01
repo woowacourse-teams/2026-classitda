@@ -44,7 +44,10 @@ class FakeSighRepository : SighRepository {
 
         return checkNotNull(getSighsResult) {
             "getSighs 결과를 먼저 생성해야 합니다."
-        }.getOrThrow()
+        }.getOrThrow().filter { sighPin ->
+            sighPin.coordinate.longitude in bounds.minLongitude..bounds.maxLongitude &&
+                sighPin.coordinate.latitude in bounds.minLatitude..bounds.maxLatitude
+        }
     }
 
     override suspend fun registerSigh(
