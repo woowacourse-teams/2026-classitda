@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -15,7 +16,11 @@ import com.pheeeew.core.navigation.Screen
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.feature.map.TempMapScreen
 import com.pheeeew.feature.setting.SettingsScreen
+import com.pheeeew.feature.setting.handleLocationPermissionSettingsClick
+import com.pheeeew.feature.setting.legal.LegalDocument
+import com.pheeeew.feature.setting.legal.LegalDocumentRoute
 import com.pheeeew.feature.splash.SplashScreen
+import kotlinx.coroutines.launch
 
 @Composable
 fun App(
@@ -23,7 +28,9 @@ fun App(
     locationDependencies: LocationDependencies?,
 ) {
     AppTheme {
+        val coroutineScope = rememberCoroutineScope()
         var screen by remember { mutableStateOf(Screen.Splash) }
+        var selectedLegalDocument by remember { mutableStateOf<LegalDocument?>(null) }
         Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
             when (screen) {
                 Screen.Splash -> {
@@ -42,14 +49,38 @@ fun App(
                     SettingsScreen(
                         onBackClick = { screen = Screen.Map },
                         onThemeSettingClick = {},
-                        onLocationPermissionClick = {},
+                        onLocationPermissionClick = {
+                            locationDependencies?.let { dependencies ->
+                                coroutineScope.launch {
+                                    handleLocationPermissionSettingsClick(
+                                        permissionController = dependencies.permissionController,
+                                        settingsLauncher = dependencies.permissionSettingsLauncher,
+                                    )
+                                }
+                            }
+                        },
                         onContactClick = {},
-                        onOpenSourceLicenseClick = {},
-                        onPrivacyPolicyClick = {},
+                        onOpenSourceLicenseClick = {
+                            selectedLegalDocument = LegalDocument.OpenSourceLicenses
+                            screen = Screen.LegalDocument
+                        },
+                        onPrivacyPolicyClick = {
+                            selectedLegalDocument = LegalDocument.PrivacyPolicy
+                            screen = Screen.LegalDocument
+                        },
                         onLocationPolicyClick = {},
                         onCreditsClick = {},
                         appVersion = appVersion,
                     )
+                }
+
+                Screen.LegalDocument -> {
+                    selectedLegalDocument?.let { document ->
+                        LegalDocumentRoute(
+                            document = document,
+                            onBack = { screen = Screen.Settings },
+                        )
+                    }
                 }
             }
         }
