@@ -48,6 +48,16 @@ class MapViewModel(
                     }
                 }
             }
+            viewModelScope.launch {
+                try {
+                    dependencies.permissionController.requestPermission()
+                    dependencies.repository.refreshCurrentLocation()
+                } catch (cancellation: CancellationException) {
+                    throw cancellation
+                } catch (_: Exception) {
+                    // 위치나 권한 값은 로그에 남기지 않습니다.
+                }
+            }
         }
     }
 
