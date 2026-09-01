@@ -5,12 +5,40 @@ import static com.pheeeew.sigh.fixture.SighFixture.서울시청_좌표;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SighTest {
+
+    @Test
+    void 삭제하면_삭제_시각이_기록된다() {
+        // given
+        Sigh sigh = 기본_한숨_빌더().build();
+
+        // when
+        sigh.delete();
+
+        // then
+        assertThat(sigh.isDeleted()).isTrue();
+        assertThat(sigh.getDeletedAt()).isNotNull();
+    }
+
+    @Test
+    void 이미_삭제한_한숨을_다시_삭제해도_최초_삭제_시각을_유지한다() {
+        // given
+        Sigh sigh = 기본_한숨_빌더().build();
+        sigh.delete();
+        Instant 최초_삭제_시각 = sigh.getDeletedAt();
+
+        // when
+        sigh.delete();
+
+        // then
+        assertThat(sigh.getDeletedAt()).isEqualTo(최초_삭제_시각);
+    }
 
     @Test
     void 메모의_앞뒤_공백을_제거한다() {

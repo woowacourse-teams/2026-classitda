@@ -51,6 +51,23 @@ class SighReportServiceIntegrationTest {
     @Autowired
     private JdbcClient jdbcClient;
 
+    @Test
+    void 삭제된_한숨의_신고_기록은_그대로_남는다() {
+        // given
+        Long sighId = insertSigh();
+        sighReportService.save(sighId, 신고자_기기_식별자(), 기본_신고_사유());
+
+        // when
+        jdbcClient.sql("UPDATE sighs SET deleted_at = NOW() WHERE id = :id")
+                .param("id", sighId)
+                .update();
+
+        // then
+        assertThat(sighReportRepository.findBySighIdAndReporterDeviceId(sighId, 신고자_기기_식별자()))
+                .isPresent();
+        assertThat(sighReportRepository.count()).isOne();
+    }
+
     @AfterEach
     void tearDown() {
         sighReportRepository.deleteAll();

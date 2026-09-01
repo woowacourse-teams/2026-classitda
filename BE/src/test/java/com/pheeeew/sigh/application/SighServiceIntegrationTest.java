@@ -163,6 +163,22 @@ class SighServiceIntegrationTest {
     }
 
     @Test
+    void 삭제된_한숨은_지도_영역_조회에_나오지_않는다() {
+        // given
+        Long 살아있는_한숨 = insertSigh(126.9780, 37.5664, "2026-09-01T10:30:00Z");
+        Long 삭제된_한숨 = insertSigh(126.9790, 37.5665, "2026-09-01T10:31:00Z");
+        softDeleteSigh(삭제된_한숨);
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .containsExactly(살아있는_한숨);
+    }
+
+    @Test
     void 지도_영역_안과_경계의_한숨만_최신순으로_조회한다() {
         // given
         Long insideId = insertSigh(126.9780, 37.5664, "2026-08-31T10:30:00Z");
@@ -277,6 +293,12 @@ class SighServiceIntegrationTest {
                         ADD CONSTRAINT ck_sighs_reject_test_request
                         CHECK (request_id <> '00000000-0000-0000-0000-000000000001'::uuid)
                         """)
+                .update();
+    }
+
+    private void softDeleteSigh(Long sighId) {
+        jdbcClient.sql("UPDATE sighs SET deleted_at = NOW() WHERE id = :id")
+                .param("id", sighId)
                 .update();
     }
 

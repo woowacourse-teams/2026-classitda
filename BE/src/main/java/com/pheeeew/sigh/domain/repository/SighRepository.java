@@ -12,6 +12,13 @@ import org.springframework.data.repository.query.Param;
 
 public interface SighRepository extends JpaRepository<Sigh, Long> {
 
+    /**
+     * 삭제 여부로 거르지 않는다.
+     *
+     * <p>{@code request_id}에는 삭제 여부와 무관하게 유니크 제약이 걸려 있다. 삭제된 한숨을 걸러내면
+     * 같은 {@code requestId}로 다시 등록할 때 선조회가 비어 삽입을 시도하고, 유니크 위반 뒤의 재조회도
+     * 비어 멱등 복구가 실패한다(ADR-0004, ADR-0005).
+     */
     Optional<Sigh> findByRequestId(UUID requestId);
 
     @Query(
@@ -32,7 +39,8 @@ public interface SighRepository extends JpaRepository<Sigh, Long> {
                         sigh.created_at AS "createdAt"
                     FROM sighs sigh
                     CROSS JOIN bounds
-                    WHERE sigh.location && bounds.area
+                    WHERE sigh.deleted_at IS NULL
+                      AND sigh.location && bounds.area
                       AND ST_Intersects(sigh.location, bounds.area)
                     ORDER BY sigh.created_at DESC, sigh.id DESC
                     LIMIT :limit
