@@ -2,6 +2,7 @@ package com.pheeeew.fake
 
 import com.pheeeew.domain.exception.ApiException
 import com.pheeeew.domain.model.geo.Coordinate
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.domain.model.sigh.SighPin
 import com.pheeeew.domain.repository.SighRepository
 
@@ -14,11 +15,13 @@ class FakeSighRepository : SighRepository {
     var registerSighCallCount: Int = 0
         private set
 
+    private val _receivedRequestIds = mutableListOf<String>()
     val receivedRequestIds: List<String>
-        field = mutableListOf<String>()
+        get() = _receivedRequestIds
 
+    private val _receivedCoordinates = mutableListOf<Coordinate>()
     val receivedCoordinates: List<Coordinate>
-        field = mutableListOf<Coordinate>()
+        get() = _receivedCoordinates
 
     fun setGetSighsSuccess(sighs: List<SighPin>) {
         getSighsResult = Result.success(sighs)
@@ -36,7 +39,7 @@ class FakeSighRepository : SighRepository {
         registerSighResult = Result.failure(exception)
     }
 
-    override suspend fun getSighs(): List<SighPin> {
+    override suspend fun getSighs(bounds: SighBounds): List<SighPin> {
         getSighsCallCount += 1
 
         return checkNotNull(getSighsResult) {
@@ -49,8 +52,8 @@ class FakeSighRepository : SighRepository {
         coordinate: Coordinate,
     ): SighPin {
         registerSighCallCount += 1
-        receivedRequestIds += requestId
-        receivedCoordinates += coordinate
+        _receivedRequestIds += requestId
+        _receivedCoordinates += coordinate
 
         return checkNotNull(registerSighResult) {
             "registerSigh 결과를 먼저 설정해야 합니다."

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pheeeew.domain.exception.ApiException
 import com.pheeeew.domain.model.geo.Coordinate
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.domain.repository.SighRepository
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -33,7 +34,17 @@ class TempMapViewModel(
         viewModelScope.launch {
             _uiState.value = TempMapUiState.Loading
             try {
-                _uiState.value = TempMapUiState.Success(sighRepository.getSighs())
+                _uiState.value =
+                    TempMapUiState.Success(
+                        sighRepository.getSighs(
+                            SighBounds(
+                                minLongitude = -180.0,
+                                minLatitude = -90.0,
+                                maxLongitude = 180.0,
+                                maxLatitude = 90.0,
+                            ),
+                        ),
+                    )
             } catch (e: ApiException) {
                 _uiState.value = TempMapUiState.Error(e.message)
             }

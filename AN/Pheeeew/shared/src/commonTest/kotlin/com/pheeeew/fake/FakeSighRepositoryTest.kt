@@ -4,6 +4,7 @@ package com.pheeeew.fake
 
 import com.pheeeew.domain.exception.ApiException
 import com.pheeeew.domain.model.geo.Coordinate
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.domain.model.sigh.SighPin
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -14,6 +15,13 @@ import kotlin.test.assertSame
 
 class FakeSighRepositoryTest {
     private lateinit var repository: FakeSighRepository
+    private val sighBounds =
+        SighBounds(
+            minLongitude = 126.9,
+            minLatitude = 37.5,
+            maxLongitude = 127.1,
+            maxLatitude = 37.6,
+        )
 
     @BeforeTest
     fun setUp() {
@@ -36,7 +44,7 @@ class FakeSighRepositoryTest {
                 )
             repository.setGetSighsSuccess(expected)
 
-            val actual = repository.getSighs()
+            val actual = repository.getSighs(sighBounds)
             assertEquals(expected, actual)
             assertEquals(1, repository.getSighsCallCount)
         }
@@ -53,7 +61,7 @@ class FakeSighRepositoryTest {
 
             val actualException =
                 assertFailsWith<ApiException.Network> {
-                    repository.getSighs()
+                    repository.getSighs(sighBounds)
                 }
 
             assertSame(expectedException, actualException)
@@ -121,7 +129,7 @@ class FakeSighRepositoryTest {
             repository.setRegisterSighSuccess(sighPin)
 
             repeat(2) {
-                repository.getSighs()
+                repository.getSighs(sighBounds)
             }
             repeat(3) { index ->
                 repository.registerSigh(
