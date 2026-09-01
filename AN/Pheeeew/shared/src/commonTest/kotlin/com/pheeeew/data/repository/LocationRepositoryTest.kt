@@ -232,6 +232,8 @@ class LocationRepositoryTest {
             requestPermissionCalls += 1
             return status
         }
+
+        override fun openAppSettings() = Unit
     }
 
     private class FakePlatformLocationProvider(

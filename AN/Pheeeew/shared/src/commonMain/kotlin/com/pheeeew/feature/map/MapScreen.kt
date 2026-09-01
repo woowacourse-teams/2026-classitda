@@ -16,9 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pheeeew.core.designsystem.component.AppDialog
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
+import com.pheeeew.domain.model.location.LocationError
 import com.pheeeew.domain.model.location.LocationState
 import com.pheeeew.feature.map.map.BreathMap
 import com.pheeeew.feature.map.overlay.MapOverlay
@@ -34,10 +36,13 @@ fun MapScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var isSighReleaseDialogVisible by remember { mutableStateOf(false) }
+    var isLocationPermissionDialogVisible by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
     val successState = uiState as? MapUiState.Success
+    val isLocationPermissionDenied =
+        (successState?.locationState as? LocationState.Unavailable)?.reason == LocationError.PermissionDenied
 
     LaunchedEffect(viewModel) {
         viewModel.sighReleasedEvents.collect {
@@ -60,11 +65,19 @@ fun MapScreen(
             onSettingsClick = onSettingsClick,
             onRefreshClick = viewModel::loadSighs,
             onSighLongPress = {
-                if (successState != null) {
-                    isSighReleaseDialogVisible = true
-                } else {
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar("연결 상태를 확인해주세요!")
+                when {
+                    successState == null -> {
+                        coroutineScope.launch {
+                            snackbarHostState.showSnackbar("연결 상태를 확인해주세요!")
+                        }
+                    }
+
+                    isLocationPermissionDenied -> {
+                        isLocationPermissionDialogVisible = true
+                    }
+
+                    else -> {
+                        isSighReleaseDialogVisible = true
                     }
                 }
             },
@@ -91,6 +104,21 @@ fun MapScreen(
                     viewModel.cancelSighRelease()
                     isSighReleaseDialogVisible = false
                 },
+            )
+        }
+
+        if (isLocationPermissionDialogVisible) {
+            AppDialog(
+                title = "위치 권한 설정 안내",
+                body = "서비스를 이용하려면 위치 권한이 필요합니다.\n[설정 > 권한 > 위치]에서 권한을 '허용'으로 변경해주세요.",
+                confirmText = "설정으로 이동",
+                dismissText = "취소",
+                onConfirmClick = {
+                    viewModel.openLocationSettings()
+                    isLocationPermissionDialogVisible = false
+                },
+                onDismissClick = { isLocationPermissionDialogVisible = false },
+                onDismissRequest = { isLocationPermissionDialogVisible = false },
             )
         }
     }

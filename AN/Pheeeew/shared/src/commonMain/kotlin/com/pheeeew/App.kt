@@ -50,7 +50,7 @@ fun App(
                     SettingsScreen(
                         onBackClick = { screen = Screen.Map },
                         onThemeSettingClick = {},
-                        onLocationPermissionClick = {},
+                        onLocationPermissionClick = { locationDependencies?.permissionController?.openAppSettings() },
                         onContactClick = {},
                         onOpenSourceLicenseClick = {},
                         onPrivacyPolicyClick = {},

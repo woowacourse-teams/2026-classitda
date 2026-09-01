@@ -2,9 +2,12 @@ package com.pheeeew.core.permission
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -113,6 +116,14 @@ class AndroidLocationPermissionController(
                 }
             }
         }
+
+    override fun openAppSettings() {
+        val intent =
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                .setData(Uri.fromParts("package", applicationContext.packageName, null))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        applicationContext.startActivity(intent)
+    }
 
     override fun close() {
         if (Looper.myLooper() == Looper.getMainLooper()) {

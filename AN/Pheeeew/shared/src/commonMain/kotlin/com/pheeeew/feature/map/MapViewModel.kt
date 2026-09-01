@@ -147,6 +147,10 @@ class MapViewModel(
         }
     }
 
+    fun openLocationSettings() {
+        locationDependencies?.permissionController?.openAppSettings()
+    }
+
     private fun sendCameraCommand(create: (Long) -> MapCameraCommand) {
         nextCameraCommandId += 1L
         _uiState.update { state ->
