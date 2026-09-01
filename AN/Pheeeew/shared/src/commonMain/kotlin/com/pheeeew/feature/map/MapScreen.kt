@@ -71,7 +71,7 @@ fun MapScreen(
             onZoomInClick = viewModel::onZoomInClick,
             onZoomOutClick = viewModel::onZoomOutClick,
             onMyLocationClick = viewModel::onMyLocationClick,
-            errorMessage = (uiState as? MapUiState.Error)?.message,
+            errorMessage = uiState.toBannerMessage(),
         )
 
         SnackbarHost(
@@ -95,6 +95,13 @@ fun MapScreen(
         }
     }
 }
+
+private fun MapUiState.toBannerMessage(): String? =
+    when (this) {
+        is MapUiState.Error -> message
+        is MapUiState.Success -> (locationState as? LocationState.Unavailable)?.reason?.toKoreanMessage()
+        MapUiState.Loading -> null
+    }
 
 private fun MapUiState.Success.toMapRenderState(): MapRenderState =
     MapRenderState(

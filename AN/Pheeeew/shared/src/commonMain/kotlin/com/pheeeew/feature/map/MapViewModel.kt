@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.pheeeew.core.permission.LocationPermissionStatus
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.domain.exception.ApiException
-import com.pheeeew.domain.model.location.LocationError
 import com.pheeeew.domain.model.location.LocationState
 import com.pheeeew.domain.repository.SighRepository
 import com.pheeeew.feature.map.map.MapCameraCommand
@@ -86,7 +85,7 @@ class MapViewModel(
         if (location == null) {
             val message =
                 (current.locationState as? LocationState.Unavailable)?.reason?.toKoreanMessage()
-                    ?: GPS_UNAVAILABLE_MESSAGE
+                    ?: "GPS 수신이 원활하지 않습니다."
             _uiState.value = current.copy(sighReleaseState = SighReleaseState.Error(message))
             return
         }
@@ -153,15 +152,5 @@ class MapViewModel(
         _uiState.update { state ->
             (state as? MapUiState.Success)?.copy(cameraCommand = create(nextCameraCommandId)) ?: state
         }
-    }
-
-    private fun LocationError.toKoreanMessage(): String =
-        when (this) {
-            LocationError.PermissionDenied -> "설정에서 위치 권한을 '허용'으로 변경해주세요."
-            LocationError.GpsUnavailable, LocationError.LocationTimeout -> GPS_UNAVAILABLE_MESSAGE
-        }
-
-    private companion object {
-        const val GPS_UNAVAILABLE_MESSAGE = "GPS 수신이 원활하지 않습니다."
     }
 }
