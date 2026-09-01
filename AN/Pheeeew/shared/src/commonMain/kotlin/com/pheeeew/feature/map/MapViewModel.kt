@@ -6,6 +6,7 @@ import com.pheeeew.core.permission.LocationPermissionStatus
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.domain.exception.ApiException
 import com.pheeeew.domain.model.location.LocationState
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.domain.repository.SighRepository
 import com.pheeeew.feature.map.map.MapCameraCommand
 import com.pheeeew.feature.map.map.MapDarkStyle
@@ -39,7 +40,7 @@ class MapViewModel(
     val sighReleasedEvents: Flow<Unit> = _sighReleasedEvents.receiveAsFlow()
 
     init {
-        loadSighs()
+        loadSighs(DEFAULT_SIGH_BOUNDS)
         locationDependencies?.let { dependencies ->
             viewModelScope.launch {
                 dependencies.repository.locationState.collect { locationState ->
@@ -61,11 +62,11 @@ class MapViewModel(
         }
     }
 
-    fun loadSighs() {
+    fun loadSighs(bounds: SighBounds = DEFAULT_SIGH_BOUNDS) {
         viewModelScope.launch {
             _uiState.value = MapUiState.Loading
             try {
-                val sighs = sighRepository.getSighs()
+                val sighs = sighRepository.getSighs(bounds)
                 _uiState.value =
                     MapUiState.Success(
                         sighs = sighs,
@@ -165,3 +166,11 @@ class MapViewModel(
         }
     }
 }
+
+private val DEFAULT_SIGH_BOUNDS =
+    SighBounds(
+        minLongitude = 126.8,
+        minLatitude = 37.4,
+        maxLongitude = 127.2,
+        maxLatitude = 37.7,
+    )

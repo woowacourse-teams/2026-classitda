@@ -56,6 +56,7 @@ fun MapScreen(
                 state = successState.toMapRenderState(),
                 cameraCommand = successState.cameraCommand,
                 onSighClick = {},
+                onBoundsChanged = viewModel::loadSighs,
                 onMapError = {},
                 modifier = Modifier.fillMaxSize(),
             )

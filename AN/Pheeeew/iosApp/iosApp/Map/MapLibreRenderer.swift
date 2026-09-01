@@ -98,6 +98,16 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         }
     }
 
+    func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {
+        let bounds = mapView.visibleCoordinateBounds
+        eventSink.onBoundsChanged(
+            minLongitude: bounds.sw.longitude,
+            minLatitude: bounds.sw.latitude,
+            maxLongitude: bounds.ne.longitude,
+            maxLatitude: bounds.ne.latitude
+        )
+    }
+
     func gestureRecognizer(
         _ gestureRecognizer: UIGestureRecognizer,
         shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
