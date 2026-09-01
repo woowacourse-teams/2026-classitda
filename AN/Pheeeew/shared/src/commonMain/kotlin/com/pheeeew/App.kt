@@ -17,8 +17,7 @@ import com.pheeeew.feature.setting.SettingsScreen
 import com.pheeeew.feature.splash.SplashScreen
 
 @Composable
-@Preview
-fun App() {
+fun App(appVersion: String) {
     AppTheme {
         var screen by remember { mutableStateOf(Screen.Splash) }
         Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
@@ -45,10 +44,16 @@ fun App() {
                         onPrivacyPolicyClick = {},
                         onLocationPolicyClick = {},
                         onCreditsClick = {},
-                        appVersion = "1.0.0",
+                        appVersion = appVersion,
                     )
                 }
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun AppPreview() {
+    App(appVersion = "1.0.0")
 }
