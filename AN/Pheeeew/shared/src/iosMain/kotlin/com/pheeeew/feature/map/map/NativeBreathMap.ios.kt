@@ -8,11 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitInteropInteractionMode
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
-import com.pheeeew.feature.map.MapUiState
+import com.pheeeew.feature.map.MapRenderState
 
 @Composable
 internal actual fun NativeBreathMap(
-    state: MapUiState,
+    state: MapRenderState,
     cameraCommand: MapCameraCommand?,
     onSighClick: (String) -> Unit,
     onMapError: (MapError) -> Unit,
@@ -49,7 +49,7 @@ internal actual fun NativeBreathMap(
     )
 }
 
-private fun MapUiState.toIosRenderState(cameraCommand: MapCameraCommand?): IosMapRenderState {
+private fun MapRenderState.toIosRenderState(cameraCommand: MapCameraCommand?): IosMapRenderState {
     val location = MapRenderRules.currentLocation(this)
     val center = MapRenderRules.initialCenter(this)
 

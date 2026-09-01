@@ -3,7 +3,7 @@ package com.pheeeew.feature.map.map
 import com.pheeeew.domain.model.location.CurrentLocation
 import com.pheeeew.domain.model.location.LocationState
 import com.pheeeew.feature.map.MapPoint
-import com.pheeeew.feature.map.MapUiState
+import com.pheeeew.feature.map.MapRenderState
 import com.pheeeew.feature.map.SighMarker
 
 internal object MapRenderRules {
@@ -14,7 +14,7 @@ internal object MapRenderRules {
             .distinctBy(SighMarker::id)
             .toList()
 
-    fun currentLocation(state: MapUiState): CurrentLocation? {
+    fun currentLocation(state: MapRenderState): CurrentLocation? {
         val available = state.locationState as? LocationState.Available ?: return null
         val location = state.currentLocation ?: return null
 
@@ -26,7 +26,7 @@ internal object MapRenderRules {
         }
     }
 
-    fun initialCenter(state: MapUiState): MapPoint? {
+    fun initialCenter(state: MapRenderState): MapPoint? {
         currentLocation(state)?.let { location ->
             return MapPoint(
                 id = "current-location",
@@ -38,7 +38,7 @@ internal object MapRenderRules {
         return state.fallbackCenter?.takeIf { it.hasValidCoordinate() }
     }
 
-    fun initialCenterIsProvisional(state: MapUiState): Boolean =
+    fun initialCenterIsProvisional(state: MapRenderState): Boolean =
         state.locationState is LocationState.Loading && initialCenter(state) != null
 
     private fun CurrentLocation.hasValidCoordinate(): Boolean =

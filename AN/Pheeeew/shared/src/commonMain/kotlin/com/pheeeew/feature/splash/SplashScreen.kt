@@ -20,18 +20,27 @@ import androidx.compose.ui.unit.dp
 import com.pheeeew.core.designsystem.theme.AppColors
 import com.pheeeew.core.designsystem.theme.AppTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.jetbrains.compose.resources.painterResource
 import pheeeew.shared.generated.resources.Res
 import pheeeew.shared.generated.resources.logo_pheeeew
 
 @Composable
 fun SplashScreen(
+    isReady: Flow<Boolean>,
     onFinished: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // TODO: 지도 로딩 + API 호출이 끝나면 onFinished를 호출하도록 교체. 그 전까지는 고정 딜레이 사용.
-    LaunchedEffect(Unit) {
-        delay(SPLASH_MINIMUM_DISPLAY_MILLIS)
+    LaunchedEffect(isReady) {
+        joinAll(
+            launch { delay(SPLASH_MINIMUM_DISPLAY_MILLIS) },
+            launch { withTimeoutOrNull(SPLASH_MAXIMUM_DISPLAY_MILLIS) { isReady.first { it } } },
+        )
         onFinished()
     }
 
@@ -52,7 +61,7 @@ fun SplashScreen(
 
         Text(
             text = "아우 힘들다~ 너도? 나도~",
-            style = AppTheme.typography.caption,
+            style = AppTheme.typography.menuItem,
             color = AppColors.Cream100,
         )
 
@@ -60,8 +69,8 @@ fun SplashScreen(
 
         TypewriterText(
             fullText = "다같이 소리질러 한숨 야호오~",
-            style = AppTheme.typography.caption,
-            color = AppTheme.colors.onSurfaceVariant,
+            style = AppTheme.typography.menuItem,
+            color = AppColors.Cream100,
         )
 
         Spacer(modifier = Modifier.height(64.dp))
@@ -70,11 +79,12 @@ fun SplashScreen(
 }
 
 private const val SPLASH_MINIMUM_DISPLAY_MILLIS = 2500L
+private const val SPLASH_MAXIMUM_DISPLAY_MILLIS = 8000L
 
 @Preview
 @Composable
 private fun SplashScreenPreview() {
     AppTheme {
-        SplashScreen(onFinished = {})
+        SplashScreen(isReady = flowOf(true), onFinished = {})
     }
 }

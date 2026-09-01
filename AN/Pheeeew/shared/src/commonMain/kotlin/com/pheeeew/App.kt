@@ -11,10 +11,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.navigation.Screen
+import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
-import com.pheeeew.feature.map.TempMapScreen
+import com.pheeeew.feature.map.MapScreen
+import com.pheeeew.feature.map.MapViewModel
 import com.pheeeew.feature.setting.SettingsScreen
 import com.pheeeew.feature.setting.handleLocationPermissionSettingsClick
 import com.pheeeew.feature.setting.legal.LegalDocument
@@ -30,18 +33,23 @@ fun App(
     AppTheme {
         val coroutineScope = rememberCoroutineScope()
         var screen by remember { mutableStateOf(Screen.Splash) }
+        val mapViewModel: MapViewModel = viewModel { MapViewModel(FakeSighRepository(), locationDependencies) }
         var selectedLegalDocument by remember { mutableStateOf<LegalDocument?>(null) }
+
         Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
             when (screen) {
                 Screen.Splash -> {
                     SplashScreen(
+                        isReady = mapViewModel.isReady,
                         onFinished = { screen = Screen.Map },
                     )
                 }
 
                 Screen.Map -> {
-                    TempMapScreen(
+                    MapScreen(
+                        locationDependencies = locationDependencies,
                         onSettingsClick = { screen = Screen.Settings },
+                        viewModel = mapViewModel,
                     )
                 }
 

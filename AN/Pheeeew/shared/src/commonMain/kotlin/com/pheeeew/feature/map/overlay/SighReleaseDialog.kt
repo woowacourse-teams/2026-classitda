@@ -68,6 +68,14 @@ private fun SighReleaseDialogContent(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
+                if (sighReleaseState is SighReleaseState.Error) {
+                    Text(
+                        text = sighReleaseState.message,
+                        style = AppTheme.typography.caption,
+                        color = AppTheme.colors.danger,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
                 Box(
                     modifier =
                         Modifier
@@ -84,15 +92,6 @@ private fun SighReleaseDialogContent(
                         text = if (sighReleaseState is SighReleaseState.Submitting) "전송 중..." else "하늘에 슈우웃",
                         style = AppTheme.typography.menuItem,
                         color = AppColors.Navy900,
-                    )
-                }
-
-                if (sighReleaseState is SighReleaseState.Error) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = sighReleaseState.message,
-                        style = AppTheme.typography.caption,
-                        color = AppTheme.colors.danger,
                     )
                 }
 

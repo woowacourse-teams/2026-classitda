@@ -17,7 +17,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pheeeew.domain.model.location.CurrentLocation
-import com.pheeeew.feature.map.MapUiState
+import com.pheeeew.feature.map.MapRenderState
 import com.pheeeew.feature.map.SighMarker
 import org.maplibre.android.MapLibre
 import org.maplibre.android.maps.MapLibreMap
@@ -30,7 +30,7 @@ import java.util.ArrayDeque
 
 @Composable
 internal actual fun NativeBreathMap(
-    state: MapUiState,
+    state: MapRenderState,
     cameraCommand: MapCameraCommand?,
     onSighClick: (String) -> Unit,
     onMapError: (MapError) -> Unit,
@@ -89,7 +89,7 @@ private class AndroidBreathMapHost(
     private val camera = AndroidMapCamera()
     private var map: MapLibreMap? = null
     private var style: Style? = null
-    private var latestState: MapUiState? = null
+    private var latestState: MapRenderState? = null
     private val pendingCameraCommands = ArrayDeque<MapCameraCommand>()
     private var lastReceivedCameraCommandId: Long? = null
     private var renderedMarkers: List<SighMarker>? = null
@@ -170,7 +170,7 @@ private class AndroidBreathMapHost(
     }
 
     fun render(
-        state: MapUiState,
+        state: MapRenderState,
         cameraCommand: MapCameraCommand?,
     ) {
         latestState = state
