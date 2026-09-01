@@ -1,0 +1,14 @@
+package com.pheeeew.feature.map.map
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.pheeeew.feature.map.MapUiState
+
+@Composable
+internal expect fun NativeBreathMap(
+    state: MapUiState,
+    cameraCommand: MapCameraCommand?,
+    onSighClick: (String) -> Unit,
+    onMapError: (MapError) -> Unit,
+    modifier: Modifier = Modifier,
+)

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A10101010101010101010101 /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = A30303030303030303030303 /* MapLibre */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		5647273F7E2BAA66C229B92E /* Pheeeew.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pheeeew.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -41,6 +45,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10101010101010101010101 /* MapLibre in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -85,6 +90,7 @@
 			);
 			name = iosApp;
 			packageProductDependencies = (
+				A30303030303030303030303 /* MapLibre */,
 			);
 			productName = iosApp;
 			productReference = 5647273F7E2BAA66C229B92E /* Pheeeew.app */;
@@ -114,6 +120,9 @@
 			);
 			mainGroup = 15DE1A31783F1BE62EB715BD;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A20202020202020202020202 /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F93A3DCF112B44FD4AE0D285 /* Products */;
 			projectDirPath = "";
@@ -370,6 +379,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A20202020202020202020202 /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/maplibre/maplibre-gl-native-distribution";
+			requirement = {
+				kind = exactVersion;
+				version = 6.29.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A30303030303030303030303 /* MapLibre */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A20202020202020202020202 /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
+			productName = MapLibre;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F883AD02D09B596C3693E590 /* Project object */;
 }

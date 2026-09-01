@@ -1,12 +1,63 @@
 package com.pheeeew
 
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.pheeeew.core.designsystem.theme.AppTheme
+import com.pheeeew.core.navigation.Screen
+import com.pheeeew.di.LocationDependencies
+import com.pheeeew.feature.map.TempMapScreen
+import com.pheeeew.feature.setting.SettingsScreen
+import com.pheeeew.feature.splash.SplashScreen
 
 @Composable
-@Preview
-fun App() {
-    MaterialTheme {
+fun App(
+    appVersion: String,
+    locationDependencies: LocationDependencies?,
+) {
+    AppTheme {
+        var screen by remember { mutableStateOf(Screen.Splash) }
+        Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
+            when (screen) {
+                Screen.Splash -> {
+                    SplashScreen(
+                        onFinished = { screen = Screen.Map },
+                    )
+                }
+
+                Screen.Map -> {
+                    TempMapScreen(
+                        onSettingsClick = { screen = Screen.Settings },
+                    )
+                }
+
+                Screen.Settings -> {
+                    SettingsScreen(
+                        onBackClick = { screen = Screen.Map },
+                        onThemeSettingClick = {},
+                        onLocationPermissionClick = {},
+                        onContactClick = {},
+                        onOpenSourceLicenseClick = {},
+                        onPrivacyPolicyClick = {},
+                        onLocationPolicyClick = {},
+                        onCreditsClick = {},
+                        appVersion = appVersion,
+                    )
+                }
+            }
+        }
     }
+}
+
+@Preview
+@Composable
+private fun AppPreview() {
+    App(appVersion = "1.0.0", locationDependencies = null)
 }
