@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -45,6 +47,7 @@ import com.pheeeew.core.audio.rememberBreathInput
 import com.pheeeew.core.designsystem.theme.AppColors
 import com.pheeeew.core.designsystem.theme.AppTheme
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -57,6 +60,8 @@ private const val BURST_DURATION_MILLIS = 720L
 fun BreathControl(
     enabled: Boolean,
     onExplosionFinished: (originInRoot: Offset) -> Unit,
+    onMicrophoneError: (BreathInputError) -> Unit,
+    ensureLocationPermission: suspend () -> Boolean,
     modifier: Modifier = Modifier,
 ) {
     var listening by remember { mutableStateOf(false) }
@@ -66,9 +71,9 @@ fun BreathControl(
     var burstSequence by remember { mutableStateOf(0) }
     var burstProgress by remember { mutableStateOf(0f) }
     var origin by remember { mutableStateOf(Offset.Zero) }
-    var inputError by remember { mutableStateOf<BreathInputError?>(null) }
     val breathInput = rememberBreathInput()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
 
     DisposableEffect(breathInput, lifecycleOwner) {
         val observer =
@@ -119,13 +124,6 @@ fun BreathControl(
         animationSpec = infiniteRepeatable(tween(1_800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "breathPulseValue",
     )
-    val inputErrorMessage =
-        when (inputError) {
-            null -> null
-            BreathInputError.PermissionDenied -> "마이크 권한이 필요해요"
-            BreathInputError.MicrophoneUnavailable -> "마이크를 사용할 수 없어요"
-            BreathInputError.StartFailed -> "마이크를 시작하지 못했어요. 다시 시도해주세요"
-        }
     val controlDescription =
         when {
             burst -> "한숨을 별로 만드는 중"
@@ -164,20 +162,22 @@ fun BreathControl(
                             detectTapGestures(onTap = {
                                 if (!enabled || burst) return@detectTapGestures
                                 if (!listening) {
-                                    inputError = null
-                                    growth = 0f
-                                    strength = 0f
-                                    listening = true
-                                    breathInput.start(
-                                        onStrengthChanged = { strength = it },
-                                        onError = {
-                                            inputError = it
-                                            breathInput.stop()
-                                            listening = false
-                                            growth = 0f
-                                            strength = 0f
-                                        },
-                                    )
+                                    coroutineScope.launch {
+                                        if (!ensureLocationPermission()) return@launch
+                                        growth = 0f
+                                        strength = 0f
+                                        listening = true
+                                        breathInput.start(
+                                            onStrengthChanged = { strength = it },
+                                            onError = { error ->
+                                                onMicrophoneError(error)
+                                                breathInput.stop()
+                                                listening = false
+                                                growth = 0f
+                                                strength = 0f
+                                            },
+                                        )
+                                    }
                                 } else {
                                     breathInput.stop()
                                     listening = false
@@ -268,7 +268,6 @@ fun BreathControl(
         Text(
             text =
                 when {
-                    inputErrorMessage != null -> inputErrorMessage
                     burst -> "한숨을 별로 빚고 있어요"
                     listening && growth >= 1f -> "한숨을 다 담았어요\n버튼을 눌러 별을 만들어보세요"
                     listening -> "후— 하고 불어보세요\n멈추려면 버튼을 눌러주세요"
@@ -278,4 +277,15 @@ fun BreathControl(
             color = AppColors.Cream100,
         )
     }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun BreathControlPreview() {
+    BreathControl(
+        enabled = true,
+        onExplosionFinished = {},
+        onMicrophoneError = {},
+        ensureLocationPermission = { true },
+    )
 }

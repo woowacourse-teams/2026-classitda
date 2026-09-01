@@ -15,7 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.pheeeew.core.audio.BreathInputError
+import com.pheeeew.core.designsystem.component.AppDialog
 import com.pheeeew.core.designsystem.theme.AppTheme
+import com.pheeeew.core.permission.LocationPermissionStatus
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.domain.model.location.LocationState
@@ -43,6 +46,9 @@ fun MapScreen(
     var isFlightInProgress by remember { mutableStateOf(false) }
     val highlightedFeatureIds = remember { mutableStateListOf<String>() }
     val animationCoordinator = remember { SighAnimationCoordinator() }
+    var microphoneError by remember { mutableStateOf<BreathInputError?>(null) }
+    var showLocationPermissionDialog by remember { mutableStateOf(false) }
+    var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
 
     val hiddenMarkerId =
         successState?.focusRequest?.id?.takeIf {
@@ -92,6 +98,29 @@ fun MapScreen(
                         pendingFlightOrigin = origin
                         viewModel.registerSighAfterExplosion()
                     },
+                    onMicrophoneError = { error ->
+                        if (error == BreathInputError.PermissionDenied) {
+                            showMicrophonePermissionDialog = true
+                        } else {
+                            microphoneError = error
+                        }
+                    },
+                    ensureLocationPermission = {
+                        when (viewModel.ensureLocationPermission()) {
+                            LocationPermissionStatus.Granted -> {
+                                true
+                            }
+
+                            LocationPermissionStatus.PermanentlyDenied -> {
+                                showLocationPermissionDialog = true
+                                false
+                            }
+
+                            LocationPermissionStatus.Denied -> {
+                                false
+                            }
+                        }
+                    },
                 )
             },
             onZoomInClick = viewModel::onZoomInClick,
@@ -104,6 +133,8 @@ fun MapScreen(
                 pendingFlightOrigin = null
                 viewModel.cancelFailedSighRegistration()
             },
+            microphoneErrorMessage = microphoneError?.toKoreanMessage(),
+            onMicrophoneErrorDismiss = { microphoneError = null },
         )
 
         val activeId = activeFlightId
@@ -137,6 +168,36 @@ fun MapScreen(
             onExpired = { highlightedFeatureIds.remove(it) },
             modifier = Modifier.fillMaxSize(),
         )
+
+        if (showLocationPermissionDialog) {
+            AppDialog(
+                title = "위치 권한 설정 안내",
+                body = "한숨을 별로 만들려면 위치 권한이 필요합니다.\n설정에서 위치 권한을 '허용'으로 변경해주세요.",
+                confirmText = "설정으로 이동",
+                onConfirmClick = {
+                    showLocationPermissionDialog = false
+                    viewModel.openLocationSettings()
+                },
+                onDismissRequest = { showLocationPermissionDialog = false },
+                onDismissClick = { showLocationPermissionDialog = false },
+                dismissText = "취소",
+            )
+        }
+
+        if (showMicrophonePermissionDialog) {
+            AppDialog(
+                title = "마이크 권한 설정 안내",
+                body = "한숨을 불려면 마이크 권한이 필요합니다.\n설정에서 마이크 권한을 '허용'으로 변경해주세요.",
+                confirmText = "설정으로 이동",
+                onConfirmClick = {
+                    showMicrophonePermissionDialog = false
+                    viewModel.openAppSettings()
+                },
+                onDismissRequest = { showMicrophonePermissionDialog = false },
+                onDismissClick = { showMicrophonePermissionDialog = false },
+                dismissText = "취소",
+            )
+        }
     }
 }
 
