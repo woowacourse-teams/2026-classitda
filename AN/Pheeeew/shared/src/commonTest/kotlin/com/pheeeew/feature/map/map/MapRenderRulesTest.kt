@@ -68,6 +68,22 @@ class MapRenderRulesTest {
     }
 
     @Test
+    fun `unavailable fallback is still provisional until the first gps result`() {
+        val fallback = MapPoint("fallback", 37.5505, 127.0373)
+        val state =
+            MapRenderState(
+                currentLocation = null,
+                locationState = LocationState.Unavailable(LocationError.PermissionDenied),
+                fallbackCenter = fallback,
+                sighMarkers = emptyList(),
+                focusRequest = null,
+            )
+
+        assertEquals(fallback, MapRenderRules.initialCenter(state))
+        assertEquals(true, MapRenderRules.initialCenterIsProvisional(state))
+    }
+
+    @Test
     fun `available state only renders the same current location`() {
         val available = CurrentLocation(37.5, 127.0, 10f, 1L)
         val staleUiValue = available.copy(longitude = 128.0)

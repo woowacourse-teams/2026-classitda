@@ -39,7 +39,7 @@ internal object MapRenderRules {
     }
 
     fun initialCenterIsProvisional(state: MapRenderState): Boolean =
-        state.locationState is LocationState.Loading && initialCenter(state) != null
+        currentLocation(state) == null && initialCenter(state) != null
 
     private fun CurrentLocation.hasValidCoordinate(): Boolean =
         latitude.isFinite() &&
