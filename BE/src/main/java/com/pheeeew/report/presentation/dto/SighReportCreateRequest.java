@@ -31,7 +31,8 @@ public record SighReportCreateRequest(
                 description = """
                         신고 사유입니다.
 
-                        정해진 항목 없이 자유롭게 입력합니다. 앞뒤 공백은 제거하고 저장합니다.
+                        정해진 항목 없이 자유롭게 입력합니다.
+                        길이 제한은 보낸 값 그대로를 기준으로 검사하며, 저장할 때 앞뒤 공백은 제거합니다.
                         """,
                 maxLength = 200,
                 example = "광고성 게시물입니다"

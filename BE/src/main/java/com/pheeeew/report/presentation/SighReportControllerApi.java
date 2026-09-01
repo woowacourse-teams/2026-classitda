@@ -18,6 +18,12 @@ public interface SighReportControllerApi {
     @Operation(
             summary = "한숨 신고",
             description = """
+                    ### 신고 대상
+
+                    - `sighId`에는 신고할 한숨의 ID를 담습니다. 1 이상의 값이어야 합니다.
+                    - 존재하지 않는 한숨이면 404를 반환합니다.
+                    - 삭제된 한숨도 신고할 수 있습니다. 신고 기록은 한숨 삭제와 무관하게 남습니다.
+
                     ### 신고자 구분
 
                     - `deviceId`는 앱 설치마다 한 번 생성해 기기에 보관하는 UUID입니다.
@@ -32,8 +38,8 @@ public interface SighReportControllerApi {
 
                     ### 신고 사유
 
-                    - `reason`은 정해진 항목 없이 자유롭게 입력하며 200자까지 허용합니다.
-                    - 앞뒤 공백은 서버가 제거하고 저장합니다.
+                    - `reason`은 정해진 항목 없이 자유롭게 입력합니다.
+                    - 길이 제한 200자는 보낸 값 그대로를 기준으로 검사합니다.
                     """
     )
     @ApiResponses({
