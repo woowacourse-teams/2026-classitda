@@ -124,9 +124,6 @@ class MapViewModel(
         submit(request)
     }
 
-    /** 이전 API 이름과의 호환용 진입점입니다. */
-    fun sendSigh() = registerSighAfterExplosion()
-
     private fun submit(request: PendingSighRequest) {
         viewModelScope.launch {
             sighOperationMutex.withLock {
@@ -172,8 +169,6 @@ class MapViewModel(
         val current = _uiState.value as? MapUiState.Success ?: return
         _uiState.value = current.copy(sighReleaseState = SighReleaseState.Idle)
     }
-
-    fun cancelSighRelease() = cancelFailedSighRegistration()
 
     fun consumeFocusRequest(id: String) {
         _uiState.update { state ->
