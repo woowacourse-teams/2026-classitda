@@ -13,7 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.navigation.Screen
 import com.pheeeew.di.LocationDependencies
-import com.pheeeew.feature.map.TempMapScreen
+import com.pheeeew.feature.map.MapScreen
 import com.pheeeew.feature.setting.SettingsScreen
 import com.pheeeew.feature.splash.SplashScreen
 
@@ -33,7 +33,8 @@ fun App(
                 }
 
                 Screen.Map -> {
-                    TempMapScreen(
+                    MapScreen(
+                        locationDependencies = locationDependencies,
                         onSettingsClick = { screen = Screen.Settings },
                     )
                 }

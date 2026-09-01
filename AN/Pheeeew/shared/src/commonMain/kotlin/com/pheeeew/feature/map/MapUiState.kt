@@ -1,30 +1,31 @@
 package com.pheeeew.feature.map
 
-import com.pheeeew.domain.model.location.CurrentLocation
 import com.pheeeew.domain.model.location.LocationState
+import com.pheeeew.domain.model.sigh.SighPin
+import com.pheeeew.feature.map.map.MapCameraCommand
 
-data class MapPoint(
-    val id: String,
-    val latitude: Double,
-    val longitude: Double,
-)
+sealed interface MapUiState {
+    data object Loading : MapUiState // 초기 로딩, 보여줄 콘텐츠 없음
 
-data class SighMarker(
-    val id: String,
-    val latitude: Double,
-    val longitude: Double,
-)
+    data class Error(
+        val message: String,
+    ) : MapUiState // 초기 로딩 실패, 보여줄 콘텐츠 없음
 
-data class MapFocusRequest(
-    val id: String,
-    val latitude: Double,
-    val longitude: Double,
-)
+    data class Success(
+        val sighs: List<SighPin>,
+        val locationState: LocationState,
+        val cameraCommand: MapCameraCommand?,
+        val isRequestingLocation: Boolean,
+        val sighReleaseState: SighReleaseState = SighReleaseState.Idle,
+    ) : MapUiState
+}
 
-data class MapUiState(
-    val currentLocation: CurrentLocation?,
-    val locationState: LocationState,
-    val fallbackCenter: MapPoint?,
-    val sighMarkers: List<SighMarker>,
-    val focusRequest: MapFocusRequest?,
-)
+sealed interface SighReleaseState {
+    data object Idle : SighReleaseState
+
+    data object Submitting : SighReleaseState
+
+    data class Error(
+        val message: String,
+    ) : SighReleaseState
+}

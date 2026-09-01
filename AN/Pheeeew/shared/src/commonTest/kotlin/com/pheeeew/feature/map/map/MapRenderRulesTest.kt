@@ -4,7 +4,7 @@ import com.pheeeew.domain.model.location.CurrentLocation
 import com.pheeeew.domain.model.location.LocationError
 import com.pheeeew.domain.model.location.LocationState
 import com.pheeeew.feature.map.MapPoint
-import com.pheeeew.feature.map.MapUiState
+import com.pheeeew.feature.map.MapRenderState
 import com.pheeeew.feature.map.SighMarker
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -39,7 +39,7 @@ class MapRenderRulesTest {
     fun `fallback is never exposed as current location`() {
         val fallback = MapPoint("fallback", 37.5505, 127.0373)
         val state =
-            MapUiState(
+            MapRenderState(
                 currentLocation = null,
                 locationState = LocationState.Unavailable(LocationError.GpsUnavailable),
                 fallbackCenter = fallback,
@@ -55,7 +55,7 @@ class MapRenderRulesTest {
     fun `loading fallback is marked provisional until the first gps result`() {
         val fallback = MapPoint("fallback", 37.5505, 127.0373)
         val state =
-            MapUiState(
+            MapRenderState(
                 currentLocation = null,
                 locationState = LocationState.Loading,
                 fallbackCenter = fallback,
@@ -72,7 +72,7 @@ class MapRenderRulesTest {
         val available = CurrentLocation(37.5, 127.0, 10f, 1L)
         val staleUiValue = available.copy(longitude = 128.0)
         val state =
-            MapUiState(
+            MapRenderState(
                 currentLocation = staleUiValue,
                 locationState = LocationState.Available(available),
                 fallbackCenter = null,
