@@ -2,6 +2,7 @@ package com.pheeeew.feature.map.map
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.feature.map.MapRenderState
 
 @Composable
@@ -9,6 +10,7 @@ fun BreathMap(
     state: MapRenderState,
     cameraCommand: MapCameraCommand?,
     onSighClick: (String) -> Unit,
+    onBoundsChanged: (SighBounds) -> Unit,
     onMapError: (MapError) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -16,6 +18,7 @@ fun BreathMap(
         state = state,
         cameraCommand = cameraCommand,
         onSighClick = onSighClick,
+        onBoundsChanged = onBoundsChanged,
         onMapError = onMapError,
         modifier = modifier,
     )

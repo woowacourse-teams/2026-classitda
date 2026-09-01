@@ -17,6 +17,13 @@ interface IosNativeMapFactory {
 interface IosMapEventSink {
     fun onSighClick(id: String)
 
+    fun onBoundsChanged(
+        minLongitude: Double,
+        minLatitude: Double,
+        maxLongitude: Double,
+        maxLatitude: Double,
+    )
+
     fun onRendererUnavailable()
 
     fun onStyleLoadFailed()

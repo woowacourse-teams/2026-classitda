@@ -17,6 +17,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pheeeew.domain.model.location.CurrentLocation
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.feature.map.MapRenderState
 import com.pheeeew.feature.map.SighMarker
 import org.maplibre.android.MapLibre
@@ -33,12 +34,14 @@ internal actual fun NativeBreathMap(
     state: MapRenderState,
     cameraCommand: MapCameraCommand?,
     onSighClick: (String) -> Unit,
+    onBoundsChanged: (SighBounds) -> Unit,
     onMapError: (MapError) -> Unit,
     modifier: Modifier,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnSighClick by rememberUpdatedState(onSighClick)
+    val currentOnBoundsChanged by rememberUpdatedState(onBoundsChanged)
     val currentOnMapError by rememberUpdatedState(onMapError)
 
     val hostResult =
@@ -48,6 +51,7 @@ internal actual fun NativeBreathMap(
                 AndroidBreathMapHost(
                     mapView = MapView(context).apply { onCreate(null) },
                     onSighClick = { id -> currentOnSighClick(id) },
+                    onBoundsChanged = { bounds -> currentOnBoundsChanged(bounds) },
                     onMapError = { error -> currentOnMapError(error) },
                 )
             }
@@ -84,6 +88,7 @@ internal actual fun NativeBreathMap(
 private class AndroidBreathMapHost(
     val mapView: MapView,
     private val onSighClick: (String) -> Unit,
+    private val onBoundsChanged: (SighBounds) -> Unit,
     private val onMapError: (MapError) -> Unit,
 ) {
     private val camera = AndroidMapCamera()
@@ -131,6 +136,19 @@ private class AndroidBreathMapHost(
             camera.onCameraMoveStarted(reason)
         }
 
+    private val cameraIdleListener =
+        MapLibreMap.OnCameraIdleListener {
+            val bounds = map?.projection?.visibleRegion?.latLngBounds ?: return@OnCameraIdleListener
+            onBoundsChanged(
+                SighBounds(
+                    minLongitude = bounds.longitudeWest,
+                    minLatitude = bounds.latitudeSouth,
+                    maxLongitude = bounds.longitudeEast,
+                    maxLatitude = bounds.latitudeNorth,
+                ),
+            )
+        }
+
     init {
         mapView.addOnDidFailLoadingMapListener(mapLoadFailureListener)
         mapView.getMapAsync { readyMap ->
@@ -148,6 +166,7 @@ private class AndroidBreathMapHost(
             }
             readyMap.addOnMapClickListener(mapClickListener)
             readyMap.addOnCameraMoveStartedListener(cameraMoveStartedListener)
+            readyMap.addOnCameraIdleListener(cameraIdleListener)
             readyMap.setStyle(Style.Builder().fromUri(MapDarkStyle.STYLE_URL)) { loadedStyle ->
                 if (released) return@setStyle
                 hasReportedStyleFailure = false
@@ -187,6 +206,7 @@ private class AndroidBreathMapHost(
         mapView.removeOnDidFailLoadingMapListener(mapLoadFailureListener)
         map?.removeOnMapClickListener(mapClickListener)
         map?.removeOnCameraMoveStartedListener(cameraMoveStartedListener)
+        map?.removeOnCameraIdleListener(cameraIdleListener)
         sighPulseAnimator?.cancel()
         sighPulseAnimator = null
         map = null
