@@ -31,6 +31,7 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         mapView = MLNMapView(frame: .zero, styleURL: MapLibreDarkStyle.styleURL)
         super.init()
 
+        mapView.backgroundColor = MapLibreDarkStyle.mapBackground
         mapView.delegate = self
         mapView.showsUserLocation = false
         mapView.allowsScrolling = true
