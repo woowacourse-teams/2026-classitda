@@ -29,16 +29,16 @@ public record SighCreateV2Request(
 
         @Schema(
                 description = "선택 메모. 앞뒤 공백은 제거되며 빈 문자열과 공백만 있는 값은 null로 저장됩니다.",
-                maxLength = 200,
+                maxLength = 50,
                 nullable = true,
                 example = "오늘은 조금 지쳤다"
         )
         String memo
 ) {
 
-    @AssertTrue(message = "메모는 200자를 초과할 수 없습니다.")
+    @AssertTrue(message = "메모는 50자를 초과할 수 없습니다.")
     @Schema(hidden = true)
     public boolean isMemoLengthValid() {
-        return memo == null || memo.strip().length() <= 200;
+        return memo == null || memo.strip().length() <= 50;
     }
 }

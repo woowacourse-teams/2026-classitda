@@ -42,9 +42,9 @@ class SighTest {
     }
 
     @Test
-    void 메모는_200자를_초과하면_생성할_수_없다() {
+    void 메모는_50자를_초과하면_생성할_수_없다() {
         // given
-        String memo = "가".repeat(201);
+        String memo = "가".repeat(51);
 
         // when
         Throwable throwable = catchThrowable(() -> 기본_한숨_빌더()
@@ -55,7 +55,7 @@ class SighTest {
         // then
         assertThat(throwable)
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("메모는 200자를 초과할 수 없습니다.");
+                .hasMessage("메모는 50자를 초과할 수 없습니다.");
     }
 
     @ParameterizedTest
