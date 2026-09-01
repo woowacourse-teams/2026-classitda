@@ -17,8 +17,8 @@ import kotlin.uuid.Uuid
 class MapViewModel(
     private val sighRepository: SighRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<MapUiState>(MapUiState.Loading)
-    val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<MapTempUiState>(MapTempUiState.Loading)
+    val uiState: StateFlow<MapTempUiState> = _uiState.asStateFlow()
 
     private val _sighReleasedEvents = Channel<Unit>(Channel.BUFFERED)
     val sighReleasedEvents: Flow<Unit> = _sighReleasedEvents.receiveAsFlow()
@@ -31,17 +31,17 @@ class MapViewModel(
 
     fun loadSighs() {
         viewModelScope.launch {
-            _uiState.value = MapUiState.Loading
+            _uiState.value = MapTempUiState.Loading
             try {
-                _uiState.value = MapUiState.Success(sighRepository.getSighs())
+                _uiState.value = MapTempUiState.Success(sighRepository.getSighs())
             } catch (e: ApiException) {
-                _uiState.value = MapUiState.Error(e.message)
+                _uiState.value = MapTempUiState.Error(e.message)
             }
         }
     }
 
     fun sendSigh(coordinate: Coordinate) {
-        val current = _uiState.value as? MapUiState.Success ?: return
+        val current = _uiState.value as? MapTempUiState.Success ?: return
         val requestId = pendingRequestId ?: Uuid.random().toString().also { pendingRequestId = it }
 
         viewModelScope.launch {
@@ -63,7 +63,7 @@ class MapViewModel(
 
     fun cancelSighRelease() {
         pendingRequestId = null
-        val current = _uiState.value as? MapUiState.Success ?: return
+        val current = _uiState.value as? MapTempUiState.Success ?: return
         _uiState.value = current.copy(sighReleaseState = SighReleaseState.Idle)
     }
 }

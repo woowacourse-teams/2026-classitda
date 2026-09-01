@@ -60,7 +60,7 @@ fun SettingsScreen(
             SettingsMenuItem(title = "문의하기", onClick = onContactClick)
             SettingsMenuItem(title = "오픈소스 라이선스", onClick = onOpenSourceLicenseClick)
             SettingsMenuItem(title = "개인정보 처리방침", onClick = onPrivacyPolicyClick)
-            //SettingsMenuItem(title = "위치정보 처리방침", onClick = onLocationPolicyClick)
+            // SettingsMenuItem(title = "위치정보 처리방침", onClick = onLocationPolicyClick)
         }
 
         Spacer(modifier = Modifier.height(32.dp))

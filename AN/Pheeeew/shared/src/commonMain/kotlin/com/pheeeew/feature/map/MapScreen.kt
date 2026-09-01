@@ -32,7 +32,7 @@ fun MapScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    val sighReleaseState = (uiState as? MapUiState.Success)?.sighReleaseState
+    val sighReleaseState = (uiState as? MapTempUiState.Success)?.sighReleaseState
 
     LaunchedEffect(viewModel) {
         viewModel.sighReleasedEvents.collect {
@@ -45,7 +45,7 @@ fun MapScreen(
             onSettingsClick = onSettingsClick,
             onRefreshClick = viewModel::loadSighs,
             onSighLongPress = {
-                if (uiState is MapUiState.Success) {
+                if (uiState is MapTempUiState.Success) {
                     isSighReleaseDialogVisible = true
                 } else {
                     coroutineScope.launch {
@@ -56,7 +56,7 @@ fun MapScreen(
             onZoomInClick = {},
             onZoomOutClick = {},
             onMyLocationClick = {},
-            errorMessage = (uiState as? MapUiState.Error)?.message,
+            errorMessage = (uiState as? MapTempUiState.Error)?.message,
         )
 
         SnackbarHost(
