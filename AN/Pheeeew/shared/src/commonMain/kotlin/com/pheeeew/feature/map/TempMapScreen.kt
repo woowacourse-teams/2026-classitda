@@ -19,20 +19,22 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.domain.model.geo.Coordinate
+import com.pheeeew.feature.map.overlay.MapOverlay
+import com.pheeeew.feature.map.overlay.SighReleaseDialog
 import kotlinx.coroutines.launch
 
 @Composable
-fun MapScreen(
+fun TempMapScreen(
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: MapViewModel = viewModel { MapViewModel(FakeSighRepository()) },
+    viewModel: TempMapViewModel = viewModel { TempMapViewModel(FakeSighRepository()) },
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var isSighReleaseDialogVisible by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    val sighReleaseState = (uiState as? MapTempUiState.Success)?.sighReleaseState
+    val sighReleaseState = (uiState as? TempMapUiState.Success)?.sighReleaseState
 
     LaunchedEffect(viewModel) {
         viewModel.sighReleasedEvents.collect {
@@ -45,7 +47,7 @@ fun MapScreen(
             onSettingsClick = onSettingsClick,
             onRefreshClick = viewModel::loadSighs,
             onSighLongPress = {
-                if (uiState is MapTempUiState.Success) {
+                if (uiState is TempMapUiState.Success) {
                     isSighReleaseDialogVisible = true
                 } else {
                     coroutineScope.launch {
@@ -56,7 +58,7 @@ fun MapScreen(
             onZoomInClick = {},
             onZoomOutClick = {},
             onMyLocationClick = {},
-            errorMessage = (uiState as? MapTempUiState.Error)?.message,
+            errorMessage = (uiState as? TempMapUiState.Error)?.message,
         )
 
         SnackbarHost(
@@ -86,8 +88,8 @@ fun MapScreen(
 
 @Preview
 @Composable
-private fun MapScreenPreview() {
+private fun TempMapScreenPreview() {
     AppTheme {
-        MapScreen(onSettingsClick = {})
+        TempMapScreen(onSettingsClick = {})
     }
 }

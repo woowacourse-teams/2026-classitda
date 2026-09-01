@@ -14,11 +14,11 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlin.uuid.Uuid
 
-class MapViewModel(
+class TempMapViewModel(
     private val sighRepository: SighRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<MapTempUiState>(MapTempUiState.Loading)
-    val uiState: StateFlow<MapTempUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<TempMapUiState>(TempMapUiState.Loading)
+    val uiState: StateFlow<TempMapUiState> = _uiState.asStateFlow()
 
     private val _sighReleasedEvents = Channel<Unit>(Channel.BUFFERED)
     val sighReleasedEvents: Flow<Unit> = _sighReleasedEvents.receiveAsFlow()
@@ -31,17 +31,17 @@ class MapViewModel(
 
     fun loadSighs() {
         viewModelScope.launch {
-            _uiState.value = MapTempUiState.Loading
+            _uiState.value = TempMapUiState.Loading
             try {
-                _uiState.value = MapTempUiState.Success(sighRepository.getSighs())
+                _uiState.value = TempMapUiState.Success(sighRepository.getSighs())
             } catch (e: ApiException) {
-                _uiState.value = MapTempUiState.Error(e.message)
+                _uiState.value = TempMapUiState.Error(e.message)
             }
         }
     }
 
     fun sendSigh(coordinate: Coordinate) {
-        val current = _uiState.value as? MapTempUiState.Success ?: return
+        val current = _uiState.value as? TempMapUiState.Success ?: return
         val requestId = pendingRequestId ?: Uuid.random().toString().also { pendingRequestId = it }
 
         viewModelScope.launch {
@@ -63,7 +63,7 @@ class MapViewModel(
 
     fun cancelSighRelease() {
         pendingRequestId = null
-        val current = _uiState.value as? MapTempUiState.Success ?: return
+        val current = _uiState.value as? TempMapUiState.Success ?: return
         _uiState.value = current.copy(sighReleaseState = SighReleaseState.Idle)
     }
 }
