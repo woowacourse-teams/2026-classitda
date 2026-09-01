@@ -1,5 +1,6 @@
 package com.pheeeew.sigh.application;
 
+import static com.pheeeew.sigh.fixture.SighFixture.기본_한숨_빌더;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -68,7 +69,33 @@ class SighServiceIntegrationTest {
 
         Sigh saved = sighRepository.findById(result.sigh().id()).orElseThrow();
         assertThat(saved.getUpdatedAt()).isNotNull();
+        assertThat(saved.getMemo()).isNull();
+        assertThat(saved.getNickname()).isNull();
         assertThat(sighRepository.count()).isOne();
+    }
+
+    @Test
+    void 메모와_닉네임을_저장한다() {
+        // given
+        Sigh sigh = 기본_한숨_빌더()
+                .memo("오늘은 힘들었다")
+                .nickname("외로운 회사원")
+                .build();
+
+        // when
+        Sigh saved = sighRepository.saveAndFlush(sigh);
+
+        // then
+        String savedMemo = jdbcClient.sql("SELECT memo FROM sighs WHERE id = :id")
+                .param("id", saved.getId())
+                .query(String.class)
+                .single();
+        String savedNickname = jdbcClient.sql("SELECT nickname FROM sighs WHERE id = :id")
+                .param("id", saved.getId())
+                .query(String.class)
+                .single();
+        assertThat(savedMemo).isEqualTo("오늘은 힘들었다");
+        assertThat(savedNickname).isEqualTo("외로운 회사원");
     }
 
     @Test
