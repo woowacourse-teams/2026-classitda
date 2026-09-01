@@ -63,12 +63,37 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(result.created()).isTrue();
-        assertThat(result.sigh().id()).isPositive();
-        assertThat(result.sigh().createdAt()).isNotNull();
+        assertThat(result.id()).isPositive();
+        assertThat(result.createdAt()).isNotNull();
 
-        Sigh saved = sighRepository.findById(result.sigh().id()).orElseThrow();
+        Sigh saved = sighRepository.findById(result.id()).orElseThrow();
         assertThat(saved.getUpdatedAt()).isNotNull();
+        assertThat(saved.getMemo()).isNull();
+        assertThat(saved.getNickname())
+                .isNotBlank()
+                .hasSizeLessThanOrEqualTo(50);
         assertThat(sighRepository.count()).isOne();
+    }
+
+    @Test
+    void 메모가_있는_한숨을_저장한다() {
+        // given
+        UUID requestId = UUID.randomUUID();
+
+        // when
+        SighSaveResult result = sighService.save(
+                requestId,
+                SEOUL_CITY_HALL_LONGITUDE,
+                SEOUL_CITY_HALL_LATITUDE,
+                "  오늘은 힘들었다  "
+        );
+
+        // then
+        Sigh saved = sighRepository.findById(result.id()).orElseThrow();
+        assertThat(result.created()).isTrue();
+        assertThat(result.memo()).isEqualTo("오늘은 힘들었다");
+        assertThat(result.nickname()).isEqualTo(saved.getNickname());
+        assertThat(saved.getMemo()).isEqualTo("오늘은 힘들었다");
     }
 
     @Test
@@ -86,9 +111,35 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(retried.created()).isFalse();
-        assertThat(retried.sigh().id()).isEqualTo(first.sigh().id());
-        assertThat(retried.sigh().longitude()).isEqualTo(first.sigh().longitude());
-        assertThat(retried.sigh().latitude()).isEqualTo(first.sigh().latitude());
+        assertThat(retried.id()).isEqualTo(first.id());
+        assertThat(retried.longitude()).isEqualTo(first.longitude());
+        assertThat(retried.latitude()).isEqualTo(first.latitude());
+        assertThat(sighRepository.count()).isOne();
+    }
+
+    @Test
+    void 같은_requestId는_다른_메모로_재시도해도_최초_메모와_닉네임을_반환한다() {
+        // given
+        UUID requestId = UUID.randomUUID();
+        SighSaveResult first = sighService.save(
+                requestId,
+                SEOUL_CITY_HALL_LONGITUDE,
+                SEOUL_CITY_HALL_LATITUDE,
+                "최초 메모"
+        );
+
+        // when
+        SighSaveResult retried = sighService.save(
+                requestId,
+                SEOUL_CITY_HALL_LONGITUDE,
+                SEOUL_CITY_HALL_LATITUDE,
+                "재시도 메모"
+        );
+
+        // then
+        assertThat(retried.created()).isFalse();
+        assertThat(retried.memo()).isEqualTo("최초 메모");
+        assertThat(retried.nickname()).isEqualTo(first.nickname());
         assertThat(sighRepository.count()).isOne();
     }
 
@@ -105,8 +156,8 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(results)
-                .extracting(result -> result.sigh().id())
-                .containsOnly(results.getFirst().sigh().id());
+                .extracting(SighSaveResult::id)
+                .containsOnly(results.getFirst().id());
         assertThat(results).filteredOn(SighSaveResult::created).hasSize(1);
         assertThat(sighRepository.count()).isOne();
     }
@@ -148,10 +199,8 @@ class SighServiceIntegrationTest {
     @Test
     void 지도_영역의_한숨이_500건을_초과하면_최신_500건과_잘림_여부를_반환한다() {
         // given
-        insertSighs(501, 126.9780, 37.5664);
-        Long oldestId = jdbcClient.sql("SELECT MIN(id) FROM sighs")
-                .query(Long.class)
-                .single();
+        Long oldestId = insertSigh(126.9780, 37.5664, "2026-08-31T10:29:00Z");
+        insertSighs(500, 126.9780, 37.5664);
 
         // when
         SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
@@ -233,10 +282,11 @@ class SighServiceIntegrationTest {
 
     private Long insertSigh(double longitude, double latitude, String createdAt) {
         return jdbcClient.sql("""
-                        INSERT INTO sighs (request_id, location, created_at, updated_at)
+                        INSERT INTO sighs (request_id, location, nickname, created_at, updated_at)
                         VALUES (
                             :requestId,
                             ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            '외로운 회사원',
                             CAST(:createdAt AS TIMESTAMPTZ),
                             CAST(:createdAt AS TIMESTAMPTZ)
                         )
@@ -252,13 +302,14 @@ class SighServiceIntegrationTest {
 
     private void insertSighs(int count, double longitude, double latitude) {
         jdbcClient.sql("""
-                        INSERT INTO sighs (request_id, location, created_at, updated_at)
+                        INSERT INTO sighs (request_id, location, nickname, created_at, updated_at)
                         SELECT
                             (
                                 '00000000-0000-0000-0000-'
                                 || LPAD(sequence::text, 12, '0')
                             )::uuid,
                             ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            '외로운 회사원',
                             TIMESTAMPTZ '2026-08-31T10:30:00Z'
                                 + sequence * INTERVAL '1 microsecond',
                             TIMESTAMPTZ '2026-08-31T10:30:00Z'
