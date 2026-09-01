@@ -46,6 +46,7 @@ class SighServiceIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        jdbcClient.sql("DELETE FROM sigh_reports").update();
         sighRepository.deleteAll();
     }
 
