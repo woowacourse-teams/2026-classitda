@@ -106,6 +106,13 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
     func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {
         cameraIsIdle = true
         eventSink.onProjectionChanged(points: projectionPoints(), cameraIdle: true)
+        let bounds = mapView.visibleCoordinateBounds
+        eventSink.onBoundsChanged(
+            minLongitude: bounds.sw.longitude,
+            minLatitude: bounds.sw.latitude,
+            maxLongitude: bounds.ne.longitude,
+            maxLatitude: bounds.ne.latitude
+        )
     }
 
     private func publishProjection(cameraIdle: Bool) {

@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.UIKitInteropInteractionMode
 import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.feature.map.MapRenderState
 
 @Composable
@@ -15,17 +16,33 @@ internal actual fun NativeBreathMap(
     state: MapRenderState,
     cameraCommand: MapCameraCommand?,
     onSighClick: (String) -> Unit,
+    onBoundsChanged: (SighBounds) -> Unit,
     onMapError: (MapError) -> Unit,
     onProjectionChanged: (MapProjectionSnapshot) -> Unit,
     modifier: Modifier,
 ) {
     val currentOnSighClick by rememberUpdatedState(onSighClick)
+    val currentOnBoundsChanged by rememberUpdatedState(onBoundsChanged)
     val currentOnMapError by rememberUpdatedState(onMapError)
     val currentOnProjectionChanged by rememberUpdatedState(onProjectionChanged)
     val eventSink =
         remember {
             object : IosMapEventSink {
                 override fun onSighClick(id: String) = currentOnSighClick(id)
+
+                override fun onBoundsChanged(
+                    minLongitude: Double,
+                    minLatitude: Double,
+                    maxLongitude: Double,
+                    maxLatitude: Double,
+                ) = currentOnBoundsChanged(
+                    SighBounds(
+                        minLongitude,
+                        minLatitude,
+                        maxLongitude,
+                        maxLatitude,
+                    ),
+                )
 
                 override fun onRendererUnavailable() = currentOnMapError(MapError.RendererUnavailable)
 

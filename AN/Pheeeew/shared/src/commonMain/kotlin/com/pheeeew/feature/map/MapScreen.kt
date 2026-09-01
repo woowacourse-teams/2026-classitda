@@ -71,6 +71,7 @@ fun MapScreen(
                 state = successState.toMapRenderState(hiddenMarkerId),
                 cameraCommand = successState.cameraCommand,
                 onSighClick = {},
+                onBoundsChanged = viewModel::loadSighs,
                 onMapError = {},
                 onProjectionChanged = { projectionSnapshot = it },
                 modifier = Modifier.fillMaxSize(),

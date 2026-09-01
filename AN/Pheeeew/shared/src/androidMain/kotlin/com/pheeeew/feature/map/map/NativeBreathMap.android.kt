@@ -17,6 +17,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.pheeeew.domain.model.location.CurrentLocation
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.feature.map.MapRenderState
 import com.pheeeew.feature.map.SighMarker
 import org.maplibre.android.MapLibre
@@ -34,6 +35,7 @@ internal actual fun NativeBreathMap(
     state: MapRenderState,
     cameraCommand: MapCameraCommand?,
     onSighClick: (String) -> Unit,
+    onBoundsChanged: (SighBounds) -> Unit,
     onMapError: (MapError) -> Unit,
     onProjectionChanged: (MapProjectionSnapshot) -> Unit,
     modifier: Modifier,
@@ -41,6 +43,7 @@ internal actual fun NativeBreathMap(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnSighClick by rememberUpdatedState(onSighClick)
+    val currentOnBoundsChanged by rememberUpdatedState(onBoundsChanged)
     val currentOnMapError by rememberUpdatedState(onMapError)
     val currentOnProjectionChanged by rememberUpdatedState(onProjectionChanged)
 
@@ -51,6 +54,7 @@ internal actual fun NativeBreathMap(
                 AndroidBreathMapHost(
                     mapView = MapView(context).apply { onCreate(null) },
                     onSighClick = { id -> currentOnSighClick(id) },
+                    onBoundsChanged = { bounds -> currentOnBoundsChanged(bounds) },
                     onMapError = { error -> currentOnMapError(error) },
                     onProjectionChanged = { snapshot -> currentOnProjectionChanged(snapshot) },
                 )
@@ -88,6 +92,7 @@ internal actual fun NativeBreathMap(
 private class AndroidBreathMapHost(
     val mapView: MapView,
     private val onSighClick: (String) -> Unit,
+    private val onBoundsChanged: (SighBounds) -> Unit,
     private val onMapError: (MapError) -> Unit,
     private val onProjectionChanged: (MapProjectionSnapshot) -> Unit,
 ) {
@@ -151,6 +156,15 @@ private class AndroidBreathMapHost(
         MapLibreMap.OnCameraIdleListener {
             cameraIdle = true
             publishProjection(cameraIdle = true)
+            val bounds = map?.projection?.visibleRegion?.latLngBounds ?: return@OnCameraIdleListener
+            onBoundsChanged(
+                SighBounds(
+                    minLongitude = bounds.longitudeWest,
+                    minLatitude = bounds.latitudeSouth,
+                    maxLongitude = bounds.longitudeEast,
+                    maxLatitude = bounds.latitudeNorth,
+                ),
+            )
         }
 
     init {

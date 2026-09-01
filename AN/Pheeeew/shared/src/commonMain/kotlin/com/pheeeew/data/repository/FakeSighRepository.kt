@@ -1,6 +1,7 @@
 package com.pheeeew.data.repository
 
 import com.pheeeew.domain.model.geo.Coordinate
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.domain.model.sigh.SighPin
 import com.pheeeew.domain.repository.SighRepository
 
@@ -12,7 +13,11 @@ class FakeSighRepository : SighRepository {
     private val sighs = mutableListOf<SighPin>()
     private var nextId = 1L
 
-    override suspend fun getSighs(): List<SighPin> = sighs.toList()
+    override suspend fun getSighs(bounds: SighBounds): List<SighPin> =
+        sighs.filter { sighPin ->
+            sighPin.coordinate.longitude in bounds.minLongitude..bounds.maxLongitude &&
+                sighPin.coordinate.latitude in bounds.minLatitude..bounds.maxLatitude
+        }
 
     override suspend fun registerSigh(
         requestId: String,
