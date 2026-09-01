@@ -1,6 +1,5 @@
 package com.pheeeew.sigh.application;
 
-import static com.pheeeew.sigh.fixture.SighFixture.기본_한숨_빌더;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -95,30 +94,6 @@ class SighServiceIntegrationTest {
         assertThat(result.memo()).isEqualTo("오늘은 힘들었다");
         assertThat(result.nickname()).isEqualTo(saved.getNickname());
         assertThat(saved.getMemo()).isEqualTo("오늘은 힘들었다");
-    }
-
-    @Test
-    void 메모와_닉네임을_저장한다() {
-        // given
-        Sigh sigh = 기본_한숨_빌더()
-                .memo("오늘은 힘들었다")
-                .nickname("외로운 회사원")
-                .build();
-
-        // when
-        Sigh saved = sighRepository.saveAndFlush(sigh);
-
-        // then
-        String savedMemo = jdbcClient.sql("SELECT memo FROM sighs WHERE id = :id")
-                .param("id", saved.getId())
-                .query(String.class)
-                .single();
-        String savedNickname = jdbcClient.sql("SELECT nickname FROM sighs WHERE id = :id")
-                .param("id", saved.getId())
-                .query(String.class)
-                .single();
-        assertThat(savedMemo).isEqualTo("오늘은 힘들었다");
-        assertThat(savedNickname).isEqualTo("외로운 회사원");
     }
 
     @Test
@@ -224,10 +199,8 @@ class SighServiceIntegrationTest {
     @Test
     void 지도_영역의_한숨이_500건을_초과하면_최신_500건과_잘림_여부를_반환한다() {
         // given
-        insertSighs(501, 126.9780, 37.5664);
-        Long oldestId = jdbcClient.sql("SELECT MIN(id) FROM sighs")
-                .query(Long.class)
-                .single();
+        Long oldestId = insertSigh(126.9780, 37.5664, "2026-08-31T10:29:00Z");
+        insertSighs(500, 126.9780, 37.5664);
 
         // when
         SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
@@ -309,10 +282,11 @@ class SighServiceIntegrationTest {
 
     private Long insertSigh(double longitude, double latitude, String createdAt) {
         return jdbcClient.sql("""
-                        INSERT INTO sighs (request_id, location, created_at, updated_at)
+                        INSERT INTO sighs (request_id, location, nickname, created_at, updated_at)
                         VALUES (
                             :requestId,
                             ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            '외로운 회사원',
                             CAST(:createdAt AS TIMESTAMPTZ),
                             CAST(:createdAt AS TIMESTAMPTZ)
                         )
@@ -328,13 +302,14 @@ class SighServiceIntegrationTest {
 
     private void insertSighs(int count, double longitude, double latitude) {
         jdbcClient.sql("""
-                        INSERT INTO sighs (request_id, location, created_at, updated_at)
+                        INSERT INTO sighs (request_id, location, nickname, created_at, updated_at)
                         SELECT
                             (
                                 '00000000-0000-0000-0000-'
                                 || LPAD(sequence::text, 12, '0')
                             )::uuid,
                             ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            '외로운 회사원',
                             TIMESTAMPTZ '2026-08-31T10:30:00Z'
                                 + sequence * INTERVAL '1 microsecond',
                             TIMESTAMPTZ '2026-08-31T10:30:00Z'

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SighTest {
@@ -57,14 +58,16 @@ class SighTest {
                 .hasMessage("메모는 200자를 초과할 수 없습니다.");
     }
 
-    @Test
-    void 닉네임은_공백이면_생성할_수_없다() {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"   "})
+    void 닉네임은_null이거나_비어_있으면_생성할_수_없다(String nickname) {
         // given
-        String nickname = "   ";
+        String requestedNickname = nickname;
 
         // when
         Throwable throwable = catchThrowable(() -> 기본_한숨_빌더()
-                .nickname(nickname)
+                .nickname(requestedNickname)
                 .build()
         );
 

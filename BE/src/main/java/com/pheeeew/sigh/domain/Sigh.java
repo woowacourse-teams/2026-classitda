@@ -39,7 +39,7 @@ public class Sigh extends BaseEntity {
     @Column(length = MAX_MEMO_LENGTH, updatable = false)
     private String memo;
 
-    @Column(length = MAX_NICKNAME_LENGTH, updatable = false)
+    @Column(nullable = false, length = MAX_NICKNAME_LENGTH, updatable = false)
     private String nickname;
 
     @Builder
@@ -83,10 +83,7 @@ public class Sigh extends BaseEntity {
     }
 
     private String requireValidNickname(String nickname) {
-        if (nickname == null) {
-            return null;
-        }
-        if (nickname.isBlank()) {
+        if (nickname == null || nickname.isBlank()) {
             throw new IllegalArgumentException("닉네임은 비어 있을 수 없습니다.");
         }
         if (nickname.length() > MAX_NICKNAME_LENGTH) {
