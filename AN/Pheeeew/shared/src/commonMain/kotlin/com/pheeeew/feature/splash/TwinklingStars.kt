@@ -49,8 +49,18 @@ fun TwinklingStars(modifier: Modifier = Modifier) {
             val color = AppColors.Cream100.copy(alpha = alpha)
             val center = Offset(size.width * star.xFraction, size.height * star.yFraction)
             when (val shape = star.shape) {
-                StarShape.Circle -> drawCircle(color = color, radius = radiusPx, center = center)
-                is StarShape.Sparkle -> drawSparkle(path = shape.path, center = center, outerRadius = radiusPx, color = color)
+                StarShape.Circle -> {
+                    drawCircle(color = color, radius = radiusPx, center = center)
+                }
+
+                is StarShape.Sparkle -> {
+                    drawSparkle(
+                        path = shape.path,
+                        center = center,
+                        outerRadius = radiusPx,
+                        color = color,
+                    )
+                }
             }
         }
     }
@@ -78,7 +88,9 @@ private fun DrawScope.drawSparkle(
 private sealed interface StarShape {
     data object Circle : StarShape
 
-    data class Sparkle(val path: Path) : StarShape
+    data class Sparkle(
+        val path: Path,
+    ) : StarShape
 }
 
 private data class Star(
