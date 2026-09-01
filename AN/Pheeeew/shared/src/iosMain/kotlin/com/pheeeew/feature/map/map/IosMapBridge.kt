@@ -20,6 +20,11 @@ interface IosMapEventSink {
     fun onRendererUnavailable()
 
     fun onStyleLoadFailed()
+
+    fun onProjectionChanged(
+        points: List<IosMapScreenPoint>,
+        cameraIdle: Boolean,
+    )
 }
 
 data class IosMapCoordinate(
@@ -52,6 +57,12 @@ data class IosMapFocusRequest(
 ) {
     override fun toString(): String = "IosMapFocusRequest(id=$id, coordinate=[redacted])"
 }
+
+data class IosMapScreenPoint(
+    val id: String,
+    val xPx: Double,
+    val yPx: Double,
+)
 
 enum class IosMapCameraCommandKind {
     ZoomBy,

@@ -2,30 +2,29 @@ package com.pheeeew.feature.map
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.pheeeew.core.designsystem.component.AppDialog
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
-import com.pheeeew.domain.model.location.LocationError
 import com.pheeeew.domain.model.location.LocationState
+import com.pheeeew.feature.map.animation.LandingHighlightOverlay
+import com.pheeeew.feature.map.animation.SighAnimationCoordinator
+import com.pheeeew.feature.map.animation.StarFlightOverlay
 import com.pheeeew.feature.map.map.BreathMap
+import com.pheeeew.feature.map.map.MapProjectionSnapshot
+import com.pheeeew.feature.map.overlay.BreathControl
 import com.pheeeew.feature.map.overlay.MapOverlay
-import com.pheeeew.feature.map.overlay.SighReleaseDialog
-import kotlinx.coroutines.launch
 
 @Composable
 fun MapScreen(
@@ -35,28 +34,45 @@ fun MapScreen(
     viewModel: MapViewModel = viewModel { MapViewModel(FakeSighRepository(), locationDependencies) },
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var isSighReleaseDialogVisible by remember { mutableStateOf(false) }
-    var isLocationPermissionDialogVisible by remember { mutableStateOf(false) }
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope()
-
     val successState = uiState as? MapUiState.Success
-    val isLocationPermissionDenied =
-        (successState?.locationState as? LocationState.Unavailable)?.reason == LocationError.PermissionDenied
+    var pendingFlightOrigin by remember { mutableStateOf<Offset?>(null) }
+    var projectionSnapshot by remember { mutableStateOf(MapProjectionSnapshot.Empty) }
+    var activeFlightId by remember { mutableStateOf<String?>(null) }
+    var landedFlightId by remember { mutableStateOf<String?>(null) }
+    var isFlightInProgress by remember { mutableStateOf(false) }
+    val highlightedFeatureIds = remember { mutableStateListOf<String>() }
+    val animationCoordinator = remember { SighAnimationCoordinator() }
 
-    LaunchedEffect(viewModel) {
-        viewModel.sighReleasedEvents.collect {
-            isSighReleaseDialogVisible = false
+    val hiddenMarkerId =
+        successState?.focusRequest?.id?.takeIf {
+            pendingFlightOrigin != null && landedFlightId != it
+        }
+
+    LaunchedEffect(successState?.focusRequest?.id, projectionSnapshot.revision) {
+        val focus = successState?.focusRequest ?: return@LaunchedEffect
+        pendingFlightOrigin ?: return@LaunchedEffect
+        val destination = projectionSnapshot.points[focus.id] ?: return@LaunchedEffect
+        if (!projectionSnapshot.cameraIdle || activeFlightId == focus.id) return@LaunchedEffect
+        activeFlightId = focus.id
+        isFlightInProgress = true
+    }
+
+    LaunchedEffect(successState?.sighReleaseState) {
+        val error = successState?.sighReleaseState as? SighReleaseState.Error ?: return@LaunchedEffect
+        if (!error.canRetry) {
+            pendingFlightOrigin = null
+            viewModel.cancelFailedSighRegistration()
         }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
         if (successState != null) {
             BreathMap(
-                state = successState.toMapRenderState(),
+                state = successState.toMapRenderState(hiddenMarkerId),
                 cameraCommand = successState.cameraCommand,
                 onSighClick = {},
                 onMapError = {},
+                onProjectionChanged = { projectionSnapshot = it },
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -64,100 +80,95 @@ fun MapScreen(
         MapOverlay(
             onSettingsClick = onSettingsClick,
             onRefreshClick = viewModel::loadSighs,
-            onSighLongPress = {
-                when {
-                    successState == null -> {
-                        coroutineScope.launch {
-                            snackbarHostState.showSnackbar("연결 상태를 확인해주세요!")
-                        }
-                    }
-
-                    isLocationPermissionDenied -> {
-                        isLocationPermissionDialogVisible = true
-                    }
-
-                    else -> {
-                        isSighReleaseDialogVisible = true
-                    }
-                }
+            breathControl = {
+                BreathControl(
+                    enabled =
+                        successState != null &&
+                            successState.sighReleaseState is SighReleaseState.Idle &&
+                            !isFlightInProgress,
+                    onExplosionFinished = { origin ->
+                        pendingFlightOrigin = origin
+                        viewModel.registerSighAfterExplosion()
+                    },
+                )
             },
             onZoomInClick = viewModel::onZoomInClick,
             onZoomOutClick = viewModel::onZoomOutClick,
             onMyLocationClick = viewModel::onMyLocationClick,
             errorMessage = uiState.toBannerMessage(),
+            sighReleaseState = successState?.sighReleaseState ?: SighReleaseState.Idle,
+            onRetrySigh = viewModel::retrySighRegistration,
+            onCancelSigh = {
+                pendingFlightOrigin = null
+                viewModel.cancelFailedSighRegistration()
+            },
         )
 
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
-
-        if (isSighReleaseDialogVisible) {
-            SighReleaseDialog(
-                sighReleaseState = successState?.sighReleaseState ?: SighReleaseState.Idle,
-                onSendClick = viewModel::sendSigh,
-                onCancelClick = {
-                    viewModel.cancelSighRelease()
-                    isSighReleaseDialogVisible = false
+        val activeId = activeFlightId
+        val origin = pendingFlightOrigin
+        val destination = activeId?.let { projectionSnapshot.points[it] }
+        if (activeId != null && origin != null && destination != null && successState?.focusRequest?.id == activeId) {
+            StarFlightOverlay(
+                flight = animationCoordinator.start(activeId, origin, Offset(destination.xPx, destination.yPx)),
+                onLanded = { id ->
+                    if (id !in highlightedFeatureIds) highlightedFeatureIds += id
+                    pendingFlightOrigin = null
+                    activeFlightId = null
+                    landedFlightId = id
+                    isFlightInProgress = false
+                    viewModel.consumeFocusRequest(id)
                 },
-                onDismissRequest = {
-                    viewModel.cancelSighRelease()
-                    isSighReleaseDialogVisible = false
-                },
+                modifier = Modifier.fillMaxSize(),
             )
         }
 
-        if (isLocationPermissionDialogVisible) {
-            AppDialog(
-                title = "위치 권한 설정 안내",
-                body = "서비스를 이용하려면 위치 권한이 필요합니다.\n[설정 > 권한 > 위치]에서 권한을 '허용'으로 변경해주세요.",
-                confirmText = "설정으로 이동",
-                dismissText = "취소",
-                onConfirmClick = {
-                    viewModel.openLocationSettings()
-                    isLocationPermissionDialogVisible = false
-                },
-                onDismissClick = { isLocationPermissionDialogVisible = false },
-                onDismissRequest = { isLocationPermissionDialogVisible = false },
-            )
-        }
+        LandingHighlightOverlay(
+            featureIds = highlightedFeatureIds,
+            projectedPoints = projectionSnapshot.points,
+            onExpired = { highlightedFeatureIds.remove(it) },
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }
 
 private fun MapUiState.toBannerMessage(): String? =
     when (this) {
-        is MapUiState.Error -> message
-        is MapUiState.Success -> (locationState as? LocationState.Unavailable)?.reason?.toKoreanMessage()
-        MapUiState.Loading -> null
+        is MapUiState.Error -> {
+            message
+        }
+
+        is MapUiState.Success -> {
+            when (val release = sighReleaseState) {
+                is SighReleaseState.Error -> release.message
+                else -> refreshErrorMessage ?: (locationState as? LocationState.Unavailable)?.reason?.toKoreanMessage()
+            }
+        }
+
+        MapUiState.Loading -> {
+            null
+        }
     }
 
-private fun MapUiState.Success.toMapRenderState(): MapRenderState =
+private fun MapUiState.Success.toMapRenderState(hiddenMarkerId: String?): MapRenderState =
     MapRenderState(
         currentLocation = (locationState as? LocationState.Available)?.location,
         locationState = locationState,
         fallbackCenter = DEFAULT_MAP_POINT,
         sighMarkers =
-            sighs.map { sighPin ->
+            sighs.filterNot { it.id.toString() == hiddenMarkerId }.map { sighPin ->
                 SighMarker(
                     id = sighPin.id.toString(),
                     latitude = sighPin.coordinate.latitude,
                     longitude = sighPin.coordinate.longitude,
                 )
             },
-        focusRequest = null,
+        focusRequest = focusRequest,
     )
 
-private val DEFAULT_MAP_POINT =
-    MapPoint(
-        id = "default-location",
-        latitude = 37.5505,
-        longitude = 127.0373,
-    )
+private val DEFAULT_MAP_POINT = MapPoint("default-location", 37.5505, 127.0373)
 
 @Preview
 @Composable
 private fun MapScreenPreview() {
-    AppTheme {
-        MapScreen(locationDependencies = null, onSettingsClick = {})
-    }
+    AppTheme { MapScreen(locationDependencies = null, onSettingsClick = {}) }
 }

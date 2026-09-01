@@ -20,6 +20,7 @@ import com.pheeeew.domain.model.location.CurrentLocation
 import com.pheeeew.feature.map.MapRenderState
 import com.pheeeew.feature.map.SighMarker
 import org.maplibre.android.MapLibre
+import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.Style
@@ -34,12 +35,14 @@ internal actual fun NativeBreathMap(
     cameraCommand: MapCameraCommand?,
     onSighClick: (String) -> Unit,
     onMapError: (MapError) -> Unit,
+    onProjectionChanged: (MapProjectionSnapshot) -> Unit,
     modifier: Modifier,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnSighClick by rememberUpdatedState(onSighClick)
     val currentOnMapError by rememberUpdatedState(onMapError)
+    val currentOnProjectionChanged by rememberUpdatedState(onProjectionChanged)
 
     val hostResult =
         remember(context, lifecycleOwner) {
@@ -49,6 +52,7 @@ internal actual fun NativeBreathMap(
                     mapView = MapView(context).apply { onCreate(null) },
                     onSighClick = { id -> currentOnSighClick(id) },
                     onMapError = { error -> currentOnMapError(error) },
+                    onProjectionChanged = { snapshot -> currentOnProjectionChanged(snapshot) },
                 )
             }
         }
@@ -85,6 +89,7 @@ private class AndroidBreathMapHost(
     val mapView: MapView,
     private val onSighClick: (String) -> Unit,
     private val onMapError: (MapError) -> Unit,
+    private val onProjectionChanged: (MapProjectionSnapshot) -> Unit,
 ) {
     private val camera = AndroidMapCamera()
     private var map: MapLibreMap? = null
@@ -98,6 +103,11 @@ private class AndroidBreathMapHost(
     private var hasReportedStyleFailure = false
     private var released = false
     private var sighPulseAnimator: ValueAnimator? = null
+    private var projectionRevision = 0L
+    private var cameraIdle = true
+    private var lastRenderedFocusId: String? = null
+    private var lastPublishedPoints: Map<String, MapScreenPoint>? = null
+    private var lastPublishedCameraIdle: Boolean? = null
 
     private val mapLoadFailureListener =
         MapView.OnDidFailLoadingMapListener {
@@ -131,6 +141,18 @@ private class AndroidBreathMapHost(
             camera.onCameraMoveStarted(reason)
         }
 
+    private val cameraMoveListener =
+        MapLibreMap.OnCameraMoveListener {
+            cameraIdle = false
+            publishProjection(cameraIdle = false)
+        }
+
+    private val cameraIdleListener =
+        MapLibreMap.OnCameraIdleListener {
+            cameraIdle = true
+            publishProjection(cameraIdle = true)
+        }
+
     init {
         mapView.addOnDidFailLoadingMapListener(mapLoadFailureListener)
         mapView.getMapAsync { readyMap ->
@@ -148,6 +170,8 @@ private class AndroidBreathMapHost(
             }
             readyMap.addOnMapClickListener(mapClickListener)
             readyMap.addOnCameraMoveStartedListener(cameraMoveStartedListener)
+            readyMap.addOnCameraMoveListener(cameraMoveListener)
+            readyMap.addOnCameraIdleListener(cameraIdleListener)
             readyMap.setStyle(Style.Builder().fromUri(MapDarkStyle.STYLE_URL)) { loadedStyle ->
                 if (released) return@setStyle
                 hasReportedStyleFailure = false
@@ -187,6 +211,8 @@ private class AndroidBreathMapHost(
         mapView.removeOnDidFailLoadingMapListener(mapLoadFailureListener)
         map?.removeOnMapClickListener(mapClickListener)
         map?.removeOnCameraMoveStartedListener(cameraMoveStartedListener)
+        map?.removeOnCameraMoveListener(cameraMoveListener)
+        map?.removeOnCameraIdleListener(cameraIdleListener)
         sighPulseAnimator?.cancel()
         sighPulseAnimator = null
         map = null
@@ -235,11 +261,46 @@ private class AndroidBreathMapHost(
             hasRenderedCurrentLocation = true
         }
 
+        if (state.focusRequest?.id != null && state.focusRequest.id != lastRenderedFocusId) {
+            cameraIdle = false
+            lastRenderedFocusId = state.focusRequest.id
+        }
         camera.render(currentMap, state, cameraCommand = null)
         while (pendingCameraCommands.isNotEmpty()) {
+            cameraIdle = false
             camera.render(currentMap, state, pendingCameraCommands.removeFirst())
         }
+        publishProjection(cameraIdle = cameraIdle)
     }
+
+    private fun publishProjection(cameraIdle: Boolean) {
+        if (released) return
+        val currentMap = map ?: return
+        val state = latestState ?: return
+        val targets =
+            buildList {
+                state.sighMarkers.forEach { add(MapPointTarget(it.id, it.latitude, it.longitude)) }
+                state.focusRequest?.let { focus ->
+                    if (none { it.id == focus.id }) add(MapPointTarget(focus.id, focus.latitude, focus.longitude))
+                }
+            }
+        val points =
+            targets.associate { target ->
+                val point = currentMap.projection.toScreenLocation(LatLng(target.latitude, target.longitude))
+                target.id to MapScreenPoint(target.id, point.x, point.y)
+            }
+        if (points == lastPublishedPoints && cameraIdle == lastPublishedCameraIdle) return
+        lastPublishedPoints = points
+        lastPublishedCameraIdle = cameraIdle
+        projectionRevision += 1
+        onProjectionChanged(MapProjectionSnapshot(projectionRevision, points, cameraIdle))
+    }
+
+    private data class MapPointTarget(
+        val id: String,
+        val latitude: Double,
+        val longitude: Double,
+    )
 }
 
 private class AndroidMapLifecycleDelegate(

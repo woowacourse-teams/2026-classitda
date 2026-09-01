@@ -21,6 +21,8 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
     private var lastReceivedCameraCommandID: Int64?
     private var lastFocusRequestID: String?
     private var pendingCameraCommands: [IosMapCameraCommand] = []
+    private var cameraIsIdle = true
+    private var lastPublishedProjectionSignature: String?
 
     private static let userCameraReasonMask: UInt =
         (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) |
@@ -56,6 +58,7 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         updateSighs(state.sighMarkers)
         updateCurrentLocation(state.currentLocation)
         applyCameraState(state)
+        publishProjection(cameraIdle: cameraIsIdle)
     }
 
     func releaseResources() {
@@ -93,8 +96,38 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         regionWillChangeWith reason: MLNCameraChangeReason,
         animated: Bool
     ) {
+        cameraIsIdle = false
+        eventSink.onProjectionChanged(points: projectionPoints(), cameraIdle: false)
         if reason.rawValue & Self.userCameraReasonMask != 0 {
             didResolveInitialCamera = true
+        }
+    }
+
+    func mapView(_ mapView: MLNMapView, regionDidChangeAnimated animated: Bool) {
+        cameraIsIdle = true
+        eventSink.onProjectionChanged(points: projectionPoints(), cameraIdle: true)
+    }
+
+    private func publishProjection(cameraIdle: Bool) {
+        guard styleIsReady else { return }
+        let points = projectionPoints()
+        let signature = points.map { "\($0.id):\($0.xPx):\($0.yPx)" }.joined(separator: "|") + ":\(cameraIdle)"
+        if signature == lastPublishedProjectionSignature { return }
+        lastPublishedProjectionSignature = signature
+        eventSink.onProjectionChanged(points: points, cameraIdle: cameraIdle)
+    }
+
+    private func projectionPoints() -> [IosMapScreenPoint] {
+        guard let state = pendingState else { return [] }
+        var targets: [(String, CLLocationCoordinate2D)] = state.sighMarkers.map {
+            ($0.id, CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude))
+        }
+        if let focus = state.focusRequest, !targets.contains(where: { $0.0 == focus.id }) {
+            targets.append((focus.id, CLLocationCoordinate2D(latitude: focus.latitude, longitude: focus.longitude)))
+        }
+        return targets.map { id, coordinate in
+            let point = mapView.convert(coordinate, toPointTo: mapView)
+            return IosMapScreenPoint(id: id, xPx: Double(point.x), yPx: Double(point.y))
         }
     }
 
@@ -248,12 +281,14 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         }
 
         if let focus = state.focusRequest, focus.id != lastFocusRequestID {
+            cameraIsIdle = false
             lastFocusRequestID = focus.id
             MapLibreCamera.focus(focus, on: mapView)
             didResolveInitialCamera = true
         }
 
         while !pendingCameraCommands.isEmpty {
+            cameraIsIdle = false
             let command = pendingCameraCommands.removeFirst()
             guard command.id != lastCameraCommandID else { continue }
             lastCameraCommandID = command.id

@@ -11,14 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.pheeeew.core.designsystem.theme.AppColors
 import com.pheeeew.core.designsystem.theme.AppTheme
+import com.pheeeew.feature.map.SighReleaseState
 import pheeeew.shared.generated.resources.Res
 import pheeeew.shared.generated.resources.ic_my_location
 import pheeeew.shared.generated.resources.ic_refresh
@@ -28,13 +27,16 @@ import pheeeew.shared.generated.resources.ic_settings
 fun MapOverlay(
     onSettingsClick: () -> Unit,
     onRefreshClick: () -> Unit,
-    onSighLongPress: () -> Unit,
+    breathControl: @Composable () -> Unit,
     onZoomInClick: () -> Unit,
     onZoomOutClick: () -> Unit,
     onMyLocationClick: () -> Unit,
     modifier: Modifier = Modifier,
     curLocation: String? = null,
     errorMessage: String? = null,
+    sighReleaseState: SighReleaseState = SighReleaseState.Idle,
+    onRetrySigh: () -> Unit = {},
+    onCancelSigh: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -56,6 +58,8 @@ fun MapOverlay(
             MapErrorBanner(
                 message = errorMessage,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                onRetry = (sighReleaseState as? SighReleaseState.Error)?.takeIf { it.canRetry }?.let { onRetrySigh },
+                onNew = (sighReleaseState as? SighReleaseState.Error)?.let { onCancelSigh },
             )
         }
 
@@ -77,15 +81,7 @@ fun MapOverlay(
             )
         }
 
-        SighButton(
-            onLongPressRelease = onSighLongPress,
-            modifier = Modifier.padding(bottom = 24.dp),
-        )
-        Text(
-            text = "꾹 눌러 한숨 던지기",
-            style = AppTheme.typography.caption,
-            color = AppColors.Cream100,
-        )
+        breathControl()
         Spacer(modifier = Modifier.navigationBarsPadding())
     }
 }
@@ -98,7 +94,7 @@ private fun MapOverlayPreview() {
             MapOverlay(
                 onSettingsClick = {},
                 onRefreshClick = {},
-                onSighLongPress = {},
+                breathControl = {},
                 onZoomInClick = {},
                 onZoomOutClick = {},
                 onMyLocationClick = {},
@@ -115,7 +111,7 @@ private fun MapOverlayNetworkErrorPreview() {
             MapOverlay(
                 onSettingsClick = {},
                 onRefreshClick = {},
-                onSighLongPress = {},
+                breathControl = {},
                 onZoomInClick = {},
                 onZoomOutClick = {},
                 onMyLocationClick = {},
@@ -133,7 +129,7 @@ private fun MapOverlayPermissionErrorPreview() {
             MapOverlay(
                 onSettingsClick = {},
                 onRefreshClick = {},
-                onSighLongPress = {},
+                breathControl = {},
                 onZoomInClick = {},
                 onZoomOutClick = {},
                 onMyLocationClick = {},
@@ -151,7 +147,7 @@ private fun MapOverlayGpsErrorPreview() {
             MapOverlay(
                 onSettingsClick = {},
                 onRefreshClick = {},
-                onSighLongPress = {},
+                breathControl = {},
                 onZoomInClick = {},
                 onZoomOutClick = {},
                 onMyLocationClick = {},

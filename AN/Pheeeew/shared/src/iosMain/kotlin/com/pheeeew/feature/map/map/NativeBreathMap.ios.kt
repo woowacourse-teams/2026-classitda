@@ -16,10 +16,12 @@ internal actual fun NativeBreathMap(
     cameraCommand: MapCameraCommand?,
     onSighClick: (String) -> Unit,
     onMapError: (MapError) -> Unit,
+    onProjectionChanged: (MapProjectionSnapshot) -> Unit,
     modifier: Modifier,
 ) {
     val currentOnSighClick by rememberUpdatedState(onSighClick)
     val currentOnMapError by rememberUpdatedState(onMapError)
+    val currentOnProjectionChanged by rememberUpdatedState(onProjectionChanged)
     val eventSink =
         remember {
             object : IosMapEventSink {
@@ -28,6 +30,25 @@ internal actual fun NativeBreathMap(
                 override fun onRendererUnavailable() = currentOnMapError(MapError.RendererUnavailable)
 
                 override fun onStyleLoadFailed() = currentOnMapError(MapError.StyleLoadFailed)
+
+                private var revision = 0L
+
+                override fun onProjectionChanged(
+                    points: List<IosMapScreenPoint>,
+                    cameraIdle: Boolean,
+                ) {
+                    revision += 1L
+                    currentOnProjectionChanged(
+                        MapProjectionSnapshot(
+                            revision = revision,
+                            points =
+                                points.associate { point ->
+                                    point.id to MapScreenPoint(point.id, point.xPx.toFloat(), point.yPx.toFloat())
+                                },
+                            cameraIdle = cameraIdle,
+                        ),
+                    )
+                }
             }
         }
 
