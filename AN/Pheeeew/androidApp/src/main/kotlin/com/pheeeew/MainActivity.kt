@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.di.createAndroidLocationDependencies
 
@@ -29,7 +30,11 @@ class MainActivity : ComponentActivity() {
             ).also { holder.dependencies = it }
 
         setContent {
-            App(appVersion = BuildConfig.VERSION_NAME, locationDependencies = locationDependencies)
+            App(
+                appVersion = BuildConfig.VERSION_NAME,
+                locationDependencies = locationDependencies,
+                sighRepository = FakeSighRepository(),
+            )
         }
     }
 }
@@ -45,5 +50,9 @@ class LocationDependenciesHolder : ViewModel() {
 @Preview
 @Composable
 fun appAndroidPreview() {
-    App(appVersion = "1.0.0", locationDependencies = null)
+    App(
+        appVersion = "1.0.0",
+        locationDependencies = null,
+        sighRepository = FakeSighRepository(),
+    )
 }

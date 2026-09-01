@@ -16,6 +16,7 @@ import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.navigation.Screen
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
+import com.pheeeew.domain.repository.SighRepository
 import com.pheeeew.feature.map.MapScreen
 import com.pheeeew.feature.map.MapViewModel
 import com.pheeeew.feature.setting.SettingsScreen
@@ -29,11 +30,12 @@ import kotlinx.coroutines.launch
 fun App(
     appVersion: String,
     locationDependencies: LocationDependencies?,
+    sighRepository: SighRepository,
 ) {
     AppTheme {
         val coroutineScope = rememberCoroutineScope()
         var screen by remember { mutableStateOf(Screen.Splash) }
-        val mapViewModel: MapViewModel = viewModel { MapViewModel(FakeSighRepository(), locationDependencies) }
+        val mapViewModel: MapViewModel = viewModel { MapViewModel(sighRepository, locationDependencies) }
         var selectedLegalDocument by remember { mutableStateOf<LegalDocument?>(null) }
 
         Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
@@ -98,5 +100,9 @@ fun App(
 @Preview
 @Composable
 private fun AppPreview() {
-    App(appVersion = "1.0.0", locationDependencies = null)
+    App(
+        appVersion = "1.0.0",
+        locationDependencies = null,
+        sighRepository = FakeSighRepository(),
+    )
 }

@@ -2,6 +2,7 @@ package com.pheeeew.feature.map.overlay
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,8 @@ import pheeeew.shared.generated.resources.ic_error
 fun MapErrorBanner(
     message: String,
     modifier: Modifier = Modifier,
+    onRetry: (() -> Unit)? = null,
+    onNew: (() -> Unit)? = null,
 ) {
     Surface(
         modifier = modifier,
@@ -52,9 +55,24 @@ fun MapErrorBanner(
             Text(
                 text = message,
                 style = AppTheme.typography.menuItem,
+                modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            if (onRetry != null) {
+                Text(
+                    text = "재시도",
+                    style = AppTheme.typography.menuItem,
+                    modifier = Modifier.padding(start = 8.dp).clickable(onClick = onRetry),
+                )
+            }
+            if (onNew != null) {
+                Text(
+                    text = "새로 하기",
+                    style = AppTheme.typography.menuItem,
+                    modifier = Modifier.padding(start = 8.dp).clickable(onClick = onNew),
+                )
+            }
         }
     }
 }

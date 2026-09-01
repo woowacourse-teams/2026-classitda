@@ -18,6 +18,8 @@ sealed interface MapUiState {
         val cameraCommand: MapCameraCommand?,
         val isRequestingLocation: Boolean,
         val sighReleaseState: SighReleaseState = SighReleaseState.Idle,
+        val focusRequest: MapFocusRequest? = null,
+        val refreshErrorMessage: String? = null,
     ) : MapUiState
 }
 
@@ -28,6 +30,7 @@ sealed interface SighReleaseState {
 
     data class Error(
         val message: String,
+        val canRetry: Boolean = true,
     ) : SighReleaseState
 }
 
