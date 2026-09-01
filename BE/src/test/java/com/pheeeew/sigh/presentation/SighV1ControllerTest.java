@@ -11,7 +11,7 @@ import com.pheeeew.sigh.application.SighSaveResult;
 import com.pheeeew.sigh.application.SighService;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
-import com.pheeeew.sigh.presentation.dto.SighCreateRequest;
+import com.pheeeew.sigh.presentation.dto.SighCreateV1Request;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -32,8 +32,8 @@ import org.springframework.test.web.servlet.client.RestTestClient;
 
 @AutoConfigureRestTestClient
 @Import(GlobalExceptionHandler.class)
-@WebMvcTest(SighController.class)
-class SighControllerTest {
+@WebMvcTest(SighV1Controller.class)
+class SighV1ControllerTest {
 
     private static final MediaType GEO_JSON = MediaType.parseMediaType("application/geo+json");
     private static final UUID REQUEST_ID = UUID.fromString("5d1ad34e-1e20-4f20-a20e-3825a095fe6b");
@@ -46,7 +46,7 @@ class SighControllerTest {
     private SighService sighService;
 
     @Autowired
-    SighControllerTest(RestTestClient client) {
+    SighV1ControllerTest(RestTestClient client) {
         this.client = client;
     }
 
@@ -144,10 +144,9 @@ class SighControllerTest {
     @Test
     void 한숨을_최초_등록하면_201과_GeoJSON_Feature를_반환한다() {
         // given
-        SighCreateRequest request = 기본_요청();
-        SighMapItem sigh = 기본_한숨();
+        SighCreateV1Request request = 기본_요청();
         when(sighService.save(REQUEST_ID, 126.9780, 37.5664))
-                .thenReturn(SighSaveResult.of(sigh, true));
+                .thenReturn(기본_저장_결과(true));
 
         // when
         RestTestClient.ResponseSpec result = 한숨을_등록한다(request);
@@ -164,10 +163,9 @@ class SighControllerTest {
     @Test
     void 같은_requestId로_재시도하면_200과_최초_GeoJSON_Feature를_반환한다() {
         // given
-        SighCreateRequest request = SighCreateRequest.of(REQUEST_ID, 35.1796, 129.0756);
-        SighMapItem sigh = 기본_한숨();
+        SighCreateV1Request request = new SighCreateV1Request(REQUEST_ID, 35.1796, 129.0756);
         when(sighService.save(REQUEST_ID, 129.0756, 35.1796))
-                .thenReturn(SighSaveResult.of(sigh, false));
+                .thenReturn(기본_저장_결과(false));
 
         // when
         RestTestClient.ResponseSpec result = 한숨을_등록한다(request);
@@ -182,7 +180,7 @@ class SighControllerTest {
 
     @ParameterizedTest
     @MethodSource("올바르지_않은_요청들")
-    void 필수값이_없거나_좌표_범위를_벗어나면_400을_반환한다(SighCreateRequest request) {
+    void 필수값이_없거나_좌표_범위를_벗어나면_400을_반환한다(SighCreateV1Request request) {
         // given / when
         RestTestClient.ResponseSpec result = 한숨을_등록한다(request);
 
@@ -265,15 +263,23 @@ class SighControllerTest {
                         """.formatted(code, message), JsonCompareMode.STRICT);
     }
 
-    private SighCreateRequest 기본_요청() {
-        return SighCreateRequest.of(REQUEST_ID, 37.5664, 126.9780);
+    private SighCreateV1Request 기본_요청() {
+        return new SighCreateV1Request(REQUEST_ID, 37.5664, 126.9780);
     }
 
-    private SighMapItem 기본_한숨() {
-        return SighMapItem.of(42L, 126.9774, 37.5669, CREATED_AT);
+    private SighSaveResult 기본_저장_결과(boolean created) {
+        return new SighSaveResult(
+                42L,
+                126.9774,
+                37.5669,
+                CREATED_AT,
+                null,
+                "외로운 회사원",
+                created
+        );
     }
 
-    private RestTestClient.ResponseSpec 한숨을_등록한다(SighCreateRequest request) {
+    private RestTestClient.ResponseSpec 한숨을_등록한다(SighCreateV1Request request) {
         return client.post()
                 .uri("/api/v1/sighs")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -311,10 +317,10 @@ class SighControllerTest {
 
     private static Stream<Arguments> 올바르지_않은_요청들() {
         return Stream.of(
-                Arguments.of(SighCreateRequest.of(null, 37.5664, 126.9780)),
-                Arguments.of(SighCreateRequest.of(REQUEST_ID, null, 126.9780)),
-                Arguments.of(SighCreateRequest.of(REQUEST_ID, 90.0001, 126.9780)),
-                Arguments.of(SighCreateRequest.of(REQUEST_ID, 37.5664, -180.0001))
+                Arguments.of(new SighCreateV1Request(null, 37.5664, 126.9780)),
+                Arguments.of(new SighCreateV1Request(REQUEST_ID, null, 126.9780)),
+                Arguments.of(new SighCreateV1Request(REQUEST_ID, 90.0001, 126.9780)),
+                Arguments.of(new SighCreateV1Request(REQUEST_ID, 37.5664, -180.0001))
         );
     }
 }

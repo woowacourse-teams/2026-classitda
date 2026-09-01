@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SighTest {
 
@@ -23,14 +25,15 @@ class SighTest {
         assertThat(sigh.getMemo()).isEqualTo("오늘은 힘들었다");
     }
 
-    @Test
-    void 공백으로만_이루어진_메모는_null로_변환한다() {
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   "})
+    void 빈_문자열과_공백으로만_이루어진_메모는_null로_변환한다(String memo) {
         // given
-        String memo = "   ";
+        String requestedMemo = memo;
 
         // when
         Sigh sigh = 기본_한숨_빌더()
-                .memo(memo)
+                .memo(requestedMemo)
                 .build();
 
         // then

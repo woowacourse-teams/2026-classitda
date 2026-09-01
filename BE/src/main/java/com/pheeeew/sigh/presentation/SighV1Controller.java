@@ -3,10 +3,11 @@ package com.pheeeew.sigh.presentation;
 import com.pheeeew.sigh.application.SighMapResult;
 import com.pheeeew.sigh.application.SighSaveResult;
 import com.pheeeew.sigh.application.SighService;
-import com.pheeeew.sigh.presentation.dto.SighCreateRequest;
+import com.pheeeew.sigh.presentation.dto.SighCreateV1Request;
+import com.pheeeew.sigh.presentation.dto.SighFeature;
 import com.pheeeew.sigh.presentation.dto.SighMapRequest;
 import com.pheeeew.sigh.presentation.dto.SighMapResponse;
-import com.pheeeew.sigh.presentation.dto.SighResponse;
+import com.pheeeew.sigh.presentation.dto.SighV1Properties;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/sighs")
 @RestController
-public class SighController implements SighControllerApi {
+public class SighV1Controller implements SighV1ControllerApi {
 
     private static final MediaType GEO_JSON = MediaType.parseMediaType("application/geo+json");
 
@@ -46,9 +47,9 @@ public class SighController implements SighControllerApi {
     }
 
     @Override
-    @PostMapping
-    public ResponseEntity<SighResponse> save(
-            @Valid @RequestBody SighCreateRequest request
+    @PostMapping(produces = "application/geo+json")
+    public ResponseEntity<SighFeature<SighV1Properties>> save(
+            @Valid @RequestBody SighCreateV1Request request
     ) {
         SighSaveResult result = sighService.save(request.requestId(), request.longitude(), request.latitude());
 
@@ -59,6 +60,11 @@ public class SighController implements SighControllerApi {
 
         return ResponseEntity.status(status)
                 .contentType(GEO_JSON)
-                .body(SighResponse.from(result.sigh()));
+                .body(SighFeature.of(
+                        result.id(),
+                        result.longitude(),
+                        result.latitude(),
+                        SighV1Properties.from(result.createdAt())
+                ));
     }
 }

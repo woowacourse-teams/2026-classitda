@@ -25,13 +25,17 @@ public class SighService {
     private final SighNicknameGenerator sighNicknameGenerator;
 
     public SighSaveResult save(UUID requestId, double longitude, double latitude) {
+        return save(requestId, longitude, latitude, null);
+    }
+
+    public SighSaveResult save(UUID requestId, double longitude, double latitude, String memo) {
         Optional<Sigh> existingSigh = sighRepository.findByRequestId(requestId);
 
         if (existingSigh.isPresent()) {
             return createSaveResult(existingSigh.get(), false);
         }
 
-        return saveNewSigh(requestId, longitude, latitude);
+        return saveNewSigh(requestId, longitude, latitude, memo);
     }
 
     public SighMapResult findAllWithinBounds(double minLongitude, double minLatitude, double maxLongitude, double maxLatitude) {
@@ -61,21 +65,15 @@ public class SighService {
     }
 
     private SighSaveResult createSaveResult(Sigh sigh, boolean created) {
-        SighMapItem item = SighMapItem.of(
-                sigh.getId(),
-                sigh.getLongitude(),
-                sigh.getLatitude(),
-                sigh.getCreatedAt()
-        );
-
-        return SighSaveResult.of(item, created);
+        return SighSaveResult.from(sigh, created);
     }
 
-    private SighSaveResult saveNewSigh(UUID requestId, double longitude, double latitude) {
+    private SighSaveResult saveNewSigh(UUID requestId, double longitude, double latitude, String memo) {
         Point location = sighLocationGenerator.generate(longitude, latitude);
         Sigh sigh = Sigh.builder()
                 .requestId(requestId)
                 .location(location)
+                .memo(memo)
                 .nickname(sighNicknameGenerator.generate())
                 .build();
 

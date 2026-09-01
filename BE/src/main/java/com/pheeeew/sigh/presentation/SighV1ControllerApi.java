@@ -1,10 +1,11 @@
 package com.pheeeew.sigh.presentation;
 
 import com.pheeeew.common.exception.ErrorResponse;
-import com.pheeeew.sigh.presentation.dto.SighCreateRequest;
+import com.pheeeew.sigh.presentation.dto.SighCreateV1Request;
+import com.pheeeew.sigh.presentation.dto.SighFeature;
 import com.pheeeew.sigh.presentation.dto.SighMapRequest;
 import com.pheeeew.sigh.presentation.dto.SighMapResponse;
-import com.pheeeew.sigh.presentation.dto.SighResponse;
+import com.pheeeew.sigh.presentation.dto.SighV1Properties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -16,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springdoc.core.annotations.ParameterObject;
 
 @Tag(name = "한숨", description = "한숨 등록과 지도 영역 조회 API")
-public interface SighControllerApi {
+public interface SighV1ControllerApi {
 
     @Operation(
             summary = "지도 영역 내 한숨 조회",
@@ -83,18 +84,12 @@ public interface SighControllerApi {
             @ApiResponse(
                     responseCode = "201",
                     description = "한숨 최초 등록 성공",
-                    content = @Content(
-                            mediaType = "application/geo+json",
-                            schema = @Schema(implementation = SighResponse.class)
-                    )
+                    useReturnTypeSchema = true
             ),
             @ApiResponse(
                     responseCode = "200",
                     description = "이미 등록된 requestId의 최초 한숨 반환",
-                    content = @Content(
-                            mediaType = "application/geo+json",
-                            schema = @Schema(implementation = SighResponse.class)
-                    )
+                    useReturnTypeSchema = true
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -112,5 +107,5 @@ public interface SighControllerApi {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    ResponseEntity<SighResponse> save(SighCreateRequest request);
+    ResponseEntity<SighFeature<SighV1Properties>> save(SighCreateV1Request request);
 }

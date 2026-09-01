@@ -1,8 +1,27 @@
 package com.pheeeew.sigh.application;
 
-public record SighSaveResult(SighMapItem sigh, boolean created) {
+import com.pheeeew.sigh.domain.Sigh;
+import java.time.Instant;
 
-    public static SighSaveResult of(SighMapItem sigh, boolean created) {
-        return new SighSaveResult(sigh, created);
+public record SighSaveResult(
+        Long id,
+        double longitude,
+        double latitude,
+        Instant createdAt,
+        String memo,
+        String nickname,
+        boolean created
+) {
+
+    public static SighSaveResult from(Sigh sigh, boolean created) {
+        return new SighSaveResult(
+                sigh.getId(),
+                sigh.getLongitude(),
+                sigh.getLatitude(),
+                sigh.getCreatedAt(),
+                sigh.getMemo(),
+                sigh.getNickname(),
+                created
+        );
     }
 }
