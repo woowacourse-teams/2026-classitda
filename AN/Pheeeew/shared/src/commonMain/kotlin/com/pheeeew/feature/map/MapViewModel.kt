@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,6 +31,9 @@ class MapViewModel(
 
     private val _uiState = MutableStateFlow<MapUiState>(MapUiState.Loading)
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
+
+    // 스플래시 화면 노출 시간 설정을 위한 플로우
+    val isReady: Flow<Boolean> = uiState.map { it !is MapUiState.Loading }
 
     private val _sighReleasedEvents = Channel<Unit>(Channel.BUFFERED)
     val sighReleasedEvents: Flow<Unit> = _sighReleasedEvents.receiveAsFlow()

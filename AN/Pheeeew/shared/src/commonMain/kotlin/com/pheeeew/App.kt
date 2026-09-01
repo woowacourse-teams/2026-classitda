@@ -10,10 +10,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.navigation.Screen
+import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.feature.map.MapScreen
+import com.pheeeew.feature.map.MapViewModel
 import com.pheeeew.feature.setting.SettingsScreen
 import com.pheeeew.feature.splash.SplashScreen
 
@@ -24,10 +27,13 @@ fun App(
 ) {
     AppTheme {
         var screen by remember { mutableStateOf(Screen.Splash) }
+        val mapViewModel: MapViewModel = viewModel { MapViewModel(FakeSighRepository(), locationDependencies) }
+
         Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
             when (screen) {
                 Screen.Splash -> {
                     SplashScreen(
+                        isReady = mapViewModel.isReady,
                         onFinished = { screen = Screen.Map },
                     )
                 }
@@ -36,6 +42,7 @@ fun App(
                     MapScreen(
                         locationDependencies = locationDependencies,
                         onSettingsClick = { screen = Screen.Settings },
+                        viewModel = mapViewModel,
                     )
                 }
 
