@@ -1,22 +1,25 @@
 package com.pheeeew.sigh.presentation;
 
 import com.pheeeew.common.exception.ErrorResponse;
-import com.pheeeew.sigh.presentation.dto.SighCreateRequest;
+import com.pheeeew.sigh.presentation.dto.SighCreateV1Request;
+import com.pheeeew.sigh.presentation.dto.SighFeature;
 import com.pheeeew.sigh.presentation.dto.SighMapRequest;
 import com.pheeeew.sigh.presentation.dto.SighMapResponse;
-import com.pheeeew.sigh.presentation.dto.SighResponse;
+import com.pheeeew.sigh.presentation.dto.SighV1Properties;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.StringToClassMapItem;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springdoc.core.annotations.ParameterObject;
 
 @Tag(name = "한숨", description = "한숨 등록과 지도 영역 조회 API")
-public interface SighControllerApi {
+public interface SighV1ControllerApi {
 
     @Operation(
             summary = "지도 영역 내 한숨 조회",
@@ -47,6 +50,7 @@ public interface SighControllerApi {
                     responseCode = "400",
                     description = "필수 좌표가 없거나 좌표 범위 또는 경계 순서가 올바르지 않음",
                     content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = @ExampleObject(value = """
                                     {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
@@ -56,7 +60,10 @@ public interface SighControllerApi {
             @ApiResponse(
                     responseCode = "500",
                     description = "한숨을 조회하지 못한 서버 오류",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             )
     })
     ResponseEntity<SighMapResponse> findAllWithinBounds(
@@ -85,7 +92,13 @@ public interface SighControllerApi {
                     description = "한숨 최초 등록 성공",
                     content = @Content(
                             mediaType = "application/geo+json",
-                            schema = @Schema(implementation = SighResponse.class)
+                            schema = @Schema(
+                                    allOf = SighFeature.class,
+                                    properties = @StringToClassMapItem(
+                                            key = "properties",
+                                            value = SighV1Properties.class
+                                    )
+                            )
                     )
             ),
             @ApiResponse(
@@ -93,13 +106,20 @@ public interface SighControllerApi {
                     description = "이미 등록된 requestId의 최초 한숨 반환",
                     content = @Content(
                             mediaType = "application/geo+json",
-                            schema = @Schema(implementation = SighResponse.class)
+                            schema = @Schema(
+                                    allOf = SighFeature.class,
+                                    properties = @StringToClassMapItem(
+                                            key = "properties",
+                                            value = SighV1Properties.class
+                                    )
+                            )
                     )
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "요청 본문, UUID 또는 좌표 범위가 올바르지 않음",
                     content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = @ExampleObject(value = """
                                     {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
@@ -109,8 +129,11 @@ public interface SighControllerApi {
             @ApiResponse(
                     responseCode = "500",
                     description = "한숨을 저장하지 못했거나 처리하지 못한 서버 오류",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             )
     })
-    ResponseEntity<SighResponse> save(SighCreateRequest request);
+    ResponseEntity<SighFeature<SighV1Properties>> save(SighCreateV1Request request);
 }
