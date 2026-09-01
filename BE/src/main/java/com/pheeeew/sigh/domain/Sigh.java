@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -42,12 +43,26 @@ public class Sigh extends BaseEntity {
     @Column(nullable = false, length = MAX_NICKNAME_LENGTH, updatable = false)
     private String nickname;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Builder
     private Sigh(UUID requestId, Point location, String memo, String nickname) {
         this.requestId = Objects.requireNonNull(requestId);
         this.location = requireWgs84Point(location);
         this.memo = normalizeMemo(memo);
         this.nickname = requireValidNickname(nickname);
+    }
+
+    public void delete() {
+        if (deletedAt != null) {
+            return;
+        }
+        this.deletedAt = Instant.now();
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 
     public double getLongitude() {

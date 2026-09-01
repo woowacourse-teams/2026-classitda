@@ -1,4 +1,4 @@
-package com.pheeeew.sigh.exception;
+package com.pheeeew.report.exception;
 
 import com.pheeeew.common.exception.ErrorCode;
 import lombok.Getter;
@@ -7,10 +7,9 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @RequiredArgsConstructor
-public enum SighErrorCode implements ErrorCode {
+public enum SighReportErrorCode implements ErrorCode {
 
-    SIGH_SAVE_FAILED("SIGH-001", "한숨을 저장하지 못했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
-    SIGH_NOT_FOUND("SIGH-002", "한숨을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    SIGH_REPORT_SAVE_FAILED("REPORT-001", "신고를 저장하지 못했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String code;
     private final String message;
