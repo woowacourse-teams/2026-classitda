@@ -58,9 +58,13 @@ private suspend fun HttpResponse.throwIfFailed() {
     if (status.value in 200..299) return
 
     val error =
-        runCatching {
+        try {
             body<ErrorResponseDto>()
-        }.getOrNull()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Exception) {
+            null
+        }
     val code = error?.code ?: "HTTP_${status.value}"
     val message = error?.message ?: "API 요청에 실패했습니다."
 
