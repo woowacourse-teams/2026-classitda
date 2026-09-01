@@ -1,0 +1,3 @@
+ALTER TABLE sighs
+    ADD COLUMN memo VARCHAR(200),
+    ADD COLUMN nickname VARCHAR(50) NOT NULL;
