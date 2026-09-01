@@ -15,6 +15,8 @@ import com.pheeeew.core.navigation.Screen
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.feature.map.TempMapScreen
 import com.pheeeew.feature.setting.SettingsScreen
+import com.pheeeew.feature.setting.legal.LegalDocument
+import com.pheeeew.feature.setting.legal.LegalDocumentRoute
 import com.pheeeew.feature.splash.SplashScreen
 
 @Composable
@@ -24,6 +26,7 @@ fun App(
 ) {
     AppTheme {
         var screen by remember { mutableStateOf(Screen.Splash) }
+        var selectedLegalDocument by remember { mutableStateOf<LegalDocument?>(null) }
         Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
             when (screen) {
                 Screen.Splash -> {
@@ -44,12 +47,27 @@ fun App(
                         onThemeSettingClick = {},
                         onLocationPermissionClick = {},
                         onContactClick = {},
-                        onOpenSourceLicenseClick = {},
-                        onPrivacyPolicyClick = {},
+                        onOpenSourceLicenseClick = {
+                            selectedLegalDocument = LegalDocument.OpenSourceLicenses
+                            screen = Screen.LegalDocument
+                        },
+                        onPrivacyPolicyClick = {
+                            selectedLegalDocument = LegalDocument.PrivacyPolicy
+                            screen = Screen.LegalDocument
+                        },
                         onLocationPolicyClick = {},
                         onCreditsClick = {},
                         appVersion = appVersion,
                     )
+                }
+
+                Screen.LegalDocument -> {
+                    selectedLegalDocument?.let { document ->
+                        LegalDocumentRoute(
+                            document = document,
+                            onBack = { screen = Screen.Settings },
+                        )
+                    }
                 }
             }
         }
