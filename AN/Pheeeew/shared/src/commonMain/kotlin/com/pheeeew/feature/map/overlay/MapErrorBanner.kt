@@ -32,7 +32,7 @@ fun MapErrorBanner(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(50),
+        shape = RoundedCornerShape(20),
         color = AppTheme.colors.surface,
         contentColor = AppTheme.colors.onBackground,
         border = BorderStroke(1.dp, AppTheme.colors.danger),

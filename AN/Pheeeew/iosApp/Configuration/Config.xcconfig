@@ -1,4 +1,4 @@
-TEAM_ID=
+#include "TeamID.xcconfig"
 
 PRODUCT_NAME=Pheeeew
 PRODUCT_BUNDLE_IDENTIFIER=com.pheeeew.Pheeeew$(TEAM_ID)

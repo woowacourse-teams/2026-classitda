@@ -1,7 +1,7 @@
 package com.pheeeew.feature.map.map
 
 import com.pheeeew.feature.map.MapFocusRequest
-import com.pheeeew.feature.map.MapUiState
+import com.pheeeew.feature.map.MapRenderState
 import org.maplibre.android.camera.CameraUpdateFactory
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
@@ -21,7 +21,7 @@ internal class AndroidMapCamera {
 
     fun render(
         map: MapLibreMap,
-        state: MapUiState,
+        state: MapRenderState,
         cameraCommand: MapCameraCommand?,
     ) {
         setInitialCenterIfNeeded(map, state)
@@ -31,7 +31,7 @@ internal class AndroidMapCamera {
 
     private fun setInitialCenterIfNeeded(
         map: MapLibreMap,
-        state: MapUiState,
+        state: MapRenderState,
     ) {
         if (hasResolvedInitialCenter) return
         val center = MapRenderRules.initialCenter(state) ?: return
@@ -72,7 +72,7 @@ internal class AndroidMapCamera {
 
     private fun consumeCameraCommand(
         map: MapLibreMap,
-        state: MapUiState,
+        state: MapRenderState,
         cameraCommand: MapCameraCommand?,
     ) {
         cameraCommand ?: return
