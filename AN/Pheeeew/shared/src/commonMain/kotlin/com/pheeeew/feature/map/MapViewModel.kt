@@ -2,68 +2,108 @@ package com.pheeeew.feature.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.pheeeew.domain.exception.ApiException
-import com.pheeeew.domain.model.geo.Coordinate
-import com.pheeeew.domain.repository.SighRepository
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
+import com.pheeeew.core.permission.LocationPermissionStatus
+import com.pheeeew.di.LocationDependencies
+import com.pheeeew.domain.model.location.LocationState
+import com.pheeeew.feature.map.map.MapCameraCommand
+import com.pheeeew.feature.map.map.MapDarkStyle
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.uuid.Uuid
+
+data class MapScreenUiState(
+    val mapState: MapUiState,
+    val cameraCommand: MapCameraCommand?,
+    val isRequestingLocation: Boolean,
+    val isLocationAvailable: Boolean,
+)
 
 class MapViewModel(
-    private val sighRepository: SighRepository,
+    private val locationDependencies: LocationDependencies?,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<MapTempUiState>(MapTempUiState.Loading)
-    val uiState: StateFlow<MapTempUiState> = _uiState.asStateFlow()
+    private var nextCameraCommandId = 0L
 
-    private val _sighReleasedEvents = Channel<Unit>(Channel.BUFFERED)
-    val sighReleasedEvents: Flow<Unit> = _sighReleasedEvents.receiveAsFlow()
-
-    private var pendingRequestId: String? = null
+    private val _uiState =
+        MutableStateFlow(
+            MapScreenUiState(
+                mapState = mapState(LocationState.Loading),
+                cameraCommand = null,
+                isRequestingLocation = false,
+                isLocationAvailable = locationDependencies != null,
+            ),
+        )
+    val uiState: StateFlow<MapScreenUiState> = _uiState.asStateFlow()
 
     init {
-        loadSighs()
-    }
-
-    fun loadSighs() {
-        viewModelScope.launch {
-            _uiState.value = MapTempUiState.Loading
-            try {
-                _uiState.value = MapTempUiState.Success(sighRepository.getSighs())
-            } catch (e: ApiException) {
-                _uiState.value = MapTempUiState.Error(e.message)
+        locationDependencies?.let { dependencies ->
+            viewModelScope.launch {
+                dependencies.repository.locationState.collect { locationState ->
+                    _uiState.update { it.copy(mapState = mapState(locationState)) }
+                }
             }
         }
     }
 
-    fun sendSigh(coordinate: Coordinate) {
-        val current = _uiState.value as? MapTempUiState.Success ?: return
-        val requestId = pendingRequestId ?: Uuid.random().toString().also { pendingRequestId = it }
+    fun onZoomInClick() = sendCameraCommand { id -> MapCameraCommand.ZoomBy(id = id, delta = 1.0) }
 
+    fun onZoomOutClick() = sendCameraCommand { id -> MapCameraCommand.ZoomBy(id = id, delta = -1.0) }
+
+    fun onMyLocationClick() {
+        val dependencies = locationDependencies ?: return
         viewModelScope.launch {
-            _uiState.value = current.copy(sighReleaseState = SighReleaseState.Submitting)
+            _uiState.update { it.copy(isRequestingLocation = true) }
             try {
-                val sighPin = sighRepository.registerSigh(requestId, coordinate)
-                pendingRequestId = null
-                _uiState.value =
-                    current.copy(
-                        sighs = current.sighs + sighPin,
-                        sighReleaseState = SighReleaseState.Idle,
-                    )
-                _sighReleasedEvents.send(Unit)
-            } catch (e: ApiException) {
-                _uiState.value = current.copy(sighReleaseState = SighReleaseState.Error(e.message))
+                val currentStatus = dependencies.permissionController.currentStatus()
+                if (currentStatus != LocationPermissionStatus.Granted) {
+                    dependencies.permissionController.requestPermission()
+                }
+                dependencies.repository.refreshCurrentLocation()
+                if (dependencies.repository.locationState.value is LocationState.Available) {
+                    sendCameraCommand { id ->
+                        MapCameraCommand.MoveToCurrentLocation(id = id, zoom = MapDarkStyle.FOCUS_ZOOM)
+                    }
+                }
+            } catch (cancellation: CancellationException) {
+                throw cancellation
+            } catch (_: Exception) {
+                // 위치나 권한 값은 로그에 남기지 않습니다. 지도는 현재 카메라를 유지합니다.
+            } finally {
+                _uiState.update { it.copy(isRequestingLocation = false) }
             }
         }
     }
 
-    fun cancelSighRelease() {
-        pendingRequestId = null
-        val current = _uiState.value as? MapTempUiState.Success ?: return
-        _uiState.value = current.copy(sighReleaseState = SighReleaseState.Idle)
+    private fun sendCameraCommand(create: (Long) -> MapCameraCommand) {
+        nextCameraCommandId += 1L
+        _uiState.update { it.copy(cameraCommand = create(nextCameraCommandId)) }
     }
+
+    private fun mapState(locationState: LocationState) =
+        MapUiState(
+            currentLocation = (locationState as? LocationState.Available)?.location,
+            locationState = locationState,
+            fallbackCenter = DEFAULT_MAP_POINT,
+            // 지도 핀 렌더링 확인을 위한 임시 샘플 1개입니다.
+            sighMarkers = PREVIEW_SIGH_MARKERS,
+            focusRequest = null,
+        )
 }
+
+private val DEFAULT_MAP_POINT =
+    MapPoint(
+        id = "default-location",
+        latitude = 37.5505,
+        longitude = 127.0373,
+    )
+
+private val PREVIEW_SIGH_MARKERS =
+    listOf(
+        SighMarker(
+            id = "preview-sigh",
+            latitude = DEFAULT_MAP_POINT.latitude,
+            longitude = DEFAULT_MAP_POINT.longitude,
+        ),
+    )
