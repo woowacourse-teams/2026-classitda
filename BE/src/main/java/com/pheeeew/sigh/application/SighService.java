@@ -22,6 +22,7 @@ public class SighService {
 
     private final SighRepository sighRepository;
     private final SighLocationGenerator sighLocationGenerator;
+    private final SighNicknameGenerator sighNicknameGenerator;
 
     public SighSaveResult save(UUID requestId, double longitude, double latitude) {
         Optional<Sigh> existingSigh = sighRepository.findByRequestId(requestId);
@@ -75,6 +76,7 @@ public class SighService {
         Sigh sigh = Sigh.builder()
                 .requestId(requestId)
                 .location(location)
+                .nickname(sighNicknameGenerator.generate())
                 .build();
 
         try {

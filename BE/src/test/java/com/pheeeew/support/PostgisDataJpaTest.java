@@ -2,6 +2,7 @@ package com.pheeeew.support;
 
 import com.pheeeew.common.config.JpaAuditingConfig;
 import com.pheeeew.sigh.application.SighService;
+import com.pheeeew.sigh.infra.KoreanSighNicknameGenerator;
 import com.pheeeew.sigh.infra.PostgisSighLocationGenerator;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -23,6 +24,7 @@ import org.springframework.test.context.ActiveProfiles;
         SharedPostgisTestConfiguration.class,
         JpaAuditingConfig.class,
         SighService.class,
+        KoreanSighNicknameGenerator.class,
         PostgisSighLocationGenerator.class
 })
 public @interface PostgisDataJpaTest {

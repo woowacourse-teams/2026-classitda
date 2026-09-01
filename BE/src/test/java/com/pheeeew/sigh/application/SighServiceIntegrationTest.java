@@ -70,7 +70,10 @@ class SighServiceIntegrationTest {
         Sigh saved = sighRepository.findById(result.sigh().id()).orElseThrow();
         assertThat(saved.getUpdatedAt()).isNotNull();
         assertThat(saved.getMemo()).isNull();
-        assertThat(saved.getNickname()).isNull();
+        assertThat(saved.getNickname())
+                .isNotBlank()
+                .matches("\\S+ \\S+")
+                .hasSizeLessThanOrEqualTo(50);
         assertThat(sighRepository.count()).isOne();
     }
 
