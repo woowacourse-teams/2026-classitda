@@ -65,7 +65,7 @@ public class SighService {
     }
 
     private SighSaveResult createSaveResult(Sigh sigh, boolean created) {
-        return SighSaveResult.from(sigh, created);
+        return SighSaveResult.of(sigh, created);
     }
 
     private SighSaveResult saveNewSigh(UUID requestId, double longitude, double latitude, String memo) {

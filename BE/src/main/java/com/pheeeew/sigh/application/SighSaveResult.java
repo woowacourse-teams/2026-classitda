@@ -13,7 +13,7 @@ public record SighSaveResult(
         boolean created
 ) {
 
-    public static SighSaveResult from(Sigh sigh, boolean created) {
+    public static SighSaveResult of(Sigh sigh, boolean created) {
         return new SighSaveResult(
                 sigh.getId(),
                 sigh.getLongitude(),
