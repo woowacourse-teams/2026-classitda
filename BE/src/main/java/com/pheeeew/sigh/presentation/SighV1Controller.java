@@ -47,7 +47,7 @@ public class SighV1Controller implements SighV1ControllerApi {
     }
 
     @Override
-    @PostMapping(produces = "application/geo+json")
+    @PostMapping
     public ResponseEntity<SighFeature<SighV1Properties>> save(
             @Valid @RequestBody SighCreateV1Request request
     ) {

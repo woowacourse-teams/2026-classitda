@@ -161,6 +161,26 @@ class SighV1ControllerTest {
     }
 
     @Test
+    void application_json_응답을_요청해도_406_없이_한숨을_등록한다() {
+        // given
+        when(sighService.save(REQUEST_ID, 126.9780, 37.5664))
+                .thenReturn(기본_저장_결과(true));
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/v1/sighs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body(기본_요청())
+                .exchange();
+
+        // then
+        result.expectStatus().isCreated()
+                .expectHeader().contentType(GEO_JSON);
+        verify(sighService).save(REQUEST_ID, 126.9780, 37.5664);
+    }
+
+    @Test
     void 같은_requestId로_재시도하면_200과_최초_GeoJSON_Feature를_반환한다() {
         // given
         SighCreateV1Request request = new SighCreateV1Request(REQUEST_ID, 35.1796, 129.0756);

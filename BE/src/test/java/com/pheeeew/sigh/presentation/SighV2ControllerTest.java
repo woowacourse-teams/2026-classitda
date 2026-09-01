@@ -65,6 +65,32 @@ class SighV2ControllerTest {
     }
 
     @Test
+    void application_json_응답을_요청해도_406_없이_한숨을_등록한다() {
+        // given
+        when(sighService.save(REQUEST_ID, 126.9780, 37.5664, null))
+                .thenReturn(기본_저장_결과(null, true));
+
+        // when
+        RestTestClient.ResponseSpec result = client.post()
+                .uri("/api/v2/sighs")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .body("""
+                        {
+                          "requestId": "5d1ad34e-1e20-4f20-a20e-3825a095fe6b",
+                          "latitude": 37.5664,
+                          "longitude": 126.9780
+                        }
+                        """)
+                .exchange();
+
+        // then
+        result.expectStatus().isCreated()
+                .expectHeader().contentType(GEO_JSON);
+        verify(sighService).save(REQUEST_ID, 126.9780, 37.5664, null);
+    }
+
+    @Test
     void 메모를_생략하면_null로_등록하고_반환한다() {
         // given
         when(sighService.save(REQUEST_ID, 126.9780, 37.5664, null))

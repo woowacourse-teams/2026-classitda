@@ -5,6 +5,7 @@ import com.pheeeew.sigh.presentation.dto.SighCreateV2Request;
 import com.pheeeew.sigh.presentation.dto.SighFeature;
 import com.pheeeew.sigh.presentation.dto.SighV2Properties;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.StringToClassMapItem;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -49,17 +50,36 @@ public interface SighV2ControllerApi {
             @ApiResponse(
                     responseCode = "201",
                     description = "한숨 최초 등록 성공",
-                    useReturnTypeSchema = true
+                    content = @Content(
+                            mediaType = "application/geo+json",
+                            schema = @Schema(
+                                    allOf = SighFeature.class,
+                                    properties = @StringToClassMapItem(
+                                            key = "properties",
+                                            value = SighV2Properties.class
+                                    )
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "200",
                     description = "이미 등록된 requestId의 최초 한숨 반환",
-                    useReturnTypeSchema = true
+                    content = @Content(
+                            mediaType = "application/geo+json",
+                            schema = @Schema(
+                                    allOf = SighFeature.class,
+                                    properties = @StringToClassMapItem(
+                                            key = "properties",
+                                            value = SighV2Properties.class
+                                    )
+                            )
+                    )
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "요청 본문, UUID, 좌표 범위 또는 메모 길이가 올바르지 않음",
                     content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = @ExampleObject(value = """
                                     {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
@@ -69,7 +89,10 @@ public interface SighV2ControllerApi {
             @ApiResponse(
                     responseCode = "500",
                     description = "한숨을 저장하지 못했거나 처리하지 못한 서버 오류",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             )
     })
     ResponseEntity<SighFeature<SighV2Properties>> save(

@@ -25,7 +25,7 @@ public class SighV2Controller implements SighV2ControllerApi {
     private final SighService sighService;
 
     @Override
-    @PostMapping(produces = "application/geo+json")
+    @PostMapping
     public ResponseEntity<SighFeature<SighV2Properties>> save(
             @Valid @RequestBody SighCreateV2Request request
     ) {
