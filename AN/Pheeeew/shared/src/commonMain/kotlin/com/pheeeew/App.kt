@@ -101,6 +101,9 @@ fun App(
                                 }
                             }
                         },
+                        onMicrophonePermissionClick = {
+                            // TODO
+                        },
                         onContactClick = {},
                         onOpenSourceLicenseClick = {
                             selectedLegalDocument = LegalDocument.OpenSourceLicenses
@@ -110,7 +113,6 @@ fun App(
                             selectedLegalDocument = LegalDocument.PrivacyPolicy
                             screen = Screen.LegalDocument
                         },
-                        onLocationPolicyClick = {},
                         onCreditsClick = {},
                         appVersion = appVersion,
                         modifier = overlayModifier,
