@@ -186,10 +186,11 @@ class SighReportServiceIntegrationTest {
 
     private Long insertSigh() {
         return jdbcClient.sql("""
-                        INSERT INTO sighs (request_id, location, created_at, updated_at)
+                        INSERT INTO sighs (request_id, location, nickname, created_at, updated_at)
                         VALUES (
                             :requestId,
                             ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            '외로운 회사원',
                             NOW(),
                             NOW()
                         )
