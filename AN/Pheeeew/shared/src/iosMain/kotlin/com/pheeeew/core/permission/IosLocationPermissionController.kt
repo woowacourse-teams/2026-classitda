@@ -13,9 +13,6 @@ import platform.CoreLocation.kCLAuthorizationStatusAuthorizedWhenInUse
 import platform.CoreLocation.kCLAuthorizationStatusDenied
 import platform.CoreLocation.kCLAuthorizationStatusNotDetermined
 import platform.CoreLocation.kCLAuthorizationStatusRestricted
-import platform.Foundation.NSURL
-import platform.UIKit.UIApplication
-import platform.UIKit.UIApplicationOpenSettingsURLString
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
@@ -43,11 +40,6 @@ class IosLocationPermissionController(
             }
             permissionDelegate.requestPermission()
         }
-
-    override fun openAppSettings() {
-        val url = NSURL(string = UIApplicationOpenSettingsURLString)
-        UIApplication.sharedApplication.openURL(url)
-    }
 }
 
 @OptIn(ExperimentalForeignApi::class)

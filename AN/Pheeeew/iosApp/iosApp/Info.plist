@@ -4,6 +4,10 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+  
+	<key>API_BASE_URL</key>
+	<string>$(API_BASE_URL)</string>
+  
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>현재 위치 주변의 한숨을 지도에 표시하기 위해 위치가 필요합니다.</string>
 </dict>

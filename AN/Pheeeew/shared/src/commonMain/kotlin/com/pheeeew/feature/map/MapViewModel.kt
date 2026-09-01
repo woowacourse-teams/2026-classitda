@@ -9,6 +9,7 @@ import com.pheeeew.domain.model.location.LocationState
 import com.pheeeew.domain.repository.SighRepository
 import com.pheeeew.feature.map.map.MapCameraCommand
 import com.pheeeew.feature.map.map.MapDarkStyle
+import com.pheeeew.feature.setting.handleLocationPermissionSettingsClick
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -148,7 +149,13 @@ class MapViewModel(
     }
 
     fun openLocationSettings() {
-        locationDependencies?.permissionController?.openAppSettings()
+        val dependencies = locationDependencies ?: return
+        viewModelScope.launch {
+            handleLocationPermissionSettingsClick(
+                permissionController = dependencies.permissionController,
+                settingsLauncher = dependencies.permissionSettingsLauncher,
+            )
+        }
     }
 
     private fun sendCameraCommand(create: (Long) -> MapCameraCommand) {
