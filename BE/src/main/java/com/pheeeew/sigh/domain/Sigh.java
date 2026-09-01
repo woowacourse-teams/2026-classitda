@@ -22,7 +22,7 @@ import org.locationtech.jts.geom.Point;
 public class Sigh extends BaseEntity {
 
     private static final int WGS84_SRID = 4326;
-    private static final int MAX_MEMO_LENGTH = 200;
+    private static final int MAX_MEMO_LENGTH = 50;
     private static final int MAX_NICKNAME_LENGTH = 50;
 
     @Id
@@ -76,7 +76,7 @@ public class Sigh extends BaseEntity {
             return null;
         }
         if (normalizedMemo.length() > MAX_MEMO_LENGTH) {
-            throw new IllegalArgumentException("메모는 200자를 초과할 수 없습니다.");
+            throw new IllegalArgumentException("메모는 50자를 초과할 수 없습니다.");
         }
 
         return normalizedMemo;

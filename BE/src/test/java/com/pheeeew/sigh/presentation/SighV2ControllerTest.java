@@ -159,9 +159,9 @@ class SighV2ControllerTest {
     }
 
     @Test
-    void 앞뒤_공백을_제외한_메모가_200자이면_등록한다() {
+    void 앞뒤_공백을_제외한_메모가_50자이면_등록한다() {
         // given
-        String memo = "가".repeat(200);
+        String memo = "가".repeat(50);
         String requestedMemo = "  " + memo + "  ";
         when(sighService.save(REQUEST_ID, 126.9780, 37.5664, requestedMemo))
                 .thenReturn(기본_저장_결과(memo, true));
@@ -182,9 +182,9 @@ class SighV2ControllerTest {
     }
 
     @Test
-    void 정규화된_메모가_200자를_초과하면_400을_반환한다() {
+    void 정규화된_메모가_50자를_초과하면_400을_반환한다() {
         // given
-        String overlongMemo = "가".repeat(201);
+        String overlongMemo = "가".repeat(51);
 
         // when
         RestTestClient.ResponseSpec result = 한숨을_등록한다("""
