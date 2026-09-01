@@ -5,6 +5,7 @@ final class BreathAudioDetector {
     private let engine = AVAudioEngine()
     private var wantsRecording = false
     private var tapInstalled = false
+    private var sessionGeneration = 0
     private var smoothedStrength = 0.0
     private var previousInput = 0.0
     private var previousHighPassed = 0.0
@@ -13,10 +14,13 @@ final class BreathAudioDetector {
     private var previousBandLimited = 0.0
 
     func start() {
+        guard !wantsRecording, !tapInstalled else { return }
         wantsRecording = true
+        sessionGeneration += 1
+        let generation = sessionGeneration
         AVAudioSession.sharedInstance().requestRecordPermission { [weak self] granted in
             DispatchQueue.main.async {
-                guard let self, self.wantsRecording else { return }
+                guard let self, self.wantsRecording, self.sessionGeneration == generation else { return }
                 guard granted else {
                     self.wantsRecording = false
                     IosBreathBridge.shared.updateError(errorName: "PermissionDenied")
@@ -28,6 +32,7 @@ final class BreathAudioDetector {
     }
 
     func stop() {
+        sessionGeneration += 1
         wantsRecording = false
         if tapInstalled { engine.inputNode.removeTap(onBus: 0); tapInstalled = false }
         engine.stop(); engine.reset(); resetAnalysisState()
@@ -36,6 +41,7 @@ final class BreathAudioDetector {
     }
 
     private func beginRecording() {
+        guard !tapInstalled else { return }
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.record, mode: .measurement)

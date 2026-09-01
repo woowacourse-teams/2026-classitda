@@ -55,6 +55,7 @@ fun MapErrorBanner(
             Text(
                 text = message,
                 style = AppTheme.typography.menuItem,
+                modifier = Modifier.weight(1f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

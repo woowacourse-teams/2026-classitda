@@ -119,6 +119,13 @@ fun MapScreen(
                     isFlightInProgress = false
                     viewModel.consumeFocusRequest(id)
                 },
+                onCancelled = { id ->
+                    if (activeFlightId == id) {
+                        pendingFlightOrigin = null
+                        activeFlightId = null
+                        isFlightInProgress = false
+                    }
+                },
                 modifier = Modifier.fillMaxSize(),
             )
         }

@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlin.uuid.Uuid
 
 class MapViewModel(
@@ -29,6 +31,8 @@ class MapViewModel(
 ) : ViewModel() {
     private var nextCameraCommandId = 0L
     private var pendingRegistration: PendingSighRequest? = null
+    private val sighOperationMutex = Mutex()
+    private val locallyRegisteredSighs = mutableMapOf<Long, SighPin>()
 
     private val _uiState = MutableStateFlow<MapUiState>(MapUiState.Loading)
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
@@ -61,29 +65,34 @@ class MapViewModel(
 
     fun loadSighs(bounds: SighBounds = DEFAULT_SIGH_BOUNDS) {
         viewModelScope.launch {
-            val wasLoaded = _uiState.value is MapUiState.Success
-            if (!wasLoaded) _uiState.value = MapUiState.Loading
-            try {
-                val sighs = sighRepository.getSighs(bounds)
-                _uiState.update { state ->
-                    if (state is MapUiState.Success) {
-                        state.copy(sighs = sighs.distinctBy(SighPin::id), refreshErrorMessage = null)
-                    } else {
-                        MapUiState.Success(
-                            sighs = sighs.distinctBy(SighPin::id),
-                            locationState =
-                                locationDependencies?.repository?.locationState?.value ?: LocationState.Loading,
-                            cameraCommand = null,
-                            isRequestingLocation = false,
-                        )
+            sighOperationMutex.withLock {
+                val wasLoaded = _uiState.value is MapUiState.Success
+                if (!wasLoaded) _uiState.value = MapUiState.Loading
+                try {
+                    val serverSighs = sighRepository.getSighs(bounds).distinctBy(SighPin::id)
+                    val serverIds = serverSighs.mapTo(mutableSetOf(), SighPin::id)
+                    serverIds.forEach(locallyRegisteredSighs::remove)
+                    val mergedSighs = (serverSighs + locallyRegisteredSighs.values).distinctBy(SighPin::id)
+                    _uiState.update { state ->
+                        if (state is MapUiState.Success) {
+                            state.copy(sighs = mergedSighs, refreshErrorMessage = null)
+                        } else {
+                            MapUiState.Success(
+                                sighs = mergedSighs,
+                                locationState =
+                                    locationDependencies?.repository?.locationState?.value ?: LocationState.Loading,
+                                cameraCommand = null,
+                                isRequestingLocation = false,
+                            )
+                        }
                     }
-                }
-            } catch (e: ApiException) {
-                _uiState.update { state ->
-                    if (state is MapUiState.Success) {
-                        state.copy(refreshErrorMessage = e.message)
-                    } else {
-                        MapUiState.Error(e.message)
+                } catch (e: ApiException) {
+                    _uiState.update { state ->
+                        if (state is MapUiState.Success) {
+                            state.copy(refreshErrorMessage = e.message)
+                        } else {
+                            MapUiState.Error(e.message)
+                        }
                     }
                 }
             }
@@ -120,28 +129,35 @@ class MapViewModel(
 
     private fun submit(request: PendingSighRequest) {
         viewModelScope.launch {
-            _uiState.update { (it as? MapUiState.Success)?.copy(sighReleaseState = SighReleaseState.Submitting) ?: it }
-            try {
-                val sighPin = sighRepository.registerSigh(request.requestId, request.coordinate)
-                pendingRegistration = null
-                _uiState.update { state ->
-                    (state as? MapUiState.Success)?.copy(
-                        sighs = (state.sighs + sighPin).distinctBy(SighPin::id),
-                        sighReleaseState = SighReleaseState.Idle,
-                        focusRequest =
-                            MapFocusRequest(
-                                id = sighPin.id.toString(),
-                                latitude = sighPin.coordinate.latitude,
-                                longitude = sighPin.coordinate.longitude,
-                            ),
-                    )
-                        ?: state
-                }
-            } catch (e: ApiException) {
+            sighOperationMutex.withLock {
                 _uiState.update {
                     (it as? MapUiState.Success)?.copy(
-                        sighReleaseState = SighReleaseState.Error(message = e.message, canRetry = true),
+                        sighReleaseState = SighReleaseState.Submitting,
                     ) ?: it
+                }
+                try {
+                    val sighPin = sighRepository.registerSigh(request.requestId, request.coordinate)
+                    locallyRegisteredSighs[sighPin.id] = sighPin
+                    pendingRegistration = null
+                    _uiState.update { state ->
+                        (state as? MapUiState.Success)?.copy(
+                            sighs = (state.sighs + sighPin).distinctBy(SighPin::id),
+                            sighReleaseState = SighReleaseState.Idle,
+                            focusRequest =
+                                MapFocusRequest(
+                                    id = sighPin.id.toString(),
+                                    latitude = sighPin.coordinate.latitude,
+                                    longitude = sighPin.coordinate.longitude,
+                                ),
+                        )
+                            ?: state
+                    }
+                } catch (e: ApiException) {
+                    _uiState.update {
+                        (it as? MapUiState.Success)?.copy(
+                            sighReleaseState = SighReleaseState.Error(message = e.message, canRetry = true),
+                        ) ?: it
+                    }
                 }
             }
         }

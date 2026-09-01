@@ -32,6 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -115,6 +119,19 @@ fun BreathControl(
         animationSpec = infiniteRepeatable(tween(1_800, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "breathPulseValue",
     )
+    val inputErrorMessage =
+        when (inputError) {
+            null -> null
+            BreathInputError.PermissionDenied -> "마이크 권한이 필요해요"
+            BreathInputError.MicrophoneUnavailable -> "마이크를 사용할 수 없어요"
+            BreathInputError.StartFailed -> "마이크를 시작하지 못했어요. 다시 시도해주세요"
+        }
+    val controlDescription =
+        when {
+            burst -> "한숨을 별로 만드는 중"
+            listening -> "한숨 감지 중. 다시 눌러 중지"
+            else -> "한숨 감지 시작"
+        }
 
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         BoxWithConstraints(
@@ -168,6 +185,9 @@ fun BreathControl(
                                     burstSequence += 1
                                 }
                             })
+                        }.semantics {
+                            role = Role.Button
+                            contentDescription = controlDescription
                         },
                 contentAlignment = Alignment.Center,
             ) {
@@ -248,7 +268,7 @@ fun BreathControl(
         Text(
             text =
                 when {
-                    inputError != null -> "마이크 권한이 필요해요"
+                    inputErrorMessage != null -> inputErrorMessage
                     burst -> "한숨을 별로 빚고 있어요"
                     listening && growth >= 1f -> "한숨을 다 담았어요\n버튼을 눌러 별을 만들어보세요"
                     listening -> "후— 하고 불어보세요\n멈추려면 버튼을 눌러주세요"

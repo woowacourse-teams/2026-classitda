@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,15 +22,23 @@ import kotlin.math.PI
 fun StarFlightOverlay(
     flight: SighFlight,
     onLanded: (String) -> Unit,
+    onCancelled: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     var progress by remember(flight.id) { mutableStateOf(0f) }
+    var animationCompleted by remember(flight.id) { mutableStateOf(false) }
+    DisposableEffect(flight.id) {
+        onDispose {
+            if (!animationCompleted) onCancelled(flight.id)
+        }
+    }
     LaunchedEffect(flight.id) {
         val animation = Animatable(0f)
         animation.animateTo(
             targetValue = 1f,
             animationSpec = spring(dampingRatio = 0.82f, stiffness = 620f),
         ) { progress = value }
+        animationCompleted = true
         onLanded(flight.id)
     }
     Canvas(modifier) {

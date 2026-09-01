@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,25 +26,28 @@ fun LandingHighlightOverlay(
     modifier: Modifier = Modifier,
 ) {
     featureIds.forEach { id ->
-        val point = projectedPoints[id] ?: return@forEach
-        var alpha by remember(id) { mutableStateOf(1f) }
-        LaunchedEffect(id) {
-            delay(10_000)
-            Animatable(1f).animateTo(0f, tween(260)) { alpha = value }
-            onExpired(id)
-        }
-        Canvas(modifier) {
-            val center = Offset(point.xPx, point.yPx)
-            drawCircle(
-                brush =
-                    Brush.radialGradient(
-                        listOf(Color.White.copy(alpha = alpha * 0.7f), Color.Transparent),
+        key(id) {
+            projectedPoints[id]?.let { point ->
+                var alpha by remember { mutableStateOf(1f) }
+                LaunchedEffect(Unit) {
+                    delay(10_000)
+                    Animatable(1f).animateTo(0f, tween(260)) { alpha = value }
+                    onExpired(id)
+                }
+                Canvas(modifier) {
+                    val center = Offset(point.xPx, point.yPx)
+                    drawCircle(
+                        brush =
+                            Brush.radialGradient(
+                                listOf(Color.White.copy(alpha = alpha * 0.7f), Color.Transparent),
+                                radius = 24.dp.toPx(),
+                            ),
                         radius = 24.dp.toPx(),
-                    ),
-                radius = 24.dp.toPx(),
-                center = center,
-            )
-            drawCircle(Color(0xFFFFE4A8).copy(alpha = alpha), radius = 5.5.dp.toPx(), center = center)
+                        center = center,
+                    )
+                    drawCircle(Color(0xFFFFE4A8).copy(alpha = alpha), radius = 5.5.dp.toPx(), center = center)
+                }
+            }
         }
     }
 }
