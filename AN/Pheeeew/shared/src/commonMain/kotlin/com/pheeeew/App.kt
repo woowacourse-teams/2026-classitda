@@ -102,7 +102,7 @@ fun App(
                             }
                         },
                         onMicrophonePermissionClick = {
-                            // TODO
+                            mapViewModel.openAppSettings()
                         },
                         onContactClick = {},
                         onOpenSourceLicenseClick = {
