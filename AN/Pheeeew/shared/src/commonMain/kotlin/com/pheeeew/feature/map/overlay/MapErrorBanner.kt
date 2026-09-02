@@ -84,7 +84,7 @@ private fun MapErrorBannerPreview() {
     AppTheme {
         Box(modifier = Modifier.background(AppTheme.colors.background).padding(24.dp)) {
             MapErrorBanner(
-                message = "인터넷 연결 상태를 확인해 주세요!",
+                message = "네트워크 연결이 불안정해요. 인터넷 연결을 확인한 후 다시 시도해 주세요.",
                 modifier = Modifier.fillMaxWidth(),
             )
         }

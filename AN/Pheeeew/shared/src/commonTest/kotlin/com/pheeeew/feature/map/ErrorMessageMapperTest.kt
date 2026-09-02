@@ -12,7 +12,10 @@ class ErrorMessageMapperTest {
     fun `네트워크 예외는 사용자 안내 문구로 변환한다`() {
         val exception = ApiException.Network(code = "NETWORK_ERROR", message = "연결 실패")
 
-        assertEquals("인터넷 연결 상태를 확인해 주세요!", exception.toUserMessage())
+        assertEquals(
+            "네트워크 연결이 불안정해요. 인터넷 연결을 확인한 후 다시 시도해 주세요.",
+            exception.toUserMessage(),
+        )
     }
 
     @Test
