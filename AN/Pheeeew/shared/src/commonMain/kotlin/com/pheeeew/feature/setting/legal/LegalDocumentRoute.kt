@@ -20,8 +20,6 @@ fun LegalDocumentRoute(
     }
     var reloadToken by remember(document) { mutableIntStateOf(0) }
 
-    LegalSystemBackHandler(onBack = onBack)
-
     LegalDocumentScreen(
         document = document,
         uiState = uiState,
