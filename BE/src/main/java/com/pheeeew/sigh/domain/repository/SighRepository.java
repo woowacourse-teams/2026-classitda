@@ -27,10 +27,22 @@ public interface SighRepository extends JpaRepository<Sigh, Long> {
                         SELECT ST_MakeEnvelope(
                             :minLongitude,
                             :minLatitude,
+                            CASE
+                                WHEN :minLongitude < :maxLongitude THEN :maxLongitude
+                                ELSE 180.0
+                            END,
+                            :maxLatitude,
+                            4326
+                        ) AS area
+                        UNION ALL
+                        SELECT ST_MakeEnvelope(
+                            -180.0,
+                            :minLatitude,
                             :maxLongitude,
                             :maxLatitude,
                             4326
                         ) AS area
+                        WHERE :minLongitude > :maxLongitude
                     )
                     SELECT
                         sigh.id AS id,

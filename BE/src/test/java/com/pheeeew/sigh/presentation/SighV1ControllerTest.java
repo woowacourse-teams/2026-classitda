@@ -130,9 +130,26 @@ class SighV1ControllerTest {
                         """, JsonCompareMode.STRICT);
     }
 
+    @Test
+    void 날짜변경선을_가로지르는_지도_영역을_조회한다() {
+        // given
+        when(sighService.findAllWithinBounds(170.0, -10.0, -170.0, 10.0))
+                .thenReturn(SighMapResult.of(List.of(), false));
+
+        // when
+        RestTestClient.ResponseSpec result = 한숨을_조회한다(
+                "/api/v1/sighs?minLongitude=170&minLatitude=-10"
+                        + "&maxLongitude=-170&maxLatitude=10"
+        );
+
+        // then
+        result.expectStatus().isOk();
+        verify(sighService).findAllWithinBounds(170.0, -10.0, -170.0, 10.0);
+    }
+
     @ParameterizedTest
     @MethodSource("올바르지_않은_지도_영역들")
-    void 지도_영역의_필수값_범위_또는_순서가_올바르지_않으면_400을_반환한다(String uri) {
+    void 지도_영역의_필수값_범위_또는_크기가_올바르지_않으면_400을_반환한다(String uri) {
         // given / when
         RestTestClient.ResponseSpec result = 한숨을_조회한다(uri);
 
@@ -328,7 +345,7 @@ class SighV1ControllerTest {
                 "/api/v1/sighs?minLongitude=127.10&minLatitude=37.30&maxLongitude=127.20",
                 "/api/v1/sighs?minLongitude=-180.01&minLatitude=37.30"
                         + "&maxLongitude=127.20&maxLatitude=37.40",
-                "/api/v1/sighs?minLongitude=127.20&minLatitude=37.30"
+                "/api/v1/sighs?minLongitude=127.10&minLatitude=37.30"
                         + "&maxLongitude=127.10&maxLatitude=37.40",
                 "/api/v1/sighs?minLongitude=127.10&minLatitude=37.40"
                         + "&maxLongitude=127.20&maxLatitude=37.40"

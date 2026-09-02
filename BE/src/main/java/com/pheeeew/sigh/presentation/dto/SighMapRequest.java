@@ -10,7 +10,7 @@ public record SighMapRequest(
         @NotNull
         @DecimalMin("-180.0")
         @DecimalMax("180.0")
-        @Schema(description = "지도 화면의 최소 경도", minimum = "-180", maximum = "180", example = "127.10")
+        @Schema(description = "지도 화면의 서쪽 경계 경도", minimum = "-180", maximum = "180", example = "127.10")
         Double minLongitude,
 
         @NotNull
@@ -22,7 +22,7 @@ public record SighMapRequest(
         @NotNull
         @DecimalMin("-180.0")
         @DecimalMax("180.0")
-        @Schema(description = "지도 화면의 최대 경도", minimum = "-180", maximum = "180", example = "127.20")
+        @Schema(description = "지도 화면의 동쪽 경계 경도", minimum = "-180", maximum = "180", example = "127.20")
         Double maxLongitude,
 
         @NotNull
@@ -35,7 +35,10 @@ public record SighMapRequest(
     @AssertTrue
     @Schema(hidden = true)
     public boolean isLongitudeRangeValid() {
-        return minLongitude == null || maxLongitude == null || minLongitude < maxLongitude;
+        return minLongitude == null
+                || maxLongitude == null
+                || minLongitude < maxLongitude
+                || minLongitude > maxLongitude;
     }
 
     @AssertTrue
