@@ -19,8 +19,7 @@ import com.pheeeew.core.designsystem.theme.AppTheme
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit,
-    onLocationPermissionClick: () -> Unit,
-    onMicrophonePermissionClick: () -> Unit,
+    onPermissionClick: () -> Unit,
     onContactClick: () -> Unit,
     onOpenSourceLicenseClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
@@ -48,8 +47,7 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         SettingsSection(title = "앱 설정") {
-            SettingsMenuItem(title = "접근 권한 설정", onClick = onLocationPermissionClick)
-            SettingsMenuItem(title = "마이크 권한 설정", onClick = onMicrophonePermissionClick)
+            SettingsMenuItem(title = "접근 권한 설정", onClick = onPermissionClick)
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -77,11 +75,10 @@ private fun SettingsScreenPreview() {
     AppTheme {
         SettingsScreen(
             onBackClick = {},
-            onLocationPermissionClick = {},
+            onPermissionClick = {},
             onContactClick = {},
             onOpenSourceLicenseClick = {},
             onPrivacyPolicyClick = {},
-            onMicrophonePermissionClick = {},
             onCreditsClick = {},
             appVersion = "1.0.0",
         )

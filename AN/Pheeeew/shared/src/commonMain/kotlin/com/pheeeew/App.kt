@@ -66,18 +66,12 @@ fun App(
                 PredictiveBackContent(onBack = { screen = Screen.Map }, modifier = overlayModifier) {
                     SettingsScreen(
                         onBackClick = { screen = Screen.Map },
-                        onLocationPermissionClick = {
+                        onPermissionClick = {
                             locationDependencies?.let { dependencies ->
                                 coroutineScope.launch {
-                                    handleLocationPermissionSettingsClick(
-                                        permissionController = dependencies.permissionController,
-                                        settingsLauncher = dependencies.permissionSettingsLauncher,
-                                    )
+                                    dependencies.permissionSettingsLauncher.openAppSettings()
                                 }
                             }
-                        },
-                        onMicrophonePermissionClick = {
-                            mapViewModel.openAppSettings()
                         },
                         onContactClick = {},
                         onOpenSourceLicenseClick = {
