@@ -19,6 +19,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.designsystem.theme.AppTheme
+import com.pheeeew.core.navigation.DoubleBackToExitHandler
+import com.pheeeew.core.navigation.PredictiveBackContent
 import com.pheeeew.core.navigation.Screen
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
@@ -74,20 +76,14 @@ fun App(
                 viewModel = mapViewModel,
             )
 
-            when (screen) {
-                Screen.Splash -> {
-                    SplashScreen(
-                        isReady = mapViewModel.isReady,
-                        onFinished = { screen = Screen.Map },
-                        modifier = overlayModifier,
-                    )
-                }
+            if (screen == Screen.Map) {
+                DoubleBackToExitHandler()
+            }
 
-                Screen.Map -> {
-                    Unit
-                }
-
-                Screen.Settings -> {
+            // Settings는 LegalDocument 아래에도 계속 조립된 상태로 유지해,
+            // LegalDocument에서 뒤로가기 제스처로 슬라이드할 때 그 아래로 Settings가 드러나도록 합니다.
+            if (screen == Screen.Settings || screen == Screen.LegalDocument) {
+                PredictiveBackContent(onBack = { screen = Screen.Map }, modifier = overlayModifier) {
                     SettingsScreen(
                         onBackClick = { screen = Screen.Map },
                         onThemeSettingClick = {},
@@ -115,19 +111,27 @@ fun App(
                         },
                         onCreditsClick = {},
                         appVersion = appVersion,
-                        modifier = overlayModifier,
                     )
                 }
+            }
 
-                Screen.LegalDocument -> {
-                    selectedLegalDocument?.let { document ->
+            if (screen == Screen.LegalDocument) {
+                selectedLegalDocument?.let { document ->
+                    PredictiveBackContent(onBack = { screen = Screen.Settings }, modifier = overlayModifier) {
                         LegalDocumentRoute(
                             document = document,
                             onBack = { screen = Screen.Settings },
-                            modifier = overlayModifier,
                         )
                     }
                 }
+            }
+
+            if (screen == Screen.Splash) {
+                SplashScreen(
+                    isReady = mapViewModel.isReady,
+                    onFinished = { screen = Screen.Map },
+                    modifier = overlayModifier,
+                )
             }
         }
     }
