@@ -14,6 +14,7 @@ import com.pheeeew.feature.map.map.MapCameraCommand
 import com.pheeeew.feature.map.map.MapDarkStyle
 import com.pheeeew.feature.setting.handleLocationPermissionSettingsClick
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +24,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import kotlin.uuid.Uuid
+
+private const val MIN_SIGH_SUBMITTING_DURATION_MILLIS = 1_500L
 
 class MapViewModel(
     private val sighRepository: SighRepository,
@@ -115,16 +120,18 @@ class MapViewModel(
     }
 
     private fun submit(request: PendingSighRequest) {
+        val submittingStartedAt = TimeSource.Monotonic.markNow()
+        _uiState.update {
+            (it as? MapUiState.Success)?.copy(
+                sighReleaseState = SighReleaseState.Submitting,
+            ) ?: it
+        }
         viewModelScope.launch {
             sighOperationMutex.withLock {
-                _uiState.update {
-                    (it as? MapUiState.Success)?.copy(
-                        sighReleaseState = SighReleaseState.Submitting,
-                    ) ?: it
-                }
                 try {
                     val sighPin = sighRepository.registerSigh(request.requestId, request.coordinate)
                     locallyRegisteredSighs[sighPin.id] = sighPin
+                    waitForMinimumSubmittingDuration(submittingStartedAt)
                     pendingRegistration = null
                     _uiState.update { state ->
                         (state as? MapUiState.Success)?.copy(
@@ -140,6 +147,7 @@ class MapViewModel(
                             ?: state
                     }
                 } catch (e: ApiException) {
+                    waitForMinimumSubmittingDuration(submittingStartedAt)
                     _uiState.update {
                         (it as? MapUiState.Success)?.copy(
                             sighReleaseState = SighReleaseState.Error(message = e.toUserMessage(), canRetry = true),
@@ -148,6 +156,12 @@ class MapViewModel(
                 }
             }
         }
+    }
+
+    private suspend fun waitForMinimumSubmittingDuration(startedAt: TimeMark) {
+        val remainingMillis =
+            MIN_SIGH_SUBMITTING_DURATION_MILLIS - startedAt.elapsedNow().inWholeMilliseconds
+        if (remainingMillis > 0) delay(remainingMillis)
     }
 
     fun retrySighRegistration() {

@@ -200,6 +200,7 @@ fun BreathControl(
         }
     LaunchedEffect(phase) { onPhaseChanged(phase) }
 
+    // TODO
     val controlDescription =
         when {
             burst -> "한숨을 별로 만드는 중"
@@ -210,7 +211,7 @@ fun BreathControl(
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         if (!listening && !burst) {
             Text(
-                text = "버튼을 눌러 한숨 시작하기",
+                text = "한숨 내쉬기",
                 style = AppTheme.typography.menuItem,
                 color = AppColors.Cream100,
             )

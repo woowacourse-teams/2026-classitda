@@ -1,9 +1,5 @@
 package com.pheeeew.feature.map
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
@@ -79,6 +75,8 @@ fun MapScreen(
     val lifeCycleOwner = LocalLifecycleOwner.current
     var sighPhase by remember { mutableStateOf(SighPhase.Idle) }
     var cancelSignal by remember { mutableStateOf(0) }
+    val isSighSubmitting = successState?.sighReleaseState is SighReleaseState.Submitting
+    val isSighInteractionVisible = sighPhase != SighPhase.Idle || isSighSubmitting
 
     LaunchedEffect(lifeCycleOwner, isActive) {
         if (!isActive) startupPermissionsChecked = false
@@ -143,92 +141,95 @@ fun MapScreen(
                 pendingFlightOrigin = null
                 viewModel.cancelFailedSighRegistration()
             },
-            controlsEnabled = sighPhase == SighPhase.Idle,
+            controlsEnabled = sighPhase == SighPhase.Idle && !isSighSubmitting,
         )
 
-        AnimatedVisibility(
-            visible = sighPhase != SighPhase.Idle,
-            enter = fadeIn(tween(200)),
-            exit = fadeOut(tween(200)),
-        ) {
+        if (isSighInteractionVisible) {
             Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.6f))
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = { cancelSignal += 1 })
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.8f))
+                            .pointerInput(Unit) {
+                                detectTapGestures(onTap = { cancelSignal += 1 })
+                            },
+                )
+                Text(
+                    text =
+                        if (isSighSubmitting) {
+                            "별을 만드는 중이에요"
+                        } else {
+                            when (sighPhase) {
+                                SighPhase.Listening -> "후– 하고\n한숨을 내쉬어보세요"
+                                SighPhase.Quiet -> "한숨을 날려\n별을 만들어보세요"
+                                SighPhase.NeedsMore -> "한숨을 더 크게 불어주세요"
+                                SighPhase.Bursting -> ""
+                                SighPhase.Idle -> ""
+                            }
                         },
-            )
-        }
+                    style = AppTheme.typography.screenTitle,
+                    color = AppColors.Cream100,
+                    modifier = Modifier.align(BiasAlignment(0f, -0.15f)),
+                )
 
-        if (sighPhase != SighPhase.Idle) {
-            Text(
-                text =
-                    when (sighPhase) {
-                        SighPhase.Listening -> "후– 하고 한숨을 내쉬어보세요"
-                        SighPhase.Quiet -> "한숨을 날려보세요"
-                        SighPhase.NeedsMore -> "한숨을 더 크게 불어주세요"
-                        SighPhase.Bursting -> "한숨을 별로 빚고 있어요"
-                        SighPhase.Idle -> ""
-                    },
-                style = AppTheme.typography.sectionHeader,
-                color = AppColors.Cream100,
-                modifier = Modifier.align(BiasAlignment(0f, -0.15f)),
-            )
-        }
-
-        if (sighPhase == SighPhase.Quiet) {
-            SwipeUpHint(
-                modifier =
-                    Modifier
-                        .align(BiasAlignment(0f, -0.15f))
-                        .offset(y = 40.dp),
-            )
+                if (sighPhase == SighPhase.Quiet) {
+                    SwipeUpHint(
+                        modifier =
+                            Modifier
+                                .align(BiasAlignment(0f, -0.15f))
+                                .offset(y = 40.dp),
+                    )
+                }
+            }
         }
 
         if (isActive) {
             Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding().align(Alignment.BottomCenter)) {
-                BreathControl(
-                    enabled =
-                        successState != null &&
-                            successState.sighReleaseState is SighReleaseState.Idle &&
-                            !isFlightInProgress,
-                    onExplosionFinished = { origin ->
-                        pendingFlightOrigin = origin
-                        viewModel.registerSighAfterExplosion()
-                    },
-                    onMicrophoneError = { error ->
-                        if (error == BreathInputError.PermissionDenied) {
-                            showMicrophonePermissionDialog = true
-                        } else {
-                            microphoneError = error
-                        }
-                    },
-                    ensureLocationPermission = {
-                        when (viewModel.ensureLocationPermission()) {
-                            LocationPermissionStatus.Granted -> {
-                                true
+                if (!isSighSubmitting) {
+                    BreathControl(
+                        enabled =
+                            successState != null &&
+                                successState.sighReleaseState is SighReleaseState.Idle &&
+                                !isFlightInProgress,
+                        onExplosionFinished = { origin ->
+                            pendingFlightOrigin = origin
+                            viewModel.registerSighAfterExplosion()
+                        },
+                        onMicrophoneError = { error ->
+                            if (error == BreathInputError.PermissionDenied) {
+                                showMicrophonePermissionDialog = true
+                            } else {
+                                microphoneError = error
                             }
+                        },
+                        ensureLocationPermission = {
+                            when (viewModel.ensureLocationPermission()) {
+                                LocationPermissionStatus.Granted -> {
+                                    true
+                                }
 
-                            LocationPermissionStatus.ServicesDisabled -> {
-                                showLocationServicesDialog = true
-                                false
-                            }
+                                LocationPermissionStatus.ServicesDisabled -> {
+                                    showLocationServicesDialog = true
+                                    false
+                                }
 
-                            LocationPermissionStatus.PermanentlyDenied -> {
-                                showLocationPermissionDialog = true
-                                false
-                            }
+                                LocationPermissionStatus.PermanentlyDenied -> {
+                                    showLocationPermissionDialog = true
+                                    false
+                                }
 
-                            LocationPermissionStatus.Denied -> {
-                                false
+                                LocationPermissionStatus.Denied -> {
+                                    false
+                                }
                             }
-                        }
-                    },
-                    onPhaseChanged = { sighPhase = it },
-                    cancelSignal = cancelSignal,
-                )
+                        },
+                        onPhaseChanged = { sighPhase = it },
+                        cancelSignal = cancelSignal,
+                    )
+                }
                 ErrorSnackbar(
                     message = microphoneError?.toKoreanMessage(),
                     onDismiss = { microphoneError = null },
