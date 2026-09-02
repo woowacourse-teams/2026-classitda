@@ -2,7 +2,6 @@ package com.pheeeew.feature.map.map
 
 import android.animation.ValueAnimator
 import android.graphics.Color
-import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -140,7 +139,7 @@ private class AndroidBreathMapHost(
                 currentMap
                     .queryRenderedFeatures(
                         currentMap.projection.toScreenLocation(latLng),
-                        MapDarkStyle.SIGH_LAYER_ID,
+                        *AndroidMapSources.sighLayerIds(),
                     ).firstOrNull()
                     ?.getStringProperty(AndroidMapSources.MARKER_ID_PROPERTY)
 
@@ -248,21 +247,26 @@ private class AndroidBreathMapHost(
     }
 
     private fun startSighPulse(style: Style) {
-        val layer = style.getLayerAs<SymbolLayer>(MapDarkStyle.SIGH_LAYER_ID) ?: return
+        if (AndroidMapSources.sighLayerIds().none { style.getLayerAs<SymbolLayer>(it) != null }) return
         sighPulseAnimator?.cancel()
         sighPulseAnimator =
             ValueAnimator.ofFloat(0f, 1f).apply {
-                duration = 1_600L
+                duration = 1_800L
                 repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE
-                interpolator = AccelerateDecelerateInterpolator()
+                repeatMode = ValueAnimator.RESTART
                 addUpdateListener { animator ->
                     if (released) return@addUpdateListener
-                    val pulse = animator.animatedValue as Float
-                    layer.setProperties(
-                        iconSize(0.48f + (pulse * 0.20f)),
-                        iconOpacity(0.72f + (pulse * 0.28f)),
-                    )
+                    val progress = animator.animatedValue as Float
+                    AndroidMapSources.sighLayerIds().forEachIndexed { group, layerId ->
+                        val layer = style.getLayerAs<SymbolLayer>(layerId) ?: return@forEachIndexed
+                        val phase = (progress + group.toFloat() / AndroidMapSources.PULSE_GROUP_COUNT) % 1f
+                        val wave = ((kotlin.math.sin(phase * 2f * kotlin.math.PI.toFloat()) + 1f) / 2f)
+                        val pulse = wave * wave * (3f - (2f * wave))
+                        layer.setProperties(
+                            iconSize(0.48f + (pulse * 0.20f)),
+                            iconOpacity(0.72f + (pulse * 0.28f)),
+                        )
+                    }
                 }
                 start()
             }

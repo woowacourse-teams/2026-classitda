@@ -2,6 +2,7 @@ package com.pheeeew.feature.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pheeeew.core.geo.toGridCenter
 import com.pheeeew.core.permission.LocationPermissionStatus
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.domain.exception.ApiException
@@ -109,7 +110,7 @@ class MapViewModel(
             pendingRegistration
                 ?: PendingSighRequest(
                     requestId = Uuid.random().toString(),
-                    coordinate = location.coordinate,
+                    coordinate = location.coordinate.toGridCenter(),
                 ).also { pendingRegistration = it }
         submit(request)
     }

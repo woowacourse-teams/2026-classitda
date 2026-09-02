@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,7 +40,6 @@ import com.pheeeew.core.permission.LocationPermissionStatus
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.domain.model.location.LocationState
-import com.pheeeew.feature.map.animation.LandingHighlightOverlay
 import com.pheeeew.feature.map.animation.SighAnimationCoordinator
 import com.pheeeew.feature.map.animation.StarFlightOverlay
 import com.pheeeew.feature.map.map.BreathMap
@@ -69,7 +67,6 @@ fun MapScreen(
     var activeFlightId by remember { mutableStateOf<String?>(null) }
     var landedFlightId by remember { mutableStateOf<String?>(null) }
     var isFlightInProgress by remember { mutableStateOf(false) }
-    val highlightedFeatureIds = remember { mutableStateListOf<String>() }
     val animationCoordinator = remember { SighAnimationCoordinator() }
     var microphoneError by remember { mutableStateOf<BreathInputError?>(null) }
     var showLocationPermissionDialog by remember { mutableStateOf(false) }
@@ -244,7 +241,6 @@ fun MapScreen(
             StarFlightOverlay(
                 flight = animationCoordinator.start(activeId, origin, Offset(destination.xPx, destination.yPx)),
                 onLanded = { id ->
-                    if (id !in highlightedFeatureIds) highlightedFeatureIds += id
                     pendingFlightOrigin = null
                     activeFlightId = null
                     landedFlightId = id
@@ -261,13 +257,6 @@ fun MapScreen(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-
-        LandingHighlightOverlay(
-            featureIds = highlightedFeatureIds,
-            projectedPoints = projectionSnapshot.points,
-            onExpired = { highlightedFeatureIds.remove(it) },
-            modifier = Modifier.fillMaxSize(),
-        )
 
         if (showLocationPermissionDialog) {
             AppDialog(

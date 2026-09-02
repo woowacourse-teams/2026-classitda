@@ -36,7 +36,7 @@ fun StarFlightOverlay(
         val animation = Animatable(0f)
         animation.animateTo(
             targetValue = 1f,
-            animationSpec = spring(dampingRatio = 0.82f, stiffness = 620f),
+            animationSpec = spring(dampingRatio = 0.82f, stiffness = 480f),
         ) { progress = value }
         animationCompleted = true
         onLanded(flight.id)
