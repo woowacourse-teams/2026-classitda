@@ -165,11 +165,11 @@ private class AndroidBreathMapHost(
             publishProjection(cameraIdle = true)
             val bounds = map?.projection?.visibleRegion?.latLngBounds ?: return@OnCameraIdleListener
             onBoundsChanged(
-                SighBounds(
-                    minLongitude = bounds.longitudeWest,
-                    minLatitude = bounds.latitudeSouth,
-                    maxLongitude = bounds.longitudeEast,
-                    maxLatitude = bounds.latitudeNorth,
+                SighBounds.fromViewport(
+                    west = bounds.longitudeWest,
+                    south = bounds.latitudeSouth,
+                    east = bounds.longitudeEast,
+                    north = bounds.latitudeNorth,
                 ),
             )
         }

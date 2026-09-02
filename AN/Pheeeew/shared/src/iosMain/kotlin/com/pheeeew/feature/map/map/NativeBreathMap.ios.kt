@@ -36,11 +36,11 @@ internal actual fun NativeBreathMap(
                     maxLongitude: Double,
                     maxLatitude: Double,
                 ) = currentOnBoundsChanged(
-                    SighBounds(
-                        minLongitude,
-                        minLatitude,
-                        maxLongitude,
-                        maxLatitude,
+                    SighBounds.fromViewport(
+                        west = minLongitude,
+                        south = minLatitude,
+                        east = maxLongitude,
+                        north = maxLatitude,
                     ),
                 )
 
