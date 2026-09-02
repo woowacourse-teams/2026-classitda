@@ -39,6 +39,8 @@ fun MapOverlay(
     onCancelSigh: () -> Unit = {},
     microphoneErrorMessage: String? = null,
     onMicrophoneErrorDismiss: () -> Unit = {},
+    onErrorClick: (() -> Unit)? = null,
+    onMicrophoneErrorClick: (() -> Unit)? = null,
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -62,6 +64,7 @@ fun MapOverlay(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 onRetry = (sighReleaseState as? SighReleaseState.Error)?.takeIf { it.canRetry }?.let { onRetrySigh },
                 onNew = (sighReleaseState as? SighReleaseState.Error)?.let { onCancelSigh },
+                onClick = onErrorClick,
             )
         }
 
@@ -88,6 +91,7 @@ fun MapOverlay(
             ErrorSnackbar(
                 message = microphoneErrorMessage,
                 onDismiss = onMicrophoneErrorDismiss,
+                onClick = onMicrophoneErrorClick,
                 modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 8.dp, end = 16.dp),
             )
         }

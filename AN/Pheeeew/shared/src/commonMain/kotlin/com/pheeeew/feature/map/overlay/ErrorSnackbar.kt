@@ -23,6 +23,7 @@ private const val SNACKBAR_DURATION_MILLIS = 3_000L
 fun ErrorSnackbar(
     message: String?,
     onDismiss: () -> Unit,
+    onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     var lastMessage by remember { mutableStateOf(message) }
@@ -40,7 +41,11 @@ fun ErrorSnackbar(
         exit = fadeOut() + slideOutVertically { it / 2 },
         modifier = modifier,
     ) {
-        MapErrorBanner(message = lastMessage.orEmpty(), modifier = Modifier.fillMaxWidth())
+        MapErrorBanner(
+            message = lastMessage.orEmpty(),
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onClick,
+        )
     }
 }
 

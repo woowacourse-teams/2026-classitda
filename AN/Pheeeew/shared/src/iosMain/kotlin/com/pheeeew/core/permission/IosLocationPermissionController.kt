@@ -34,10 +34,9 @@ class IosLocationPermissionController(
 
     override suspend fun requestPermission(): LocationPermissionStatus =
         withContext(Dispatchers.Main) {
-            if (!CLLocationManager.locationServicesEnabled()) {
-                // 권한 게이트를 통과시켜 provider가 GpsUnavailable로 분류하게 합니다.
-                return@withContext LocationPermissionStatus.Granted
-            }
+            // 앱 권한이 아직 결정되지 않았다면 위치 서비스가 꺼져 있어도
+            // 앱 권한 시스템 팝업을 먼저 요청합니다. 이후 결과를 확인해
+            // 위치 서비스가 꺼진 상태는 ServicesDisabled로 노출합니다.
             permissionDelegate.requestPermission()
         }
 }
@@ -89,29 +88,32 @@ private class IosPermissionDelegate(
         val requestContinuation = continuation ?: return
         continuation = null
         locationManager.delegate = null
+
         if (requestContinuation.isActive) {
             requestContinuation.resume(
                 status.toCommonStatus(
-                    locationServicesEnabled = CLLocationManager.locationServicesEnabled(),
+                    locationServicesEnabled =
+                        CLLocationManager.locationServicesEnabled(),
                 ),
             )
         }
     }
 }
 
-internal fun CLAuthorizationStatus.toCommonStatus(locationServicesEnabled: Boolean = true): LocationPermissionStatus =
+internal fun CLAuthorizationStatus.toCommonStatus(locationServicesEnabled: Boolean = true): LocationPermissionStatus {
     if (!locationServicesEnabled) {
-        LocationPermissionStatus.Granted
-    } else {
-        when (this) {
-            kCLAuthorizationStatusAuthorizedAlways,
-            kCLAuthorizationStatusAuthorizedWhenInUse,
-            -> LocationPermissionStatus.Granted
-
-            kCLAuthorizationStatusDenied,
-            kCLAuthorizationStatusRestricted,
-            -> LocationPermissionStatus.PermanentlyDenied
-
-            else -> LocationPermissionStatus.Denied
-        }
+        return LocationPermissionStatus.ServicesDisabled
     }
+
+    return when (this) {
+        kCLAuthorizationStatusAuthorizedAlways,
+        kCLAuthorizationStatusAuthorizedWhenInUse,
+        -> LocationPermissionStatus.Granted
+
+        kCLAuthorizationStatusDenied,
+        kCLAuthorizationStatusRestricted,
+        -> LocationPermissionStatus.PermanentlyDenied
+
+        else -> LocationPermissionStatus.Denied
+    }
+}

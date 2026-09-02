@@ -14,6 +14,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.audio.BreathInputError
 import com.pheeeew.core.designsystem.component.AppDialog
@@ -21,6 +24,7 @@ import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.permission.LocationPermissionStatus
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
+import com.pheeeew.domain.model.location.LocationError
 import com.pheeeew.domain.model.location.LocationState
 import com.pheeeew.feature.map.animation.LandingHighlightOverlay
 import com.pheeeew.feature.map.animation.SighAnimationCoordinator
@@ -29,16 +33,28 @@ import com.pheeeew.feature.map.map.BreathMap
 import com.pheeeew.feature.map.map.MapProjectionSnapshot
 import com.pheeeew.feature.map.overlay.BreathControl
 import com.pheeeew.feature.map.overlay.MapOverlay
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
 
 @Composable
 fun MapScreen(
     locationDependencies: LocationDependencies?,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isActive: Boolean = true,
     viewModel: MapViewModel = viewModel { MapViewModel(FakeSighRepository(), locationDependencies) },
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val successState = uiState as? MapUiState.Success
+    val lifeCycleOwner = LocalLifecycleOwner.current
+    val locationServicesInstruction =
+        locationDependencies?.permissionSettingsLauncher?.locationServicesInstruction
+            ?: "설정에서 위치 서비스를 켜주세요."
+    val locationServicesDialogInstruction =
+        locationDependencies?.permissionSettingsLauncher?.locationServicesDialogInstruction
+            ?: locationServicesInstruction
+
+    var startupPermissionsChecked by remember { mutableStateOf(false) }
     var pendingFlightOrigin by remember { mutableStateOf<Offset?>(null) }
     var projectionSnapshot by remember { mutableStateOf(MapProjectionSnapshot.Empty) }
     var activeFlightId by remember { mutableStateOf<String?>(null) }
@@ -48,7 +64,49 @@ fun MapScreen(
     val animationCoordinator = remember { SighAnimationCoordinator() }
     var microphoneError by remember { mutableStateOf<BreathInputError?>(null) }
     var showLocationPermissionDialog by remember { mutableStateOf(false) }
+    var showLocationServicesDialog by remember { mutableStateOf(false) }
     var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(lifeCycleOwner, isActive) {
+        if (!isActive) {
+            startupPermissionsChecked = false
+        }
+        lifeCycleOwner.lifecycle.repeatOnLifecycle(
+            Lifecycle.State.RESUMED,
+        ) {
+            if (!isActive) return@repeatOnLifecycle
+
+            val status =
+                if (!startupPermissionsChecked) {
+                    // 위치 권한 결과와 관계없이 마이크 권한 요청은 독립적으로 진행합니다.
+                    viewModel.ensureLocationPermission(refreshLocation = false).also {
+                        startupPermissionsChecked = true
+                        launch { viewModel.refreshLocationPermission() }
+                    }
+                } else {
+                    viewModel.refreshLocationPermission()
+                }
+
+            when (status) {
+                LocationPermissionStatus.ServicesDisabled,
+                LocationPermissionStatus.PermanentlyDenied,
+                LocationPermissionStatus.Denied,
+                -> {
+                    Unit
+                }
+
+                LocationPermissionStatus.Granted -> {
+                    showLocationServicesDialog = false
+                    showLocationPermissionDialog = false
+                }
+
+                null -> {
+                    Unit
+                }
+            }
+            awaitCancellation()
+        }
+    }
 
     val hiddenMarkerId =
         successState?.focusRequest?.id?.takeIf {
@@ -89,44 +147,69 @@ fun MapScreen(
             onSettingsClick = onSettingsClick,
             onRefreshClick = viewModel::loadSighs,
             breathControl = {
-                BreathControl(
-                    enabled =
-                        successState != null &&
-                            successState.sighReleaseState is SighReleaseState.Idle &&
-                            !isFlightInProgress,
-                    onExplosionFinished = { origin ->
-                        pendingFlightOrigin = origin
-                        viewModel.registerSighAfterExplosion()
-                    },
-                    onMicrophoneError = { error ->
-                        if (error == BreathInputError.PermissionDenied) {
-                            showMicrophonePermissionDialog = true
-                        } else {
-                            microphoneError = error
-                        }
-                    },
-                    ensureLocationPermission = {
-                        when (viewModel.ensureLocationPermission()) {
-                            LocationPermissionStatus.Granted -> {
-                                true
+                if (isActive) {
+                    BreathControl(
+                        enabled =
+                            successState != null &&
+                                successState.sighReleaseState is SighReleaseState.Idle &&
+                                !isFlightInProgress,
+                        onExplosionFinished = { origin ->
+                            pendingFlightOrigin = origin
+                            viewModel.registerSighAfterExplosion()
+                        },
+                        onMicrophoneError = { error ->
+                            if (error == BreathInputError.PermissionDenied) {
+                                showMicrophonePermissionDialog = true
+                            } else {
+                                microphoneError = error
                             }
+                        },
+                        ensureLocationPermission = {
+                            when (viewModel.ensureLocationPermission()) {
+                                LocationPermissionStatus.Granted -> {
+                                    true
+                                }
 
-                            LocationPermissionStatus.PermanentlyDenied -> {
-                                showLocationPermissionDialog = true
-                                false
-                            }
+                                LocationPermissionStatus.ServicesDisabled -> {
+                                    showLocationServicesDialog = true
+                                    false
+                                }
 
-                            LocationPermissionStatus.Denied -> {
-                                false
+                                LocationPermissionStatus.PermanentlyDenied -> {
+                                    showLocationPermissionDialog = true
+                                    false
+                                }
+
+                                LocationPermissionStatus.Denied -> {
+                                    false
+                                }
                             }
-                        }
-                    },
-                )
+                        },
+                        requestPermissionOnLaunch = startupPermissionsChecked,
+                    )
+                }
             },
             onZoomInClick = viewModel::onZoomInClick,
             onZoomOutClick = viewModel::onZoomOutClick,
             onMyLocationClick = viewModel::onMyLocationClick,
-            errorMessage = uiState.toBannerMessage(),
+            errorMessage = uiState.toBannerMessage(locationServicesInstruction),
+            onErrorClick = {
+                when ((successState?.locationState as? LocationState.Unavailable)?.reason) {
+                    LocationError.ServicesDisabled -> {
+                        showLocationPermissionDialog = false
+                        showLocationServicesDialog = true
+                    }
+
+                    LocationError.PermissionDenied -> {
+                        showLocationServicesDialog = false
+                        showLocationPermissionDialog = true
+                    }
+
+                    else -> {
+                        Unit
+                    }
+                }
+            },
             sighReleaseState = successState?.sighReleaseState ?: SighReleaseState.Idle,
             onRetrySigh = viewModel::retrySighRegistration,
             onCancelSigh = {
@@ -135,6 +218,11 @@ fun MapScreen(
             },
             microphoneErrorMessage = microphoneError?.toKoreanMessage(),
             onMicrophoneErrorDismiss = { microphoneError = null },
+            onMicrophoneErrorClick = {
+                if (microphoneError == BreathInputError.PermissionDenied) {
+                    showMicrophonePermissionDialog = true
+                }
+            },
         )
 
         val activeId = activeFlightId
@@ -184,6 +272,33 @@ fun MapScreen(
             )
         }
 
+        if (showLocationServicesDialog) {
+            val canOpenLocationSettings =
+                locationDependencies?.permissionSettingsLauncher?.canOpenLocationSettings == true
+            AppDialog(
+                title = "위치 서비스 설정 안내",
+                body =
+                    if (canOpenLocationSettings) {
+                        "현재 위치를 확인하려면 기기 설정에서 위치 서비스를 켜주세요."
+                    } else {
+                        locationServicesDialogInstruction
+                    },
+                confirmText = if (canOpenLocationSettings) "설정으로 이동" else "확인",
+                onConfirmClick = {
+                    showLocationServicesDialog = false
+                    if (canOpenLocationSettings) {
+                        viewModel.openLocationSettings()
+                    }
+                },
+                onDismissRequest = {
+                    showLocationServicesDialog = false
+                },
+                onDismissClick = {
+                    showLocationServicesDialog = false
+                },
+            )
+        }
+
         if (showMicrophonePermissionDialog) {
             AppDialog(
                 title = "마이크 권한 설정 안내",
@@ -201,16 +316,25 @@ fun MapScreen(
     }
 }
 
-private fun MapUiState.toBannerMessage(): String? =
+private fun MapUiState.toBannerMessage(locationServicesInstruction: String): String? =
     when (this) {
         is MapUiState.Error -> {
             message
         }
 
         is MapUiState.Success -> {
-            when (val release = sighReleaseState) {
-                is SighReleaseState.Error -> release.message
-                else -> refreshErrorMessage ?: (locationState as? LocationState.Unavailable)?.reason?.toKoreanMessage()
+            when {
+                (locationState as? LocationState.Unavailable)?.reason == LocationError.ServicesDisabled -> {
+                    locationServicesInstruction
+                }
+
+                sighReleaseState is SighReleaseState.Error -> {
+                    sighReleaseState.message
+                }
+
+                else -> {
+                    refreshErrorMessage ?: (locationState as? LocationState.Unavailable)?.reason?.toKoreanMessage()
+                }
             }
         }
 
