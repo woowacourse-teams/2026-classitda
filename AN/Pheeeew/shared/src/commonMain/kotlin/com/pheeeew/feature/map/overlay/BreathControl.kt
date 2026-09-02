@@ -2,7 +2,6 @@ package com.pheeeew.feature.map.overlay
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -65,7 +64,6 @@ private const val EFFECTIVE_STRENGTH_THRESHOLD = 0.22f
 private const val GROWTH_DURATION_MILLIS = 2_200L
 private const val BURST_DURATION_MILLIS = 720L
 private const val IDLE_SCALE = 2f / 3f
-private const val SCALE_TWEEN_MILLIS = 220
 private const val QUIET_DELAY_MILLIS = 500L
 private const val MIN_RELEASE_GROWTH = 0.3f
 private const val NEEDS_MORE_HINT_MILLIS = 1_400L
@@ -92,7 +90,6 @@ fun BreathControl(
     var listening by remember { mutableStateOf(false) }
     var strength by remember { mutableStateOf(0f) }
     var growth by remember { mutableStateOf(0f) }
-    var activeElapsedMillis by remember { mutableStateOf(0L) }
     var lastActiveElapsedMillis by remember { mutableStateOf(0L) }
     var burst by remember { mutableStateOf(false) }
     var burstSequence by remember { mutableStateOf(0) }
@@ -121,7 +118,6 @@ fun BreathControl(
                     listening = false
                     strength = 0f
                     growth = 0f
-                    activeElapsedMillis = 0L
                     lastActiveElapsedMillis = 0L
                     coroutineScope.launch { dragOffsetY.snapTo(0f) }
                 }
@@ -137,10 +133,7 @@ fun BreathControl(
         while (listening) {
             delay(16)
             if (strength >= EFFECTIVE_STRENGTH_THRESHOLD) {
-                activeElapsedMillis = (activeElapsedMillis + 16L).coerceAtMost(GROWTH_DURATION_MILLIS)
-                val progress = activeElapsedMillis / GROWTH_DURATION_MILLIS.toFloat()
-                val remaining = 1f - progress
-                growth = 1f - remaining * remaining * remaining
+                growth = (growth + 16f / GROWTH_DURATION_MILLIS).coerceAtMost(1f)
                 lastActiveElapsedMillis = 0L
             } else {
                 lastActiveElapsedMillis += 16L
@@ -163,7 +156,6 @@ fun BreathControl(
         burstProgress = 0f
         growth = 0f
         strength = 0f
-        activeElapsedMillis = 0L
         lastActiveElapsedMillis = 0L
         dragOffsetY.snapTo(0f)
     }
@@ -181,7 +173,6 @@ fun BreathControl(
             listening = false
             growth = 0f
             strength = 0f
-            activeElapsedMillis = 0L
             lastActiveElapsedMillis = 0L
             dragOffsetY.snapTo(0f)
         }
@@ -239,7 +230,7 @@ fun BreathControl(
                         // the button sitting there, barely moved, until the (slower-starting) flight catches up.
                         tween(durationMillis = BURST_DURATION_MILLIS.toInt(), easing = FastOutLinearInEasing)
                     } else {
-                        tween(durationMillis = SCALE_TWEEN_MILLIS, easing = FastOutSlowInEasing)
+                        spring(dampingRatio = 0.82f, stiffness = 180f)
                     },
                 label = "breathScale",
             )
@@ -291,7 +282,6 @@ fun BreathControl(
                                         if (!ensureLocationPermission()) return@launch
                                         growth = 0f
                                         strength = 0f
-                                        activeElapsedMillis = 0L
                                         lastActiveElapsedMillis = 0L
                                         listening = true
                                         breathInput.start(
@@ -302,7 +292,6 @@ fun BreathControl(
                                                 listening = false
                                                 growth = 0f
                                                 strength = 0f
-                                                activeElapsedMillis = 0L
                                             },
                                         )
                                     }
