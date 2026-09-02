@@ -41,6 +41,8 @@ public interface SighV2ControllerApi {
                     ### 위치
 
                     - `latitude`와 `longitude`에는 클라이언트가 계산한 300m 격자 중심을 전달합니다.
+                    - WGS84 위치를 EPSG:5179로 변환한 뒤 각 축에 `floor(value / 300) * 300 + 150`을 적용하고 WGS84로 되돌립니다.
+                    - 클라이언트는 무작위 오프셋을 적용하거나 정확한 위치를 서버로 보내지 않습니다.
                     - 서버는 격자 안에서 최종 표시 위치를 최초 한 번 생성하고 영구 저장합니다.
                     - 응답 좌표는 `[longitude, latitude]` 순서입니다.
                     - 상세 조회 API가 아직 없으므로 `Location` 헤더는 제공하지 않습니다.
@@ -107,8 +109,8 @@ public interface SighV2ControllerApi {
                                             value = """
                                                     {
                                                       "requestId": "5d1ad34e-1e20-4f20-a20e-3825a095fe6b",
-                                                      "latitude": 37.5664,
-                                                      "longitude": 126.9780,
+                                                      "latitude": 37.5657576255,
+                                                      "longitude": 126.9774258201,
                                                       "memo": "오늘은 조금 지쳤다"
                                                     }
                                                     """
@@ -118,8 +120,8 @@ public interface SighV2ControllerApi {
                                             value = """
                                                     {
                                                       "requestId": "5d1ad34e-1e20-4f20-a20e-3825a095fe6b",
-                                                      "latitude": 37.5664,
-                                                      "longitude": 126.9780
+                                                      "latitude": 37.5657576255,
+                                                      "longitude": 126.9774258201
                                                     }
                                                     """
                                     )
