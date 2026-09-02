@@ -128,6 +128,9 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
 
     private func projectionPoints() -> [IosMapScreenPoint] {
         guard let state = pendingState else { return [] }
+        // MapLibre reports UIKit points, while Compose Canvas coordinates are pixels on iOS.
+        // Convert the projected map points before sending them to the Compose animation overlay.
+        let screenScale = mapView.window?.screen.scale ?? mapView.contentScaleFactor
         var targets: [(String, CLLocationCoordinate2D)] = state.sighMarkers.map {
             ($0.id, CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude))
         }
@@ -136,7 +139,11 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         }
         return targets.map { id, coordinate in
             let point = mapView.convert(coordinate, toPointTo: mapView)
-            return IosMapScreenPoint(id: id, xPx: Double(point.x), yPx: Double(point.y))
+            return IosMapScreenPoint(
+                id: id,
+                xPx: Double(point.x * screenScale),
+                yPx: Double(point.y * screenScale)
+            )
         }
     }
 
