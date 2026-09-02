@@ -25,10 +25,12 @@ fun OverlayIconButton(
     contentDescription: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Surface(
         onClick = onClick,
         modifier = modifier.size(44.dp),
+        enabled = enabled,
         shape = CircleShape,
         color = AppTheme.colors.surface,
         contentColor = AppTheme.colors.onBackground,

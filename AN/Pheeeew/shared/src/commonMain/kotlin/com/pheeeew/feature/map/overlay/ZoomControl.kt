@@ -28,6 +28,7 @@ fun ZoomControl(
     onZoomInClick: () -> Unit,
     onZoomOutClick: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Surface(
         modifier = modifier.width(44.dp),
@@ -39,14 +40,14 @@ fun ZoomControl(
     ) {
         Column {
             Box(
-                modifier = Modifier.size(44.dp).clickable(onClick = onZoomInClick),
+                modifier = Modifier.size(44.dp).clickable(enabled = enabled, onClick = onZoomInClick),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(painter = painterResource(Res.drawable.ic_zoom_in), contentDescription = "확대")
             }
             HorizontalDivider(color = AppTheme.colors.outline)
             Box(
-                modifier = Modifier.size(44.dp).clickable(onClick = onZoomOutClick),
+                modifier = Modifier.size(44.dp).clickable(enabled = enabled, onClick = onZoomOutClick),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(painter = painterResource(Res.drawable.ic_zoom_out), contentDescription = "축소")
