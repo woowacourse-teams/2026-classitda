@@ -9,6 +9,7 @@ class AndroidLocationPermissionControllerTest {
         val status =
             androidLocationPermissionStatus(
                 hasPermission = true,
+                locationServicesEnabled = true,
                 wasRequested = true,
                 isActivityAttached = false,
                 canExplainDenial = false,
@@ -22,6 +23,7 @@ class AndroidLocationPermissionControllerTest {
         val status =
             androidLocationPermissionStatus(
                 hasPermission = false,
+                locationServicesEnabled = true,
                 wasRequested = true,
                 isActivityAttached = false,
                 canExplainDenial = false,
@@ -35,6 +37,7 @@ class AndroidLocationPermissionControllerTest {
         val status =
             androidLocationPermissionStatus(
                 hasPermission = false,
+                locationServicesEnabled = true,
                 wasRequested = true,
                 isActivityAttached = true,
                 canExplainDenial = false,

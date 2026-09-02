@@ -3,6 +3,8 @@ package com.pheeeew.core.audio
 import androidx.compose.runtime.Composable
 
 interface BreathInput {
+    suspend fun requestPermission(): Boolean
+
     fun start(
         onStrengthChanged: (Float) -> Unit,
         onError: (BreathInputError) -> Unit,

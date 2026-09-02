@@ -28,6 +28,14 @@ class AndroidLocationPermissionSettingsLauncher(
                 )
         }
 
+    override suspend fun openLocationSettings(): Boolean =
+        withContext(Dispatchers.Main.immediate) {
+            open(
+                Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        }
+
     private fun open(intent: Intent): Boolean {
         if (intent.resolveActivity(applicationContext.packageManager) == null) return false
 

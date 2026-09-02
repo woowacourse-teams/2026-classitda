@@ -1,3 +1,5 @@
+@file:Suppress("NonAsciiCharacters")
+
 package com.pheeeew.core.permission
 
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -26,9 +28,9 @@ class IosLocationPermissionControllerTest {
     }
 
     @Test
-    fun disabledLocationServicesPassPermissionGateForGpsErrorClassification() {
+    fun disabledLocationServicesMapsToServicesDisabled() {
         assertEquals(
-            LocationPermissionStatus.Granted,
+            LocationPermissionStatus.ServicesDisabled,
             kCLAuthorizationStatusDenied.toCommonStatus(locationServicesEnabled = false),
         )
     }
@@ -38,6 +40,18 @@ class IosLocationPermissionControllerTest {
         assertEquals(
             LocationPermissionStatus.Denied,
             kCLAuthorizationStatusNotDetermined.toCommonStatus(),
+        )
+    }
+
+    @Test
+    fun `위치 서비스가 꺼져 있으면 ServicesDisabled를 변환한다`() {
+        val result =
+            kCLAuthorizationStatusAuthorizedWhenInUse
+                .toCommonStatus(locationServicesEnabled = false)
+
+        assertEquals(
+            LocationPermissionStatus.ServicesDisabled,
+            result,
         )
     }
 }

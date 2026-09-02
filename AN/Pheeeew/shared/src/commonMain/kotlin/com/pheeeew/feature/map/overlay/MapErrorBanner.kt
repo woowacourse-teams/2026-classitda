@@ -32,9 +32,10 @@ fun MapErrorBanner(
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
     onNew: (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(20),
         color = AppTheme.colors.surface,
         contentColor = AppTheme.colors.onBackground,

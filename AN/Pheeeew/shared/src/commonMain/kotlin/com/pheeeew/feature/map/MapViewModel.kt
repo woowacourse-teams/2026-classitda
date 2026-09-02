@@ -50,16 +50,6 @@ class MapViewModel(
                     }
                 }
             }
-            viewModelScope.launch {
-                try {
-                    dependencies.permissionController.requestPermission()
-                    dependencies.repository.refreshCurrentLocation()
-                } catch (cancellation: CancellationException) {
-                    throw cancellation
-                } catch (_: Exception) {
-                    // 위치나 권한 값은 로그에 남기지 않습니다.
-                }
-            }
         }
     }
 
@@ -188,14 +178,16 @@ class MapViewModel(
         viewModelScope.launch {
             _uiState.update { (it as? MapUiState.Success)?.copy(isRequestingLocation = true) ?: it }
             try {
-                val currentStatus = dependencies.permissionController.currentStatus()
-                if (currentStatus != LocationPermissionStatus.Granted) {
-                    dependencies.permissionController.requestPermission()
+                val status = ensureLocationPermission()
+                if (status != LocationPermissionStatus.Granted) {
+                    return@launch
                 }
-                dependencies.repository.refreshCurrentLocation()
                 if (dependencies.repository.locationState.value is LocationState.Available) {
                     sendCameraCommand { id ->
-                        MapCameraCommand.MoveToCurrentLocation(id = id, zoom = MapDarkStyle.FOCUS_ZOOM)
+                        MapCameraCommand.MoveToCurrentLocation(
+                            id = id,
+                            zoom = MapDarkStyle.FOCUS_ZOOM,
+                        )
                     }
                 }
             } catch (cancellation: CancellationException) {
@@ -208,16 +200,39 @@ class MapViewModel(
         }
     }
 
-    suspend fun ensureLocationPermission(): LocationPermissionStatus {
-        val dependencies = locationDependencies ?: return LocationPermissionStatus.Denied
+    suspend fun ensureLocationPermission(refreshLocation: Boolean = true): LocationPermissionStatus {
+        val dependencies =
+            locationDependencies
+                ?: return LocationPermissionStatus.Denied
+
         return try {
             val status =
                 when (dependencies.permissionController.currentStatus()) {
-                    LocationPermissionStatus.Granted -> LocationPermissionStatus.Granted
-                    LocationPermissionStatus.Denied -> dependencies.permissionController.requestPermission()
-                    LocationPermissionStatus.PermanentlyDenied -> LocationPermissionStatus.PermanentlyDenied
+                    LocationPermissionStatus.Granted -> {
+                        LocationPermissionStatus.Granted
+                    }
+
+                    LocationPermissionStatus.Denied -> {
+                        dependencies.permissionController.requestPermission()
+                    }
+
+                    LocationPermissionStatus.PermanentlyDenied -> {
+                        LocationPermissionStatus.PermanentlyDenied
+                    }
+
+                    LocationPermissionStatus.ServicesDisabled -> {
+                        // iOS에서는 앱 권한이 아직 결정되지 않았을 수 있으므로
+                        // 위치 서비스가 꺼져 있어도 시스템 권한 요청을 먼저 시도합니다.
+                        dependencies.permissionController.requestPermission()
+                        // 앱 권한 요청 결과와 전역 위치 서비스 상태를 다시 반영합니다.
+                        dependencies.permissionController.currentStatus()
+                    }
                 }
-            dependencies.repository.refreshCurrentLocation()
+            // 권한이 없거나 위치 서비스가 꺼진 경우에도 LocationState를 갱신해
+            // 지도 화면의 오류 배너에서 사용자가 안내를 열 수 있도록 합니다.
+            if (refreshLocation) {
+                dependencies.repository.refreshCurrentLocation()
+            }
             status
         } catch (cancellation: CancellationException) {
             throw cancellation
@@ -226,26 +241,31 @@ class MapViewModel(
         }
     }
 
-    fun refreshLocationPermission() {
-        val dependencies = locationDependencies ?: return
-        viewModelScope.launch {
-            try {
-                dependencies.repository.refreshCurrentLocation()
-            } catch (cancellation: CancellationException) {
-                throw cancellation
-            } catch (_: Exception) {
-                // 위치나 권한 값은 로그에 남기지 않습니다.
-            }
+    suspend fun refreshLocationPermission(): LocationPermissionStatus? {
+        val dependencies = locationDependencies ?: return null
+        return try {
+            val status = dependencies.permissionController.currentStatus()
+            dependencies.repository.refreshCurrentLocation()
+            status
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Exception) {
+            // 위치나 권한 값은 로그에 남기지 않습니다.
+            LocationPermissionStatus.Denied
         }
     }
 
     fun openLocationSettings() {
         val dependencies = locationDependencies ?: return
+
         viewModelScope.launch {
-            handleLocationPermissionSettingsClick(
-                permissionController = dependencies.permissionController,
-                settingsLauncher = dependencies.permissionSettingsLauncher,
-            )
+            val status = dependencies.permissionController.currentStatus()
+
+            if (status == LocationPermissionStatus.ServicesDisabled) {
+                dependencies.permissionSettingsLauncher.openLocationSettings()
+            } else {
+                dependencies.permissionSettingsLauncher.openAppSettings()
+            }
         }
     }
 

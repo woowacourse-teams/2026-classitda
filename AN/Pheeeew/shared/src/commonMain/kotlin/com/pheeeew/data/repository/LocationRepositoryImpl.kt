@@ -43,23 +43,33 @@ class LocationRepositoryImpl(
         refreshMutex.withLock {
             mutableLocationState.value = LocationState.Loading
 
-            if (!hasLocationPermission()) {
-                mutableLocationState.value =
-                    LocationState.Unavailable(LocationError.PermissionDenied)
-                return@withLock
-            }
+            when (currentLocationPermissionStatus()) {
+                LocationPermissionStatus.Granted -> {
+                    mutableLocationState.value = resolveCurrentLocation()
+                }
 
-            mutableLocationState.value = resolveCurrentLocation()
+                LocationPermissionStatus.ServicesDisabled -> {
+                    mutableLocationState.value =
+                        LocationState.Unavailable(LocationError.ServicesDisabled)
+                }
+
+                LocationPermissionStatus.Denied,
+                LocationPermissionStatus.PermanentlyDenied,
+                -> {
+                    mutableLocationState.value =
+                        LocationState.Unavailable(LocationError.PermissionDenied)
+                }
+            }
         }
     }
 
-    private suspend fun hasLocationPermission(): Boolean =
+    private suspend fun currentLocationPermissionStatus(): LocationPermissionStatus =
         try {
-            permissionController.currentStatus() == LocationPermissionStatus.Granted
+            permissionController.currentStatus()
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (_: Exception) {
-            false
+            LocationPermissionStatus.Denied
         }
 
     private suspend fun resolveCurrentLocation(): LocationState {
