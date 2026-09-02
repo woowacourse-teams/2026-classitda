@@ -1,5 +1,6 @@
 package com.pheeeew.core.location
 
+import com.pheeeew.domain.model.location.CurrentLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -76,5 +77,20 @@ class AndroidPlatformLocationProviderTest {
                 maximumAgeMillis = 60_000L,
             ),
         )
+    }
+
+    @Test
+    fun invalidRecentLocationDoesNotBlockValidFallback() {
+        val fallbackLocation =
+            CurrentLocation(
+                latitude = 37.5505,
+                longitude = 127.0373,
+                accuracyMeters = 12f,
+                capturedAtMillis = 100_000L,
+            )
+
+        val result = firstValidCurrentLocation(listOf(null, fallbackLocation))
+
+        assertSame(fallbackLocation, result)
     }
 }

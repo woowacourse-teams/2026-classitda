@@ -74,12 +74,17 @@ class AndroidPlatformLocationProvider(
                 null
             }
 
-        val recentLocation =
-            fusedLastKnownLocation?.takeIf { it.isRecent(nowMillis) }
-                ?: lastKnownLocation(LocationManager.NETWORK_PROVIDER, nowMillis)
-                ?: lastKnownLocation(LocationManager.GPS_PROVIDER, nowMillis)
-
-        return recentLocation.toCurrentLocationOrNull()
+        return firstValidCurrentLocation(
+            listOf(
+                fusedLastKnownLocation
+                    ?.takeIf { it.isRecent(nowMillis) }
+                    .toCurrentLocationOrNull(),
+                lastKnownLocation(LocationManager.NETWORK_PROVIDER, nowMillis)
+                    .toCurrentLocationOrNull(),
+                lastKnownLocation(LocationManager.GPS_PROVIDER, nowMillis)
+                    .toCurrentLocationOrNull(),
+            ),
+        )
     }
 
     @SuppressLint("MissingPermission")
@@ -303,6 +308,9 @@ internal fun isRecentAndroidLocation(
     capturedAtMillis > 0L &&
         nowMillis >= capturedAtMillis &&
         nowMillis - capturedAtMillis <= maximumAgeMillis
+
+internal fun firstValidCurrentLocation(candidates: List<CurrentLocation?>): CurrentLocation? =
+    candidates.asSequence().filterNotNull().firstOrNull()
 
 internal fun androidPlatformLocationResult(
     latitude: Double,
