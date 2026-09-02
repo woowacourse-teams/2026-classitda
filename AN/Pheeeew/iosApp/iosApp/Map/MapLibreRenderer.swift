@@ -40,6 +40,7 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         mapView.allowsZooming = true
         mapView.minimumZoomLevel = MapLibreDarkStyle.minimumZoom
         mapView.maximumZoomLevel = MapLibreDarkStyle.maximumZoom
+        mapView.compassView.isHidden = true
 
         let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleMapTap(_:)))
         tapRecognizer.cancelsTouchesInView = false

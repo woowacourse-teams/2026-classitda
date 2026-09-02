@@ -79,7 +79,8 @@ fun MapOverlay(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(end = 16.dp, bottom = 24.dp),
+                    // BreathControl의 기본(idle) 버튼 상단(약 103dp)보다 위에 오도록 여백을 둔다.
+                    .padding(end = 16.dp, bottom = 120.dp),
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

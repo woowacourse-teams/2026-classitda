@@ -2,7 +2,6 @@ package com.pheeeew.feature.map.overlay
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -37,8 +36,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.util.VelocityTracker
-import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
@@ -67,12 +64,11 @@ private const val EFFECTIVE_STRENGTH_THRESHOLD = 0.22f
 private const val GROWTH_DURATION_MILLIS = 2_200L
 private const val BURST_DURATION_MILLIS = 720L
 private const val IDLE_SCALE = 2f / 3f
-private const val SCALE_TWEEN_MILLIS = 220
 private const val QUIET_DELAY_MILLIS = 500L
 private const val MIN_RELEASE_GROWTH = 0.3f
 private const val NEEDS_MORE_HINT_MILLIS = 1_400L
 private const val RELEASE_DRAG_MAX_DP = 1200f
-private const val FLING_VELOCITY_THRESHOLD_DP = 400f
+private const val FLING_VELOCITY_THRESHOLD_DP = 250f
 private const val SHAKE_AMPLITUDE_DP = 3f
 private const val FLY_AWAY_DISTANCE_DP = 1600f
 private const val IDLE_TEXT_GAP_BOX_HEIGHT_DP = 100f
@@ -94,7 +90,6 @@ fun BreathControl(
     var listening by remember { mutableStateOf(false) }
     var strength by remember { mutableStateOf(0f) }
     var growth by remember { mutableStateOf(0f) }
-    var activeElapsedMillis by remember { mutableStateOf(0L) }
     var lastActiveElapsedMillis by remember { mutableStateOf(0L) }
     var burst by remember { mutableStateOf(false) }
     var burstSequence by remember { mutableStateOf(0) }
@@ -123,7 +118,6 @@ fun BreathControl(
                     listening = false
                     strength = 0f
                     growth = 0f
-                    activeElapsedMillis = 0L
                     lastActiveElapsedMillis = 0L
                     coroutineScope.launch { dragOffsetY.snapTo(0f) }
                 }
@@ -139,10 +133,7 @@ fun BreathControl(
         while (listening) {
             delay(16)
             if (strength >= EFFECTIVE_STRENGTH_THRESHOLD) {
-                activeElapsedMillis = (activeElapsedMillis + 16L).coerceAtMost(GROWTH_DURATION_MILLIS)
-                val progress = activeElapsedMillis / GROWTH_DURATION_MILLIS.toFloat()
-                val remaining = 1f - progress
-                growth = 1f - remaining * remaining * remaining
+                growth = (growth + 16f / GROWTH_DURATION_MILLIS).coerceAtMost(1f)
                 lastActiveElapsedMillis = 0L
             } else {
                 lastActiveElapsedMillis += 16L
@@ -165,7 +156,6 @@ fun BreathControl(
         burstProgress = 0f
         growth = 0f
         strength = 0f
-        activeElapsedMillis = 0L
         lastActiveElapsedMillis = 0L
         dragOffsetY.snapTo(0f)
     }
@@ -183,7 +173,6 @@ fun BreathControl(
             listening = false
             growth = 0f
             strength = 0f
-            activeElapsedMillis = 0L
             lastActiveElapsedMillis = 0L
             dragOffsetY.snapTo(0f)
         }
@@ -200,6 +189,7 @@ fun BreathControl(
         }
     LaunchedEffect(phase) { onPhaseChanged(phase) }
 
+    // TODO
     val controlDescription =
         when {
             burst -> "한숨을 별로 만드는 중"
@@ -210,7 +200,7 @@ fun BreathControl(
     Column(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         if (!listening && !burst) {
             Text(
-                text = "버튼을 눌러 한숨 시작하기",
+                text = "한숨 내쉬기",
                 style = AppTheme.typography.menuItem,
                 color = AppColors.Cream100,
             )
@@ -240,7 +230,7 @@ fun BreathControl(
                         // the button sitting there, barely moved, until the (slower-starting) flight catches up.
                         tween(durationMillis = BURST_DURATION_MILLIS.toInt(), easing = FastOutLinearInEasing)
                     } else {
-                        tween(durationMillis = SCALE_TWEEN_MILLIS, easing = FastOutSlowInEasing)
+                        spring(dampingRatio = 0.82f, stiffness = 180f)
                     },
                 label = "breathScale",
             )
@@ -292,7 +282,6 @@ fun BreathControl(
                                         if (!ensureLocationPermission()) return@launch
                                         growth = 0f
                                         strength = 0f
-                                        activeElapsedMillis = 0L
                                         lastActiveElapsedMillis = 0L
                                         listening = true
                                         breathInput.start(
@@ -303,7 +292,6 @@ fun BreathControl(
                                                 listening = false
                                                 growth = 0f
                                                 strength = 0f
-                                                activeElapsedMillis = 0L
                                             },
                                         )
                                     }
@@ -311,12 +299,29 @@ fun BreathControl(
                             } else {
                                 val maxDragPx = with(density) { RELEASE_DRAG_MAX_DP.dp.toPx() }
                                 val flingThresholdPx = with(density) { FLING_VELOCITY_THRESHOLD_DP.dp.toPx() }
-                                val velocityTracker = VelocityTracker()
+                                // Manual velocity calc (whole-gesture average) instead of Compose's
+                                // VelocityTracker: on iOS this app's fling detection was unreliable using
+                                // VelocityTracker, so this avoids depending on its platform-specific internal
+                                // smoothing. Uses the raw per-event dragAmount deltas summed up, NOT
+                                // change.position — position is in the pointerInput node's own (moving)
+                                // local coordinate frame, and since this box translates to follow the
+                                // finger, the local position barely changes even while the finger travels
+                                // far, which silently corrupts any position-delta-based velocity calc.
+                                var dragStartTimeMillis = -1L
+                                var lastDragTimeMillis = 0L
+                                var rawTraveledY = 0f
                                 detectDragGestures(
-                                    onDragStart = { velocityTracker.resetTracking() },
+                                    onDragStart = {
+                                        dragStartTimeMillis = -1L
+                                        rawTraveledY = 0f
+                                    },
                                     onDrag = { change, dragAmount ->
                                         change.consume()
-                                        velocityTracker.addPointerInputChange(change)
+                                        if (dragStartTimeMillis < 0L) {
+                                            dragStartTimeMillis = change.uptimeMillis
+                                        }
+                                        lastDragTimeMillis = change.uptimeMillis
+                                        rawTraveledY += dragAmount.y
                                         coroutineScope.launch {
                                             dragOffsetY.snapTo(
                                                 (dragOffsetY.value + dragAmount.y).coerceIn(-maxDragPx, 0f),
@@ -326,7 +331,8 @@ fun BreathControl(
                                     onDragEnd = {
                                         // A slow, deliberate raise must NOT register — only a fast upward
                                         // flick (fling) does, regardless of how far the drag itself traveled.
-                                        val flingVelocityY = velocityTracker.calculateVelocity().y
+                                        val elapsedMillis = (lastDragTimeMillis - dragStartTimeMillis).coerceAtLeast(1L)
+                                        val flingVelocityY = rawTraveledY / elapsedMillis * 1000f
                                         when {
                                             flingVelocityY > -flingThresholdPx -> {
                                                 coroutineScope.launch {
@@ -383,48 +389,15 @@ fun BreathControl(
                     val center = Offset(size.width / 2f, size.height / 2f)
                     val radius = 62.dp.toPx() * scale
                     val burstEase = 1f - (1f - burstProgress) * (1f - burstProgress) * (1f - burstProgress)
-                    val highlightCenter =
-                        Offset(
-                            x = center.x - radius * 0.28f,
-                            y = center.y - radius * 0.32f,
-                        )
                     drawCircle(
                         brush =
                             Brush.radialGradient(
-                                0.0f to Color.White.copy(alpha = 0.20f),
-                                0.38f to AppColors.Cream100.copy(alpha = 0.18f),
-                                0.63f to AppColors.Tan200.copy(alpha = 0.13f),
-                                0.82f to AppColors.Blue100.copy(alpha = 0.10f),
-                                1.0f to Color.Transparent,
+                                0.0f to AppColors.Cream100,
+                                0.35f to AppColors.Tan200,
+                                0.7f to AppColors.Blue100,
+                                1.0f to AppColors.Blue200.copy(alpha = 0f),
                                 center = center,
-                                radius = radius * 1.72f,
-                            ),
-                        radius = radius * 1.72f,
-                        center = center,
-                    )
-                    drawCircle(
-                        brush =
-                            Brush.radialGradient(
-                                0.0f to AppColors.Cream100.copy(alpha = 0.16f),
-                                0.52f to AppColors.Tan200.copy(alpha = 0.12f),
-                                0.78f to AppColors.Blue100.copy(alpha = 0.08f),
-                                1.0f to Color.Transparent,
-                                center = Offset(center.x - radius * 0.10f, center.y - radius * 0.12f),
-                                radius = radius * 1.38f,
-                            ),
-                        radius = radius * 1.38f,
-                        center = center,
-                    )
-                    drawCircle(
-                        brush =
-                            Brush.radialGradient(
-                                0.0f to Color.White.copy(alpha = 0.98f),
-                                0.18f to AppColors.Cream100,
-                                0.52f to AppColors.Tan200,
-                                0.78f to AppColors.Blue100,
-                                1.0f to AppColors.Blue200,
-                                center = highlightCenter,
-                                radius = radius * 1.28f,
+                                radius = radius,
                             ),
                         radius = radius,
                         center = center,
