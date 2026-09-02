@@ -389,48 +389,15 @@ fun BreathControl(
                     val center = Offset(size.width / 2f, size.height / 2f)
                     val radius = 62.dp.toPx() * scale
                     val burstEase = 1f - (1f - burstProgress) * (1f - burstProgress) * (1f - burstProgress)
-                    val highlightCenter =
-                        Offset(
-                            x = center.x - radius * 0.28f,
-                            y = center.y - radius * 0.32f,
-                        )
                     drawCircle(
                         brush =
                             Brush.radialGradient(
-                                0.0f to Color.White.copy(alpha = 0.20f),
-                                0.38f to AppColors.Cream100.copy(alpha = 0.18f),
-                                0.63f to AppColors.Tan200.copy(alpha = 0.13f),
-                                0.82f to AppColors.Blue100.copy(alpha = 0.10f),
-                                1.0f to Color.Transparent,
+                                0.0f to AppColors.Cream100,
+                                0.35f to AppColors.Tan200,
+                                0.7f to AppColors.Blue100,
+                                1.0f to AppColors.Blue200.copy(alpha = 0f),
                                 center = center,
-                                radius = radius * 1.72f,
-                            ),
-                        radius = radius * 1.72f,
-                        center = center,
-                    )
-                    drawCircle(
-                        brush =
-                            Brush.radialGradient(
-                                0.0f to AppColors.Cream100.copy(alpha = 0.16f),
-                                0.52f to AppColors.Tan200.copy(alpha = 0.12f),
-                                0.78f to AppColors.Blue100.copy(alpha = 0.08f),
-                                1.0f to Color.Transparent,
-                                center = Offset(center.x - radius * 0.10f, center.y - radius * 0.12f),
-                                radius = radius * 1.38f,
-                            ),
-                        radius = radius * 1.38f,
-                        center = center,
-                    )
-                    drawCircle(
-                        brush =
-                            Brush.radialGradient(
-                                0.0f to Color.White.copy(alpha = 0.98f),
-                                0.18f to AppColors.Cream100,
-                                0.52f to AppColors.Tan200,
-                                0.78f to AppColors.Blue100,
-                                1.0f to AppColors.Blue200,
-                                center = highlightCenter,
-                                radius = radius * 1.28f,
+                                radius = radius,
                             ),
                         radius = radius,
                         center = center,
