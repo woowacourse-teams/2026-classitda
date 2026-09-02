@@ -1,9 +1,12 @@
 package com.pheeeew.core.location
 
+import com.pheeeew.domain.model.location.CurrentLocation
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class AndroidPlatformLocationProviderTest {
     @Test
@@ -45,5 +48,49 @@ class AndroidPlatformLocationProviderTest {
 
         assertSame(PlatformLocationResult.GpsUnavailable, invalidCoordinate)
         assertSame(PlatformLocationResult.GpsUnavailable, invalidTimestamp)
+    }
+
+    @Test
+    fun recentLastKnownLocationIsAcceptedForSixtySeconds() {
+        assertTrue(
+            isRecentAndroidLocation(
+                capturedAtMillis = 40_000L,
+                nowMillis = 100_000L,
+                maximumAgeMillis = 60_000L,
+            ),
+        )
+    }
+
+    @Test
+    fun staleOrFutureLastKnownLocationIsRejected() {
+        assertFalse(
+            isRecentAndroidLocation(
+                capturedAtMillis = 39_999L,
+                nowMillis = 100_000L,
+                maximumAgeMillis = 60_000L,
+            ),
+        )
+        assertFalse(
+            isRecentAndroidLocation(
+                capturedAtMillis = 100_001L,
+                nowMillis = 100_000L,
+                maximumAgeMillis = 60_000L,
+            ),
+        )
+    }
+
+    @Test
+    fun invalidRecentLocationDoesNotBlockValidFallback() {
+        val fallbackLocation =
+            CurrentLocation(
+                latitude = 37.5505,
+                longitude = 127.0373,
+                accuracyMeters = 12f,
+                capturedAtMillis = 100_000L,
+            )
+
+        val result = firstValidCurrentLocation(listOf(null, fallbackLocation))
+
+        assertSame(fallbackLocation, result)
     }
 }

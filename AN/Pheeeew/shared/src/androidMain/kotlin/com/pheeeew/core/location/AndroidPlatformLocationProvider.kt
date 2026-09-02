@@ -12,8 +12,18 @@ import android.os.Bundle
 import android.os.CancellationSignal
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.android.gms.tasks.Task
 import com.pheeeew.domain.model.location.CurrentLocation
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
 /** Android의 [LocationManager]에서 단발성 포그라운드 위치를 가져옵니다. */
@@ -21,32 +31,29 @@ class AndroidPlatformLocationProvider(
     context: Context,
     private val locationManager: LocationManager =
         requireNotNull(context.applicationContext.getSystemService(LocationManager::class.java)),
+    private val fusedLocationClient: FusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(context.applicationContext),
 ) : PlatformLocationProvider {
     private val applicationContext = context.applicationContext
 
     override suspend fun getCurrentLocation(): PlatformLocationResult {
-        val provider = selectEnabledProvider() ?: return PlatformLocationResult.GpsUnavailable
-        return requestLocation(provider)
-    }
-
-    private fun selectEnabledProvider(): String? {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && !locationManager.isLocationEnabled) {
-            return null
+            return PlatformLocationResult.GpsUnavailable
         }
 
         val hasFinePermission = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
         val hasCoarsePermission = hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
         if (!hasFinePermission && !hasCoarsePermission) {
-            return null
+            return PlatformLocationResult.GpsUnavailable
         }
 
-        if (hasFinePermission && isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            return LocationManager.GPS_PROVIDER
+        findRecentLastKnownLocation()?.let { location ->
+            return PlatformLocationResult.Success(location)
         }
 
-        return LocationManager.NETWORK_PROVIDER.takeIf {
-            isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-        }
+        return requestFromAvailableProviders()?.let { location ->
+            PlatformLocationResult.Success(location)
+        } ?: PlatformLocationResult.GpsUnavailable
     }
 
     private fun isProviderEnabled(provider: String): Boolean =
@@ -54,6 +61,123 @@ class AndroidPlatformLocationProvider(
             locationManager.isProviderEnabled(provider)
         } catch (_: IllegalArgumentException) {
             false
+        }
+
+    private suspend fun findRecentLastKnownLocation(): CurrentLocation? {
+        val nowMillis = System.currentTimeMillis()
+        val fusedLastKnownLocation =
+            try {
+                withTimeoutOrNull(LAST_KNOWN_LOCATION_TIMEOUT_MILLIS) {
+                    fusedLocationClient.lastLocation.awaitOrNull()
+                }
+            } catch (_: Exception) {
+                null
+            }
+
+        return firstValidCurrentLocation(
+            listOf(
+                fusedLastKnownLocation
+                    ?.takeIf { it.isRecent(nowMillis) }
+                    .toCurrentLocationOrNull(),
+                lastKnownLocation(LocationManager.NETWORK_PROVIDER, nowMillis)
+                    .toCurrentLocationOrNull(),
+                lastKnownLocation(LocationManager.GPS_PROVIDER, nowMillis)
+                    .toCurrentLocationOrNull(),
+            ),
+        )
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun lastKnownLocation(
+        provider: String,
+        nowMillis: Long,
+    ): Location? =
+        if (!isProviderEnabled(provider)) {
+            null
+        } else {
+            try {
+                locationManager.getLastKnownLocation(provider)?.takeIf { it.isRecent(nowMillis) }
+            } catch (_: SecurityException) {
+                null
+            } catch (_: IllegalArgumentException) {
+                null
+            }
+        }
+
+    private suspend fun requestFromAvailableProviders(): CurrentLocation? =
+        coroutineScope {
+            val requests =
+                buildList<Deferred<CurrentLocation?>> {
+                    add(async { requestFusedLocationCandidate() })
+                    if (isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                        add(async { requestProviderCandidate(LocationManager.NETWORK_PROVIDER) })
+                    }
+                    if (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                        isProviderEnabled(LocationManager.GPS_PROVIDER)
+                    ) {
+                        add(async { requestProviderCandidate(LocationManager.GPS_PROVIDER) })
+                    }
+                }
+
+            val remainingRequests = requests.toMutableList()
+            try {
+                while (remainingRequests.isNotEmpty()) {
+                    val completedRequest =
+                        select<Deferred<CurrentLocation?>> {
+                            remainingRequests.forEach { request ->
+                                request.onAwait { request }
+                            }
+                        }
+                    remainingRequests.remove(completedRequest)
+                    completedRequest.await()?.let { return@coroutineScope it }
+                }
+                null
+            } finally {
+                requests.forEach { it.cancel() }
+            }
+        }
+
+    private suspend fun requestFusedLocationCandidate(): CurrentLocation? =
+        try {
+            withTimeoutOrNull(LOCATION_REQUEST_TIMEOUT_MILLIS) {
+                requestFusedLocation().toCurrentLocationOrNull()
+            }
+        } catch (_: Exception) {
+            null
+        }
+
+    private suspend fun requestProviderCandidate(provider: String): CurrentLocation? =
+        try {
+            withTimeoutOrNull(LOCATION_REQUEST_TIMEOUT_MILLIS) {
+                (requestLocation(provider) as? PlatformLocationResult.Success)?.location
+            }
+        } catch (_: Exception) {
+            null
+        }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun requestFusedLocation(): Location? =
+        suspendCancellableCoroutine { continuation ->
+            val cancellationTokenSource = CancellationTokenSource()
+            continuation.invokeOnCancellation { cancellationTokenSource.cancel() }
+
+            try {
+                val locationTask =
+                    fusedLocationClient.getCurrentLocation(
+                        Priority.PRIORITY_HIGH_ACCURACY,
+                        cancellationTokenSource.token,
+                    )
+                locationTask
+                    .addOnSuccessListener { location ->
+                        if (continuation.isActive) continuation.resume(location)
+                    }.addOnFailureListener {
+                        if (continuation.isActive) continuation.resume(null)
+                    }.addOnCanceledListener {
+                        if (continuation.isActive) continuation.resume(null)
+                    }
+            } catch (_: Exception) {
+                if (continuation.isActive) continuation.resume(null)
+            }
         }
 
     @SuppressLint("MissingPermission")
@@ -149,7 +273,44 @@ class AndroidPlatformLocationProvider(
             capturedAtMillis = time,
         )
     }
+
+    private fun Location?.toCurrentLocationOrNull(): CurrentLocation? =
+        (toPlatformResult() as? PlatformLocationResult.Success)?.location
+
+    private fun Location.isRecent(nowMillis: Long): Boolean =
+        isRecentAndroidLocation(time, nowMillis, MAX_LAST_KNOWN_LOCATION_AGE_MILLIS)
+
+    private suspend fun <T> Task<T>.awaitOrNull(): T? =
+        suspendCancellableCoroutine { continuation ->
+            addOnSuccessListener { value ->
+                if (continuation.isActive) continuation.resume(value)
+            }
+            addOnFailureListener {
+                if (continuation.isActive) continuation.resume(null)
+            }
+            addOnCanceledListener {
+                if (continuation.isActive) continuation.resume(null)
+            }
+        }
+
+    companion object {
+        private const val LAST_KNOWN_LOCATION_TIMEOUT_MILLIS = 1_000L
+        private const val MAX_LAST_KNOWN_LOCATION_AGE_MILLIS = 60_000L
+        private const val LOCATION_REQUEST_TIMEOUT_MILLIS = 30_000L
+    }
 }
+
+internal fun isRecentAndroidLocation(
+    capturedAtMillis: Long,
+    nowMillis: Long,
+    maximumAgeMillis: Long,
+): Boolean =
+    capturedAtMillis > 0L &&
+        nowMillis >= capturedAtMillis &&
+        nowMillis - capturedAtMillis <= maximumAgeMillis
+
+internal fun firstValidCurrentLocation(candidates: List<CurrentLocation?>): CurrentLocation? =
+    candidates.asSequence().filterNotNull().firstOrNull()
 
 internal fun androidPlatformLocationResult(
     latitude: Double,

@@ -13,14 +13,11 @@ import com.pheeeew.feature.map.SighMarker
 import org.maplibre.android.maps.Style
 import org.maplibre.android.style.expressions.Expression
 import org.maplibre.android.style.layers.CircleLayer
-import org.maplibre.android.style.layers.FillLayer
 import org.maplibre.android.style.layers.Property
 import org.maplibre.android.style.layers.PropertyFactory.circleColor
 import org.maplibre.android.style.layers.PropertyFactory.circleOpacity
 import org.maplibre.android.style.layers.PropertyFactory.circlePitchScale
 import org.maplibre.android.style.layers.PropertyFactory.circleRadius
-import org.maplibre.android.style.layers.PropertyFactory.fillColor
-import org.maplibre.android.style.layers.PropertyFactory.fillOpacity
 import org.maplibre.android.style.layers.PropertyFactory.iconAllowOverlap
 import org.maplibre.android.style.layers.PropertyFactory.iconAnchor
 import org.maplibre.android.style.layers.PropertyFactory.iconIgnorePlacement
@@ -31,10 +28,7 @@ import org.maplibre.android.style.sources.GeoJsonSource
 import org.maplibre.geojson.Feature
 import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.Point
-import org.maplibre.geojson.Polygon
 import kotlin.math.PI
-import kotlin.math.asin
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -43,11 +37,8 @@ internal object AndroidMapSources {
     const val MARKER_ID_PROPERTY = "sigh-id"
 
     private const val FEATURE_KIND_PROPERTY = "location-kind"
-    private const val FEATURE_KIND_ACCURACY = "accuracy"
     private const val FEATURE_KIND_POINT = "point"
     private const val STAR_BITMAP_SIZE = 96
-    private const val ACCURACY_CIRCLE_VERTEX_COUNT = 64
-    private const val EARTH_RADIUS_METERS = 6_371_008.8
 
     fun install(style: Style) {
         installSighLayers(style)
@@ -84,31 +75,16 @@ internal object AndroidMapSources {
             if (location == null) {
                 emptyList()
             } else {
-                buildList {
-                    if (location.accuracyMeters > 0f) {
-                        val accuracyProperties =
-                            JsonObject().apply {
-                                addProperty(FEATURE_KIND_PROPERTY, FEATURE_KIND_ACCURACY)
-                            }
-                        add(
-                            Feature.fromGeometry(
-                                accuracyPolygon(location),
-                                accuracyProperties,
-                            ),
-                        )
+                val pointProperties =
+                    JsonObject().apply {
+                        addProperty(FEATURE_KIND_PROPERTY, FEATURE_KIND_POINT)
                     }
-
-                    val pointProperties =
-                        JsonObject().apply {
-                            addProperty(FEATURE_KIND_PROPERTY, FEATURE_KIND_POINT)
-                        }
-                    add(
-                        Feature.fromGeometry(
-                            Point.fromLngLat(location.longitude, location.latitude),
-                            pointProperties,
-                        ),
-                    )
-                }
+                listOf(
+                    Feature.fromGeometry(
+                        Point.fromLngLat(location.longitude, location.latitude),
+                        pointProperties,
+                    ),
+                )
             }
 
         style
@@ -148,23 +124,6 @@ internal object AndroidMapSources {
                 GeoJsonSource(
                     MapDarkStyle.CURRENT_LOCATION_SOURCE_ID,
                     FeatureCollection.fromFeatures(emptyList()),
-                ),
-            )
-        }
-
-        if (style.getLayer(MapDarkStyle.CURRENT_LOCATION_ACCURACY_LAYER_ID) == null) {
-            style.addLayer(
-                FillLayer(
-                    MapDarkStyle.CURRENT_LOCATION_ACCURACY_LAYER_ID,
-                    MapDarkStyle.CURRENT_LOCATION_SOURCE_ID,
-                ).withFilter(
-                    Expression.eq(
-                        Expression.get(FEATURE_KIND_PROPERTY),
-                        Expression.literal(FEATURE_KIND_ACCURACY),
-                    ),
-                ).withProperties(
-                    fillColor(Color.parseColor(MapDarkStyle.LOCATION_BLUE)),
-                    fillOpacity(0.16f),
                 ),
             )
         }
@@ -279,30 +238,4 @@ internal object AndroidMapSources {
             }
             close()
         }
-
-    private fun accuracyPolygon(location: CurrentLocation): Polygon {
-        val latitudeRadians = Math.toRadians(location.latitude)
-        val longitudeRadians = Math.toRadians(location.longitude)
-        val angularDistance = location.accuracyMeters / EARTH_RADIUS_METERS
-
-        val ring =
-            (0..ACCURACY_CIRCLE_VERTEX_COUNT).map { index ->
-                val bearing = index.toDouble() / ACCURACY_CIRCLE_VERTEX_COUNT * 2.0 * PI
-                val latitude =
-                    asin(
-                        sin(latitudeRadians) * cos(angularDistance) +
-                            cos(latitudeRadians) * sin(angularDistance) * cos(bearing),
-                    )
-                val longitude =
-                    longitudeRadians +
-                        atan2(
-                            sin(bearing) * sin(angularDistance) * cos(latitudeRadians),
-                            cos(angularDistance) - sin(latitudeRadians) * sin(latitude),
-                        )
-
-                Point.fromLngLat(Math.toDegrees(longitude), Math.toDegrees(latitude))
-            }
-
-        return Polygon.fromLngLats(listOf(ring))
-    }
 }
