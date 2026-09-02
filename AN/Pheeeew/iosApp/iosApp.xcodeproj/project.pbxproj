@@ -314,7 +314,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = 피휴;
+				INFOPLIST_KEY_CFBundleDisplayName = "피휴";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 위치 주변의 한숨을 지도에 표시하기 위해 위치가 필요합니다.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "한숨 소리를 감지해 별을 만드는 데 마이크가 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -345,7 +345,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = 피휴;
+				INFOPLIST_KEY_CFBundleDisplayName = "피휴";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 위치 주변의 한숨을 지도에 표시하기 위해 위치가 필요합니다.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "한숨 소리를 감지해 별을 만드는 데 마이크가 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
