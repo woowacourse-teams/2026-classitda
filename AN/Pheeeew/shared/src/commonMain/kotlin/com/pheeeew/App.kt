@@ -66,7 +66,6 @@ fun App(
                 PredictiveBackContent(onBack = { screen = Screen.Map }, modifier = overlayModifier) {
                     SettingsScreen(
                         onBackClick = { screen = Screen.Map },
-                        onThemeSettingClick = {},
                         onLocationPermissionClick = {
                             locationDependencies?.let { dependencies ->
                                 coroutineScope.launch {
