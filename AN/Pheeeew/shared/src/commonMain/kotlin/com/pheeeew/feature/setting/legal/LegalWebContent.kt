@@ -12,6 +12,3 @@ internal expect fun LegalWebContent(
     onNavigationBlocked: () -> Unit,
     modifier: Modifier,
 )
-
-@Composable
-internal expect fun LegalSystemBackHandler(onBack: () -> Unit)
