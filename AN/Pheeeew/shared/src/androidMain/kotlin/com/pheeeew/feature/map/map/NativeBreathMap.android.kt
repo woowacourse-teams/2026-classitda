@@ -39,6 +39,7 @@ internal actual fun NativeBreathMap(
     onSighClick: (String) -> Unit,
     onBoundsChanged: (SighBounds) -> Unit,
     onMapError: (MapError) -> Unit,
+    onMapRecovered: () -> Unit,
     onProjectionChanged: (MapProjectionSnapshot) -> Unit,
     modifier: Modifier,
 ) {
@@ -47,6 +48,7 @@ internal actual fun NativeBreathMap(
     val currentOnSighClick by rememberUpdatedState(onSighClick)
     val currentOnBoundsChanged by rememberUpdatedState(onBoundsChanged)
     val currentOnMapError by rememberUpdatedState(onMapError)
+    val currentOnMapRecovered by rememberUpdatedState(onMapRecovered)
     val currentOnProjectionChanged by rememberUpdatedState(onProjectionChanged)
 
     val hostResult =
@@ -63,6 +65,7 @@ internal actual fun NativeBreathMap(
                     onSighClick = { id -> currentOnSighClick(id) },
                     onBoundsChanged = { bounds -> currentOnBoundsChanged(bounds) },
                     onMapError = { error -> currentOnMapError(error) },
+                    onMapRecovered = { currentOnMapRecovered() },
                     onProjectionChanged = { snapshot -> currentOnProjectionChanged(snapshot) },
                 )
             }
@@ -101,6 +104,7 @@ private class AndroidBreathMapHost(
     private val onSighClick: (String) -> Unit,
     private val onBoundsChanged: (SighBounds) -> Unit,
     private val onMapError: (MapError) -> Unit,
+    private val onMapRecovered: () -> Unit,
     private val onProjectionChanged: (MapProjectionSnapshot) -> Unit,
 ) {
     private val camera = AndroidMapCamera()
@@ -209,6 +213,7 @@ private class AndroidBreathMapHost(
 
                 style = loadedStyle
                 startSighPulse(loadedStyle)
+                onMapRecovered()
                 renderLatestState()
             }
         }

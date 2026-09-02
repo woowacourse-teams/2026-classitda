@@ -63,6 +63,7 @@ fun MapScreen(
     val highlightedFeatureIds = remember { mutableStateListOf<String>() }
     val animationCoordinator = remember { SighAnimationCoordinator() }
     var microphoneError by remember { mutableStateOf<BreathInputError?>(null) }
+    var mapErrorState by remember { mutableStateOf(MapErrorState()) }
     var showLocationPermissionDialog by remember { mutableStateOf(false) }
     var showLocationServicesDialog by remember { mutableStateOf(false) }
     var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
@@ -137,7 +138,8 @@ fun MapScreen(
                 cameraCommand = successState.cameraCommand,
                 onSighClick = {},
                 onBoundsChanged = viewModel::loadSighs,
-                onMapError = {},
+                onMapError = { mapErrorState = mapErrorState.onError(it) },
+                onMapRecovered = { mapErrorState = mapErrorState.onRecovered() },
                 onProjectionChanged = { projectionSnapshot = it },
                 modifier = Modifier.fillMaxSize(),
             )
@@ -192,7 +194,8 @@ fun MapScreen(
             onZoomInClick = viewModel::onZoomInClick,
             onZoomOutClick = viewModel::onZoomOutClick,
             onMyLocationClick = viewModel::onMyLocationClick,
-            errorMessage = uiState.toBannerMessage(locationServicesInstruction),
+            errorMessage =
+                uiState.toBannerMessage(locationServicesInstruction) ?: mapErrorState.error?.toUserMessage(),
             onErrorClick = {
                 when ((successState?.locationState as? LocationState.Unavailable)?.reason) {
                     LocationError.ServicesDisabled -> {

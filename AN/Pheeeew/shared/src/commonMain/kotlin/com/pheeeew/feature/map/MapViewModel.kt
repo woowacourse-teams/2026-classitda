@@ -79,9 +79,9 @@ class MapViewModel(
                 } catch (e: ApiException) {
                     _uiState.update { state ->
                         if (state is MapUiState.Success) {
-                            state.copy(refreshErrorMessage = e.message)
+                            state.copy(refreshErrorMessage = e.toUserMessage())
                         } else {
-                            MapUiState.Error(e.message)
+                            MapUiState.Error(e.toUserMessage())
                         }
                     }
                 }
@@ -142,7 +142,7 @@ class MapViewModel(
                 } catch (e: ApiException) {
                     _uiState.update {
                         (it as? MapUiState.Success)?.copy(
-                            sighReleaseState = SighReleaseState.Error(message = e.message, canRetry = true),
+                            sighReleaseState = SighReleaseState.Error(message = e.toUserMessage(), canRetry = true),
                         ) ?: it
                     }
                 }

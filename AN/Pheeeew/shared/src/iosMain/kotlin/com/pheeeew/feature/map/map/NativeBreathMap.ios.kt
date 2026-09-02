@@ -18,12 +18,14 @@ internal actual fun NativeBreathMap(
     onSighClick: (String) -> Unit,
     onBoundsChanged: (SighBounds) -> Unit,
     onMapError: (MapError) -> Unit,
+    onMapRecovered: () -> Unit,
     onProjectionChanged: (MapProjectionSnapshot) -> Unit,
     modifier: Modifier,
 ) {
     val currentOnSighClick by rememberUpdatedState(onSighClick)
     val currentOnBoundsChanged by rememberUpdatedState(onBoundsChanged)
     val currentOnMapError by rememberUpdatedState(onMapError)
+    val currentOnMapRecovered by rememberUpdatedState(onMapRecovered)
     val currentOnProjectionChanged by rememberUpdatedState(onProjectionChanged)
     val eventSink =
         remember {
@@ -47,6 +49,8 @@ internal actual fun NativeBreathMap(
                 override fun onRendererUnavailable() = currentOnMapError(MapError.RendererUnavailable)
 
                 override fun onStyleLoadFailed() = currentOnMapError(MapError.StyleLoadFailed)
+
+                override fun onMapRecovered() = currentOnMapRecovered()
 
                 private var revision = 0L
 
