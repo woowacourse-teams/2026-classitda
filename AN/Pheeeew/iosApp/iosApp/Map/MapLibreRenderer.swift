@@ -10,7 +10,7 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
     private let eventSink: IosMapEventSink
     private var pendingState: IosMapRenderState?
     private var sighSource: MLNShapeSource?
-    private var sighLayer: MLNSymbolStyleLayer?
+    private var sighLayers: [MLNSymbolStyleLayer] = []
     private var sighPulseDisplayLink: CADisplayLink?
     private var sighPulseStartedAt = CACurrentMediaTime()
     private var currentLocationSource: MLNShapeSource?
@@ -66,7 +66,7 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         mapView.delegate = nil
         pendingState = nil
         sighSource = nil
-        sighLayer = nil
+        sighLayers.removeAll()
         sighPulseDisplayLink?.invalidate()
         sighPulseDisplayLink = nil
         currentLocationSource = nil
@@ -161,7 +161,7 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         let hitRect = CGRect(x: point.x - 22, y: point.y - 22, width: 44, height: 44)
         let features = mapView.visibleFeatures(
             in: hitRect,
-            styleLayerIdentifiers: [MapLibreDarkStyle.sighLayerID],
+            styleLayerIdentifiers: Set(Self.sighLayerIDs),
             predicate: nil
         )
         guard let feature = features.first else { return }
@@ -184,13 +184,20 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         style.addSource(sighSource)
         self.sighSource = sighSource
 
-        let sighLayer = MLNSymbolStyleLayer(identifier: MapLibreDarkStyle.sighLayerID, source: sighSource)
-        sighLayer.iconImageName = NSExpression(forConstantValue: MapLibreDarkStyle.sighImageID)
-        sighLayer.iconScale = NSExpression(forConstantValue: 0.3)
-        sighLayer.iconAllowsOverlap = NSExpression(forConstantValue: true)
-        sighLayer.iconIgnoresPlacement = NSExpression(forConstantValue: true)
-        style.addLayer(sighLayer)
-        self.sighLayer = sighLayer
+        sighLayers.removeAll(keepingCapacity: true)
+        for group in 0..<Self.sighPulseGroupCount {
+            let sighLayer = MLNSymbolStyleLayer(
+                identifier: Self.sighLayerID(for: group),
+                source: sighSource
+            )
+            sighLayer.predicate = NSPredicate(format: "%K == %d", Self.sighPulseGroupProperty, group)
+            sighLayer.iconImageName = NSExpression(forConstantValue: MapLibreDarkStyle.sighImageID)
+            sighLayer.iconScale = NSExpression(forConstantValue: 0.3)
+            sighLayer.iconAllowsOverlap = NSExpression(forConstantValue: true)
+            sighLayer.iconIgnoresPlacement = NSExpression(forConstantValue: true)
+            style.addLayer(sighLayer)
+            sighLayers.append(sighLayer)
+        }
         startSighPulse()
 
         let currentSource = MLNShapeSource(
@@ -234,7 +241,10 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
             let feature = MLNPointFeature()
             feature.coordinate = CLLocationCoordinate2D(latitude: marker.latitude, longitude: marker.longitude)
             feature.identifier = marker.id as NSString
-            feature.attributes = ["id": marker.id]
+            feature.attributes = [
+                "id": marker.id,
+                Self.sighPulseGroupProperty: Self.pulseGroup(for: marker.id),
+            ]
             return feature
         }
         sighSource?.shape = MLNShapeCollectionFeature(shapes: features)
@@ -251,12 +261,35 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
 
     @objc
     private func updateSighPulse() {
-        guard let sighLayer else { return }
         let elapsed = CACurrentMediaTime() - sighPulseStartedAt
-        let wave = (sin(elapsed * 2 * .pi / 1.8) + 1) / 2
-        let pulse = wave * wave * (3 - (2 * wave))
-        sighLayer.iconScale = NSExpression(forConstantValue: 0.24 + (pulse * 0.12))
-        sighLayer.iconOpacity = NSExpression(forConstantValue: 0.72 + (pulse * 0.28))
+        for (group, sighLayer) in sighLayers.enumerated() {
+            let phase = (elapsed / Self.sighPulsePeriod + Double(group) / Double(Self.sighPulseGroupCount))
+                .truncatingRemainder(dividingBy: 1)
+            let wave = (sin(phase * 2 * .pi) + 1) / 2
+            let pulse = wave * wave * (3 - (2 * wave))
+            sighLayer.iconScale = NSExpression(forConstantValue: 0.24 + (pulse * 0.12))
+            sighLayer.iconOpacity = NSExpression(forConstantValue: 0.72 + (pulse * 0.28))
+        }
+    }
+
+    private static let sighPulseGroupCount = 12
+    private static let sighPulsePeriod = 1.8
+    private static let sighPulseGroupProperty = "sighPulseGroup"
+    private static var sighLayerIDs: [String] {
+        (0..<sighPulseGroupCount).map { sighLayerID(for: $0) }
+    }
+
+    private static func sighLayerID(for group: Int) -> String {
+        group == 0 ? MapLibreDarkStyle.sighLayerID : "\(MapLibreDarkStyle.sighLayerID)-\(group)"
+    }
+
+    private static func pulseGroup(for markerID: String) -> Int {
+        var hash: UInt64 = 14_695_981_039_346_656_037
+        for byte in markerID.utf8 {
+            hash ^= UInt64(byte)
+            hash &*= 1_099_511_628_211
+        }
+        return Int(hash % UInt64(sighPulseGroupCount))
     }
 
     private func updateCurrentLocation(_ location: IosCurrentLocation?) {
