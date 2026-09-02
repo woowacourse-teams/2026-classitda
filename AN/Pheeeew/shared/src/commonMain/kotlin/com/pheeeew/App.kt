@@ -73,7 +73,6 @@ fun App(
                                 }
                             }
                         },
-                        onContactClick = {},
                         onOpenSourceLicenseClick = {
                             selectedLegalDocument = LegalDocument.OpenSourceLicenses
                             screen = Screen.LegalDocument
@@ -82,8 +81,8 @@ fun App(
                             selectedLegalDocument = LegalDocument.PrivacyPolicy
                             screen = Screen.LegalDocument
                         },
-                        onCreditsClick = {},
                         appVersion = appVersion,
+                        contactMail = "contact@pheeeew.com",
                     )
                 }
             }

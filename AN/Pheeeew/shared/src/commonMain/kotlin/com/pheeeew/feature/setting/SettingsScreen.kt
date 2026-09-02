@@ -18,13 +18,12 @@ import com.pheeeew.core.designsystem.theme.AppTheme
 
 @Composable
 fun SettingsScreen(
+    appVersion: String,
+    contactMail: String,
     onBackClick: () -> Unit,
     onPermissionClick: () -> Unit,
-    onContactClick: () -> Unit,
-    onOpenSourceLicenseClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
-    onCreditsClick: () -> Unit,
-    appVersion: String,
+    onOpenSourceLicenseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -53,16 +52,10 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(32.dp))
 
         SettingsSection(title = "이용안내") {
-            SettingsMenuItem(title = "앱 버전", trailingText = appVersion)
-            SettingsMenuItem(title = "문의하기", onClick = onContactClick)
-            SettingsMenuItem(title = "오픈소스 라이선스", onClick = onOpenSourceLicenseClick)
             SettingsMenuItem(title = "개인정보 처리방침", onClick = onPrivacyPolicyClick)
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        SettingsSection(title = "기타") {
-            SettingsMenuItem(title = "Pheeeew를 만든 사람들", onClick = onCreditsClick)
+            SettingsMenuItem(title = "오픈소스 라이선스", onClick = onOpenSourceLicenseClick)
+            SettingsMenuItem(title = "앱 버전", trailingText = appVersion)
+            SettingsMenuItem(title = "문의하기", trailingText = contactMail)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -76,11 +69,10 @@ private fun SettingsScreenPreview() {
         SettingsScreen(
             onBackClick = {},
             onPermissionClick = {},
-            onContactClick = {},
             onOpenSourceLicenseClick = {},
             onPrivacyPolicyClick = {},
-            onCreditsClick = {},
             appVersion = "1.0.0",
+            contactMail = "contact@pheeeew.com",
         )
     }
 }
