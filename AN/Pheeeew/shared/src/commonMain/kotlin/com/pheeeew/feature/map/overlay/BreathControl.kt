@@ -37,8 +37,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.input.pointer.util.VelocityTracker
-import androidx.compose.ui.input.pointer.util.addPointerInputChange
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
@@ -72,7 +70,7 @@ private const val QUIET_DELAY_MILLIS = 500L
 private const val MIN_RELEASE_GROWTH = 0.3f
 private const val NEEDS_MORE_HINT_MILLIS = 1_400L
 private const val RELEASE_DRAG_MAX_DP = 1200f
-private const val FLING_VELOCITY_THRESHOLD_DP = 400f
+private const val FLING_VELOCITY_THRESHOLD_DP = 250f
 private const val SHAKE_AMPLITUDE_DP = 3f
 private const val FLY_AWAY_DISTANCE_DP = 1600f
 private const val IDLE_TEXT_GAP_BOX_HEIGHT_DP = 100f
@@ -312,12 +310,29 @@ fun BreathControl(
                             } else {
                                 val maxDragPx = with(density) { RELEASE_DRAG_MAX_DP.dp.toPx() }
                                 val flingThresholdPx = with(density) { FLING_VELOCITY_THRESHOLD_DP.dp.toPx() }
-                                val velocityTracker = VelocityTracker()
+                                // Manual velocity calc (whole-gesture average) instead of Compose's
+                                // VelocityTracker: on iOS this app's fling detection was unreliable using
+                                // VelocityTracker, so this avoids depending on its platform-specific internal
+                                // smoothing. Uses the raw per-event dragAmount deltas summed up, NOT
+                                // change.position — position is in the pointerInput node's own (moving)
+                                // local coordinate frame, and since this box translates to follow the
+                                // finger, the local position barely changes even while the finger travels
+                                // far, which silently corrupts any position-delta-based velocity calc.
+                                var dragStartTimeMillis = -1L
+                                var lastDragTimeMillis = 0L
+                                var rawTraveledY = 0f
                                 detectDragGestures(
-                                    onDragStart = { velocityTracker.resetTracking() },
+                                    onDragStart = {
+                                        dragStartTimeMillis = -1L
+                                        rawTraveledY = 0f
+                                    },
                                     onDrag = { change, dragAmount ->
                                         change.consume()
-                                        velocityTracker.addPointerInputChange(change)
+                                        if (dragStartTimeMillis < 0L) {
+                                            dragStartTimeMillis = change.uptimeMillis
+                                        }
+                                        lastDragTimeMillis = change.uptimeMillis
+                                        rawTraveledY += dragAmount.y
                                         coroutineScope.launch {
                                             dragOffsetY.snapTo(
                                                 (dragOffsetY.value + dragAmount.y).coerceIn(-maxDragPx, 0f),
@@ -327,7 +342,8 @@ fun BreathControl(
                                     onDragEnd = {
                                         // A slow, deliberate raise must NOT register — only a fast upward
                                         // flick (fling) does, regardless of how far the drag itself traveled.
-                                        val flingVelocityY = velocityTracker.calculateVelocity().y
+                                        val elapsedMillis = (lastDragTimeMillis - dragStartTimeMillis).coerceAtLeast(1L)
+                                        val flingVelocityY = rawTraveledY / elapsedMillis * 1000f
                                         when {
                                             flingVelocityY > -flingThresholdPx -> {
                                                 coroutineScope.launch {
