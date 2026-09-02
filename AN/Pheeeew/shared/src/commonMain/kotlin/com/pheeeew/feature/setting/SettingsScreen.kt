@@ -21,10 +21,10 @@ fun SettingsScreen(
     onBackClick: () -> Unit,
     onThemeSettingClick: () -> Unit,
     onLocationPermissionClick: () -> Unit,
+    onMicrophonePermissionClick: () -> Unit,
     onContactClick: () -> Unit,
     onOpenSourceLicenseClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
-    onLocationPolicyClick: () -> Unit,
     onCreditsClick: () -> Unit,
     appVersion: String,
     modifier: Modifier = Modifier,
@@ -51,6 +51,7 @@ fun SettingsScreen(
         SettingsSection(title = "앱 설정") {
             SettingsMenuItem(title = "테마 설정", onClick = onThemeSettingClick)
             SettingsMenuItem(title = "위치 권한 설정", onClick = onLocationPermissionClick)
+            SettingsMenuItem(title = "마이크 권한 설정", onClick = onMicrophonePermissionClick)
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -60,7 +61,6 @@ fun SettingsScreen(
             SettingsMenuItem(title = "문의하기", onClick = onContactClick)
             SettingsMenuItem(title = "오픈소스 라이선스", onClick = onOpenSourceLicenseClick)
             SettingsMenuItem(title = "개인정보 처리방침", onClick = onPrivacyPolicyClick)
-            // SettingsMenuItem(title = "위치정보 처리방침", onClick = onLocationPolicyClick)
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -84,7 +84,7 @@ private fun SettingsScreenPreview() {
             onContactClick = {},
             onOpenSourceLicenseClick = {},
             onPrivacyPolicyClick = {},
-            onLocationPolicyClick = {},
+            onMicrophonePermissionClick = {},
             onCreditsClick = {},
             appVersion = "1.0.0",
         )

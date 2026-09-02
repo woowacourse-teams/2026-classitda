@@ -10,8 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.pheeeew.core.network.ApiConfig
 import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
+import com.pheeeew.di.SighModule
 import com.pheeeew.di.createAndroidLocationDependencies
 
 class MainActivity : ComponentActivity() {
@@ -28,12 +30,13 @@ class MainActivity : ComponentActivity() {
                 activity = this,
                 retainedDependencies = holder.dependencies,
             ).also { holder.dependencies = it }
+        val sighRepository = SighModule.create(ApiConfig(baseUrl = BuildConfig.API_BASE_URL))
 
         setContent {
             App(
                 appVersion = BuildConfig.VERSION_NAME,
                 locationDependencies = locationDependencies,
-                sighRepository = FakeSighRepository(),
+                sighRepository = sighRepository,
             )
         }
     }

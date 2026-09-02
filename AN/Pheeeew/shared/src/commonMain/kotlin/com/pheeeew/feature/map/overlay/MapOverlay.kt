@@ -37,6 +37,8 @@ fun MapOverlay(
     sighReleaseState: SighReleaseState = SighReleaseState.Idle,
     onRetrySigh: () -> Unit = {},
     onCancelSigh: () -> Unit = {},
+    microphoneErrorMessage: String? = null,
+    onMicrophoneErrorDismiss: () -> Unit = {},
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -81,7 +83,14 @@ fun MapOverlay(
             )
         }
 
-        breathControl()
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            breathControl()
+            ErrorSnackbar(
+                message = microphoneErrorMessage,
+                onDismiss = onMicrophoneErrorDismiss,
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 8.dp, end = 16.dp),
+            )
+        }
         Spacer(modifier = Modifier.navigationBarsPadding())
     }
 }

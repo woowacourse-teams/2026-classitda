@@ -1,5 +1,6 @@
 package com.pheeeew.feature.map
 
+import com.pheeeew.core.audio.BreathInputError
 import com.pheeeew.domain.model.location.LocationError
 import com.pheeeew.domain.model.location.LocationState
 import com.pheeeew.domain.model.sigh.SighPin
@@ -38,4 +39,11 @@ internal fun LocationError.toKoreanMessage(): String =
     when (this) {
         LocationError.PermissionDenied -> "설정에서 위치 권한을 '허용'으로 변경해주세요."
         LocationError.GpsUnavailable, LocationError.LocationTimeout -> "GPS 수신이 원활하지 않습니다."
+    }
+
+internal fun BreathInputError.toKoreanMessage(): String =
+    when (this) {
+        BreathInputError.PermissionDenied -> "마이크 권한이 필요해요"
+        BreathInputError.MicrophoneUnavailable -> "마이크를 사용할 수 없어요"
+        BreathInputError.StartFailed -> "마이크를 시작하지 못했어요. 다시 시도해주세요"
     }
