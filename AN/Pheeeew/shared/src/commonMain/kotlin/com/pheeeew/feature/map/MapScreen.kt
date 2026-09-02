@@ -1,8 +1,18 @@
 package com.pheeeew.feature.map
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -11,12 +21,18 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.audio.BreathInputError
 import com.pheeeew.core.designsystem.component.AppDialog
+import com.pheeeew.core.designsystem.theme.AppColors
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.permission.LocationPermissionStatus
 import com.pheeeew.data.repository.FakeSighRepository
@@ -28,7 +44,10 @@ import com.pheeeew.feature.map.animation.StarFlightOverlay
 import com.pheeeew.feature.map.map.BreathMap
 import com.pheeeew.feature.map.map.MapProjectionSnapshot
 import com.pheeeew.feature.map.overlay.BreathControl
+import com.pheeeew.feature.map.overlay.ErrorSnackbar
 import com.pheeeew.feature.map.overlay.MapOverlay
+import com.pheeeew.feature.map.overlay.SighPhase
+import com.pheeeew.feature.map.overlay.SwipeUpHint
 
 @Composable
 fun MapScreen(
@@ -49,6 +68,8 @@ fun MapScreen(
     var microphoneError by remember { mutableStateOf<BreathInputError?>(null) }
     var showLocationPermissionDialog by remember { mutableStateOf(false) }
     var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
+    var sighPhase by remember { mutableStateOf(SighPhase.Idle) }
+    var cancelSignal by remember { mutableStateOf(0) }
 
     val hiddenMarkerId =
         successState?.focusRequest?.id?.takeIf {
@@ -88,41 +109,6 @@ fun MapScreen(
         MapOverlay(
             onSettingsClick = onSettingsClick,
             onRefreshClick = viewModel::loadSighs,
-            breathControl = {
-                BreathControl(
-                    enabled =
-                        successState != null &&
-                            successState.sighReleaseState is SighReleaseState.Idle &&
-                            !isFlightInProgress,
-                    onExplosionFinished = { origin ->
-                        pendingFlightOrigin = origin
-                        viewModel.registerSighAfterExplosion()
-                    },
-                    onMicrophoneError = { error ->
-                        if (error == BreathInputError.PermissionDenied) {
-                            showMicrophonePermissionDialog = true
-                        } else {
-                            microphoneError = error
-                        }
-                    },
-                    ensureLocationPermission = {
-                        when (viewModel.ensureLocationPermission()) {
-                            LocationPermissionStatus.Granted -> {
-                                true
-                            }
-
-                            LocationPermissionStatus.PermanentlyDenied -> {
-                                showLocationPermissionDialog = true
-                                false
-                            }
-
-                            LocationPermissionStatus.Denied -> {
-                                false
-                            }
-                        }
-                    },
-                )
-            },
             onZoomInClick = viewModel::onZoomInClick,
             onZoomOutClick = viewModel::onZoomOutClick,
             onMyLocationClick = viewModel::onMyLocationClick,
@@ -133,9 +119,92 @@ fun MapScreen(
                 pendingFlightOrigin = null
                 viewModel.cancelFailedSighRegistration()
             },
-            microphoneErrorMessage = microphoneError?.toKoreanMessage(),
-            onMicrophoneErrorDismiss = { microphoneError = null },
+            controlsEnabled = sighPhase == SighPhase.Idle,
         )
+
+        AnimatedVisibility(
+            visible = sighPhase != SighPhase.Idle,
+            enter = fadeIn(tween(200)),
+            exit = fadeOut(tween(200)),
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.6f))
+                        .pointerInput(Unit) {
+                            detectTapGestures(onTap = { cancelSignal += 1 })
+                        },
+            )
+        }
+
+        if (sighPhase != SighPhase.Idle) {
+            Text(
+                text =
+                    when (sighPhase) {
+                        SighPhase.Listening -> "후– 하고 한숨을 내쉬어보세요"
+                        SighPhase.Quiet -> "한숨을 날려보세요"
+                        SighPhase.NeedsMore -> "한숨을 더 크게 불어주세요"
+                        SighPhase.Bursting -> "한숨을 별로 빚고 있어요"
+                        SighPhase.Idle -> ""
+                    },
+                style = AppTheme.typography.sectionHeader,
+                color = AppColors.Cream100,
+                modifier = Modifier.align(BiasAlignment(0f, -0.15f)),
+            )
+        }
+
+        if (sighPhase == SighPhase.Quiet) {
+            SwipeUpHint(
+                modifier =
+                    Modifier
+                        .align(BiasAlignment(0f, -0.15f))
+                        .offset(y = 40.dp),
+            )
+        }
+
+        Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding().align(Alignment.BottomCenter)) {
+            BreathControl(
+                enabled =
+                    successState != null &&
+                        successState.sighReleaseState is SighReleaseState.Idle &&
+                        !isFlightInProgress,
+                onExplosionFinished = { origin ->
+                    pendingFlightOrigin = origin
+                    viewModel.registerSighAfterExplosion()
+                },
+                onMicrophoneError = { error ->
+                    if (error == BreathInputError.PermissionDenied) {
+                        showMicrophonePermissionDialog = true
+                    } else {
+                        microphoneError = error
+                    }
+                },
+                ensureLocationPermission = {
+                    when (viewModel.ensureLocationPermission()) {
+                        LocationPermissionStatus.Granted -> {
+                            true
+                        }
+
+                        LocationPermissionStatus.PermanentlyDenied -> {
+                            showLocationPermissionDialog = true
+                            false
+                        }
+
+                        LocationPermissionStatus.Denied -> {
+                            false
+                        }
+                    }
+                },
+                onPhaseChanged = { sighPhase = it },
+                cancelSignal = cancelSignal,
+            )
+            ErrorSnackbar(
+                message = microphoneError?.toKoreanMessage(),
+                onDismiss = { microphoneError = null },
+                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 8.dp, end = 16.dp),
+            )
+        }
 
         val activeId = activeFlightId
         val origin = pendingFlightOrigin
