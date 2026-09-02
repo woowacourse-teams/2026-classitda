@@ -11,7 +11,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		5647273F7E2BAA66C229B92E /* Pheeeew.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pheeeew.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5647273F7E2BAA66C229B92E /* .app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = .app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -64,7 +64,7 @@
 		F93A3DCF112B44FD4AE0D285 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5647273F7E2BAA66C229B92E /* Pheeeew.app */,
+				5647273F7E2BAA66C229B92E /* .app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,7 +93,7 @@
 				A30303030303030303030303 /* MapLibre */,
 			);
 			productName = iosApp;
-			productReference = 5647273F7E2BAA66C229B92E /* Pheeeew.app */;
+			productReference = 5647273F7E2BAA66C229B92E /* .app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
