@@ -28,6 +28,8 @@ interface IosMapEventSink {
 
     fun onStyleLoadFailed()
 
+    fun onMapRecovered()
+
     fun onProjectionChanged(
         points: List<IosMapScreenPoint>,
         cameraIdle: Boolean,

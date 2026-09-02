@@ -89,6 +89,7 @@ fun BreathControl(
     onPhaseChanged: (SighPhase) -> Unit,
     cancelSignal: Int,
     modifier: Modifier = Modifier,
+    requestPermissionOnLaunch: Boolean = true,
 ) {
     var listening by remember { mutableStateOf(false) }
     var strength by remember { mutableStateOf(0f) }
@@ -107,6 +108,12 @@ fun BreathControl(
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
     val density = LocalDensity.current
+
+    LaunchedEffect(breathInput, requestPermissionOnLaunch) {
+        if (requestPermissionOnLaunch) {
+            breathInput.requestPermission()
+        }
+    }
 
     DisposableEffect(breathInput, lifecycleOwner) {
         val observer =
@@ -278,6 +285,10 @@ fun BreathControl(
                                 detectTapGestures(onTap = {
                                     if (!enabled || burst) return@detectTapGestures
                                     coroutineScope.launch {
+                                        if (!breathInput.requestPermission()) {
+                                            onMicrophoneError(BreathInputError.PermissionDenied)
+                                            return@launch
+                                        }
                                         if (!ensureLocationPermission()) return@launch
                                         growth = 0f
                                         strength = 0f

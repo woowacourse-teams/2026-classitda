@@ -29,6 +29,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.audio.BreathInputError
 import com.pheeeew.core.designsystem.component.AppDialog
@@ -48,12 +51,15 @@ import com.pheeeew.feature.map.overlay.ErrorSnackbar
 import com.pheeeew.feature.map.overlay.MapOverlay
 import com.pheeeew.feature.map.overlay.SighPhase
 import com.pheeeew.feature.map.overlay.SwipeUpHint
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
 
 @Composable
 fun MapScreen(
     locationDependencies: LocationDependencies?,
     onSettingsClick: () -> Unit,
     modifier: Modifier = Modifier,
+    isActive: Boolean = true,
     viewModel: MapViewModel = viewModel { MapViewModel(FakeSighRepository(), locationDependencies) },
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -67,9 +73,27 @@ fun MapScreen(
     val animationCoordinator = remember { SighAnimationCoordinator() }
     var microphoneError by remember { mutableStateOf<BreathInputError?>(null) }
     var showLocationPermissionDialog by remember { mutableStateOf(false) }
+    var showLocationServicesDialog by remember { mutableStateOf(false) }
     var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
+    var startupPermissionsChecked by remember { mutableStateOf(false) }
+    val lifeCycleOwner = LocalLifecycleOwner.current
     var sighPhase by remember { mutableStateOf(SighPhase.Idle) }
     var cancelSignal by remember { mutableStateOf(0) }
+
+    LaunchedEffect(lifeCycleOwner, isActive) {
+        if (!isActive) startupPermissionsChecked = false
+        lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            if (!isActive) return@repeatOnLifecycle
+            if (!startupPermissionsChecked) {
+                viewModel.ensureLocationPermission()
+                startupPermissionsChecked = true
+                launch { viewModel.refreshLocationPermission() }
+            } else {
+                viewModel.refreshLocationPermission()
+            }
+            awaitCancellation()
+        }
+    }
 
     val hiddenMarkerId =
         successState?.focusRequest?.id?.takeIf {
@@ -163,7 +187,7 @@ fun MapScreen(
             )
         }
 
-        Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding().align(Alignment.BottomCenter)) {
+        if (isActive) Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding().align(Alignment.BottomCenter)) {
             BreathControl(
                 enabled =
                     successState != null &&
@@ -184,6 +208,11 @@ fun MapScreen(
                     when (viewModel.ensureLocationPermission()) {
                         LocationPermissionStatus.Granted -> {
                             true
+                        }
+
+                        LocationPermissionStatus.ServicesDisabled -> {
+                            showLocationServicesDialog = true
+                            false
                         }
 
                         LocationPermissionStatus.PermanentlyDenied -> {
@@ -249,6 +278,21 @@ fun MapScreen(
                 },
                 onDismissRequest = { showLocationPermissionDialog = false },
                 onDismissClick = { showLocationPermissionDialog = false },
+                dismissText = "취소",
+            )
+        }
+
+        if (showLocationServicesDialog) {
+            AppDialog(
+                title = "위치 서비스 설정 안내",
+                body = "현재 위치를 확인하려면 기기 설정에서 위치 서비스를 켜주세요.",
+                confirmText = "설정으로 이동",
+                onConfirmClick = {
+                    showLocationServicesDialog = false
+                    viewModel.openLocationSettings()
+                },
+                onDismissRequest = { showLocationServicesDialog = false },
+                onDismissClick = { showLocationServicesDialog = false },
                 dismissText = "취소",
             )
         }

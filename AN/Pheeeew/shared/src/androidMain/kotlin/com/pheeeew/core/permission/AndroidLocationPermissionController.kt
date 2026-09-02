@@ -3,6 +3,8 @@ package com.pheeeew.core.permission
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.activity.ComponentActivity
@@ -50,6 +52,11 @@ class AndroidLocationPermissionController(
 
     private var permissionLauncher: ActivityResultLauncher<Array<String>>? = null
 
+    private val locationManager: LocationManager =
+        requireNotNull(
+            applicationContext.getSystemService(LocationManager::class.java),
+        )
+
     init {
         attach(activity)
     }
@@ -85,6 +92,11 @@ class AndroidLocationPermissionController(
     override suspend fun requestPermission(): LocationPermissionStatus =
         requestMutex.withLock {
             withContext(Dispatchers.Main.immediate) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
+                    !locationManager.isLocationEnabled
+                ) {
+                    return@withContext LocationPermissionStatus.ServicesDisabled
+                }
                 if (hasLocationPermission()) {
                     return@withContext LocationPermissionStatus.Granted
                 }
@@ -134,6 +146,10 @@ class AndroidLocationPermissionController(
     }
 
     private fun statusNow(): LocationPermissionStatus {
+        val locationServicesEnabled =
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
+                locationManager.isLocationEnabled
+
         val wasRequested = preferences.getBoolean(KEY_HAS_REQUESTED, false)
         val activity = activityReference.get()
         val canExplainDenial =
@@ -145,6 +161,7 @@ class AndroidLocationPermissionController(
 
         return androidLocationPermissionStatus(
             hasPermission = hasLocationPermission(),
+            locationServicesEnabled = locationServicesEnabled,
             wasRequested = wasRequested,
             isActivityAttached = activity != null,
             canExplainDenial = canExplainDenial,
@@ -172,11 +189,13 @@ class AndroidLocationPermissionController(
 
 internal fun androidLocationPermissionStatus(
     hasPermission: Boolean,
+    locationServicesEnabled: Boolean,
     wasRequested: Boolean,
     isActivityAttached: Boolean,
     canExplainDenial: Boolean,
 ): LocationPermissionStatus =
     when {
+        !locationServicesEnabled -> LocationPermissionStatus.ServicesDisabled
         hasPermission -> LocationPermissionStatus.Granted
         !isActivityAttached -> LocationPermissionStatus.Denied
         wasRequested && !canExplainDenial -> LocationPermissionStatus.PermanentlyDenied

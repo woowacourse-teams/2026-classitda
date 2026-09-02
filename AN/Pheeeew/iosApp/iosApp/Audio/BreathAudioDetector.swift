@@ -13,6 +13,10 @@ final class BreathAudioDetector {
     private var lowPassed2000 = 0.0
     private var previousBandLimited = 0.0
 
+    func requestPermission(completion: @escaping (Bool) -> Void) {
+        AVAudioSession.sharedInstance().requestRecordPermission(completion)
+    }
+
     func start() {
         guard !wantsRecording, !tapInstalled else { return }
         wantsRecording = true

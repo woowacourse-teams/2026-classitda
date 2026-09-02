@@ -13,6 +13,10 @@ internal suspend fun handleLocationPermissionSettingsClick(
             permissionController.requestPermission()
         }
 
+        LocationPermissionStatus.ServicesDisabled -> {
+            settingsLauncher.openLocationSettings()
+        }
+
         LocationPermissionStatus.Granted,
         LocationPermissionStatus.PermanentlyDenied,
         -> {

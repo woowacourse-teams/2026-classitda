@@ -44,6 +44,18 @@ class LocationPermissionSettingsHandlerTest {
             assertEquals(1, settingsLauncher.openCalls)
         }
 
+    @Test
+    fun `disabled location services opens location settings`() =
+        runTest {
+            val permissionController = FakePermissionController(LocationPermissionStatus.ServicesDisabled)
+            val settingsLauncher = FakeSettingsLauncher()
+
+            handleLocationPermissionSettingsClick(permissionController, settingsLauncher)
+
+            assertEquals(0, settingsLauncher.openCalls)
+            assertEquals(1, settingsLauncher.openLocationSettingsCalls)
+        }
+
     private class FakePermissionController(
         private val status: LocationPermissionStatus,
     ) : LocationPermissionController {
@@ -59,9 +71,15 @@ class LocationPermissionSettingsHandlerTest {
 
     private class FakeSettingsLauncher : LocationPermissionSettingsLauncher {
         var openCalls = 0
+        var openLocationSettingsCalls = 0
 
         override suspend fun openAppSettings(): Boolean {
             openCalls += 1
+            return true
+        }
+
+        override suspend fun openLocationSettings(): Boolean {
+            openLocationSettingsCalls += 1
             return true
         }
     }

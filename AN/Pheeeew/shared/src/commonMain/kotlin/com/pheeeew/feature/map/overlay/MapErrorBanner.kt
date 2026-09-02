@@ -32,9 +32,10 @@ fun MapErrorBanner(
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
     onNew: (() -> Unit)? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     Surface(
-        modifier = modifier,
+        modifier = modifier.then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         shape = RoundedCornerShape(20),
         color = AppTheme.colors.surface,
         contentColor = AppTheme.colors.onBackground,
@@ -83,7 +84,7 @@ private fun MapErrorBannerPreview() {
     AppTheme {
         Box(modifier = Modifier.background(AppTheme.colors.background).padding(24.dp)) {
             MapErrorBanner(
-                message = "인터넷 연결 상태를 확인해주세요!",
+                message = "네트워크 연결이 불안정해요. 인터넷 연결을 확인한 후 다시 시도해 주세요.",
                 modifier = Modifier.fillMaxWidth(),
             )
         }

@@ -12,6 +12,7 @@ fun BreathMap(
     onSighClick: (String) -> Unit,
     onBoundsChanged: (SighBounds) -> Unit,
     onMapError: (MapError) -> Unit,
+    onMapRecovered: () -> Unit = {},
     onProjectionChanged: (MapProjectionSnapshot) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
@@ -21,6 +22,7 @@ fun BreathMap(
         onSighClick = onSighClick,
         onBoundsChanged = onBoundsChanged,
         onMapError = onMapError,
+        onMapRecovered = onMapRecovered,
         onProjectionChanged = onProjectionChanged,
         modifier = modifier,
     )

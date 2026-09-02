@@ -37,8 +37,21 @@ sealed interface SighReleaseState {
 
 internal fun LocationError.toKoreanMessage(): String =
     when (this) {
-        LocationError.PermissionDenied -> "설정에서 위치 권한을 '허용'으로 변경해주세요."
-        LocationError.GpsUnavailable, LocationError.LocationTimeout -> "GPS 수신이 원활하지 않습니다."
+        LocationError.PermissionDenied -> {
+            "설정에서 위치 권한을 '허용'으로 변경해주세요."
+        }
+
+        LocationError.ServicesDisabled -> {
+            "기기 설정에서 위치 서비스를 켜주세요."
+        }
+
+        LocationError.GpsUnavailable -> {
+            "현재 위치를 확인할 수 없습니다."
+        }
+
+        LocationError.LocationTimeout -> {
+            "현재 위치를 확인하는 데 시간이 걸리고 있습니다."
+        }
     }
 
 internal fun BreathInputError.toKoreanMessage(): String =

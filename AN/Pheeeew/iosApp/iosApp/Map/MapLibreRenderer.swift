@@ -78,6 +78,7 @@ final class MapLibreRenderer: NSObject, MLNMapViewDelegate, UIGestureRecognizerD
         MapLibreDarkStyle.addKoreanPoiLayerIfPossible(to: style)
         addRuntimeSourcesAndLayers(to: style)
         styleIsReady = true
+        eventSink.onMapRecovered()
 
         if let state = pendingState {
             update(state: state)

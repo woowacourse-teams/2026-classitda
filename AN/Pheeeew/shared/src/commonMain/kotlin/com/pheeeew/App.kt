@@ -6,7 +6,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,9 +13,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.navigation.DoubleBackToExitHandler
@@ -46,23 +42,6 @@ fun App(
         val mapViewModel: MapViewModel = viewModel { MapViewModel(sighRepository, locationDependencies) }
         var selectedLegalDocument by remember { mutableStateOf<LegalDocument?>(null) }
 
-        // 시스템 설정 화면 등 백그라운드에 다녀온 뒤 앱으로 돌아왔을 때 위치 권한 상태를 다시 확인합니다.
-        val lifecycleOwner = LocalLifecycleOwner.current
-        DisposableEffect(locationDependencies, lifecycleOwner) {
-            var isInitialResume = true
-            val observer =
-                LifecycleEventObserver { _, event ->
-                    if (event != Lifecycle.Event.ON_RESUME) return@LifecycleEventObserver
-                    if (isInitialResume) {
-                        isInitialResume = false
-                    } else {
-                        mapViewModel.refreshLocationPermission()
-                    }
-                }
-            lifecycleOwner.lifecycle.addObserver(observer)
-            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-        }
-
         // 오버레이 화면들이 뒤에 깔린 지도로 터치가 새어나가지 않도록 막습니다.
         val overlayModifier =
             Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {}
@@ -73,6 +52,7 @@ fun App(
             MapScreen(
                 locationDependencies = locationDependencies,
                 onSettingsClick = { screen = Screen.Settings },
+                isActive = screen == Screen.Map,
                 viewModel = mapViewModel,
             )
 
@@ -86,21 +66,13 @@ fun App(
                 PredictiveBackContent(onBack = { screen = Screen.Map }, modifier = overlayModifier) {
                     SettingsScreen(
                         onBackClick = { screen = Screen.Map },
-                        onThemeSettingClick = {},
-                        onLocationPermissionClick = {
+                        onPermissionClick = {
                             locationDependencies?.let { dependencies ->
                                 coroutineScope.launch {
-                                    handleLocationPermissionSettingsClick(
-                                        permissionController = dependencies.permissionController,
-                                        settingsLauncher = dependencies.permissionSettingsLauncher,
-                                    )
+                                    dependencies.permissionSettingsLauncher.openAppSettings()
                                 }
                             }
                         },
-                        onMicrophonePermissionClick = {
-                            mapViewModel.openAppSettings()
-                        },
-                        onContactClick = {},
                         onOpenSourceLicenseClick = {
                             selectedLegalDocument = LegalDocument.OpenSourceLicenses
                             screen = Screen.LegalDocument
@@ -109,8 +81,8 @@ fun App(
                             selectedLegalDocument = LegalDocument.PrivacyPolicy
                             screen = Screen.LegalDocument
                         },
-                        onCreditsClick = {},
                         appVersion = appVersion,
+                        contactMail = "contact@pheeeew.com",
                     )
                 }
             }
