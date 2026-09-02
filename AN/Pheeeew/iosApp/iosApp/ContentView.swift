@@ -10,7 +10,12 @@ struct ComposeView: UIViewControllerRepresentable {
         IosMapBridge.shared.registerFactory(factory: Self.mapFactory)
         IosBreathBridge.shared.attach(
             onStart: { Self.breathDetector.start() },
-            onStop: { Self.breathDetector.stop() }
+            onStop: { Self.breathDetector.stop() },
+            onRequestPermission: { completion in
+                Self.breathDetector.requestPermission { granted in
+                    completion(KotlinBoolean(bool: granted))
+                }
+            }
         )
         return MainViewControllerKt.MainViewController()
     }

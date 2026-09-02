@@ -16,7 +16,10 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.concurrent.thread
+import kotlin.coroutines.resume
 import kotlin.math.PI
 import kotlin.math.ln
 import kotlin.math.max
@@ -45,8 +48,38 @@ private class AndroidBreathInput(
     private var worker: Thread? = null
     private var strengthCallback: ((Float) -> Unit)? = null
     private var errorCallback: ((BreathInputError) -> Unit)? = null
+    private var permissionContinuation: CancellableContinuation<Boolean>? = null
     private var smoothedStrength = 0f
     var permissionRequester: (() -> Unit)? = null
+
+    override suspend fun requestPermission(): Boolean {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            return true
+        }
+
+        return suspendCancellableCoroutine { continuation ->
+            permissionContinuation?.cancel()
+            permissionContinuation = continuation
+            continuation.invokeOnCancellation {
+                if (permissionContinuation === continuation) {
+                    permissionContinuation = null
+                }
+            }
+
+            try {
+                permissionRequester?.invoke()
+                    ?: run {
+                        permissionContinuation = null
+                        continuation.resume(false)
+                    }
+            } catch (_: IllegalStateException) {
+                permissionContinuation = null
+                continuation.resume(false)
+            }
+        }
+    }
 
     override fun start(
         onStrengthChanged: (Float) -> Unit,
@@ -65,6 +98,11 @@ private class AndroidBreathInput(
     }
 
     fun onPermissionResult(granted: Boolean) {
+        permissionContinuation?.let { continuation ->
+            permissionContinuation = null
+            if (continuation.isActive) continuation.resume(granted)
+        }
+
         if (!granted) {
             wantsRecording = false
             publishError(BreathInputError.PermissionDenied)
