@@ -21,7 +21,8 @@ public final class SighFixture {
     public static Sigh.SighBuilder 기본_한숨_빌더() {
         return Sigh.builder()
                 .requestId(UUID.randomUUID())
-                .location(서울시청_좌표());
+                .location(서울시청_좌표())
+                .nickname("외로운 회사원");
     }
 
     public static Point 서울시청_좌표() {
