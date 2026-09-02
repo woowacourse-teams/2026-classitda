@@ -66,21 +66,13 @@ fun App(
                 PredictiveBackContent(onBack = { screen = Screen.Map }, modifier = overlayModifier) {
                     SettingsScreen(
                         onBackClick = { screen = Screen.Map },
-                        onThemeSettingClick = {},
-                        onLocationPermissionClick = {
+                        onPermissionClick = {
                             locationDependencies?.let { dependencies ->
                                 coroutineScope.launch {
-                                    handleLocationPermissionSettingsClick(
-                                        permissionController = dependencies.permissionController,
-                                        settingsLauncher = dependencies.permissionSettingsLauncher,
-                                    )
+                                    dependencies.permissionSettingsLauncher.openAppSettings()
                                 }
                             }
                         },
-                        onMicrophonePermissionClick = {
-                            mapViewModel.openAppSettings()
-                        },
-                        onContactClick = {},
                         onOpenSourceLicenseClick = {
                             selectedLegalDocument = LegalDocument.OpenSourceLicenses
                             screen = Screen.LegalDocument
@@ -89,8 +81,8 @@ fun App(
                             selectedLegalDocument = LegalDocument.PrivacyPolicy
                             screen = Screen.LegalDocument
                         },
-                        onCreditsClick = {},
                         appVersion = appVersion,
+                        contactMail = "contact@pheeeew.com",
                     )
                 }
             }

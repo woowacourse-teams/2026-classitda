@@ -18,15 +18,12 @@ import com.pheeeew.core.designsystem.theme.AppTheme
 
 @Composable
 fun SettingsScreen(
-    onBackClick: () -> Unit,
-    onThemeSettingClick: () -> Unit,
-    onLocationPermissionClick: () -> Unit,
-    onMicrophonePermissionClick: () -> Unit,
-    onContactClick: () -> Unit,
-    onOpenSourceLicenseClick: () -> Unit,
-    onPrivacyPolicyClick: () -> Unit,
-    onCreditsClick: () -> Unit,
     appVersion: String,
+    contactMail: String,
+    onBackClick: () -> Unit,
+    onPermissionClick: () -> Unit,
+    onPrivacyPolicyClick: () -> Unit,
+    onOpenSourceLicenseClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -49,24 +46,16 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         SettingsSection(title = "앱 설정") {
-            SettingsMenuItem(title = "테마 설정", onClick = onThemeSettingClick)
-            SettingsMenuItem(title = "위치 권한 설정", onClick = onLocationPermissionClick)
-            SettingsMenuItem(title = "마이크 권한 설정", onClick = onMicrophonePermissionClick)
+            SettingsMenuItem(title = "접근 권한 설정", onClick = onPermissionClick)
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
         SettingsSection(title = "이용안내") {
-            SettingsMenuItem(title = "앱 버전", trailingText = appVersion)
-            SettingsMenuItem(title = "문의하기", onClick = onContactClick)
-            SettingsMenuItem(title = "오픈소스 라이선스", onClick = onOpenSourceLicenseClick)
             SettingsMenuItem(title = "개인정보 처리방침", onClick = onPrivacyPolicyClick)
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        SettingsSection(title = "기타") {
-            SettingsMenuItem(title = "Pheeeew를 만든 사람들", onClick = onCreditsClick)
+            SettingsMenuItem(title = "오픈소스 라이선스", onClick = onOpenSourceLicenseClick)
+            SettingsMenuItem(title = "앱 버전", trailingText = appVersion)
+            SettingsMenuItem(title = "문의하기", trailingText = contactMail)
         }
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -79,14 +68,11 @@ private fun SettingsScreenPreview() {
     AppTheme {
         SettingsScreen(
             onBackClick = {},
-            onThemeSettingClick = {},
-            onLocationPermissionClick = {},
-            onContactClick = {},
+            onPermissionClick = {},
             onOpenSourceLicenseClick = {},
             onPrivacyPolicyClick = {},
-            onMicrophonePermissionClick = {},
-            onCreditsClick = {},
             appVersion = "1.0.0",
+            contactMail = "contact@pheeeew.com",
         )
     }
 }
