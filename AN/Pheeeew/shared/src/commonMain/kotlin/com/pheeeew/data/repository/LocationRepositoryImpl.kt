@@ -94,6 +94,6 @@ class LocationRepositoryImpl(
     }
 
     companion object {
-        const val DEFAULT_LOCATION_TIMEOUT_MILLIS: Long = 10_000L
+        const val DEFAULT_LOCATION_TIMEOUT_MILLIS: Long = 30_000L
     }
 }

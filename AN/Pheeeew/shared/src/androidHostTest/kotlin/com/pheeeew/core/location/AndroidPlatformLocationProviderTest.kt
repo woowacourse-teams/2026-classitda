@@ -2,8 +2,10 @@ package com.pheeeew.core.location
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 
 class AndroidPlatformLocationProviderTest {
     @Test
@@ -45,5 +47,34 @@ class AndroidPlatformLocationProviderTest {
 
         assertSame(PlatformLocationResult.GpsUnavailable, invalidCoordinate)
         assertSame(PlatformLocationResult.GpsUnavailable, invalidTimestamp)
+    }
+
+    @Test
+    fun recentLastKnownLocationIsAcceptedForSixtySeconds() {
+        assertTrue(
+            isRecentAndroidLocation(
+                capturedAtMillis = 40_000L,
+                nowMillis = 100_000L,
+                maximumAgeMillis = 60_000L,
+            ),
+        )
+    }
+
+    @Test
+    fun staleOrFutureLastKnownLocationIsRejected() {
+        assertFalse(
+            isRecentAndroidLocation(
+                capturedAtMillis = 39_999L,
+                nowMillis = 100_000L,
+                maximumAgeMillis = 60_000L,
+            ),
+        )
+        assertFalse(
+            isRecentAndroidLocation(
+                capturedAtMillis = 100_001L,
+                nowMillis = 100_000L,
+                maximumAgeMillis = 60_000L,
+            ),
+        )
     }
 }
