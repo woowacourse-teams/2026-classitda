@@ -23,7 +23,6 @@ internal object MapDarkStyle {
     const val SIGH_IMAGE_ID = "sigh-star-dark"
 
     const val CURRENT_LOCATION_SOURCE_ID = "current-location-source"
-    const val CURRENT_LOCATION_ACCURACY_LAYER_ID = "current-location-accuracy-layer"
     const val CURRENT_LOCATION_BORDER_LAYER_ID = "current-location-border-layer"
     const val CURRENT_LOCATION_LAYER_ID = "current-location-layer"
 
