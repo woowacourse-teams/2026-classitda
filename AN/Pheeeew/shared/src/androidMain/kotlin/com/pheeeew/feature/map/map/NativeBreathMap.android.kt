@@ -192,6 +192,7 @@ private class AndroidBreathMapHost(
                 isTiltGesturesEnabled = true
                 isLogoEnabled = true
                 isAttributionEnabled = true
+                isCompassEnabled = false
             }
             readyMap.addOnMapClickListener(mapClickListener)
             readyMap.addOnCameraMoveStartedListener(cameraMoveStartedListener)

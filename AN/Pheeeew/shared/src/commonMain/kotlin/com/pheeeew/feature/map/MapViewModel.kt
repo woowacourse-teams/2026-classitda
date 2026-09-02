@@ -28,7 +28,7 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import kotlin.uuid.Uuid
 
-private const val MIN_SIGH_SUBMITTING_DURATION_MILLIS = 1_500L
+private const val MIN_SIGH_SUBMITTING_DURATION_MILLIS = 2_000L
 
 class MapViewModel(
     private val sighRepository: SighRepository,
