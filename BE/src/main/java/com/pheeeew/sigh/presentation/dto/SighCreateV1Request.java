@@ -6,7 +6,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
-public record SighCreateRequest(
+public record SighCreateV1Request(
         @NotNull(message = "요청 식별자는 필수입니다.")
         @Schema(
                 description = "한 번의 한숨 등록 시도를 식별하는 UUID. 네트워크 재시도에는 같은 값을 사용합니다.",
@@ -17,17 +17,13 @@ public record SighCreateRequest(
         @NotNull(message = "위도는 필수입니다.")
         @DecimalMin(value = "-90.0", message = "위도는 -90 이상이어야 합니다.")
         @DecimalMax(value = "90.0", message = "위도는 90 이하여야 합니다.")
-        @Schema(description = "클라이언트가 계산한 격자 중심 위도", minimum = "-90", maximum = "90", example = "37.5664")
+        @Schema(description = "클라이언트가 EPSG:5179에서 계산한 300m 격자 중심 위도", minimum = "-90", maximum = "90", example = "37.5657576255")
         Double latitude,
 
         @NotNull(message = "경도는 필수입니다.")
         @DecimalMin(value = "-180.0", message = "경도는 -180 이상이어야 합니다.")
         @DecimalMax(value = "180.0", message = "경도는 180 이하여야 합니다.")
-        @Schema(description = "클라이언트가 계산한 격자 중심 경도", minimum = "-180", maximum = "180", example = "126.9780")
+        @Schema(description = "클라이언트가 EPSG:5179에서 계산한 300m 격자 중심 경도", minimum = "-180", maximum = "180", example = "126.9774258201")
         Double longitude
 ) {
-
-    public static SighCreateRequest of(UUID requestId, Double latitude, Double longitude) {
-        return new SighCreateRequest(requestId, latitude, longitude);
-    }
 }

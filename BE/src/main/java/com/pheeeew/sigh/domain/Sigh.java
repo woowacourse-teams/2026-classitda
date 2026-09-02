@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -22,6 +23,8 @@ import org.locationtech.jts.geom.Point;
 public class Sigh extends BaseEntity {
 
     private static final int WGS84_SRID = 4326;
+    private static final int MAX_MEMO_LENGTH = 50;
+    private static final int MAX_NICKNAME_LENGTH = 50;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,10 +37,32 @@ public class Sigh extends BaseEntity {
     @Column(nullable = false, updatable = false, columnDefinition = "geometry(Point,4326)")
     private Point location;
 
+    @Column(length = MAX_MEMO_LENGTH, updatable = false)
+    private String memo;
+
+    @Column(nullable = false, length = MAX_NICKNAME_LENGTH, updatable = false)
+    private String nickname;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @Builder
-    private Sigh(UUID requestId, Point location) {
+    private Sigh(UUID requestId, Point location, String memo, String nickname) {
         this.requestId = Objects.requireNonNull(requestId);
         this.location = requireWgs84Point(location);
+        this.memo = normalizeMemo(memo);
+        this.nickname = requireValidNickname(nickname);
+    }
+
+    public void delete() {
+        if (deletedAt != null) {
+            return;
+        }
+        this.deletedAt = Instant.now();
+    }
+
+    public boolean isDeleted() {
+        return deletedAt != null;
     }
 
     public double getLongitude() {
@@ -54,5 +79,32 @@ public class Sigh extends BaseEntity {
             throw new IllegalArgumentException("위치는 비어 있지 않은 WGS84(SRID 4326) 점 좌표여야 합니다.");
         }
         return location;
+    }
+
+    private String normalizeMemo(String memo) {
+        if (memo == null) {
+            return null;
+        }
+
+        String normalizedMemo = memo.strip();
+        if (normalizedMemo.isEmpty()) {
+            return null;
+        }
+        if (normalizedMemo.length() > MAX_MEMO_LENGTH) {
+            throw new IllegalArgumentException("메모는 50자를 초과할 수 없습니다.");
+        }
+
+        return normalizedMemo;
+    }
+
+    private String requireValidNickname(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            throw new IllegalArgumentException("닉네임은 비어 있을 수 없습니다.");
+        }
+        if (nickname.length() > MAX_NICKNAME_LENGTH) {
+            throw new IllegalArgumentException("닉네임은 50자를 초과할 수 없습니다.");
+        }
+
+        return nickname;
     }
 }

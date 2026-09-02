@@ -3,11 +3,14 @@ package com.pheeeew.sigh.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.SighRepository;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
 import com.pheeeew.support.PostgisDataJpaTest;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -43,6 +46,7 @@ class SighServiceIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        jdbcClient.sql("DELETE FROM sigh_reports").update();
         sighRepository.deleteAll();
     }
 
@@ -60,10 +64,37 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(result.created()).isTrue();
-        assertThat(result.sigh().getId()).isPositive();
-        assertThat(result.sigh().getCreatedAt()).isNotNull();
-        assertThat(result.sigh().getUpdatedAt()).isNotNull();
+        assertThat(result.id()).isPositive();
+        assertThat(result.createdAt()).isNotNull();
+
+        Sigh saved = sighRepository.findById(result.id()).orElseThrow();
+        assertThat(saved.getUpdatedAt()).isNotNull();
+        assertThat(saved.getMemo()).isNull();
+        assertThat(saved.getNickname())
+                .isNotBlank()
+                .hasSizeLessThanOrEqualTo(50);
         assertThat(sighRepository.count()).isOne();
+    }
+
+    @Test
+    void 메모가_있는_한숨을_저장한다() {
+        // given
+        UUID requestId = UUID.randomUUID();
+
+        // when
+        SighSaveResult result = sighService.save(
+                requestId,
+                SEOUL_CITY_HALL_LONGITUDE,
+                SEOUL_CITY_HALL_LATITUDE,
+                "  오늘은 힘들었다  "
+        );
+
+        // then
+        Sigh saved = sighRepository.findById(result.id()).orElseThrow();
+        assertThat(result.created()).isTrue();
+        assertThat(result.memo()).isEqualTo("오늘은 힘들었다");
+        assertThat(result.nickname()).isEqualTo(saved.getNickname());
+        assertThat(saved.getMemo()).isEqualTo("오늘은 힘들었다");
     }
 
     @Test
@@ -81,9 +112,35 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(retried.created()).isFalse();
-        assertThat(retried.sigh().getId()).isEqualTo(first.sigh().getId());
-        assertThat(retried.sigh().getLongitude()).isEqualTo(first.sigh().getLongitude());
-        assertThat(retried.sigh().getLatitude()).isEqualTo(first.sigh().getLatitude());
+        assertThat(retried.id()).isEqualTo(first.id());
+        assertThat(retried.longitude()).isEqualTo(first.longitude());
+        assertThat(retried.latitude()).isEqualTo(first.latitude());
+        assertThat(sighRepository.count()).isOne();
+    }
+
+    @Test
+    void 같은_requestId는_다른_메모로_재시도해도_최초_메모와_닉네임을_반환한다() {
+        // given
+        UUID requestId = UUID.randomUUID();
+        SighSaveResult first = sighService.save(
+                requestId,
+                SEOUL_CITY_HALL_LONGITUDE,
+                SEOUL_CITY_HALL_LATITUDE,
+                "최초 메모"
+        );
+
+        // when
+        SighSaveResult retried = sighService.save(
+                requestId,
+                SEOUL_CITY_HALL_LONGITUDE,
+                SEOUL_CITY_HALL_LATITUDE,
+                "재시도 메모"
+        );
+
+        // then
+        assertThat(retried.created()).isFalse();
+        assertThat(retried.memo()).isEqualTo("최초 메모");
+        assertThat(retried.nickname()).isEqualTo(first.nickname());
         assertThat(sighRepository.count()).isOne();
     }
 
@@ -100,10 +157,131 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(results)
-                .extracting(result -> result.sigh().getId())
-                .containsOnly(results.getFirst().sigh().getId());
+                .extracting(SighSaveResult::id)
+                .containsOnly(results.getFirst().id());
         assertThat(results).filteredOn(SighSaveResult::created).hasSize(1);
         assertThat(sighRepository.count()).isOne();
+    }
+
+    @Test
+    void 삭제된_한숨은_지도_영역_조회에_나오지_않는다() {
+        // given
+        Long 살아있는_한숨 = insertSigh(126.9780, 37.5664, "2026-09-01T10:30:00Z");
+        Long 삭제된_한숨 = insertSigh(126.9790, 37.5665, "2026-09-01T10:31:00Z");
+        softDeleteSigh(삭제된_한숨);
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .containsExactly(살아있는_한숨);
+    }
+
+    @Test
+    void 지도_영역_안과_경계의_한숨만_최신순으로_조회한다() {
+        // given
+        Long insideId = insertSigh(126.9780, 37.5664, "2026-08-31T10:30:00Z");
+        insertSigh(127.2000, 37.5664, "2026-08-31T10:31:00Z");
+        Long boundaryId = insertSigh(127.1000, 37.6000, "2026-08-31T10:32:00Z");
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(result.truncated()).isFalse();
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .containsExactly(boundaryId, insideId);
+        assertThat(result.sighs().getFirst().longitude()).isEqualTo(127.1000);
+        assertThat(result.sighs().getFirst().latitude()).isEqualTo(37.6000);
+        assertThat(result.sighs().getFirst().createdAt())
+                .isEqualTo(Instant.parse("2026-08-31T10:32:00Z"));
+    }
+
+    @Test
+    void 날짜변경선_양쪽_영역의_한숨을_최신순으로_조회한다() {
+        // given
+        Long 양의_경도_한숨 = insertSigh(170.0000, 0.0000, "2026-08-31T10:30:00Z");
+        Long 음의_경도_한숨 = insertSigh(-170.0000, 0.0000, "2026-08-31T10:31:00Z");
+        insertSigh(169.9999, 0.0000, "2026-08-31T10:32:00Z");
+        insertSigh(-169.9999, 0.0000, "2026-08-31T10:33:00Z");
+        insertSigh(175.0000, 10.0001, "2026-08-31T10:34:00Z");
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(170.0000, -10.0000, -170.0000, 10.0000);
+
+        // then
+        assertThat(result.truncated()).isFalse();
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .containsExactly(음의_경도_한숨, 양의_경도_한숨);
+    }
+
+    @Test
+    void 날짜변경선_양쪽_영역을_합쳐_500건_제한과_잘림_여부를_계산한다() {
+        // given
+        Long oldestId = insertSigh(175.0000, 0.0000, "2026-08-31T10:29:00Z");
+        insertSighs(500, -175.0000, 0.0000);
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(170.0000, -10.0000, -170.0000, 10.0000);
+
+        // then
+        assertThat(result.truncated()).isTrue();
+        assertThat(result.sighs()).hasSize(500);
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .doesNotContain(oldestId);
+    }
+
+    @Test
+    void 전_세계_경계의_한숨을_조회한다() {
+        // given
+        Long 서쪽_경계_한숨 = insertSigh(-180.0000, 0.0000, "2026-08-31T10:30:00Z");
+        Long 중앙_한숨 = insertSigh(0.0000, 0.0000, "2026-08-31T10:31:00Z");
+        Long 동쪽_경계_한숨 = insertSigh(180.0000, 0.0000, "2026-08-31T10:32:00Z");
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(-180.0000, -90.0000, 180.0000, 90.0000);
+
+        // then
+        assertThat(result.truncated()).isFalse();
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .containsExactly(동쪽_경계_한숨, 중앙_한숨, 서쪽_경계_한숨);
+    }
+
+    @Test
+    void 지도_영역의_한숨이_500건이면_모두_반환하고_잘리지_않았음을_알린다() {
+        // given
+        insertSighs(500, 126.9780, 37.5664);
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(result.truncated()).isFalse();
+        assertThat(result.sighs()).hasSize(500);
+    }
+
+    @Test
+    void 지도_영역의_한숨이_500건을_초과하면_최신_500건과_잘림_여부를_반환한다() {
+        // given
+        Long oldestId = insertSigh(126.9780, 37.5664, "2026-08-31T10:29:00Z");
+        insertSighs(500, 126.9780, 37.5664);
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(result.truncated()).isTrue();
+        assertThat(result.sighs()).hasSize(500);
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .isSortedAccordingTo(Comparator.reverseOrder())
+                .doesNotContain(oldestId);
     }
 
     @Test
@@ -169,6 +347,54 @@ class SighServiceIntegrationTest {
                         ADD CONSTRAINT ck_sighs_reject_test_request
                         CHECK (request_id <> '00000000-0000-0000-0000-000000000001'::uuid)
                         """)
+                .update();
+    }
+
+    private void softDeleteSigh(Long sighId) {
+        jdbcClient.sql("UPDATE sighs SET deleted_at = NOW() WHERE id = :id")
+                .param("id", sighId)
+                .update();
+    }
+
+    private Long insertSigh(double longitude, double latitude, String createdAt) {
+        return jdbcClient.sql("""
+                        INSERT INTO sighs (request_id, location, nickname, created_at, updated_at)
+                        VALUES (
+                            :requestId,
+                            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            '외로운 회사원',
+                            CAST(:createdAt AS TIMESTAMPTZ),
+                            CAST(:createdAt AS TIMESTAMPTZ)
+                        )
+                        RETURNING id
+                        """)
+                .param("requestId", UUID.randomUUID())
+                .param("longitude", longitude)
+                .param("latitude", latitude)
+                .param("createdAt", createdAt)
+                .query(Long.class)
+                .single();
+    }
+
+    private void insertSighs(int count, double longitude, double latitude) {
+        jdbcClient.sql("""
+                        INSERT INTO sighs (request_id, location, nickname, created_at, updated_at)
+                        SELECT
+                            (
+                                '00000000-0000-0000-0000-'
+                                || LPAD(sequence::text, 12, '0')
+                            )::uuid,
+                            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            '외로운 회사원',
+                            TIMESTAMPTZ '2026-08-31T10:30:00Z'
+                                + sequence * INTERVAL '1 microsecond',
+                            TIMESTAMPTZ '2026-08-31T10:30:00Z'
+                                + sequence * INTERVAL '1 microsecond'
+                        FROM generate_series(1, :count) AS sequence
+                        """)
+                .param("longitude", longitude)
+                .param("latitude", latitude)
+                .param("count", count)
                 .update();
     }
 

@@ -2,6 +2,8 @@ package com.pheeeew.sigh.domain.repository;
 
 import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.projection.GeneratedLocation;
+import com.pheeeew.sigh.domain.repository.projection.SighMapProjection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +12,60 @@ import org.springframework.data.repository.query.Param;
 
 public interface SighRepository extends JpaRepository<Sigh, Long> {
 
+    /**
+     * 삭제 여부로 거르지 않는다.
+     *
+     * <p>{@code request_id}에는 삭제 여부와 무관하게 유니크 제약이 걸려 있다. 삭제된 한숨을 걸러내면
+     * 같은 {@code requestId}로 다시 등록할 때 선조회가 비어 삽입을 시도하고, 유니크 위반 뒤의 재조회도
+     * 비어 멱등 복구가 실패한다(ADR-0004, ADR-0005).
+     */
     Optional<Sigh> findByRequestId(UUID requestId);
+
+    @Query(
+            value = """
+                    WITH bounds AS (
+                        SELECT ST_MakeEnvelope(
+                            :minLongitude,
+                            :minLatitude,
+                            CASE
+                                WHEN :minLongitude < :maxLongitude THEN :maxLongitude
+                                ELSE 180.0
+                            END,
+                            :maxLatitude,
+                            4326
+                        ) AS area
+                        UNION ALL
+                        SELECT ST_MakeEnvelope(
+                            -180.0,
+                            :minLatitude,
+                            :maxLongitude,
+                            :maxLatitude,
+                            4326
+                        ) AS area
+                        WHERE :minLongitude > :maxLongitude
+                    )
+                    SELECT
+                        sigh.id AS id,
+                        ST_X(sigh.location) AS longitude,
+                        ST_Y(sigh.location) AS latitude,
+                        sigh.created_at AS "createdAt"
+                    FROM sighs sigh
+                    CROSS JOIN bounds
+                    WHERE sigh.deleted_at IS NULL
+                      AND sigh.location && bounds.area
+                      AND ST_Intersects(sigh.location, bounds.area)
+                    ORDER BY sigh.created_at DESC, sigh.id DESC
+                    LIMIT :limit
+                    """,
+            nativeQuery = true
+    )
+    List<SighMapProjection> findAllWithinBounds(
+            @Param("minLongitude") double minLongitude,
+            @Param("minLatitude") double minLatitude,
+            @Param("maxLongitude") double maxLongitude,
+            @Param("maxLatitude") double maxLatitude,
+            @Param("limit") int limit
+    );
 
     @Query(
             value = """
