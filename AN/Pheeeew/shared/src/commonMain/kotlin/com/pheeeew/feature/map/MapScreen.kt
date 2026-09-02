@@ -187,52 +187,54 @@ fun MapScreen(
             )
         }
 
-        if (isActive) Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding().align(Alignment.BottomCenter)) {
-            BreathControl(
-                enabled =
-                    successState != null &&
-                        successState.sighReleaseState is SighReleaseState.Idle &&
-                        !isFlightInProgress,
-                onExplosionFinished = { origin ->
-                    pendingFlightOrigin = origin
-                    viewModel.registerSighAfterExplosion()
-                },
-                onMicrophoneError = { error ->
-                    if (error == BreathInputError.PermissionDenied) {
-                        showMicrophonePermissionDialog = true
-                    } else {
-                        microphoneError = error
-                    }
-                },
-                ensureLocationPermission = {
-                    when (viewModel.ensureLocationPermission()) {
-                        LocationPermissionStatus.Granted -> {
-                            true
+        if (isActive) {
+            Box(modifier = Modifier.fillMaxWidth().navigationBarsPadding().align(Alignment.BottomCenter)) {
+                BreathControl(
+                    enabled =
+                        successState != null &&
+                            successState.sighReleaseState is SighReleaseState.Idle &&
+                            !isFlightInProgress,
+                    onExplosionFinished = { origin ->
+                        pendingFlightOrigin = origin
+                        viewModel.registerSighAfterExplosion()
+                    },
+                    onMicrophoneError = { error ->
+                        if (error == BreathInputError.PermissionDenied) {
+                            showMicrophonePermissionDialog = true
+                        } else {
+                            microphoneError = error
                         }
+                    },
+                    ensureLocationPermission = {
+                        when (viewModel.ensureLocationPermission()) {
+                            LocationPermissionStatus.Granted -> {
+                                true
+                            }
 
-                        LocationPermissionStatus.ServicesDisabled -> {
-                            showLocationServicesDialog = true
-                            false
-                        }
+                            LocationPermissionStatus.ServicesDisabled -> {
+                                showLocationServicesDialog = true
+                                false
+                            }
 
-                        LocationPermissionStatus.PermanentlyDenied -> {
-                            showLocationPermissionDialog = true
-                            false
-                        }
+                            LocationPermissionStatus.PermanentlyDenied -> {
+                                showLocationPermissionDialog = true
+                                false
+                            }
 
-                        LocationPermissionStatus.Denied -> {
-                            false
+                            LocationPermissionStatus.Denied -> {
+                                false
+                            }
                         }
-                    }
-                },
-                onPhaseChanged = { sighPhase = it },
-                cancelSignal = cancelSignal,
-            )
-            ErrorSnackbar(
-                message = microphoneError?.toKoreanMessage(),
-                onDismiss = { microphoneError = null },
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 8.dp, end = 16.dp),
-            )
+                    },
+                    onPhaseChanged = { sighPhase = it },
+                    cancelSignal = cancelSignal,
+                )
+                ErrorSnackbar(
+                    message = microphoneError?.toKoreanMessage(),
+                    onDismiss = { microphoneError = null },
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 8.dp, end = 16.dp),
+                )
+            }
         }
 
         val activeId = activeFlightId
