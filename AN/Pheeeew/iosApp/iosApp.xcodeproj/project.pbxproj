@@ -11,7 +11,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		5647273F7E2BAA66C229B92E /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5647273F7E2BAA66C229B92E /* Pheeeew.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pheeeew.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -64,7 +64,7 @@
 		F93A3DCF112B44FD4AE0D285 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				5647273F7E2BAA66C229B92E /* iosApp.app */,
+				5647273F7E2BAA66C229B92E /* Pheeeew.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,7 +93,7 @@
 				A30303030303030303030303 /* MapLibre */,
 			);
 			productName = iosApp;
-			productReference = 5647273F7E2BAA66C229B92E /* iosApp.app */;
+			productReference = 5647273F7E2BAA66C229B92E /* Pheeeew.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -314,7 +314,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "피휴";
+				INFOPLIST_KEY_CFBundleDisplayName = "히유";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 위치 주변의 한숨을 지도에 표시하기 위해 위치가 필요합니다.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "한숨 소리를 감지해 별을 만드는 데 마이크가 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -345,7 +345,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "피휴";
+				INFOPLIST_KEY_CFBundleDisplayName = "히유";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "현재 위치 주변의 한숨을 지도에 표시하기 위해 위치가 필요합니다.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "한숨 소리를 감지해 별을 만드는 데 마이크가 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
