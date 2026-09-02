@@ -27,7 +27,6 @@ import pheeeew.shared.generated.resources.ic_settings
 fun MapOverlay(
     onSettingsClick: () -> Unit,
     onRefreshClick: () -> Unit,
-    breathControl: @Composable () -> Unit,
     onZoomInClick: () -> Unit,
     onZoomOutClick: () -> Unit,
     onMyLocationClick: () -> Unit,
@@ -37,10 +36,7 @@ fun MapOverlay(
     sighReleaseState: SighReleaseState = SighReleaseState.Idle,
     onRetrySigh: () -> Unit = {},
     onCancelSigh: () -> Unit = {},
-    microphoneErrorMessage: String? = null,
-    onMicrophoneErrorDismiss: () -> Unit = {},
-    onErrorClick: (() -> Unit)? = null,
-    onMicrophoneErrorClick: (() -> Unit)? = null,
+    controlsEnabled: Boolean = true,
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -54,8 +50,18 @@ fun MapOverlay(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            OverlayIconButton(icon = Res.drawable.ic_settings, contentDescription = "설정", onClick = onSettingsClick)
-            OverlayIconButton(icon = Res.drawable.ic_refresh, contentDescription = "새로고침", onClick = onRefreshClick)
+            OverlayIconButton(
+                icon = Res.drawable.ic_settings,
+                contentDescription = "설정",
+                onClick = onSettingsClick,
+                enabled = controlsEnabled,
+            )
+            OverlayIconButton(
+                icon = Res.drawable.ic_refresh,
+                contentDescription = "새로고침",
+                onClick = onRefreshClick,
+                enabled = controlsEnabled,
+            )
         }
 
         if (errorMessage != null) {
@@ -64,7 +70,6 @@ fun MapOverlay(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 onRetry = (sighReleaseState as? SighReleaseState.Error)?.takeIf { it.canRetry }?.let { onRetrySigh },
                 onNew = (sighReleaseState as? SighReleaseState.Error)?.let { onCancelSigh },
-                onClick = onErrorClick,
             )
         }
 
@@ -78,21 +83,12 @@ fun MapOverlay(
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            ZoomControl(onZoomInClick = onZoomInClick, onZoomOutClick = onZoomOutClick)
+            ZoomControl(onZoomInClick = onZoomInClick, onZoomOutClick = onZoomOutClick, enabled = controlsEnabled)
             OverlayIconButton(
                 icon = Res.drawable.ic_my_location,
                 contentDescription = "현재 위치로 이동",
                 onClick = onMyLocationClick,
-            )
-        }
-
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-            breathControl()
-            ErrorSnackbar(
-                message = microphoneErrorMessage,
-                onDismiss = onMicrophoneErrorDismiss,
-                onClick = onMicrophoneErrorClick,
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, top = 8.dp, end = 16.dp),
+                enabled = controlsEnabled,
             )
         }
         Spacer(modifier = Modifier.navigationBarsPadding())
@@ -107,7 +103,6 @@ private fun MapOverlayPreview() {
             MapOverlay(
                 onSettingsClick = {},
                 onRefreshClick = {},
-                breathControl = {},
                 onZoomInClick = {},
                 onZoomOutClick = {},
                 onMyLocationClick = {},
@@ -124,7 +119,6 @@ private fun MapOverlayNetworkErrorPreview() {
             MapOverlay(
                 onSettingsClick = {},
                 onRefreshClick = {},
-                breathControl = {},
                 onZoomInClick = {},
                 onZoomOutClick = {},
                 onMyLocationClick = {},
@@ -142,7 +136,6 @@ private fun MapOverlayPermissionErrorPreview() {
             MapOverlay(
                 onSettingsClick = {},
                 onRefreshClick = {},
-                breathControl = {},
                 onZoomInClick = {},
                 onZoomOutClick = {},
                 onMyLocationClick = {},
@@ -160,7 +153,6 @@ private fun MapOverlayGpsErrorPreview() {
             MapOverlay(
                 onSettingsClick = {},
                 onRefreshClick = {},
-                breathControl = {},
                 onZoomInClick = {},
                 onZoomOutClick = {},
                 onMyLocationClick = {},
