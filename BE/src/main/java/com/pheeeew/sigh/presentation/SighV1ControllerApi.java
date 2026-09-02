@@ -27,7 +27,9 @@ public interface SighV1ControllerApi {
                     ### 지도 영역
 
                     - WGS84 경계 상자를 `minLongitude`, `minLatitude`, `maxLongitude`, `maxLatitude`로 전달합니다.
-                    - 최소 좌표는 최대 좌표보다 작아야 하며 antimeridian을 가로지르는 영역은 지원하지 않습니다.
+                    - `minLongitude`가 `maxLongitude`보다 작으면 일반 영역을 조회합니다.
+                    - `minLongitude`가 `maxLongitude`보다 크면 날짜변경선을 가로지르는 영역을 조회합니다.
+                    - 두 경도가 같거나 `minLatitude`가 `maxLatitude`보다 크거나 같으면 조회할 수 없습니다.
                     - 경계선 위에 저장된 한숨도 조회 결과에 포함합니다.
 
                     ### 조회 결과
@@ -48,7 +50,7 @@ public interface SighV1ControllerApi {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "필수 좌표가 없거나 좌표 범위 또는 경계 순서가 올바르지 않음",
+                    description = "필수 좌표가 없거나 좌표 범위 또는 조회할 영역의 너비나 높이가 올바르지 않음",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class),

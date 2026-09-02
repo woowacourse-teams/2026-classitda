@@ -201,6 +201,59 @@ class SighServiceIntegrationTest {
     }
 
     @Test
+    void 날짜변경선_양쪽_영역의_한숨을_최신순으로_조회한다() {
+        // given
+        Long 양의_경도_한숨 = insertSigh(170.0000, 0.0000, "2026-08-31T10:30:00Z");
+        Long 음의_경도_한숨 = insertSigh(-170.0000, 0.0000, "2026-08-31T10:31:00Z");
+        insertSigh(169.9999, 0.0000, "2026-08-31T10:32:00Z");
+        insertSigh(-169.9999, 0.0000, "2026-08-31T10:33:00Z");
+        insertSigh(175.0000, 10.0001, "2026-08-31T10:34:00Z");
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(170.0000, -10.0000, -170.0000, 10.0000);
+
+        // then
+        assertThat(result.truncated()).isFalse();
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .containsExactly(음의_경도_한숨, 양의_경도_한숨);
+    }
+
+    @Test
+    void 날짜변경선_양쪽_영역을_합쳐_500건_제한과_잘림_여부를_계산한다() {
+        // given
+        Long oldestId = insertSigh(175.0000, 0.0000, "2026-08-31T10:29:00Z");
+        insertSighs(500, -175.0000, 0.0000);
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(170.0000, -10.0000, -170.0000, 10.0000);
+
+        // then
+        assertThat(result.truncated()).isTrue();
+        assertThat(result.sighs()).hasSize(500);
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .doesNotContain(oldestId);
+    }
+
+    @Test
+    void 전_세계_경계의_한숨을_조회한다() {
+        // given
+        Long 서쪽_경계_한숨 = insertSigh(-180.0000, 0.0000, "2026-08-31T10:30:00Z");
+        Long 중앙_한숨 = insertSigh(0.0000, 0.0000, "2026-08-31T10:31:00Z");
+        Long 동쪽_경계_한숨 = insertSigh(180.0000, 0.0000, "2026-08-31T10:32:00Z");
+
+        // when
+        SighMapResult result = sighService.findAllWithinBounds(-180.0000, -90.0000, 180.0000, 90.0000);
+
+        // then
+        assertThat(result.truncated()).isFalse();
+        assertThat(result.sighs())
+                .extracting(SighMapItem::id)
+                .containsExactly(동쪽_경계_한숨, 중앙_한숨, 서쪽_경계_한숨);
+    }
+
+    @Test
     void 지도_영역의_한숨이_500건이면_모두_반환하고_잘리지_않았음을_알린다() {
         // given
         insertSighs(500, 126.9780, 37.5664);
