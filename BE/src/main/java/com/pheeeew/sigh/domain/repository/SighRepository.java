@@ -21,6 +21,8 @@ public interface SighRepository extends JpaRepository<Sigh, Long> {
      */
     Optional<Sigh> findByRequestId(UUID requestId);
 
+    Optional<Sigh> findByIdAndDeletedAtIsNull(Long id);
+
     @Query(
             value = """
                     WITH bounds AS (

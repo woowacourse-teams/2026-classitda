@@ -1,6 +1,7 @@
 package com.pheeeew.sigh.application;
 
 import static com.pheeeew.sigh.exception.SighErrorCode.SIGH_SAVE_FAILED;
+import static com.pheeeew.sigh.exception.SighErrorCode.SIGH_NOT_FOUND;
 
 import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.SighRepository;
@@ -36,6 +37,12 @@ public class SighService {
         }
 
         return saveNewSigh(requestId, longitude, latitude, memo);
+    }
+
+    public SighDetailResult findById(Long id) {
+        return sighRepository.findByIdAndDeletedAtIsNull(id)
+                .map(SighDetailResult::from)
+                .orElseThrow(() -> new SighException(SIGH_NOT_FOUND));
     }
 
     public SighMapResult findAllWithinBounds(double minLongitude, double minLatitude, double maxLongitude, double maxLatitude) {
