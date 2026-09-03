@@ -66,8 +66,10 @@ class SighServiceIntegrationTest {
         assertThat(result.created()).isTrue();
         assertThat(result.id()).isPositive();
         assertThat(result.createdAt()).isNotNull();
+        assertThat(result.createdAt().getNano() % 1_000).isZero();
 
         Sigh saved = sighRepository.findById(result.id()).orElseThrow();
+        assertThat(saved.getCreatedAt()).isEqualTo(result.createdAt());
         assertThat(saved.getUpdatedAt()).isNotNull();
         assertThat(saved.getMemo()).isNull();
         assertThat(saved.getNickname())
@@ -142,6 +144,65 @@ class SighServiceIntegrationTest {
         assertThat(retried.memo()).isEqualTo("최초 메모");
         assertThat(retried.nickname()).isEqualTo(first.nickname());
         assertThat(sighRepository.count()).isOne();
+    }
+
+    @Test
+    void ID로_한숨_상세를_조회한다() {
+        // given
+        SighSaveResult saved = sighService.save(
+                UUID.randomUUID(),
+                SEOUL_CITY_HALL_LONGITUDE,
+                SEOUL_CITY_HALL_LATITUDE,
+                "오늘은 조금 지쳤다"
+        );
+
+        // when
+        SighDetailResult result = sighService.findById(saved.id());
+
+        // then
+        assertThat(result.id()).isEqualTo(saved.id());
+        assertThat(result.longitude()).isEqualTo(saved.longitude());
+        assertThat(result.latitude()).isEqualTo(saved.latitude());
+        assertThat(result.createdAt()).isEqualTo(saved.createdAt());
+        assertThat(result.memo()).isEqualTo("오늘은 조금 지쳤다");
+        assertThat(result.nickname()).isEqualTo(saved.nickname());
+    }
+
+    @Test
+    void 존재하지_않는_ID로_한숨_상세를_조회하면_예외가_발생한다() {
+        // given
+        Long nonexistentId = Long.MAX_VALUE;
+
+        // when
+        Throwable throwable = catchThrowable(() -> sighService.findById(nonexistentId));
+
+        // then
+        assertThat(throwable)
+                .isInstanceOf(SighException.class)
+                .hasMessage("한숨을 찾을 수 없습니다.");
+        assertThat(((SighException) throwable).getErrorCode())
+                .isEqualTo(SighErrorCode.SIGH_NOT_FOUND);
+    }
+
+    @Test
+    void 삭제된_한숨_상세를_조회하면_예외가_발생한다() {
+        // given
+        SighSaveResult saved = sighService.save(
+                UUID.randomUUID(),
+                SEOUL_CITY_HALL_LONGITUDE,
+                SEOUL_CITY_HALL_LATITUDE
+        );
+        softDeleteSigh(saved.id());
+
+        // when
+        Throwable throwable = catchThrowable(() -> sighService.findById(saved.id()));
+
+        // then
+        assertThat(throwable)
+                .isInstanceOf(SighException.class)
+                .hasMessage("한숨을 찾을 수 없습니다.");
+        assertThat(((SighException) throwable).getErrorCode())
+                .isEqualTo(SighErrorCode.SIGH_NOT_FOUND);
     }
 
     @Test
