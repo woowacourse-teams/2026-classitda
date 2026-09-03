@@ -39,14 +39,21 @@ class MapViewModel(
     private val sighOperationMutex = Mutex()
     private val locallyRegisteredSighs = mutableMapOf<Long, SighPin>()
 
-    private val _uiState = MutableStateFlow<MapUiState>(MapUiState.Loading)
+    private val _uiState =
+        MutableStateFlow<MapUiState>(
+            MapUiState.Success(
+                sighs = emptyList(),
+                locationState = locationDependencies?.repository?.locationState?.value ?: LocationState.Loading,
+                cameraCommand = null,
+                isRequestingLocation = false,
+            ),
+        )
     val uiState: StateFlow<MapUiState> = _uiState.asStateFlow()
 
     // 스플래시 화면 노출 시간 설정을 위한 플로우
     val isReady: Flow<Boolean> = uiState.map { it !is MapUiState.Loading }
 
     init {
-        loadSighs(DEFAULT_SIGH_BOUNDS)
         locationDependencies?.let { dependencies ->
             viewModelScope.launch {
                 dependencies.repository.locationState.collect { locationState ->
@@ -58,35 +65,23 @@ class MapViewModel(
         }
     }
 
-    fun loadSighs(bounds: SighBounds = DEFAULT_SIGH_BOUNDS) {
+    fun loadSighs(bounds: SighBounds) {
         viewModelScope.launch {
             sighOperationMutex.withLock {
-                val wasLoaded = _uiState.value is MapUiState.Success
-                if (!wasLoaded) _uiState.value = MapUiState.Loading
                 try {
                     val serverSighs = sighRepository.getSighs(bounds).distinctBy(SighPin::id)
                     val serverIds = serverSighs.mapTo(mutableSetOf(), SighPin::id)
                     serverIds.forEach(locallyRegisteredSighs::remove)
                     val mergedSighs = (serverSighs + locallyRegisteredSighs.values).distinctBy(SighPin::id)
                     _uiState.update { state ->
-                        if (state is MapUiState.Success) {
-                            state.copy(sighs = mergedSighs, refreshErrorMessage = null)
-                        } else {
-                            MapUiState.Success(
-                                sighs = mergedSighs,
-                                locationState =
-                                    locationDependencies?.repository?.locationState?.value ?: LocationState.Loading,
-                                cameraCommand = null,
-                                isRequestingLocation = false,
-                            )
-                        }
+                        (state as? MapUiState.Success)?.copy(sighs = mergedSighs, refreshErrorMessage = null) ?: state
                     }
                 } catch (e: ApiException) {
                     _uiState.update { state ->
                         if (state is MapUiState.Success) {
                             state.copy(refreshErrorMessage = e.toUserMessage())
                         } else {
-                            MapUiState.Error(e.toUserMessage())
+                            state
                         }
                     }
                 }
@@ -298,11 +293,3 @@ class MapViewModel(
         val coordinate: Coordinate,
     )
 }
-
-private val DEFAULT_SIGH_BOUNDS =
-    SighBounds(
-        minLongitude = 126.8,
-        minLatitude = 37.4,
-        maxLongitude = 127.2,
-        maxLatitude = 37.7,
-    )
