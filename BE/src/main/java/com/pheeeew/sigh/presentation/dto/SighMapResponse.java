@@ -19,9 +19,7 @@ public record SighMapResponse(
     public static SighMapResponse from(SighMapResult result) {
         List<SighFeature<SighV1Properties>> features = result.sighs().stream()
                 .map(sigh -> SighFeature.of(
-                        sigh.id(),
-                        sigh.longitude(),
-                        sigh.latitude(),
+                        sigh,
                         SighV1Properties.from(sigh.createdAt())
                 ))
                 .toList();

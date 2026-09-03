@@ -44,7 +44,7 @@ public class SighV2Controller implements SighV2ControllerApi {
         }
 
         List<SighFeature<SighV2Properties>> items = result.items().stream()
-                .map(item -> SighFeature.of(item, SighV2Properties.from(item)))
+                .map(this::toFeature)
                 .toList();
 
         return CursorResponse.of(items, result.hasNext(), result.nextCursor());
@@ -59,7 +59,7 @@ public class SighV2Controller implements SighV2ControllerApi {
 
         return ResponseEntity.ok()
                 .contentType(GEO_JSON)
-                .body(SighFeature.of(result, SighV2Properties.from(result)));
+                .body(toFeature(result));
     }
 
     @Override
@@ -82,6 +82,10 @@ public class SighV2Controller implements SighV2ControllerApi {
 
         return response
                 .contentType(GEO_JSON)
-                .body(SighFeature.of(sigh, SighV2Properties.from(sigh)));
+                .body(toFeature(sigh));
+    }
+
+    private SighFeature<SighV2Properties> toFeature(SighResult sigh) {
+        return SighFeature.of(sigh, SighV2Properties.from(sigh));
     }
 }
