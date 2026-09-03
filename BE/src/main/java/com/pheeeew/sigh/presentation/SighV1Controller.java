@@ -34,12 +34,7 @@ public class SighV1Controller implements SighV1ControllerApi {
     public ResponseEntity<SighMapResponse> findAllWithinBounds(
             @Valid @ModelAttribute SighMapRequest request
     ) {
-        SighMapResult result = sighService.findAllWithinBounds(
-                request.minLongitude(),
-                request.minLatitude(),
-                request.maxLongitude(),
-                request.maxLatitude()
-        );
+        SighMapResult result = sighService.findAllWithinBounds(request.toBounds());
 
         return ResponseEntity.ok()
                 .contentType(GEO_JSON)

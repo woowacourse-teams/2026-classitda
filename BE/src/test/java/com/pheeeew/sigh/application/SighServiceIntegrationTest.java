@@ -10,6 +10,7 @@ import com.pheeeew.sigh.application.dto.SighListResult;
 import com.pheeeew.sigh.application.dto.SighMapItem;
 import com.pheeeew.sigh.application.dto.SighMapResult;
 import com.pheeeew.sigh.application.dto.SighSaveResult;
+import com.pheeeew.sigh.application.dto.SighSearchBounds;
 import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.SighRepository;
 import com.pheeeew.sigh.exception.SighErrorCode;
@@ -39,6 +40,12 @@ class SighServiceIntegrationTest {
 
     private static final double SEOUL_CITY_HALL_LONGITUDE = 126.9780;
     private static final double SEOUL_CITY_HALL_LATITUDE = 37.5664;
+    private static final SighSearchBounds SEOUL_BOUNDS =
+            SighSearchBounds.of(126.9000, 37.5000, 127.1000, 37.6000);
+    private static final SighSearchBounds DATE_LINE_BOUNDS =
+            SighSearchBounds.of(170.0000, -10.0000, -170.0000, 10.0000);
+    private static final SighSearchBounds WORLD_BOUNDS =
+            SighSearchBounds.of(-180.0000, -90.0000, 180.0000, 90.0000);
     private static final UUID REJECTED_REQUEST_ID =
             UUID.fromString("00000000-0000-0000-0000-000000000001");
 
@@ -239,7 +246,7 @@ class SighServiceIntegrationTest {
         softDeleteSigh(삭제된_한숨);
 
         // when
-        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+        SighMapResult result = sighService.findAllWithinBounds(SEOUL_BOUNDS);
 
         // then
         assertThat(result.sighs())
@@ -255,7 +262,7 @@ class SighServiceIntegrationTest {
         Long boundaryId = insertSigh(127.1000, 37.6000, "2026-08-31T10:32:00Z");
 
         // when
-        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+        SighMapResult result = sighService.findAllWithinBounds(SEOUL_BOUNDS);
 
         // then
         assertThat(result.truncated()).isFalse();
@@ -278,7 +285,7 @@ class SighServiceIntegrationTest {
         insertSigh(175.0000, 10.0001, "2026-08-31T10:34:00Z");
 
         // when
-        SighMapResult result = sighService.findAllWithinBounds(170.0000, -10.0000, -170.0000, 10.0000);
+        SighMapResult result = sighService.findAllWithinBounds(DATE_LINE_BOUNDS);
 
         // then
         assertThat(result.truncated()).isFalse();
@@ -294,7 +301,7 @@ class SighServiceIntegrationTest {
         insertSighs(500, -175.0000, 0.0000);
 
         // when
-        SighMapResult result = sighService.findAllWithinBounds(170.0000, -10.0000, -170.0000, 10.0000);
+        SighMapResult result = sighService.findAllWithinBounds(DATE_LINE_BOUNDS);
 
         // then
         assertThat(result.truncated()).isTrue();
@@ -312,7 +319,7 @@ class SighServiceIntegrationTest {
         Long 동쪽_경계_한숨 = insertSigh(180.0000, 0.0000, "2026-08-31T10:32:00Z");
 
         // when
-        SighMapResult result = sighService.findAllWithinBounds(-180.0000, -90.0000, 180.0000, 90.0000);
+        SighMapResult result = sighService.findAllWithinBounds(WORLD_BOUNDS);
 
         // then
         assertThat(result.truncated()).isFalse();
@@ -327,7 +334,7 @@ class SighServiceIntegrationTest {
         insertSighs(500, 126.9780, 37.5664);
 
         // when
-        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+        SighMapResult result = sighService.findAllWithinBounds(SEOUL_BOUNDS);
 
         // then
         assertThat(result.truncated()).isFalse();
@@ -341,7 +348,7 @@ class SighServiceIntegrationTest {
         insertSighs(500, 126.9780, 37.5664);
 
         // when
-        SighMapResult result = sighService.findAllWithinBounds(126.9000, 37.5000, 127.1000, 37.6000);
+        SighMapResult result = sighService.findAllWithinBounds(SEOUL_BOUNDS);
 
         // then
         assertThat(result.truncated()).isTrue();
@@ -369,7 +376,7 @@ class SighServiceIntegrationTest {
         ));
 
         // when
-        SighListResult firstPage = sighService.findFirstListPage(126.9000, 37.5000, 127.1000, 37.6000);
+        SighListResult firstPage = sighService.findFirstListPage(SEOUL_BOUNDS);
         SighListResult secondPage = sighService.findNextListPage(firstPage.nextCursor());
 
         // then
@@ -404,7 +411,7 @@ class SighServiceIntegrationTest {
         softDeleteSigh(삭제된_한숨);
 
         // when
-        SighListResult result = sighService.findFirstListPage(170.0000, -10.0000, -170.0000, 10.0000);
+        SighListResult result = sighService.findFirstListPage(DATE_LINE_BOUNDS);
 
         // then
         assertThat(result.items())
@@ -421,7 +428,7 @@ class SighServiceIntegrationTest {
         for (int index = 0; index < 21; index++) {
             ids.add(insertSigh(126.9780, 37.5664, createdAt));
         }
-        SighListResult firstPage = sighService.findFirstListPage(126.9000, 37.5000, 127.1000, 37.6000);
+        SighListResult firstPage = sighService.findFirstListPage(SEOUL_BOUNDS);
         SighListCursor cursor = SighListCursorCodec.decode(firstPage.nextCursor());
         Long 이후에_등록된_한숨 = insertSigh(
                 126.9780,
@@ -447,7 +454,7 @@ class SighServiceIntegrationTest {
         insertSighs(500, 126.9780, 37.5664);
 
         // when
-        List<SighListItem> items = findAllListPages(126.9000, 37.5000, 127.1000, 37.6000);
+        List<SighListItem> items = findAllListPages(SEOUL_BOUNDS);
 
         // then
         assertThat(items)
@@ -600,19 +607,9 @@ class SighServiceIntegrationTest {
                 .update();
     }
 
-    private List<SighListItem> findAllListPages(
-            double minLongitude,
-            double minLatitude,
-            double maxLongitude,
-            double maxLatitude
-    ) {
+    private List<SighListItem> findAllListPages(SighSearchBounds bounds) {
         List<SighListItem> items = new ArrayList<>();
-        SighListResult page = sighService.findFirstListPage(
-                minLongitude,
-                minLatitude,
-                maxLongitude,
-                maxLatitude
-        );
+        SighListResult page = sighService.findFirstListPage(bounds);
 
         for (int pageIndex = 0; pageIndex < 25; pageIndex++) {
             assertThat(page.items()).hasSizeLessThanOrEqualTo(20);

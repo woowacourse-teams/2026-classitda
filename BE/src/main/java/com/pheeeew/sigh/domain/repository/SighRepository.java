@@ -114,7 +114,7 @@ public interface SighRepository extends JpaRepository<Sigh, Long> {
                         latest_sighs.nickname AS nickname,
                         latest_sighs.memo AS memo
                     FROM latest_sighs
-                    WHERE (latest_sighs.created_at, latest_sighs.id) < (:lastCreatedAt, :lastId)
+                    WHERE (latest_sighs.created_at, latest_sighs.id) < (:lastItemCreatedAt, :lastId)
                     ORDER BY latest_sighs.created_at DESC, latest_sighs.id DESC
                     LIMIT :limit
                     """,
@@ -126,7 +126,7 @@ public interface SighRepository extends JpaRepository<Sigh, Long> {
             @Param("maxLongitude") double maxLongitude,
             @Param("maxLatitude") double maxLatitude,
             @Param("snapshotAt") Instant snapshotAt,
-            @Param("lastCreatedAt") Instant lastCreatedAt,
+            @Param("lastItemCreatedAt") Instant lastItemCreatedAt,
             @Param("lastId") long lastId,
             @Param("maxCount") int maxCount,
             @Param("limit") int limit

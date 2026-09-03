@@ -3,6 +3,7 @@ package com.pheeeew.sigh.application;
 import static com.pheeeew.sigh.exception.SighErrorCode.SIGH_INVALID_CURSOR;
 
 import com.pheeeew.sigh.application.dto.SighListCursor;
+import com.pheeeew.sigh.application.dto.SighSearchBounds;
 import com.pheeeew.sigh.exception.SighException;
 import java.nio.charset.StandardCharsets;
 import java.time.DateTimeException;
@@ -33,10 +34,10 @@ public final class SighListCursorCodec {
             }
 
             return SighListCursor.of(
-                    Double.parseDouble(fields[1]),
-                    Double.parseDouble(fields[2]),
-                    Double.parseDouble(fields[3]),
-                    Double.parseDouble(fields[4]),
+                    SighSearchBounds.of(
+                            Double.parseDouble(fields[1]), Double.parseDouble(fields[2]),
+                            Double.parseDouble(fields[3]), Double.parseDouble(fields[4])
+                    ),
                     Instant.parse(fields[5]),
                     Instant.parse(fields[6]),
                     Long.parseLong(fields[7])
@@ -47,15 +48,16 @@ public final class SighListCursorCodec {
     }
 
     public static String encode(SighListCursor cursor) {
+        SighSearchBounds bounds = cursor.bounds();
         String payload = String.join(
                 FIELD_DELIMITER,
                 VERSION,
-                Double.toString(cursor.minLongitude()),
-                Double.toString(cursor.minLatitude()),
-                Double.toString(cursor.maxLongitude()),
-                Double.toString(cursor.maxLatitude()),
+                Double.toString(bounds.minLongitude()),
+                Double.toString(bounds.minLatitude()),
+                Double.toString(bounds.maxLongitude()),
+                Double.toString(bounds.maxLatitude()),
                 cursor.snapshotAt().toString(),
-                cursor.lastCreatedAt().toString(),
+                cursor.lastItemCreatedAt().toString(),
                 Long.toString(cursor.lastId())
         );
         return Base64.getUrlEncoder()

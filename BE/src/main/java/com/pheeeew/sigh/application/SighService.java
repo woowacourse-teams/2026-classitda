@@ -10,6 +10,7 @@ import com.pheeeew.sigh.application.dto.SighListResult;
 import com.pheeeew.sigh.application.dto.SighMapItem;
 import com.pheeeew.sigh.application.dto.SighMapResult;
 import com.pheeeew.sigh.application.dto.SighSaveResult;
+import com.pheeeew.sigh.application.dto.SighSearchBounds;
 import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.SighRepository;
 import com.pheeeew.sigh.domain.repository.projection.SighListProjection;
@@ -56,12 +57,12 @@ public class SighService {
                 .orElseThrow(() -> new SighException(SIGH_NOT_FOUND));
     }
 
-    public SighMapResult findAllWithinBounds(double minLongitude, double minLatitude, double maxLongitude, double maxLatitude) {
+    public SighMapResult findAllWithinBounds(SighSearchBounds bounds) {
         List<SighMapProjection> projections = sighRepository.findAllWithinBounds(
-                minLongitude,
-                minLatitude,
-                maxLongitude,
-                maxLatitude,
+                bounds.minLongitude(),
+                bounds.minLatitude(),
+                bounds.maxLongitude(),
+                bounds.maxLatitude(),
                 MAX_FIND_COUNT + 1
         );
 
@@ -82,17 +83,9 @@ public class SighService {
         return SighMapResult.of(sighs, truncated);
     }
 
-    public SighListResult findFirstListPage(double minLongitude, double minLatitude, double maxLongitude, double maxLatitude) {
+    public SighListResult findFirstListPage(SighSearchBounds bounds) {
         Instant snapshotAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
-        SighListCursor cursor = SighListCursor.of(
-                minLongitude,
-                minLatitude,
-                maxLongitude,
-                maxLatitude,
-                snapshotAt,
-                snapshotAt,
-                Long.MAX_VALUE
-        );
+        SighListCursor cursor = SighListCursor.initial(bounds, snapshotAt);
 
         return findList(cursor);
     }
@@ -106,13 +99,14 @@ public class SighService {
     }
 
     private SighListResult findList(SighListCursor cursor) {
+        SighSearchBounds bounds = cursor.bounds();
         List<SighListProjection> projections = sighRepository.findListWithinBounds(
-                cursor.minLongitude(),
-                cursor.minLatitude(),
-                cursor.maxLongitude(),
-                cursor.maxLatitude(),
+                bounds.minLongitude(),
+                bounds.minLatitude(),
+                bounds.maxLongitude(),
+                bounds.maxLatitude(),
                 cursor.snapshotAt(),
-                cursor.lastCreatedAt(),
+                cursor.lastItemCreatedAt(),
                 cursor.lastId(),
                 MAX_FIND_COUNT,
                 LIST_PAGE_SIZE + 1
