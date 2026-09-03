@@ -13,7 +13,6 @@ import com.pheeeew.domain.model.sigh.SighPin
 import com.pheeeew.domain.repository.SighRepository
 import com.pheeeew.feature.map.map.MapCameraCommand
 import com.pheeeew.feature.map.map.MapDarkStyle
-import com.pheeeew.feature.setting.handleLocationPermissionSettingsClick
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -163,10 +162,6 @@ class MapViewModel(
         val remainingMillis =
             MIN_SIGH_SUBMITTING_DURATION_MILLIS - startedAt.elapsedNow().inWholeMilliseconds
         if (remainingMillis > 0) delay(remainingMillis)
-    }
-
-    fun retrySighRegistration() {
-        pendingRegistration?.let(::submit)
     }
 
     fun cancelFailedSighRegistration() {

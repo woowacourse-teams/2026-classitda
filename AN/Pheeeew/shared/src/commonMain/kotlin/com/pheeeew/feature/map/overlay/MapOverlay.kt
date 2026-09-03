@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.pheeeew.core.designsystem.theme.AppTheme
-import com.pheeeew.feature.map.SighReleaseState
 import pheeeew.shared.generated.resources.Res
 import pheeeew.shared.generated.resources.ic_my_location
 import pheeeew.shared.generated.resources.ic_settings
@@ -29,9 +28,6 @@ fun MapOverlay(
     onMyLocationClick: () -> Unit,
     modifier: Modifier = Modifier,
     errorMessage: String? = null,
-    sighReleaseState: SighReleaseState = SighReleaseState.Idle,
-    onRetrySigh: () -> Unit = {},
-    onCancelSigh: () -> Unit = {},
     controlsEnabled: Boolean = true,
 ) {
     Column(

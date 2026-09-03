@@ -130,12 +130,6 @@ fun MapScreen(
             onZoomOutClick = viewModel::onZoomOutClick,
             onMyLocationClick = viewModel::onMyLocationClick,
             errorMessage = uiState.toBannerMessage(),
-            sighReleaseState = successState?.sighReleaseState ?: SighReleaseState.Idle,
-            onRetrySigh = viewModel::retrySighRegistration,
-            onCancelSigh = {
-                pendingFlightOrigin = null
-                viewModel.cancelFailedSighRegistration()
-            },
             controlsEnabled = sighPhase == SighPhase.Idle && !isSighSubmitting,
         )
 
