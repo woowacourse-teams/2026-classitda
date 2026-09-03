@@ -9,15 +9,83 @@ import io.swagger.v3.oas.annotations.StringToClassMapItem;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
-@Tag(name = "한숨 v2", description = "메모와 익명 닉네임을 포함한 한숨 등록 API")
+@Tag(name = "한숨 v2", description = "메모와 익명 닉네임을 포함한 한숨 등록과 상세 조회 API")
 public interface SighV2ControllerApi {
+
+    @Operation(
+            summary = "한숨 상세 조회",
+            description = """
+                    - 경로의 `id`로 삭제되지 않은 한숨을 조회합니다.
+                    - 등록 시 저장된 최종 표시 위치, 생성 시각, 메모와 익명 닉네임을 반환합니다.
+                    - 조회할 때 위치나 닉네임을 다시 생성하지 않습니다.
+                    - 메모가 없는 경우 `memo`는 `null`입니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "한숨 상세 조회 성공",
+                    content = @Content(
+                            mediaType = "application/geo+json",
+                            schema = @Schema(
+                                    allOf = SighFeature.class,
+                                    properties = @StringToClassMapItem(
+                                            key = "properties",
+                                            value = SighV2Properties.class
+                                    )
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "한숨 ID 형식이 올바르지 않거나 1보다 작음",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "한숨을 찾을 수 없음",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(value = """
+                                    {"code":"SIGH-002","message":"한숨을 찾을 수 없습니다."}
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "한숨 상세 조회 처리 중 서버 오류",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    ResponseEntity<SighFeature<SighV2Properties>> findById(
+            @Parameter(
+                    description = "조회할 한숨 ID",
+                    example = "42",
+                    schema = @Schema(minimum = "1")
+            )
+            @Min(value = 1, message = "한숨 ID는 1 이상이어야 합니다.")
+            Long id
+    );
 
     @Operation(
             summary = "메모와 익명 닉네임을 포함한 한숨 등록",
@@ -128,6 +196,7 @@ public interface SighV2ControllerApi {
                             }
                     )
             )
+            @Valid
             SighCreateV2Request request
     );
 }
