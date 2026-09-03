@@ -37,18 +37,36 @@ android {
                 .get()
                 .toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
     }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
     buildTypes {
+        debug {
+            buildConfigField(
+                "String",
+                "API_BASE_URL",
+                "\"https://api-dev.pheeeew.com\"",
+            )
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField(
+                "String",
+                "API_BASE_URL",
+                "\"https://api.pheeeew.com\"",
+            )
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
+                getDefaultProguardFile(
+                    "proguard-android-optimize.txt",
+                ),
                 "proguard-rules.pro",
             )
         }
@@ -59,5 +77,6 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
