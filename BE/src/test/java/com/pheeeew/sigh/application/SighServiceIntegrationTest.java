@@ -3,12 +3,11 @@ package com.pheeeew.sigh.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import com.pheeeew.sigh.application.dto.SighDetailResult;
 import com.pheeeew.sigh.application.dto.SighListCursor;
-import com.pheeeew.sigh.application.dto.SighListItem;
 import com.pheeeew.sigh.application.dto.SighListResult;
 import com.pheeeew.sigh.application.dto.SighMapItem;
 import com.pheeeew.sigh.application.dto.SighMapResult;
+import com.pheeeew.sigh.application.dto.SighResult;
 import com.pheeeew.sigh.application.dto.SighSaveResult;
 import com.pheeeew.sigh.application.dto.SighSearchBounds;
 import com.pheeeew.sigh.domain.Sigh;
@@ -78,12 +77,12 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(result.created()).isTrue();
-        assertThat(result.id()).isPositive();
-        assertThat(result.createdAt()).isNotNull();
-        assertThat(result.createdAt().getNano() % 1_000).isZero();
+        assertThat(result.sigh().id()).isPositive();
+        assertThat(result.sigh().createdAt()).isNotNull();
+        assertThat(result.sigh().createdAt().getNano() % 1_000).isZero();
 
-        Sigh saved = sighRepository.findById(result.id()).orElseThrow();
-        assertThat(saved.getCreatedAt()).isEqualTo(result.createdAt());
+        Sigh saved = sighRepository.findById(result.sigh().id()).orElseThrow();
+        assertThat(saved.getCreatedAt()).isEqualTo(result.sigh().createdAt());
         assertThat(saved.getUpdatedAt()).isNotNull();
         assertThat(saved.getMemo()).isNull();
         assertThat(saved.getNickname())
@@ -106,10 +105,10 @@ class SighServiceIntegrationTest {
         );
 
         // then
-        Sigh saved = sighRepository.findById(result.id()).orElseThrow();
+        Sigh saved = sighRepository.findById(result.sigh().id()).orElseThrow();
         assertThat(result.created()).isTrue();
-        assertThat(result.memo()).isEqualTo("오늘은 힘들었다");
-        assertThat(result.nickname()).isEqualTo(saved.getNickname());
+        assertThat(result.sigh().memo()).isEqualTo("오늘은 힘들었다");
+        assertThat(result.sigh().nickname()).isEqualTo(saved.getNickname());
         assertThat(saved.getMemo()).isEqualTo("오늘은 힘들었다");
     }
 
@@ -128,9 +127,9 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(retried.created()).isFalse();
-        assertThat(retried.id()).isEqualTo(first.id());
-        assertThat(retried.longitude()).isEqualTo(first.longitude());
-        assertThat(retried.latitude()).isEqualTo(first.latitude());
+        assertThat(retried.sigh().id()).isEqualTo(first.sigh().id());
+        assertThat(retried.sigh().longitude()).isEqualTo(first.sigh().longitude());
+        assertThat(retried.sigh().latitude()).isEqualTo(first.sigh().latitude());
         assertThat(sighRepository.count()).isOne();
     }
 
@@ -155,8 +154,8 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(retried.created()).isFalse();
-        assertThat(retried.memo()).isEqualTo("최초 메모");
-        assertThat(retried.nickname()).isEqualTo(first.nickname());
+        assertThat(retried.sigh().memo()).isEqualTo("최초 메모");
+        assertThat(retried.sigh().nickname()).isEqualTo(first.sigh().nickname());
         assertThat(sighRepository.count()).isOne();
     }
 
@@ -171,15 +170,15 @@ class SighServiceIntegrationTest {
         );
 
         // when
-        SighDetailResult result = sighService.findById(saved.id());
+        SighResult result = sighService.findById(saved.sigh().id());
 
         // then
-        assertThat(result.id()).isEqualTo(saved.id());
-        assertThat(result.longitude()).isEqualTo(saved.longitude());
-        assertThat(result.latitude()).isEqualTo(saved.latitude());
-        assertThat(result.createdAt()).isEqualTo(saved.createdAt());
+        assertThat(result.id()).isEqualTo(saved.sigh().id());
+        assertThat(result.longitude()).isEqualTo(saved.sigh().longitude());
+        assertThat(result.latitude()).isEqualTo(saved.sigh().latitude());
+        assertThat(result.createdAt()).isEqualTo(saved.sigh().createdAt());
         assertThat(result.memo()).isEqualTo("오늘은 조금 지쳤다");
-        assertThat(result.nickname()).isEqualTo(saved.nickname());
+        assertThat(result.nickname()).isEqualTo(saved.sigh().nickname());
     }
 
     @Test
@@ -206,10 +205,10 @@ class SighServiceIntegrationTest {
                 SEOUL_CITY_HALL_LONGITUDE,
                 SEOUL_CITY_HALL_LATITUDE
         );
-        softDeleteSigh(saved.id());
+        softDeleteSigh(saved.sigh().id());
 
         // when
-        Throwable throwable = catchThrowable(() -> sighService.findById(saved.id()));
+        Throwable throwable = catchThrowable(() -> sighService.findById(saved.sigh().id()));
 
         // then
         assertThat(throwable)
@@ -232,8 +231,8 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(results)
-                .extracting(SighSaveResult::id)
-                .containsOnly(results.getFirst().id());
+                .extracting(result -> result.sigh().id())
+                .containsOnly(results.getFirst().sigh().id());
         assertThat(results).filteredOn(SighSaveResult::created).hasSize(1);
         assertThat(sighRepository.count()).isOne();
     }
@@ -384,10 +383,12 @@ class SighServiceIntegrationTest {
         expectedFirstPageIds.sort(Comparator.reverseOrder());
 
         assertThat(firstPage.items())
-                .extracting(SighListItem::id)
+                .extracting(SighResult::id)
                 .containsExactlyElementsOf(expectedFirstPageIds);
         assertThat(firstPage.items().getFirst().nickname()).isEqualTo("날아가는 고라니");
         assertThat(firstPage.items().getFirst().memo()).isEqualTo("오늘은 조금 지쳤다");
+        assertThat(firstPage.items().getFirst().longitude()).isEqualTo(126.9780);
+        assertThat(firstPage.items().getFirst().latitude()).isEqualTo(37.5664);
         assertThat(firstPage.hasNext()).isTrue();
         assertThat(firstPage.nextCursor()).isNotBlank();
 
@@ -415,7 +416,7 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(result.items())
-                .extracting(SighListItem::id)
+                .extracting(SighResult::id)
                 .containsExactly(음의_경도_경계_한숨, 양의_경도_경계_한숨);
         assertThat(result.hasNext()).isFalse();
     }
@@ -441,7 +442,7 @@ class SighServiceIntegrationTest {
 
         // then
         assertThat(secondPage.items())
-                .extracting(SighListItem::id)
+                .extracting(SighResult::id)
                 .containsExactly(ids.getFirst())
                 .doesNotContain(이후에_등록된_한숨);
         assertThat(secondPage.hasNext()).isFalse();
@@ -454,12 +455,12 @@ class SighServiceIntegrationTest {
         insertSighs(500, 126.9780, 37.5664);
 
         // when
-        List<SighListItem> items = findAllListPages(SEOUL_BOUNDS);
+        List<SighResult> items = findAllListPages(SEOUL_BOUNDS);
 
         // then
         assertThat(items)
                 .hasSize(500)
-                .extracting(SighListItem::id)
+                .extracting(SighResult::id)
                 .isSortedAccordingTo(Comparator.reverseOrder())
                 .doesNotContain(oldestId);
     }
@@ -607,8 +608,8 @@ class SighServiceIntegrationTest {
                 .update();
     }
 
-    private List<SighListItem> findAllListPages(SighSearchBounds bounds) {
-        List<SighListItem> items = new ArrayList<>();
+    private List<SighResult> findAllListPages(SighSearchBounds bounds) {
+        List<SighResult> items = new ArrayList<>();
         SighListResult page = sighService.findFirstListPage(bounds);
 
         for (int pageIndex = 0; pageIndex < 25; pageIndex++) {

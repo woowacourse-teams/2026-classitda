@@ -1,5 +1,6 @@
 package com.pheeeew.sigh.presentation.dto;
 
+import com.pheeeew.sigh.application.dto.SighResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record SighFeature<P>(
@@ -15,6 +16,15 @@ public record SighFeature<P>(
 ) {
 
     private static final String FEATURE_TYPE = "Feature";
+
+    public static <P> SighFeature<P> of(SighResult sigh, P properties) {
+        return SighFeature.of(
+                sigh.id(),
+                sigh.longitude(),
+                sigh.latitude(),
+                properties
+        );
+    }
 
     public static <P> SighFeature<P> of(
             Long id,

@@ -96,6 +96,7 @@ public interface SighRepository extends JpaRepository<Sigh, Long> {
                     ), latest_sighs AS (
                         SELECT
                             sigh.id,
+                            sigh.location,
                             sigh.created_at,
                             sigh.nickname,
                             sigh.memo
@@ -110,6 +111,8 @@ public interface SighRepository extends JpaRepository<Sigh, Long> {
                     )
                     SELECT
                         latest_sighs.id AS id,
+                        ST_X(latest_sighs.location) AS longitude,
+                        ST_Y(latest_sighs.location) AS latitude,
                         latest_sighs.created_at AS "createdAt",
                         latest_sighs.nickname AS nickname,
                         latest_sighs.memo AS memo

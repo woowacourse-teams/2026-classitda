@@ -3,12 +3,11 @@ package com.pheeeew.sigh.application;
 import static com.pheeeew.sigh.exception.SighErrorCode.SIGH_SAVE_FAILED;
 import static com.pheeeew.sigh.exception.SighErrorCode.SIGH_NOT_FOUND;
 
-import com.pheeeew.sigh.application.dto.SighDetailResult;
 import com.pheeeew.sigh.application.dto.SighListCursor;
-import com.pheeeew.sigh.application.dto.SighListItem;
 import com.pheeeew.sigh.application.dto.SighListResult;
 import com.pheeeew.sigh.application.dto.SighMapItem;
 import com.pheeeew.sigh.application.dto.SighMapResult;
+import com.pheeeew.sigh.application.dto.SighResult;
 import com.pheeeew.sigh.application.dto.SighSaveResult;
 import com.pheeeew.sigh.application.dto.SighSearchBounds;
 import com.pheeeew.sigh.domain.Sigh;
@@ -51,9 +50,9 @@ public class SighService {
         return saveNewSigh(requestId, longitude, latitude, memo);
     }
 
-    public SighDetailResult findById(Long id) {
+    public SighResult findById(Long id) {
         return sighRepository.findByIdAndDeletedAtIsNull(id)
-                .map(SighDetailResult::from)
+                .map(SighResult::from)
                 .orElseThrow(() -> new SighException(SIGH_NOT_FOUND));
     }
 
@@ -95,7 +94,7 @@ public class SighService {
     }
 
     private SighSaveResult createSaveResult(Sigh sigh, boolean created) {
-        return SighSaveResult.of(sigh, created);
+        return SighSaveResult.of(SighResult.from(sigh), created);
     }
 
     private SighListResult findList(SighListCursor cursor) {
@@ -117,12 +116,14 @@ public class SighService {
             projections = projections.subList(0, LIST_PAGE_SIZE);
         }
 
-        List<SighListItem> items = projections.stream()
-                .map(projection -> SighListItem.of(
+        List<SighResult> items = projections.stream()
+                .map(projection -> SighResult.of(
                         projection.getId(),
+                        projection.getLongitude(),
+                        projection.getLatitude(),
                         projection.getCreatedAt(),
-                        projection.getNickname(),
-                        projection.getMemo()
+                        projection.getMemo(),
+                        projection.getNickname()
                 ))
                 .toList();
         String nextCursor = createNextCursor(cursor, projections, hasNext);

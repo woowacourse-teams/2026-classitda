@@ -5,11 +5,12 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.pheeeew.common.exception.GlobalExceptionHandler;
+import com.pheeeew.sigh.application.SighService;
 import com.pheeeew.sigh.application.dto.SighMapItem;
 import com.pheeeew.sigh.application.dto.SighMapResult;
+import com.pheeeew.sigh.application.dto.SighResult;
 import com.pheeeew.sigh.application.dto.SighSaveResult;
 import com.pheeeew.sigh.application.dto.SighSearchBounds;
-import com.pheeeew.sigh.application.SighService;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
 import com.pheeeew.sigh.presentation.dto.SighCreateV1Request;
@@ -308,13 +309,15 @@ class SighV1ControllerTest {
     }
 
     private SighSaveResult 기본_저장_결과(boolean created) {
-        return new SighSaveResult(
-                42L,
-                126.9774,
-                37.5669,
-                CREATED_AT,
-                null,
-                "외로운 회사원",
+        return SighSaveResult.of(
+                SighResult.of(
+                        42L,
+                        126.9774,
+                        37.5669,
+                        CREATED_AT,
+                        null,
+                        "외로운 회사원"
+                ),
                 created
         );
     }

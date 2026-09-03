@@ -1,16 +1,21 @@
 package com.pheeeew.sigh.presentation;
 
-import com.pheeeew.sigh.application.dto.SighDetailResult;
-import com.pheeeew.sigh.application.dto.SighSaveResult;
+import com.pheeeew.common.presentation.dto.CursorResponse;
 import com.pheeeew.sigh.application.SighService;
+import com.pheeeew.sigh.application.dto.SighListResult;
+import com.pheeeew.sigh.application.dto.SighResult;
+import com.pheeeew.sigh.application.dto.SighSaveResult;
 import com.pheeeew.sigh.presentation.dto.SighCreateV2Request;
 import com.pheeeew.sigh.presentation.dto.SighFeature;
+import com.pheeeew.sigh.presentation.dto.SighListRequest;
 import com.pheeeew.sigh.presentation.dto.SighV2Properties;
 import java.net.URI;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,15 +32,34 @@ public class SighV2Controller implements SighV2ControllerApi {
     private final SighService sighService;
 
     @Override
+    @GetMapping
+    public CursorResponse<SighFeature<SighV2Properties>> findAll(
+            @ModelAttribute SighListRequest request
+    ) {
+        SighListResult result;
+        if (request.isNextPageRequest()) {
+            result = sighService.findNextListPage(request.cursor());
+        } else {
+            result = sighService.findFirstListPage(request.toBounds());
+        }
+
+        List<SighFeature<SighV2Properties>> items = result.items().stream()
+                .map(item -> SighFeature.of(item, SighV2Properties.from(item)))
+                .toList();
+
+        return CursorResponse.of(items, result.hasNext(), result.nextCursor());
+    }
+
+    @Override
     @GetMapping("/{id}")
     public ResponseEntity<SighFeature<SighV2Properties>> findById(
             @PathVariable Long id
     ) {
-        SighDetailResult result = sighService.findById(id);
+        SighResult result = sighService.findById(id);
 
         return ResponseEntity.ok()
                 .contentType(GEO_JSON)
-                .body(SighFeature.of(result.id(), result.longitude(), result.latitude(), SighV2Properties.from(result)));
+                .body(SighFeature.of(result, SighV2Properties.from(result)));
     }
 
     @Override
@@ -49,19 +73,15 @@ public class SighV2Controller implements SighV2ControllerApi {
                 request.latitude(),
                 request.memo()
         );
+        SighResult sigh = result.sigh();
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok();
         if (result.created()) {
-            response = ResponseEntity.created(URI.create("/api/v2/sighs/" + result.id()));
+            response = ResponseEntity.created(URI.create("/api/v2/sighs/" + sigh.id()));
         }
 
         return response
                 .contentType(GEO_JSON)
-                .body(SighFeature.of(
-                        result.id(),
-                        result.longitude(),
-                        result.latitude(),
-                        SighV2Properties.from(result)
-                ));
+                .body(SighFeature.of(sigh, SighV2Properties.from(sigh)));
     }
 }

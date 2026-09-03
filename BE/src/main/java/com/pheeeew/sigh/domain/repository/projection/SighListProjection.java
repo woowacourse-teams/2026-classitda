@@ -6,6 +6,10 @@ public interface SighListProjection {
 
     Long getId();
 
+    Double getLongitude();
+
+    Double getLatitude();
+
     Instant getCreatedAt();
 
     String getNickname();
