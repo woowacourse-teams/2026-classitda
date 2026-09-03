@@ -1,25 +1,61 @@
 package com.pheeeew
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.pheeeew.core.network.ApiConfig
+import com.pheeeew.data.repository.FakeSighRepository
+import com.pheeeew.di.LocationDependencies
+import com.pheeeew.di.SighModule
+import com.pheeeew.di.createAndroidLocationDependencies
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
 
+        val holder = ViewModelProvider(this)[LocationDependenciesHolder::class.java]
+        val locationDependencies =
+            createAndroidLocationDependencies(
+                activity = this,
+                retainedDependencies = holder.dependencies,
+            ).also { holder.dependencies = it }
+        val sighRepository = SighModule.create(ApiConfig(baseUrl = BuildConfig.API_BASE_URL))
+
         setContent {
-            App()
+            App(
+                appVersion = BuildConfig.VERSION_NAME,
+                locationDependencies = locationDependencies,
+                sighRepository = sighRepository,
+            )
         }
+    }
+}
+
+class LocationDependenciesHolder : ViewModel() {
+    var dependencies: LocationDependencies? = null
+
+    override fun onCleared() {
+        (dependencies?.permissionController as? AutoCloseable)?.close()
     }
 }
 
 @Preview
 @Composable
 fun appAndroidPreview() {
-    App()
+    App(
+        appVersion = "1.0.0",
+        locationDependencies = null,
+        sighRepository = FakeSighRepository(),
+    )
 }
