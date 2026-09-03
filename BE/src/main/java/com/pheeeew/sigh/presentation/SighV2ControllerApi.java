@@ -1,8 +1,10 @@
 package com.pheeeew.sigh.presentation;
 
 import com.pheeeew.common.exception.ErrorResponse;
+import com.pheeeew.common.presentation.dto.CursorResponse;
 import com.pheeeew.sigh.presentation.dto.SighCreateV2Request;
 import com.pheeeew.sigh.presentation.dto.SighFeature;
+import com.pheeeew.sigh.presentation.dto.SighListRequest;
 import com.pheeeew.sigh.presentation.dto.SighV2Properties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.StringToClassMapItem;
@@ -19,9 +21,97 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springdoc.core.annotations.ParameterObject;
 
-@Tag(name = "한숨 v2", description = "메모와 익명 닉네임을 포함한 한숨 등록과 상세 조회 API")
+@Tag(name = "한숨 v2", description = "메모와 익명 닉네임을 포함한 한숨 등록과 목록·상세 조회 API")
 public interface SighV2ControllerApi {
+
+    @Operation(
+            summary = "지도 바텀시트용 한숨 목록 조회",
+            description = """
+                    ### 첫 페이지
+
+                    - WGS84 검색 영역을 네 좌표로 모두 전달하고 `cursor`는 전달하지 않습니다.
+                    - 날짜변경선을 가로지르는 영역은 `minLongitude`를 `maxLongitude`보다 크게 전달합니다.
+                    - 검색 영역의 경계를 포함하며 삭제되지 않은 최신 한숨을 조회합니다.
+
+                    ### 다음 페이지
+
+                    - 서버가 직전 응답에서 발급한 `nextCursor`만 수정하지 않고 전달합니다.
+                    - 좌표와 `cursor`를 함께 전달하거나 모두 생략하면 조회할 수 없습니다.
+                    - 커서에 첫 요청의 검색 영역과 스냅샷이 고정되어 이후 등록된 한숨은 섞이지 않습니다.
+
+                    ### 조회 결과
+
+                    - `createdAt DESC`, `id DESC` 순으로 페이지당 20건을 반환합니다.
+                    - 현재 검색 영역의 최신 500건까지만 페이지로 조회할 수 있습니다.
+                    - `geometry`는 저장된 최종 표시 위치이며 좌표는 `[longitude, latitude]` 순서입니다.
+                    - 메모가 없는 경우 `properties.memo`는 `null`입니다.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "한숨 목록 조회 성공",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "items": [
+                                        {
+                                          "type": "Feature",
+                                          "id": 42,
+                                          "geometry": {
+                                            "type": "Point",
+                                            "coordinates": [126.9774, 37.5669]
+                                          },
+                                          "properties": {
+                                            "createdAt": "2026-09-01T12:00:00Z",
+                                            "memo": "오늘은 조금 지쳤다",
+                                            "nickname": "날아가는 고라니"
+                                          }
+                                        }
+                                      ],
+                                      "hasNext": true,
+                                      "nextCursor": "opaque-cursor"
+                                    }
+                                    """)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "좌표, 요청 조합 또는 커서가 올바르지 않음",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "잘못된 요청 조합",
+                                            value = """
+                                                    {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
+                                                    """
+                                    ),
+                                    @ExampleObject(
+                                            name = "사용할 수 없는 커서",
+                                            value = """
+                                                    {"code":"SIGH-003","message":"한숨 목록 커서를 사용할 수 없습니다."}
+                                                    """
+                                    )
+                            }
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "한숨 목록 조회 처리 중 서버 오류",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    CursorResponse<SighFeature<SighV2Properties>> findAll(
+            @ParameterObject @Valid SighListRequest request
+    );
 
     @Operation(
             summary = "한숨 상세 조회",

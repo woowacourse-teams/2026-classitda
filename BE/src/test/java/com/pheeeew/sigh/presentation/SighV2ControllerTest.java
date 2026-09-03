@@ -5,12 +5,15 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.pheeeew.common.exception.GlobalExceptionHandler;
-import com.pheeeew.sigh.application.SighDetailResult;
-import com.pheeeew.sigh.application.SighSaveResult;
 import com.pheeeew.sigh.application.SighService;
+import com.pheeeew.sigh.application.dto.SighListResult;
+import com.pheeeew.sigh.application.dto.SighResult;
+import com.pheeeew.sigh.application.dto.SighSaveResult;
+import com.pheeeew.sigh.application.dto.SighSearchBounds;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,6 +46,171 @@ class SighV2ControllerTest {
     @Autowired
     SighV2ControllerTest(RestTestClient client) {
         this.client = client;
+    }
+
+    @Test
+    void 검색_영역으로_바텀시트_첫_페이지를_조회한다() {
+        // given
+        SighSearchBounds bounds = SighSearchBounds.of(126.9, 37.5, 127.1, 37.6);
+        when(sighService.findFirstListPage(bounds))
+                .thenReturn(SighListResult.of(
+                        List.of(SighResult.of(
+                                SIGH_ID,
+                                126.9774,
+                                37.5669,
+                                CREATED_AT,
+                                "오늘은 조금 지쳤다",
+                                "날아가는 고라니"
+                        )),
+                        true,
+                        "next-cursor"
+                ));
+
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri("/api/v2/sighs?minLongitude=126.9&minLatitude=37.5&maxLongitude=127.1&maxLatitude=37.6")
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange();
+
+        // then
+        result.expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .json("""
+                        {
+                          "items": [
+                            {
+                              "type": "Feature",
+                              "id": 42,
+                              "geometry": {
+                                "type": "Point",
+                                "coordinates": [126.9774, 37.5669]
+                              },
+                              "properties": {
+                                "createdAt": "2026-09-01T12:00:00Z",
+                                "memo": "오늘은 조금 지쳤다",
+                                "nickname": "날아가는 고라니"
+                              }
+                            }
+                          ],
+                          "hasNext": true,
+                          "nextCursor": "next-cursor"
+                        }
+                        """, JsonCompareMode.STRICT);
+        verify(sighService).findFirstListPage(bounds);
+    }
+
+    @Test
+    void 날짜변경선을_가로지르는_검색_영역으로_첫_페이지를_조회한다() {
+        // given
+        SighSearchBounds bounds = SighSearchBounds.of(170.0, -10.0, -170.0, 10.0);
+        when(sighService.findFirstListPage(bounds))
+                .thenReturn(SighListResult.of(List.of(), false, null));
+
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri("/api/v2/sighs?minLongitude=170&minLatitude=-10&maxLongitude=-170&maxLatitude=10")
+                .exchange();
+
+        // then
+        result.expectStatus().isOk();
+        verify(sighService).findFirstListPage(bounds);
+    }
+
+    @Test
+    void 서버가_발급한_커서만으로_바텀시트_다음_페이지를_조회한다() {
+        // given
+        when(sighService.findNextListPage("opaque-cursor"))
+                .thenReturn(SighListResult.of(
+                        List.of(SighResult.of(
+                                SIGH_ID,
+                                126.9774,
+                                37.5669,
+                                CREATED_AT,
+                                null,
+                                "날아가는 고라니"
+                        )),
+                        false,
+                        null
+                ));
+
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri("/api/v2/sighs?cursor=opaque-cursor")
+                .exchange();
+
+        // then
+        result.expectStatus().isOk()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .json("""
+                        {
+                          "items": [
+                            {
+                              "type": "Feature",
+                              "id": 42,
+                              "geometry": {
+                                "type": "Point",
+                                "coordinates": [126.9774, 37.5669]
+                              },
+                              "properties": {
+                                "createdAt": "2026-09-01T12:00:00Z",
+                                "memo": null,
+                                "nickname": "날아가는 고라니"
+                              }
+                            }
+                          ],
+                          "hasNext": false,
+                          "nextCursor": null
+                        }
+                        """, JsonCompareMode.STRICT);
+        verify(sighService).findNextListPage("opaque-cursor");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "/api/v2/sighs",
+            "/api/v2/sighs?minLongitude=126.9&minLatitude=37.5",
+            "/api/v2/sighs?minLongitude=126.9&minLatitude=37.5&maxLongitude=127.1&maxLatitude=37.6&cursor=opaque-cursor",
+            "/api/v2/sighs?minLongitude=126.9&minLatitude=37.6&maxLongitude=127.1&maxLatitude=37.5",
+            "/api/v2/sighs?minLongitude=126.9&minLatitude=37.5&maxLongitude=126.9&maxLatitude=37.6",
+            "/api/v2/sighs?minLongitude=-181&minLatitude=37.5&maxLongitude=127.1&maxLatitude=37.6"
+    })
+    void 첫_페이지와_다음_페이지_요청_계약을_지키지_않으면_400을_반환한다(String uri) {
+        // given / when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri(uri)
+                .exchange();
+
+        // then
+        result.expectStatus().isBadRequest()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .json("""
+                        {"code":"COMMON-001","message":"요청 값이 올바르지 않습니다."}
+                        """, JsonCompareMode.STRICT);
+        verifyNoInteractions(sighService);
+    }
+
+    @Test
+    void 사용할_수_없는_커서는_400을_반환한다() {
+        // given
+        when(sighService.findNextListPage("invalid-cursor"))
+                .thenThrow(new SighException(SighErrorCode.SIGH_INVALID_CURSOR));
+
+        // when
+        RestTestClient.ResponseSpec result = client.get()
+                .uri("/api/v2/sighs?cursor=invalid-cursor")
+                .exchange();
+
+        // then
+        result.expectStatus().isBadRequest()
+                .expectHeader().contentType(MediaType.APPLICATION_JSON)
+                .expectBody()
+                .json("""
+                        {"code":"SIGH-003","message":"한숨 목록 커서를 사용할 수 없습니다."}
+                        """, JsonCompareMode.STRICT);
+        verify(sighService).findNextListPage("invalid-cursor");
     }
 
     @Test
@@ -299,19 +467,21 @@ class SighV2ControllerTest {
     }
 
     private SighSaveResult 기본_저장_결과(String memo, boolean created) {
-        return new SighSaveResult(
-                42L,
-                126.9774,
-                37.5669,
-                CREATED_AT,
-                memo,
-                "날아가는 고라니",
+        return SighSaveResult.of(
+                SighResult.of(
+                        42L,
+                        126.9774,
+                        37.5669,
+                        CREATED_AT,
+                        memo,
+                        "날아가는 고라니"
+                ),
                 created
         );
     }
 
-    private SighDetailResult 기본_상세_조회_결과(String memo) {
-        return new SighDetailResult(
+    private SighResult 기본_상세_조회_결과(String memo) {
+        return SighResult.of(
                 SIGH_ID,
                 126.9774,
                 37.5669,

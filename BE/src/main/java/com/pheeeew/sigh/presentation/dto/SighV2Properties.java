@@ -1,7 +1,6 @@
 package com.pheeeew.sigh.presentation.dto;
 
-import com.pheeeew.sigh.application.SighDetailResult;
-import com.pheeeew.sigh.application.SighSaveResult;
+import com.pheeeew.sigh.application.dto.SighResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 
@@ -16,11 +15,7 @@ public record SighV2Properties(
         String nickname
 ) {
 
-    public static SighV2Properties from(SighSaveResult sigh) {
-        return new SighV2Properties(sigh.createdAt(), sigh.memo(), sigh.nickname());
-    }
-
-    public static SighV2Properties from(SighDetailResult sigh) {
+    public static SighV2Properties from(SighResult sigh) {
         return new SighV2Properties(sigh.createdAt(), sigh.memo(), sigh.nickname());
     }
 }
