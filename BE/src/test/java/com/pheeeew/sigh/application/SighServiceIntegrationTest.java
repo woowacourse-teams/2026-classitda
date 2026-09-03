@@ -66,8 +66,10 @@ class SighServiceIntegrationTest {
         assertThat(result.created()).isTrue();
         assertThat(result.id()).isPositive();
         assertThat(result.createdAt()).isNotNull();
+        assertThat(result.createdAt().getNano() % 1_000).isZero();
 
         Sigh saved = sighRepository.findById(result.id()).orElseThrow();
+        assertThat(saved.getCreatedAt()).isEqualTo(result.createdAt());
         assertThat(saved.getUpdatedAt()).isNotNull();
         assertThat(saved.getMemo()).isNull();
         assertThat(saved.getNickname())
