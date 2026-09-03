@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.pheeeew.sigh.application.dto.SighDetailResult;
+import com.pheeeew.sigh.application.dto.SighListCursor;
+import com.pheeeew.sigh.application.dto.SighListItem;
+import com.pheeeew.sigh.application.dto.SighListResult;
 import com.pheeeew.sigh.application.dto.SighMapItem;
 import com.pheeeew.sigh.application.dto.SighMapResult;
 import com.pheeeew.sigh.application.dto.SighSaveResult;
@@ -350,6 +353,111 @@ class SighServiceIntegrationTest {
     }
 
     @Test
+    void 바텀시트_목록은_메모와_닉네임을_포함해_20건씩_최신순으로_조회한다() {
+        // given
+        String createdAt = Instant.now().minusSeconds(60).toString();
+        List<Long> ids = new ArrayList<>();
+        for (int index = 0; index < 20; index++) {
+            ids.add(insertSigh(126.9780, 37.5664, createdAt));
+        }
+        ids.add(insertSighWithDetails(
+                126.9780,
+                37.5664,
+                createdAt,
+                "날아가는 고라니",
+                "오늘은 조금 지쳤다"
+        ));
+
+        // when
+        SighListResult firstPage = sighService.findFirstListPage(126.9000, 37.5000, 127.1000, 37.6000);
+        SighListResult secondPage = sighService.findNextListPage(firstPage.nextCursor());
+
+        // then
+        List<Long> expectedFirstPageIds = new ArrayList<>(ids.subList(1, ids.size()));
+        expectedFirstPageIds.sort(Comparator.reverseOrder());
+
+        assertThat(firstPage.items())
+                .extracting(SighListItem::id)
+                .containsExactlyElementsOf(expectedFirstPageIds);
+        assertThat(firstPage.items().getFirst().nickname()).isEqualTo("날아가는 고라니");
+        assertThat(firstPage.items().getFirst().memo()).isEqualTo("오늘은 조금 지쳤다");
+        assertThat(firstPage.hasNext()).isTrue();
+        assertThat(firstPage.nextCursor()).isNotBlank();
+
+        assertThat(secondPage.items())
+                .singleElement()
+                .satisfies(item -> {
+                    assertThat(item.id()).isEqualTo(ids.getFirst());
+                    assertThat(item.memo()).isNull();
+                });
+        assertThat(secondPage.hasNext()).isFalse();
+        assertThat(secondPage.nextCursor()).isNull();
+    }
+
+    @Test
+    void 바텀시트_목록은_날짜변경선_경계를_포함하고_삭제된_한숨을_제외한다() {
+        // given
+        Long 양의_경도_경계_한숨 = insertSigh(170.0000, 10.0000, "2026-08-31T10:30:00Z");
+        Long 음의_경도_경계_한숨 = insertSigh(-170.0000, -10.0000, "2026-08-31T10:31:00Z");
+        insertSigh(169.9999, 0.0000, "2026-08-31T10:32:00Z");
+        Long 삭제된_한숨 = insertSigh(175.0000, 0.0000, "2026-08-31T10:33:00Z");
+        softDeleteSigh(삭제된_한숨);
+
+        // when
+        SighListResult result = sighService.findFirstListPage(170.0000, -10.0000, -170.0000, 10.0000);
+
+        // then
+        assertThat(result.items())
+                .extracting(SighListItem::id)
+                .containsExactly(음의_경도_경계_한숨, 양의_경도_경계_한숨);
+        assertThat(result.hasNext()).isFalse();
+    }
+
+    @Test
+    void 첫_페이지_이후에_등록된_한숨은_현재_바텀시트_목록에_포함하지_않는다() {
+        // given
+        String createdAt = Instant.now().minusSeconds(60).toString();
+        List<Long> ids = new ArrayList<>();
+        for (int index = 0; index < 21; index++) {
+            ids.add(insertSigh(126.9780, 37.5664, createdAt));
+        }
+        SighListResult firstPage = sighService.findFirstListPage(126.9000, 37.5000, 127.1000, 37.6000);
+        SighListCursor cursor = SighListCursorCodec.decode(firstPage.nextCursor());
+        Long 이후에_등록된_한숨 = insertSigh(
+                126.9780,
+                37.5664,
+                cursor.snapshotAt().toString()
+        );
+
+        // when
+        SighListResult secondPage = sighService.findNextListPage(firstPage.nextCursor());
+
+        // then
+        assertThat(secondPage.items())
+                .extracting(SighListItem::id)
+                .containsExactly(ids.getFirst())
+                .doesNotContain(이후에_등록된_한숨);
+        assertThat(secondPage.hasNext()).isFalse();
+    }
+
+    @Test
+    void 바텀시트_목록은_최신_500건까지만_페이지로_조회한다() {
+        // given
+        Long oldestId = insertSigh(126.9780, 37.5664, "2026-08-31T10:29:00Z");
+        insertSighs(500, 126.9780, 37.5664);
+
+        // when
+        List<SighListItem> items = findAllListPages(126.9000, 37.5000, 127.1000, 37.6000);
+
+        // then
+        assertThat(items)
+                .hasSize(500)
+                .extracting(SighListItem::id)
+                .isSortedAccordingTo(Comparator.reverseOrder())
+                .doesNotContain(oldestId);
+    }
+
+    @Test
     void 저장_무결성_오류는_한숨_도메인_예외로_변환한다() {
         // given
         addRejectedRequestIdConstraint();
@@ -441,6 +549,35 @@ class SighServiceIntegrationTest {
                 .single();
     }
 
+    private Long insertSighWithDetails(
+            double longitude,
+            double latitude,
+            String createdAt,
+            String nickname,
+            String memo
+    ) {
+        return jdbcClient.sql("""
+                        INSERT INTO sighs (request_id, location, nickname, memo, created_at, updated_at)
+                        VALUES (
+                            :requestId,
+                            ST_SetSRID(ST_MakePoint(:longitude, :latitude), 4326),
+                            :nickname,
+                            :memo,
+                            CAST(:createdAt AS TIMESTAMPTZ),
+                            CAST(:createdAt AS TIMESTAMPTZ)
+                        )
+                        RETURNING id
+                        """)
+                .param("requestId", UUID.randomUUID())
+                .param("longitude", longitude)
+                .param("latitude", latitude)
+                .param("nickname", nickname)
+                .param("memo", memo)
+                .param("createdAt", createdAt)
+                .query(Long.class)
+                .single();
+    }
+
     private void insertSighs(int count, double longitude, double latitude) {
         jdbcClient.sql("""
                         INSERT INTO sighs (request_id, location, nickname, created_at, updated_at)
@@ -461,6 +598,32 @@ class SighServiceIntegrationTest {
                 .param("latitude", latitude)
                 .param("count", count)
                 .update();
+    }
+
+    private List<SighListItem> findAllListPages(
+            double minLongitude,
+            double minLatitude,
+            double maxLongitude,
+            double maxLatitude
+    ) {
+        List<SighListItem> items = new ArrayList<>();
+        SighListResult page = sighService.findFirstListPage(
+                minLongitude,
+                minLatitude,
+                maxLongitude,
+                maxLatitude
+        );
+
+        for (int pageIndex = 0; pageIndex < 25; pageIndex++) {
+            assertThat(page.items()).hasSizeLessThanOrEqualTo(20);
+            items.addAll(page.items());
+            if (!page.hasNext()) {
+                return items;
+            }
+            page = sighService.findNextListPage(page.nextCursor());
+        }
+
+        throw new AssertionError("500건 조회는 25페이지 안에 끝나야 합니다.");
     }
 
     private void removeRejectedRequestIdConstraint() {

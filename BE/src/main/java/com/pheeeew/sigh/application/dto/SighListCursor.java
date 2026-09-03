@@ -55,6 +55,18 @@ public record SighListCursor(
         );
     }
 
+    public SighListCursor next(Instant lastCreatedAt, long lastId) {
+        return SighListCursor.of(
+                minLongitude,
+                minLatitude,
+                maxLongitude,
+                maxLatitude,
+                snapshotAt,
+                lastCreatedAt,
+                lastId
+        );
+    }
+
     private static void validateLongitude(double longitude) {
         if (!Double.isFinite(longitude) || longitude < -180.0 || longitude > 180.0) {
             throw new IllegalArgumentException("경도는 -180 이상 180 이하여야 합니다.");

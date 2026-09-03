@@ -4,13 +4,19 @@ import static com.pheeeew.sigh.exception.SighErrorCode.SIGH_SAVE_FAILED;
 import static com.pheeeew.sigh.exception.SighErrorCode.SIGH_NOT_FOUND;
 
 import com.pheeeew.sigh.application.dto.SighDetailResult;
+import com.pheeeew.sigh.application.dto.SighListCursor;
+import com.pheeeew.sigh.application.dto.SighListItem;
+import com.pheeeew.sigh.application.dto.SighListResult;
 import com.pheeeew.sigh.application.dto.SighMapItem;
 import com.pheeeew.sigh.application.dto.SighMapResult;
 import com.pheeeew.sigh.application.dto.SighSaveResult;
 import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.SighRepository;
+import com.pheeeew.sigh.domain.repository.projection.SighListProjection;
 import com.pheeeew.sigh.domain.repository.projection.SighMapProjection;
 import com.pheeeew.sigh.exception.SighException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,6 +30,7 @@ import org.springframework.stereotype.Service;
 public class SighService {
 
     private static final int MAX_FIND_COUNT = 500;
+    private static final int LIST_PAGE_SIZE = 20;
 
     private final SighRepository sighRepository;
     private final SighLocationGenerator sighLocationGenerator;
@@ -75,8 +82,75 @@ public class SighService {
         return SighMapResult.of(sighs, truncated);
     }
 
+    public SighListResult findFirstListPage(double minLongitude, double minLatitude, double maxLongitude, double maxLatitude) {
+        Instant snapshotAt = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        SighListCursor cursor = SighListCursor.of(
+                minLongitude,
+                minLatitude,
+                maxLongitude,
+                maxLatitude,
+                snapshotAt,
+                snapshotAt,
+                Long.MAX_VALUE
+        );
+
+        return findList(cursor);
+    }
+
+    public SighListResult findNextListPage(String encodedCursor) {
+        return findList(SighListCursorCodec.decode(encodedCursor));
+    }
+
     private SighSaveResult createSaveResult(Sigh sigh, boolean created) {
         return SighSaveResult.of(sigh, created);
+    }
+
+    private SighListResult findList(SighListCursor cursor) {
+        List<SighListProjection> projections = sighRepository.findListWithinBounds(
+                cursor.minLongitude(),
+                cursor.minLatitude(),
+                cursor.maxLongitude(),
+                cursor.maxLatitude(),
+                cursor.snapshotAt(),
+                cursor.lastCreatedAt(),
+                cursor.lastId(),
+                MAX_FIND_COUNT,
+                LIST_PAGE_SIZE + 1
+        );
+
+        boolean hasNext = projections.size() > LIST_PAGE_SIZE;
+        if (hasNext) {
+            projections = projections.subList(0, LIST_PAGE_SIZE);
+        }
+
+        List<SighListItem> items = projections.stream()
+                .map(projection -> SighListItem.of(
+                        projection.getId(),
+                        projection.getCreatedAt(),
+                        projection.getNickname(),
+                        projection.getMemo()
+                ))
+                .toList();
+        String nextCursor = createNextCursor(cursor, projections, hasNext);
+
+        return SighListResult.of(items, hasNext, nextCursor);
+    }
+
+    private String createNextCursor(
+            SighListCursor cursor,
+            List<SighListProjection> projections,
+            boolean hasNext
+    ) {
+        if (!hasNext) {
+            return null;
+        }
+
+        SighListProjection lastProjection = projections.getLast();
+        SighListCursor nextCursor = cursor.next(
+                lastProjection.getCreatedAt(),
+                lastProjection.getId()
+        );
+        return SighListCursorCodec.encode(nextCursor);
     }
 
     private SighSaveResult saveNewSigh(UUID requestId, double longitude, double latitude, String memo) {
