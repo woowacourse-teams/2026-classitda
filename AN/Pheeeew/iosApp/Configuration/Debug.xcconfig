@@ -1,4 +1,0 @@
-#include "Config.xcconfig"
-
-SLASH = /
-API_BASE_URL = https:$(SLASH)/api-dev.pheeeew.com
