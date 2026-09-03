@@ -126,7 +126,6 @@ fun MapScreen(
 
         MapOverlay(
             onSettingsClick = onSettingsClick,
-            onRefreshClick = viewModel::loadSighs,
             onZoomInClick = viewModel::onZoomInClick,
             onZoomOutClick = viewModel::onZoomOutClick,
             onMyLocationClick = viewModel::onMyLocationClick,
