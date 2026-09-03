@@ -12,6 +12,7 @@ import com.pheeeew.sigh.application.dto.SighSaveResult;
 import com.pheeeew.sigh.application.dto.SighSearchBounds;
 import com.pheeeew.sigh.domain.Sigh;
 import com.pheeeew.sigh.domain.repository.SighRepository;
+import com.pheeeew.sigh.domain.repository.projection.SighListProjection;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
 import com.pheeeew.support.PostgisDataJpaTest;
@@ -422,6 +423,46 @@ class SighServiceIntegrationTest {
     }
 
     @Test
+    void 바텀시트_목록은_첫_조회_전에_스냅샷_시각에_등록된_한숨도_제외한다() {
+        // given
+        Instant snapshotAt = Instant.parse("2026-09-01T12:00:00Z");
+        String beforeSnapshot = snapshotAt.minusSeconds(60).toString();
+        List<Long> ids = new ArrayList<>();
+        for (int index = 0; index < 21; index++) {
+            ids.add(insertSigh(126.9780, 37.5664, beforeSnapshot));
+        }
+        SighListCursor initialCursor = SighListCursor.initial(SEOUL_BOUNDS, snapshotAt);
+        Long 스냅샷_경계_한숨 = insertSigh(
+                126.9780,
+                37.5664,
+                snapshotAt.toString()
+        );
+
+        // when
+        List<SighListProjection> firstQuery = findListProjections(initialCursor);
+        List<SighListProjection> firstPage = firstQuery.subList(0, 20);
+        SighListProjection lastProjection = firstPage.getLast();
+        SighListCursor nextCursor = initialCursor.next(
+                lastProjection.getCreatedAt(),
+                lastProjection.getId()
+        );
+        List<SighListProjection> secondPage = findListProjections(nextCursor);
+
+        // then
+        List<Long> expectedFirstPageIds = new ArrayList<>(ids.subList(1, ids.size()));
+        expectedFirstPageIds.sort(Comparator.reverseOrder());
+
+        assertThat(firstPage)
+                .extracting(SighListProjection::getId)
+                .containsExactlyElementsOf(expectedFirstPageIds)
+                .doesNotContain(스냅샷_경계_한숨);
+        assertThat(secondPage)
+                .extracting(SighListProjection::getId)
+                .containsExactly(ids.getFirst())
+                .doesNotContain(스냅샷_경계_한숨);
+    }
+
+    @Test
     void 첫_페이지_이후에_등록된_한숨은_현재_바텀시트_목록에_포함하지_않는다() {
         // given
         String createdAt = Instant.now().minusSeconds(60).toString();
@@ -622,6 +663,21 @@ class SighServiceIntegrationTest {
         }
 
         throw new AssertionError("500건 조회는 25페이지 안에 끝나야 합니다.");
+    }
+
+    private List<SighListProjection> findListProjections(SighListCursor cursor) {
+        SighSearchBounds bounds = cursor.bounds();
+        return sighRepository.findListWithinBounds(
+                bounds.minLongitude(),
+                bounds.minLatitude(),
+                bounds.maxLongitude(),
+                bounds.maxLatitude(),
+                cursor.snapshotAt(),
+                cursor.lastItemCreatedAt(),
+                cursor.lastId(),
+                500,
+                21
+        );
     }
 
     private void removeRejectedRequestIdConstraint() {
