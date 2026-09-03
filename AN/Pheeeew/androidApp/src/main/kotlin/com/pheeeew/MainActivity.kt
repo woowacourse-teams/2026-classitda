@@ -7,11 +7,9 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.pheeeew.core.network.ApiConfig
-import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.di.SighModule
 import com.pheeeew.di.createAndroidLocationDependencies
@@ -48,14 +46,4 @@ class LocationDependenciesHolder : ViewModel() {
     override fun onCleared() {
         (dependencies?.permissionController as? AutoCloseable)?.close()
     }
-}
-
-@Preview
-@Composable
-fun appAndroidPreview() {
-    App(
-        appVersion = "1.0.0",
-        locationDependencies = null,
-        sighRepository = FakeSighRepository(),
-    )
 }
