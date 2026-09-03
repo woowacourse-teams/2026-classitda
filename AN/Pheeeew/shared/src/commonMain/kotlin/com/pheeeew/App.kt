@@ -12,19 +12,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.navigation.DoubleBackToExitHandler
 import com.pheeeew.core.navigation.PredictiveBackContent
 import com.pheeeew.core.navigation.Screen
-import com.pheeeew.data.repository.FakeSighRepository
 import com.pheeeew.di.LocationDependencies
 import com.pheeeew.domain.repository.SighRepository
-import com.pheeeew.feature.map.MapScreen
+import com.pheeeew.feature.map.MapRoute
 import com.pheeeew.feature.map.MapViewModel
 import com.pheeeew.feature.setting.SettingsScreen
-import com.pheeeew.feature.setting.handleLocationPermissionSettingsClick
 import com.pheeeew.feature.setting.legal.LegalDocument
 import com.pheeeew.feature.setting.legal.LegalDocumentRoute
 import com.pheeeew.feature.splash.SplashScreen
@@ -49,8 +46,7 @@ fun App(
         Box(modifier = Modifier.fillMaxSize().background(AppTheme.colors.background)) {
             // Map은 항상 조립된 상태로 유지해, 화면 전환 시 지도 뷰가 매번 새로 생성되며
             // 생기는 깜박임을 막습니다. Splash/Settings/LegalDocument는 그 위에 오버레이로 뜹니다.
-            MapScreen(
-                locationDependencies = locationDependencies,
+            MapRoute(
                 onSettingsClick = { screen = Screen.Settings },
                 isActive = screen == Screen.Map,
                 viewModel = mapViewModel,
@@ -107,14 +103,4 @@ fun App(
             }
         }
     }
-}
-
-@Preview
-@Composable
-private fun AppPreview() {
-    App(
-        appVersion = "1.0.0",
-        locationDependencies = null,
-        sighRepository = FakeSighRepository(),
-    )
 }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,18 +23,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.repeatOnLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.pheeeew.core.audio.BreathInputError
 import com.pheeeew.core.designsystem.component.AppDialog
 import com.pheeeew.core.designsystem.theme.AppColors
 import com.pheeeew.core.designsystem.theme.AppTheme
 import com.pheeeew.core.permission.LocationPermissionStatus
-import com.pheeeew.data.repository.FakeSighRepository
-import com.pheeeew.di.LocationDependencies
 import com.pheeeew.domain.model.location.LocationState
+import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.feature.map.animation.SighAnimationCoordinator
 import com.pheeeew.feature.map.animation.StarFlightOverlay
 import com.pheeeew.feature.map.map.BreathMap
@@ -44,18 +38,24 @@ import com.pheeeew.feature.map.overlay.BreathControl
 import com.pheeeew.feature.map.overlay.ErrorSnackbar
 import com.pheeeew.feature.map.overlay.MapOverlay
 import com.pheeeew.feature.map.overlay.SighPhase
-import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.launch
 
 @Composable
 fun MapScreen(
-    locationDependencies: LocationDependencies?,
+    uiState: MapUiState,
     onSettingsClick: () -> Unit,
+    onZoomInClick: () -> Unit,
+    onZoomOutClick: () -> Unit,
+    onMyLocationClick: () -> Unit,
+    onBoundsChanged: (SighBounds) -> Unit,
+    onRegisterSighAfterExplosion: () -> Unit,
+    onCancelFailedSighRegistration: () -> Unit,
+    onConsumeFocusRequest: (String) -> Unit,
+    onEnsureLocationPermission: suspend () -> LocationPermissionStatus,
+    onOpenLocationSettings: () -> Unit,
+    onOpenAppSettings: () -> Unit,
     modifier: Modifier = Modifier,
     isActive: Boolean = true,
-    viewModel: MapViewModel = viewModel { MapViewModel(FakeSighRepository(), locationDependencies) },
 ) {
-    val uiState by viewModel.uiState.collectAsState()
     val successState = uiState as? MapUiState.Success
     var pendingFlightOrigin by remember { mutableStateOf<Offset?>(null) }
     var projectionSnapshot by remember { mutableStateOf(MapProjectionSnapshot.Empty) }
@@ -67,27 +67,10 @@ fun MapScreen(
     var showLocationPermissionDialog by remember { mutableStateOf(false) }
     var showLocationServicesDialog by remember { mutableStateOf(false) }
     var showMicrophonePermissionDialog by remember { mutableStateOf(false) }
-    var startupPermissionsChecked by remember { mutableStateOf(false) }
-    val lifeCycleOwner = LocalLifecycleOwner.current
     var sighPhase by remember { mutableStateOf(SighPhase.Idle) }
     var cancelSignal by remember { mutableStateOf(0) }
     val isSighSubmitting = successState?.sighReleaseState is SighReleaseState.Submitting
     val isSighInteractionVisible = sighPhase != SighPhase.Idle || isSighSubmitting
-
-    LaunchedEffect(lifeCycleOwner, isActive) {
-        if (!isActive) startupPermissionsChecked = false
-        lifeCycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            if (!isActive) return@repeatOnLifecycle
-            if (!startupPermissionsChecked) {
-                viewModel.ensureLocationPermission()
-                startupPermissionsChecked = true
-                launch { viewModel.refreshLocationPermission() }
-            } else {
-                viewModel.refreshLocationPermission()
-            }
-            awaitCancellation()
-        }
-    }
 
     val hiddenMarkerId =
         successState?.focusRequest?.id?.takeIf {
@@ -107,7 +90,7 @@ fun MapScreen(
         val error = successState?.sighReleaseState as? SighReleaseState.Error ?: return@LaunchedEffect
         if (!error.canRetry) {
             pendingFlightOrigin = null
-            viewModel.cancelFailedSighRegistration()
+            onCancelFailedSighRegistration()
         }
     }
 
@@ -117,7 +100,7 @@ fun MapScreen(
                 state = successState.toMapRenderState(hiddenMarkerId),
                 cameraCommand = successState.cameraCommand,
                 onSighClick = {},
-                onBoundsChanged = viewModel::loadSighs,
+                onBoundsChanged = onBoundsChanged,
                 onMapError = {},
                 onProjectionChanged = { projectionSnapshot = it },
                 modifier = Modifier.fillMaxSize(),
@@ -126,9 +109,9 @@ fun MapScreen(
 
         MapOverlay(
             onSettingsClick = onSettingsClick,
-            onZoomInClick = viewModel::onZoomInClick,
-            onZoomOutClick = viewModel::onZoomOutClick,
-            onMyLocationClick = viewModel::onMyLocationClick,
+            onZoomInClick = onZoomInClick,
+            onZoomOutClick = onZoomOutClick,
+            onMyLocationClick = onMyLocationClick,
             errorMessage = uiState.toBannerMessage(),
             controlsEnabled = sighPhase == SighPhase.Idle && !isSighSubmitting,
         )
@@ -177,7 +160,7 @@ fun MapScreen(
                                 !isFlightInProgress,
                         onExplosionFinished = { origin ->
                             pendingFlightOrigin = origin
-                            viewModel.registerSighAfterExplosion()
+                            onRegisterSighAfterExplosion()
                         },
                         onMicrophoneError = { error ->
                             if (error == BreathInputError.PermissionDenied) {
@@ -187,7 +170,7 @@ fun MapScreen(
                             }
                         },
                         ensureLocationPermission = {
-                            when (viewModel.ensureLocationPermission()) {
+                            when (onEnsureLocationPermission()) {
                                 LocationPermissionStatus.Granted -> {
                                     true
                                 }
@@ -230,7 +213,7 @@ fun MapScreen(
                     activeFlightId = null
                     landedFlightId = id
                     isFlightInProgress = false
-                    viewModel.consumeFocusRequest(id)
+                    onConsumeFocusRequest(id)
                 },
                 onCancelled = { id ->
                     if (activeFlightId == id) {
@@ -250,7 +233,7 @@ fun MapScreen(
                 confirmText = "설정으로 이동",
                 onConfirmClick = {
                     showLocationPermissionDialog = false
-                    viewModel.openLocationSettings()
+                    onOpenLocationSettings()
                 },
                 onDismissRequest = { showLocationPermissionDialog = false },
                 onDismissClick = { showLocationPermissionDialog = false },
@@ -265,7 +248,7 @@ fun MapScreen(
                 confirmText = "설정으로 이동",
                 onConfirmClick = {
                     showLocationServicesDialog = false
-                    viewModel.openLocationSettings()
+                    onOpenLocationSettings()
                 },
                 onDismissRequest = { showLocationServicesDialog = false },
                 onDismissClick = { showLocationServicesDialog = false },
@@ -280,7 +263,7 @@ fun MapScreen(
                 confirmText = "설정으로 이동",
                 onConfirmClick = {
                     showMicrophonePermissionDialog = false
-                    viewModel.openAppSettings()
+                    onOpenAppSettings()
                 },
                 onDismissRequest = { showMicrophonePermissionDialog = false },
                 onDismissClick = { showMicrophonePermissionDialog = false },
@@ -329,5 +312,26 @@ private val DEFAULT_MAP_POINT = MapPoint("default-location", 37.5505, 127.0373)
 @Preview
 @Composable
 private fun MapScreenPreview() {
-    AppTheme { MapScreen(locationDependencies = null, onSettingsClick = {}) }
+    AppTheme {
+        MapScreen(
+            uiState =
+                MapUiState.Success(
+                    sighs = emptyList(),
+                    locationState = LocationState.Loading,
+                    cameraCommand = null,
+                    isRequestingLocation = false,
+                ),
+            onSettingsClick = {},
+            onZoomInClick = {},
+            onZoomOutClick = {},
+            onMyLocationClick = {},
+            onBoundsChanged = {},
+            onRegisterSighAfterExplosion = {},
+            onCancelFailedSighRegistration = {},
+            onConsumeFocusRequest = {},
+            onEnsureLocationPermission = { LocationPermissionStatus.Granted },
+            onOpenLocationSettings = {},
+            onOpenAppSettings = {},
+        )
+    }
 }
