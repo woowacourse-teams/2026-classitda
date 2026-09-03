@@ -6,6 +6,7 @@ import com.pheeeew.sigh.presentation.dto.SighFeature;
 import com.pheeeew.sigh.presentation.dto.SighV2Properties;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.StringToClassMapItem;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -113,13 +114,22 @@ public interface SighV2ControllerApi {
                     - 클라이언트는 무작위 오프셋을 적용하거나 정확한 위치를 서버로 보내지 않습니다.
                     - 서버는 격자 안에서 최종 표시 위치를 최초 한 번 생성하고 영구 저장합니다.
                     - 응답 좌표는 `[longitude, latitude]` 순서입니다.
-                    - 상세 조회 API가 아직 없으므로 `Location` 헤더는 제공하지 않습니다.
+                    - 최초 등록 성공 응답은 생성된 한숨의 상세 URI를 `Location` 헤더로 제공합니다.
                     """
     )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "201",
                     description = "한숨 최초 등록 성공",
+                    headers = @Header(
+                            name = "Location",
+                            description = "생성된 한숨의 상세 조회 URI",
+                            schema = @Schema(
+                                    type = "string",
+                                    format = "uri",
+                                    example = "/api/v2/sighs/42"
+                            )
+                    ),
                     content = @Content(
                             mediaType = "application/geo+json",
                             schema = @Schema(

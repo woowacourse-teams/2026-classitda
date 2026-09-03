@@ -6,8 +6,8 @@ import com.pheeeew.sigh.application.SighService;
 import com.pheeeew.sigh.presentation.dto.SighCreateV2Request;
 import com.pheeeew.sigh.presentation.dto.SighFeature;
 import com.pheeeew.sigh.presentation.dto.SighV2Properties;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,12 +50,12 @@ public class SighV2Controller implements SighV2ControllerApi {
                 request.memo()
         );
 
-        HttpStatus status = HttpStatus.OK;
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
         if (result.created()) {
-            status = HttpStatus.CREATED;
+            response = ResponseEntity.created(URI.create("/api/v2/sighs/" + result.id()));
         }
 
-        return ResponseEntity.status(status)
+        return response
                 .contentType(GEO_JSON)
                 .body(SighFeature.of(
                         result.id(),

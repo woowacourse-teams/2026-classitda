@@ -46,7 +46,7 @@ class SighV2ControllerTest {
     }
 
     @Test
-    void 메모가_있는_한숨을_최초_등록하면_201과_메모와_닉네임을_반환한다() {
+    void 메모가_있는_한숨을_최초_등록하면_201과_상세_URI와_메모와_닉네임을_반환한다() {
         // given
         when(sighService.save(REQUEST_ID, 126.9780, 37.5664, "  오늘은 조금 지쳤다  "))
                 .thenReturn(기본_저장_결과("오늘은 조금 지쳤다", true));
@@ -64,7 +64,7 @@ class SighV2ControllerTest {
         // then
         result.expectStatus().isCreated()
                 .expectHeader().contentType(GEO_JSON)
-                .expectHeader().doesNotExist(HttpHeaders.LOCATION)
+                .expectHeader().valueEquals(HttpHeaders.LOCATION, "/api/v2/sighs/42")
                 .expectBody()
                 .json(기본_GeoJSON("\"오늘은 조금 지쳤다\""), JsonCompareMode.STRICT);
         verify(sighService).save(REQUEST_ID, 126.9780, 37.5664, "  오늘은 조금 지쳤다  ");
@@ -159,6 +159,7 @@ class SighV2ControllerTest {
         // then
         result.expectStatus().isOk()
                 .expectHeader().contentType(GEO_JSON)
+                .expectHeader().doesNotExist(HttpHeaders.LOCATION)
                 .expectBody()
                 .json(기본_GeoJSON("\"최초 메모\""), JsonCompareMode.STRICT);
         verify(sighService).save(REQUEST_ID, 129.0756, 35.1796, "재시도 메모");
