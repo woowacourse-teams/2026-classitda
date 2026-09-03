@@ -1,7 +1,7 @@
 package com.pheeeew.sigh.presentation;
 
-import com.pheeeew.sigh.application.SighDetailResult;
-import com.pheeeew.sigh.application.SighSaveResult;
+import com.pheeeew.sigh.application.dto.SighDetailResult;
+import com.pheeeew.sigh.application.dto.SighSaveResult;
 import com.pheeeew.sigh.application.SighService;
 import com.pheeeew.sigh.presentation.dto.SighCreateV2Request;
 import com.pheeeew.sigh.presentation.dto.SighFeature;

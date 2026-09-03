@@ -1,6 +1,6 @@
 package com.pheeeew.sigh.presentation.dto;
 
-import com.pheeeew.sigh.application.SighMapResult;
+import com.pheeeew.sigh.application.dto.SighMapResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 

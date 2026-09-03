@@ -1,4 +1,4 @@
-package com.pheeeew.sigh.application;
+package com.pheeeew.sigh.application.dto;
 
 import com.pheeeew.sigh.domain.Sigh;
 import java.time.Instant;

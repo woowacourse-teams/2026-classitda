@@ -3,6 +3,7 @@ package com.pheeeew.sigh.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.pheeeew.sigh.application.dto.SighListCursor;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
 import java.nio.charset.StandardCharsets;

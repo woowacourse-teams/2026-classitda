@@ -5,9 +5,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.pheeeew.common.exception.GlobalExceptionHandler;
-import com.pheeeew.sigh.application.SighMapItem;
-import com.pheeeew.sigh.application.SighMapResult;
-import com.pheeeew.sigh.application.SighSaveResult;
+import com.pheeeew.sigh.application.dto.SighMapItem;
+import com.pheeeew.sigh.application.dto.SighMapResult;
+import com.pheeeew.sigh.application.dto.SighSaveResult;
 import com.pheeeew.sigh.application.SighService;
 import com.pheeeew.sigh.exception.SighErrorCode;
 import com.pheeeew.sigh.exception.SighException;
