@@ -39,10 +39,11 @@ fun MapOverlay(
             contentDescription = "설정",
             onClick = onSettingsClick,
             enabled = controlsEnabled,
-            modifier = Modifier
-                .align(Alignment.Start)
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .align(Alignment.Start)
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
         )
 
         if (errorMessage != null) {
