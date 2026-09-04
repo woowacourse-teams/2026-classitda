@@ -21,6 +21,7 @@ sealed interface MapUiState {
         val sighReleaseState: SighReleaseState = SighReleaseState.Idle,
         val focusRequest: MapFocusRequest? = null,
         val refreshErrorMessage: String? = null,
+        val mapErrorMessage: String? = null,
     ) : MapUiState
 }
 

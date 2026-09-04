@@ -33,6 +33,7 @@ import com.pheeeew.domain.model.sigh.SighBounds
 import com.pheeeew.feature.map.animation.SighAnimationCoordinator
 import com.pheeeew.feature.map.animation.StarFlightOverlay
 import com.pheeeew.feature.map.map.BreathMap
+import com.pheeeew.feature.map.map.MapError
 import com.pheeeew.feature.map.map.MapProjectionSnapshot
 import com.pheeeew.feature.map.overlay.BreathControl
 import com.pheeeew.feature.map.overlay.ErrorSnackbar
@@ -53,6 +54,7 @@ fun MapScreen(
     onEnsureLocationPermission: suspend () -> LocationPermissionStatus,
     onOpenLocationSettings: () -> Unit,
     onOpenAppSettings: () -> Unit,
+    onMapError: (MapError) -> Unit,
     modifier: Modifier = Modifier,
     isActive: Boolean = true,
 ) {
@@ -101,7 +103,7 @@ fun MapScreen(
                 cameraCommand = successState.cameraCommand,
                 onSighClick = {},
                 onBoundsChanged = onBoundsChanged,
-                onMapError = {},
+                onMapError = onMapError,
                 onProjectionChanged = { projectionSnapshot = it },
                 modifier = Modifier.fillMaxSize(),
             )
@@ -281,8 +283,15 @@ private fun MapUiState.toBannerMessage(): String? =
 
         is MapUiState.Success -> {
             when (val release = sighReleaseState) {
-                is SighReleaseState.Error -> release.message
-                else -> refreshErrorMessage ?: (locationState as? LocationState.Unavailable)?.reason?.toKoreanMessage()
+                is SighReleaseState.Error -> {
+                    release.message
+                }
+
+                else -> {
+                    mapErrorMessage
+                        ?: refreshErrorMessage
+                        ?: (locationState as? LocationState.Unavailable)?.reason?.toKoreanMessage()
+                }
             }
         }
 
@@ -332,6 +341,7 @@ private fun MapScreenPreview() {
             onEnsureLocationPermission = { LocationPermissionStatus.Granted },
             onOpenLocationSettings = {},
             onOpenAppSettings = {},
+            onMapError = {},
         )
     }
 }

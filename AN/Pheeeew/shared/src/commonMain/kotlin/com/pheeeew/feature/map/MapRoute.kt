@@ -53,6 +53,7 @@ fun MapRoute(
         onEnsureLocationPermission = { viewModel.ensureLocationPermission() },
         onOpenLocationSettings = viewModel::openLocationSettings,
         onOpenAppSettings = viewModel::openAppSettings,
+        onMapError = viewModel::onMapError,
         isActive = isActive,
         modifier = modifier,
     )

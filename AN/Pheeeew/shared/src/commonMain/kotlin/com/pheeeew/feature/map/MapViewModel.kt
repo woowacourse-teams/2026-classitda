@@ -13,6 +13,7 @@ import com.pheeeew.domain.model.sigh.SighPin
 import com.pheeeew.domain.repository.SighRepository
 import com.pheeeew.feature.map.map.MapCameraCommand
 import com.pheeeew.feature.map.map.MapDarkStyle
+import com.pheeeew.feature.map.map.MapError
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -278,6 +279,14 @@ class MapViewModel(
         val dependencies = locationDependencies ?: return
         viewModelScope.launch {
             dependencies.permissionSettingsLauncher.openAppSettings()
+        }
+    }
+
+    fun onMapError(error: MapError) {
+        _uiState.update { state ->
+            (state as? MapUiState.Success)?.copy(
+                mapErrorMessage = error.toUserMessage(),
+            ) ?: state
         }
     }
 
