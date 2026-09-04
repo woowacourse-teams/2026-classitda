@@ -28,7 +28,7 @@ class ErrorMessageMapperTest {
     @Test
     fun `지도 렌더러 오류는 사용자 안내 문구로 변환한다`() {
         assertEquals(
-            "지도를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
+            "지도를 불러오지 못했어요. 잠시 후 재시도해 주세요.",
             MapError.RendererUnavailable.toUserMessage(),
         )
     }
