@@ -11,6 +11,6 @@ internal fun ApiException.toUserMessage(): String =
 
 internal fun MapError.toUserMessage(): String =
     when (this) {
-        MapError.RendererUnavailable -> "지도를 불러오지 못했어요. 잠시 후 다시 시도해 주세요."
+        MapError.RendererUnavailable -> "지도를 불러오지 못했어요. 잠시 후 재시도해 주세요."
         MapError.StyleLoadFailed -> "지도 화면을 불러오지 못했어요. 인터넷 연결 상태를 확인해 주세요."
     }

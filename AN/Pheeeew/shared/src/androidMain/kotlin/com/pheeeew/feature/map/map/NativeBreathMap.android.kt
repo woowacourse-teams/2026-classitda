@@ -2,6 +2,7 @@ package com.pheeeew.feature.map.map
 
 import android.animation.ValueAnimator
 import android.graphics.Color
+import android.view.Gravity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -12,6 +13,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -30,6 +33,7 @@ import org.maplibre.android.style.layers.PropertyFactory.iconOpacity
 import org.maplibre.android.style.layers.PropertyFactory.iconSize
 import org.maplibre.android.style.layers.SymbolLayer
 import java.util.ArrayDeque
+import kotlin.math.roundToInt
 
 @Composable
 internal actual fun NativeBreathMap(
@@ -123,6 +127,7 @@ private class AndroidBreathMapHost(
     private var lastRenderedFocusId: String? = null
     private var lastPublishedPoints: Map<String, MapScreenPoint>? = null
     private var lastPublishedCameraIdle: Boolean? = null
+    private var statusBarInset = 0
 
     private val mapLoadFailureListener =
         MapView.OnDidFailLoadingMapListener {
@@ -178,10 +183,17 @@ private class AndroidBreathMapHost(
         }
 
     init {
+        ViewCompat.setOnApplyWindowInsetsListener(mapView) { _, insets ->
+            statusBarInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            applyCompassMargins()
+            insets
+        }
+        ViewCompat.requestApplyInsets(mapView)
         mapView.addOnDidFailLoadingMapListener(mapLoadFailureListener)
         mapView.getMapAsync { readyMap ->
             if (released) return@getMapAsync
             map = readyMap
+            applyCompassMargins()
             readyMap.setMinZoomPreference(MapDarkStyle.MINIMUM_ZOOM)
             readyMap.setMaxZoomPreference(MapDarkStyle.MAXIMUM_ZOOM)
             readyMap.uiSettings.apply {
@@ -191,7 +203,9 @@ private class AndroidBreathMapHost(
                 isTiltGesturesEnabled = true
                 isLogoEnabled = true
                 isAttributionEnabled = true
-                isCompassEnabled = false
+                isCompassEnabled = true
+                setCompassFadeFacingNorth(true)
+                compassGravity = Gravity.TOP or Gravity.END
             }
             readyMap.addOnMapClickListener(mapClickListener)
             readyMap.addOnCameraMoveStartedListener(cameraMoveStartedListener)
@@ -234,6 +248,7 @@ private class AndroidBreathMapHost(
     fun release() {
         if (released) return
         released = true
+        ViewCompat.setOnApplyWindowInsetsListener(mapView, null)
         mapView.removeOnDidFailLoadingMapListener(mapLoadFailureListener)
         map?.removeOnMapClickListener(mapClickListener)
         map?.removeOnCameraMoveStartedListener(cameraMoveStartedListener)
@@ -245,6 +260,15 @@ private class AndroidBreathMapHost(
         style = null
         latestState = null
         pendingCameraCommands.clear()
+    }
+
+    private fun applyCompassMargins() {
+        map?.uiSettings?.setCompassMargins(
+            0,
+            statusBarInset + (12f * mapView.resources.displayMetrics.density).roundToInt(),
+            (16f * mapView.resources.displayMetrics.density).roundToInt(),
+            0,
+        )
     }
 
     private fun startSighPulse(style: Style) {
