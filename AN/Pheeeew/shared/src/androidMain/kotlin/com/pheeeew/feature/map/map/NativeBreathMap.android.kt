@@ -127,6 +127,7 @@ private class AndroidBreathMapHost(
     private var lastRenderedFocusId: String? = null
     private var lastPublishedPoints: Map<String, MapScreenPoint>? = null
     private var lastPublishedCameraIdle: Boolean? = null
+    private var statusBarInset = 0
 
     private val mapLoadFailureListener =
         MapView.OnDidFailLoadingMapListener {
@@ -182,10 +183,17 @@ private class AndroidBreathMapHost(
         }
 
     init {
+        ViewCompat.setOnApplyWindowInsetsListener(mapView) { _, insets ->
+            statusBarInset = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            applyCompassMargins()
+            insets
+        }
+        ViewCompat.requestApplyInsets(mapView)
         mapView.addOnDidFailLoadingMapListener(mapLoadFailureListener)
         mapView.getMapAsync { readyMap ->
             if (released) return@getMapAsync
             map = readyMap
+            applyCompassMargins()
             readyMap.setMinZoomPreference(MapDarkStyle.MINIMUM_ZOOM)
             readyMap.setMaxZoomPreference(MapDarkStyle.MAXIMUM_ZOOM)
             readyMap.uiSettings.apply {
@@ -198,20 +206,6 @@ private class AndroidBreathMapHost(
                 isCompassEnabled = true
                 setCompassFadeFacingNorth(true)
                 compassGravity = Gravity.TOP or Gravity.END
-
-                val density = mapView.resources.displayMetrics.density
-                val statusBarInset =
-                    ViewCompat
-                        .getRootWindowInsets(mapView)
-                        ?.getInsets(WindowInsetsCompat.Type.statusBars())
-                        ?.top
-                        ?: 0
-                setCompassMargins(
-                    0,
-                    statusBarInset + (12f * density).roundToInt(),
-                    (16f * density).roundToInt(),
-                    0,
-                )
             }
             readyMap.addOnMapClickListener(mapClickListener)
             readyMap.addOnCameraMoveStartedListener(cameraMoveStartedListener)
@@ -254,6 +248,7 @@ private class AndroidBreathMapHost(
     fun release() {
         if (released) return
         released = true
+        ViewCompat.setOnApplyWindowInsetsListener(mapView, null)
         mapView.removeOnDidFailLoadingMapListener(mapLoadFailureListener)
         map?.removeOnMapClickListener(mapClickListener)
         map?.removeOnCameraMoveStartedListener(cameraMoveStartedListener)
@@ -265,6 +260,15 @@ private class AndroidBreathMapHost(
         style = null
         latestState = null
         pendingCameraCommands.clear()
+    }
+
+    private fun applyCompassMargins() {
+        map?.uiSettings?.setCompassMargins(
+            0,
+            statusBarInset + (12f * mapView.resources.displayMetrics.density).roundToInt(),
+            (16f * mapView.resources.displayMetrics.density).roundToInt(),
+            0,
+        )
     }
 
     private fun startSighPulse(style: Style) {
