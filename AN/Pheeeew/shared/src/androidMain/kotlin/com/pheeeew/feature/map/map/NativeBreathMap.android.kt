@@ -2,6 +2,7 @@ package com.pheeeew.feature.map.map
 
 import android.animation.ValueAnimator
 import android.graphics.Color
+import android.view.Gravity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -12,6 +13,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -30,6 +33,7 @@ import org.maplibre.android.style.layers.PropertyFactory.iconOpacity
 import org.maplibre.android.style.layers.PropertyFactory.iconSize
 import org.maplibre.android.style.layers.SymbolLayer
 import java.util.ArrayDeque
+import kotlin.math.roundToInt
 
 @Composable
 internal actual fun NativeBreathMap(
@@ -192,6 +196,22 @@ private class AndroidBreathMapHost(
                 isLogoEnabled = true
                 isAttributionEnabled = true
                 isCompassEnabled = true
+                setCompassFadeFacingNorth(true)
+                compassGravity = Gravity.TOP or Gravity.END
+
+                val density = mapView.resources.displayMetrics.density
+                val statusBarInset =
+                    ViewCompat
+                        .getRootWindowInsets(mapView)
+                        ?.getInsets(WindowInsetsCompat.Type.statusBars())
+                        ?.top
+                        ?: 0
+                setCompassMargins(
+                    0,
+                    statusBarInset + (12f * density).roundToInt(),
+                    (16f * density).roundToInt(),
+                    0,
+                )
             }
             readyMap.addOnMapClickListener(mapClickListener)
             readyMap.addOnCameraMoveStartedListener(cameraMoveStartedListener)
