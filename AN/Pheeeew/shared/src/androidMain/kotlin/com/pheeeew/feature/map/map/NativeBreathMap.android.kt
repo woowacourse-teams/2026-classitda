@@ -84,7 +84,12 @@ internal actual fun NativeBreathMap(
     }
 
     DisposableEffect(host, lifecycleOwner) {
-        val lifecycleDelegate = AndroidMapLifecycleDelegate(host.mapView)
+        val lifecycleDelegate =
+            AndroidMapLifecycleDelegate(
+                mapView = host.mapView,
+                onPause = host::pauseAnimations,
+                onResume = host::resumeAnimations,
+            )
         lifecycleDelegate.attach(lifecycleOwner)
 
         onDispose {
@@ -262,6 +267,14 @@ private class AndroidBreathMapHost(
         pendingCameraCommands.clear()
     }
 
+    fun pauseAnimations() {
+        sighPulseAnimator?.takeIf { it.isStarted }?.pause()
+    }
+
+    fun resumeAnimations() {
+        sighPulseAnimator?.takeIf { it.isPaused }?.resume()
+    }
+
     private fun applyCompassMargins() {
         map?.uiSettings?.setCompassMargins(
             0,
@@ -360,6 +373,8 @@ private class AndroidBreathMapHost(
 
 private class AndroidMapLifecycleDelegate(
     private val mapView: MapView,
+    private val onPause: () -> Unit,
+    private val onResume: () -> Unit,
 ) {
     private var started = false
     private var resumed = false
@@ -397,12 +412,16 @@ private class AndroidMapLifecycleDelegate(
     private fun resume() {
         if (destroyed || resumed) return
         if (!started) start()
+
         mapView.onResume()
+        onResume()
         resumed = true
     }
 
     private fun pause() {
         if (!resumed) return
+
+        onPause()
         mapView.onPause()
         resumed = false
     }
